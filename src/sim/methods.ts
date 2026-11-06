@@ -1,18 +1,30 @@
 /** Method commit: refusal hooks first, else wound matrix resolve. Pure sim. */
 
-import methodsJson from '../data/methods.json';
 import { applyEffect, type EffectCtx } from './effects';
-import { matchesWhen } from './hooks';
 import type { DataTables } from './load-data';
 import type { Rng } from './rng';
-import type { Effect, HookDef } from './types/data';
+import type { Effect } from './types/data';
 import type { PersonState, SimState } from './types/runtime';
+import {
+  findRefusal,
+  pickRefusalLine,
+  selectReactionLine,
+  type MethodSimState,
+} from './method-reactions';
+
+export type { MethodSimState } from './method-reactions';
+export {
+  pickFixedReactionLine,
+  setReactionLineSelector,
+  selectReactionLine,
+  type ReactionPickCtx,
+  type ReactionLineResult,
+  type ReactionLineSelector,
+} from './method-reactions';
 
 export type CommitResult =
   | { kind: 'refused'; line: string; tells: Tell[] }
   | { kind: 'resolved'; flameDelta: number; marks: { markId: string; stacks: number }[] };
-
-export type MethodSimState = SimState & { data: DataTables; rng: Rng };
 
 type Tell = { id: string; view?: string; durationTicks?: number };
 type MarkWeight = { markId: string; weight: number; minMatrix?: number };
@@ -26,39 +38,6 @@ type MethodRow = {
   effectiveness?: Record<string, number>;
   markWeights?: MarkWeight[];
 };
-type RefusalHook = HookDef & { lineVoiceFrom?: string; tells?: Tell[] };
-
-export type ReactionPickCtx = {
-  personId: string;
-  methodId: string;
-  seed: number;
-  state: MethodSimState;
-  features: { bakedDynamismLines: boolean };
-};
-export type ReactionLineResult = {
-  lineId: string;
-  text: string;
-  source: 'fixed' | 'blend' | 'fallback';
-};
-export type ReactionLineSelector = (ctx: ReactionPickCtx) => ReactionLineResult;
-
-const META = methodsJson as {
-  rngFuzz?: number;
-  reigniteThreshold?: number;
-  methods: MethodRow[];
-};
-
-export function pickFixedReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> })
-    .people;
-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
-}
-
-let reactionLineSelector: ReactionLineSelector = pickFixedReactionLine;
-export function setReactionLineSelector(selector: ReactionLineSelector | null): void {
-  reactionLineSelector = selector ?? pickFixedReactionLine;
-}
 
 function requireMethodState(state: SimState): MethodSimState {
   const s = state as MethodSimState;
@@ -129,26 +108,9 @@ function buildCtx(state: MethodSimState, person: PersonState, method: MethodRow,
   };
 }
 
-function pickRefusalLine(hook: RefusalHook, archetypeId: string, rng: Rng): string {
-  const bag = hook.lines ?? {};
-  const lines = (hook.lineVoiceFrom === 'archetypeId' ? bag[archetypeId] : undefined) ?? bag.default ?? [];
-  if (!lines.length) return '';
-  return lines[rng.int(0, lines.length)] ?? lines[0] ?? '';
-}
-
-function findRefusal(state: MethodSimState, method: MethodRow, ctx: EffectCtx): RefusalHook | undefined {
-  for (const hookId of state.player.hookIds) {
-    const hook = state.data.hooksById.get(hookId) as RefusalHook | undefined;
-    if (!hook || hook.kind !== 'refusal' || hook.trigger !== 'on_method_commit') continue;
-    if (hook.methodId && hook.methodId !== method.id) continue;
-    if (matchesWhen(hook.when, state, ctx)) return hook;
-  }
-  return undefined;
-}
-
 function hasWitness(state: MethodSimState, target: PersonState): boolean {
   if (typeof target.x !== 'number' || typeof target.y !== 'number') return false;
-  const burnAt = META.reigniteThreshold ?? 35;
+  const burnAt = state.data.reigniteThreshold;
   for (const p of Object.values(state.people)) {
     if (p.id === target.id || p.flame < burnAt) continue;
     if (typeof p.x !== 'number' || typeof p.y !== 'number') continue;
@@ -214,7 +176,7 @@ export function commitMethod(state: SimState, personId: string, methodId: string
       woundMul *
       markMul(person, s.data) *
       mod.powerMul *
-      (1 + (s.rng.next() * 2 - 1) * (META.rngFuzz ?? 0.1)),
+      (1 + (s.rng.next() * 2 - 1) * s.data.rngFuzz),
   );
   const cost = Math.floor(method.sparkCost * mod.sparkCostMul * emberMul(s, method));
   s.player.spark -= cost;
@@ -228,7 +190,7 @@ export function commitMethod(state: SimState, personId: string, methodId: string
   }
 
   person.flame += flameDelta;
-  const reaction = reactionLineSelector({
+  const reaction = selectReactionLine({
     personId,
     methodId,
     seed: s.seed,
@@ -236,7 +198,7 @@ export function commitMethod(state: SimState, personId: string, methodId: string
     features: { bakedDynamismLines: false },
   });
   pushJuice(s, 'person.reaction', { personId, methodId, line: reaction.text, source: reaction.source });
-  if (person.flame >= (META.reigniteThreshold ?? 35)) {
+  if (person.flame >= s.data.reigniteThreshold) {
     pushJuice(s, 'site.kindle', { personId, siteId: person.siteId });
   }
   return { kind: 'resolved', flameDelta, marks };

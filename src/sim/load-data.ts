@@ -38,6 +38,9 @@ export type DataTables = {
   traits: TraitsTables;
   hooks: HookDef[];
   methods: unknown[];
+  /** From methods.json meta — used by commitMethod resolve. */
+  rngFuzz: number;
+  reigniteThreshold: number;
   people: unknown[];
   towns: unknown[];
   links: unknown[];
@@ -107,6 +110,9 @@ export function loadData(): DataTables {
     traits: traitsJson as TraitsTables,
     hooks,
     methods: (methodsJson.methods ?? []) as unknown[],
+    rngFuzz: typeof methodsJson.rngFuzz === 'number' ? methodsJson.rngFuzz : 0.1,
+    reigniteThreshold:
+      typeof methodsJson.reigniteThreshold === 'number' ? methodsJson.reigniteThreshold : 35,
     people: (peopleJson.people ?? []) as unknown[],
     towns: (townsJson.towns ?? []) as unknown[],
     links: (linksJson.links ?? []) as unknown[],

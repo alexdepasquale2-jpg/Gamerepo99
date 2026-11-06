@@ -61,4 +61,6 @@ export type SimState = {
   /** Attached by boot / play session for pure resolve. */
   data?: unknown;
   rng?: unknown;
+  /** Per-state reaction-line picker (see method-reactions). Never module-global. */
+  reactionLineSelector?: unknown;
 };
