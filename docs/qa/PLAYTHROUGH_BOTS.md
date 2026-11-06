@@ -3,7 +3,7 @@
 ## Milestone split (Alex replan)
 | Milestone | Bots | Report |
 |-----------|------|--------|
-| **M2 Fabric** | Generator quality — `tests/bots/fabric-*` (world diversity, history, kin, gap, assertions, people distinctness, determinism, anti-template) | `docs/qa/reports/m2-fabric-alive.md` |
+| **M2 Fabric** | Generator quality — `tests/bots/fabric/` (world diversity, history, kin, gap, assertions, people distinctness, determinism, anti-template) | `docs/qa/reports/m2-fabric-alive.md` |
 | **M3** First playable world | Playthrough matrix below (stuck/boredom/dominance/burnout/hollow) | playable-town / worth-playing (M3) |
 
 Design (fabric): `docs/superpowers/specs/2026-11-05-fabric-quality-bots-design.md`  
@@ -54,7 +54,7 @@ tests/bots/
   fabric-api.ts           # connectFabricApi feature-detect (src/sim/fabric.ts)
   fabric-metrics.ts       # world/people diversity, history, kin, gap, assertions, …
   fabric-run.ts           # multi-seed suite (API_PENDING | fake | live)
-  fabric-thresholds.json
+  fabric/fabric-thresholds.json
   fabric-*.test.ts
   # M3 playthrough
   bot-session.ts      # BotSession + connectBotSession feature-detect

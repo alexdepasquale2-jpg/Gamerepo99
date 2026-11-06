@@ -1,5 +1,5 @@
-import { runFabricSuite } from '../tests/bots/fabric-run';
-import thresholds from '../tests/bots/fabric-thresholds.json';
+import { runFabricSuite } from '../tests/bots/fabric/fabric-run';
+import thresholds from '../tests/bots/fabric/fabric-thresholds.json';
 
 const result = await runFabricSuite({
   seeds: thresholds.defaultSeeds,

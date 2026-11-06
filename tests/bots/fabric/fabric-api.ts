@@ -24,8 +24,8 @@ import type { FabricApi } from './fabric-api-types';
 
 /** Prefer Forge facade first; index fallback last. No dead fabric/ folder. */
 const MODULE_CANDIDATES = [
-  '../../src/sim/fabric.ts',
-  '../../src/sim/index.ts',
+  '../../../src/sim/fabric.ts',
+  '../../../src/sim/index.ts',
 ] as const;
 
 /** Export names Forge may ship — detect all of them. */

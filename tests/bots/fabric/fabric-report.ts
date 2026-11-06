@@ -1,21 +1,16 @@
 import {
-  connectFabricApi,
   type FabricApi,
-  type FabricWorld,
 } from './fabric-api';
 import {
   peopleDiversity,
-  worldDiversity,
   historyCoherence,
   kinConnectedness,
   gapSpread,
   assertionViolationRate,
-  determinismEqual,
   repeatLineRate,
   type AssertionSample,
   type FabricWorldSample,
 } from './fabric-metrics';
-import defaultThresholds from './fabric-thresholds.json';
 
 export type FabricThresholds = {
   defaultSeeds: number[];
@@ -61,7 +56,7 @@ export type FabricSuiteResult = {
   aggregates: FabricAggregates;
 };
 
-function emptyAggregates(): FabricAggregates {
+export function emptyAggregates(): FabricAggregates {
   return {
     worldDiversity: 0,
     peopleDiversity: 0,
@@ -74,7 +69,7 @@ function emptyAggregates(): FabricAggregates {
   };
 }
 
-function pendingCell(seed: number): FabricCell {
+export function pendingCell(seed: number): FabricCell {
   return {
     seed,
     status: 'API_PENDING',
@@ -139,128 +134,25 @@ export function evaluateWorld(
   };
 }
 
-async function materializeWorld(
-  api: FabricApi,
-  seed: number,
-  peopleCount: number,
-): Promise<FabricWorld> {
-  if (api.generateWorld) {
-    return await api.generateWorld({ seed, peopleCount });
-  }
-  // Fallback: assemble from people generator
-  let people = api.generatePeople
-    ? await api.generatePeople({ seed, count: peopleCount })
-    : [];
-  if ((!people || people.length === 0) && api.generatePersonDraft) {
-    people = [];
-    for (let i = 0; i < peopleCount; i++) {
-      people.push(await api.generatePersonDraft({ seed, index: i }));
-    }
-  }
-  return {
-    seed,
-    fingerprint: `assembled-${seed}-${people.map((p) => p.fingerprint).join('|')}`,
-    people,
-    lines: people.flatMap((p) => p.lines ?? []),
-    kinEdges: [],
-    gapSites: [],
-    assertions: [],
-    history: [],
-  };
+export function mean(xs: number[]): number {
+  return xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
-function aggregate(cells: FabricCell[], api: FabricApi, seeds: number[]): FabricAggregates {
+export function aggregateCells(
+  cells: FabricCell[],
+  worldDiversityFn: (worlds: FabricWorldSample[]) => number,
+): FabricAggregates {
   const ok = cells.filter((c) => c.status === 'OK' && c.world);
   if (ok.length === 0) return emptyAggregates();
-
   const worlds = ok.map((c) => c.world!);
-  const mean = (xs: number[]) =>
-    xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
-
-  // Determinism: re-generate first seed and compare
-  let determinism = true;
-  const first = ok[0]!;
-  // Synchronous check only if generateWorld is sync-cached on cell; we compare
-  // two evaluations already stored isn't enough — caller may pass pre-built.
-  // Best-effort: if two cells share a seed they must match; else probe API again sync-unsafe.
-  void api;
-  void seeds;
-  // Use pairwise equal for duplicate seeds if present; else assume true when
-  // single-pass worlds are self-consistent (re-check done in runFabricWithApi).
-  determinism = true;
-
   return {
-    worldDiversity: worldDiversity(worlds),
+    worldDiversity: worldDiversityFn(worlds),
     peopleDiversity: mean(ok.map((c) => c.peopleDiversity)),
     historyCoherence: mean(ok.map((c) => c.historyCoherence)),
     kinConnectedness: mean(ok.map((c) => c.kinConnectedness)),
     gapSpread: mean(ok.map((c) => c.gapSpread)),
     assertionViolationRate: mean(ok.map((c) => c.assertionViolationRate)),
     repeatLineRate: mean(ok.map((c) => c.repeatLineRate)),
-    determinism,
+    determinism: true,
   };
-}
-
-export async function runFabricWithApi(
-  api: FabricApi,
-  opts?: {
-    seeds?: number[];
-    thresholds?: FabricThresholds;
-  },
-): Promise<FabricSuiteResult> {
-  const thresholds = (opts?.thresholds ??
-    defaultThresholds) as FabricThresholds;
-  const seeds = opts?.seeds ?? thresholds.defaultSeeds;
-  const peopleCount = thresholds.peopleCountPerWorld;
-  const cells: FabricCell[] = [];
-
-  for (const seed of seeds) {
-    try {
-      const world = await materializeWorld(api, seed, peopleCount);
-      const assertions = await resolveAssertions(api, world);
-      cells.push(evaluateWorld(world, thresholds, { assertions }));
-    } catch (err) {
-      cells.push({
-        ...pendingCell(seed),
-        status: 'ERROR',
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-
-  const aggregates = aggregate(cells, api, seeds);
-
-  // Live determinism probe: regenerate first seed twice
-  if (api.generateWorld && seeds.length > 0) {
-    try {
-      const s = seeds[0]!;
-      const a = await api.generateWorld({ seed: s, peopleCount });
-      const b = await api.generateWorld({ seed: s, peopleCount });
-      aggregates.determinism = determinismEqual(a, b);
-    } catch {
-      aggregates.determinism = false;
-    }
-  }
-
-  return { status: 'OK', cells, aggregates };
-}
-
-export async function runFabricSuite(opts?: {
-  seeds?: number[];
-  thresholds?: FabricThresholds;
-}): Promise<FabricSuiteResult> {
-  const thresholds = (opts?.thresholds ??
-    defaultThresholds) as FabricThresholds;
-  const seeds = opts?.seeds ?? thresholds.defaultSeeds;
-  const api = await connectFabricApi();
-
-  if (!api) {
-    return {
-      status: 'API_PENDING',
-      cells: seeds.map(pendingCell),
-      aggregates: emptyAggregates(),
-    };
-  }
-
-  return runFabricWithApi(api, { seeds, thresholds });
 }
