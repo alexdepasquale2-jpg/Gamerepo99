@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md",
+  "byKind": [
+    {
+      "facilityKind": "mill",
+      "workers": [
+        {
+          "id": "miller_shift",
+          "role": "miller",
+          "shiftHours": 8,
+          "sparkDrainIfHelp": 1,
+          "meaningTag": "meaning"
+        },
+        {
+          "id": "mill_hand",
+          "role": "hand",
+          "shiftHours": 6,
+          "sparkDrainIfHelp": 1,
+          "meaningTag": "meaning"
+        }
+      ]
+    },
+    {
+      "facilityKind": "lumber_camp",
+      "workers": [
+        {
+          "id": "logger_shift",
+          "role": "logger",
+          "shiftHours": 8,
+          "sparkDrainIfHelp": 2,
+          "meaningTag": "exhaustion"
+        }
+      ]
+    },
+    {
+      "facilityKind": "waystation",
+      "workers": [
+        {
+          "id": "hostler",
+          "role": "hostler",
+          "shiftHours": 10,
+          "sparkDrainIfHelp": 1,
+          "meaningTag": "meaning"
+        }
+      ]
+    },
+    {
+      "facilityKind": "mine",
+      "workers": [
+        {
+          "id": "miner_shift",
+          "role": "miner",
+          "shiftHours": 8,
+          "sparkDrainIfHelp": 2,
+          "meaningTag": "exhaustion"
+        }
+      ]
+    },
+    {
+      "facilityKind": "farm",
+      "workers": [
+        {
+          "id": "field_hand",
+          "role": "hand",
+          "shiftHours": 8,
+          "sparkDrainIfHelp": 1,
+          "meaningTag": "meaning"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md",
+  "schedules": [
+    {
+      "id": "cav_strand_grain",
+      "routeId": "route_ashford_lowmere",
+      "departDawnMod": 0,
+      "periodDays": 3,
+      "cargoResourceId": "food_grain",
+      "qty": 4,
+      "lean": "good",
+      "prism": "caravan.carter"
+    },
+    {
+      "id": "cav_strand_timber",
+      "routeId": "route_ashford_lowmere",
+      "departDawnMod": 1,
+      "periodDays": 4,
+      "cargoResourceId": "timber",
+      "qty": 3,
+      "lean": "good",
+      "prism": "caravan.guild"
+    },
+    {
+      "id": "cav_glare_ore",
+      "routeId": "route_ashford_city_glare",
+      "departDawnMod": 0,
+      "periodDays": 2,
+      "cargoResourceId": "ore_iron",
+      "qty": 5,
+      "lean": "mixed",
+      "prism": "route.caravan"
+    },
+    {
+      "id": "cav_glare_wool",
+      "routeId": "route_ashford_city_glare",
+      "departDawnMod": 1,
+      "periodDays": 5,
+      "cargoResourceId": "wool",
+      "qty": 2,
+      "lean": "good",
+      "prism": "caravan.carter"
+    },
+    {
+      "id": "cav_brine_fish",
+      "routeId": "route_ashford_brine",
+      "departDawnMod": 0,
+      "periodDays": 3,
+      "cargoResourceId": "food_grain",
+      "qty": 2,
+      "lean": "good",
+      "prism": "caravan.ferry"
+    }
+  ]
+}

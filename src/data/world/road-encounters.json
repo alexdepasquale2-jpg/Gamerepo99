@@ -16,7 +16,8 @@
               "townId": "ashford"
             }
           ],
-          "prism": "encounter.spawn.carter"
+          "prism": "encounter.spawn.carter",
+          "tags": []
         },
         {
           "id": "enc_tired_logger",
@@ -30,7 +31,8 @@
             }
           ],
           "workHook": "cost_road_labor",
-          "prism": "encounter.spawn.worker"
+          "prism": "encounter.spawn.worker",
+          "tags": []
         },
         {
           "id": "enc_kin_letter",
@@ -43,14 +45,19 @@
               "value": 1
             }
           ],
-          "prism": "encounter.spawn.runner"
+          "prism": "encounter.spawn.runner",
+          "tags": []
         },
         {
           "id": "enc_quiet_road",
-          "weight": 10,
+          "weight": 49,
           "blurb": "Only wind in the ash leaves.",
           "effects": [],
-          "prism": "biome.ambience.wood"
+          "prism": "biome.ambience.wood",
+          "quiet": true,
+          "tags": [
+            "quiet"
+          ]
         }
       ]
     },
@@ -69,7 +76,8 @@
               "townId": "ashford"
             }
           ],
-          "prism": "route.caravan"
+          "prism": "route.caravan",
+          "tags": []
         },
         {
           "id": "enc_propaganda_handbill",
@@ -83,12 +91,13 @@
               "doctrineId": "doctrine_reach_progress"
             }
           ],
-          "prism": "encounter.spawn.handbill"
+          "prism": "encounter.spawn.handbill",
+          "tags": []
         },
         {
           "id": "enc_broken_axle",
           "weight": 20,
-          "blurb": "A caravan axle cracked \u2014 supply thins.",
+          "blurb": "A caravan axle cracked — supply thins.",
           "effects": [
             {
               "target": "route.condition",
@@ -97,11 +106,14 @@
               "routeId": "route_ashford_city_glare"
             }
           ],
-          "prism": "route.break"
+          "prism": "route.break",
+          "tags": [
+            "break"
+          ]
         },
         {
           "id": "enc_empty_glare",
-          "weight": 20,
+          "weight": 44,
           "blurb": "White road. No one to meet.",
           "effects": [
             {
@@ -111,9 +123,14 @@
               "townId": "ashford"
             }
           ],
-          "prism": "biome.ambience.glare"
+          "prism": "biome.ambience.glare",
+          "quiet": true,
+          "tags": [
+            "quiet"
+          ]
         }
       ]
     }
-  ]
+  ],
+  "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md"
 }
