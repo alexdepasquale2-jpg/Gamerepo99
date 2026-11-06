@@ -9,7 +9,8 @@ Unless marked **imported**, assets are **shortlisted, not yet imported** into th
 |-------|--------|---------|-----|--------|
 | RPG Town Pixel Art Assets | Luis Zuno (@ansimuz) | CC0 | https://opengameart.org/content/rpg-town-pixel-art-assets | shortlisted; vendor `assets/vendor/ansimuz-rpg-town-pixel-art-assets.zip` |
 | Roguelike/RPG pack | Kenney Vleugels (Kenney.nl); 16×16 conversion help Lynn Evers | CC0 | https://kenney.nl/assets/roguelike-rpg-pack · https://opengameart.org/content/roguelikerpg-pack-1700-tiles | shortlisted; vendor `assets/vendor/kenney-roguelike-rpg-pack.zip` |
-| Tiny Town | Kenney | CC0 | https://kenney.nl/assets/tiny-town | shortlisted, not yet imported (download gate); URL verified |
+| Tiny Town | Kenney | CC0 | https://kenney.nl/assets/tiny-town | **imported for art-pass** · vendor `assets/vendor/kenney-tiny-town.zip` · primary 2.5D kit |
+| Tiny Dungeon | Kenney | CC0 | https://kenney.nl/assets/tiny-dungeon | **imported for art-pass** · vendor `assets/vendor/kenney-tiny-dungeon.zip` · characters + stone |
 | Town Tiles | surt | CC0 | https://opengameart.org/content/town-tiles | shortlisted; vendor `assets/vendor/surt-town-tiles.png` |
 | Dungeon Crawl Stone Soup Supplemental (32×32) | MedicineStorm | CC0 | https://opengameart.org/content/dungeon-crawl-32x32-tiles-supplemental | shortlisted; vendor `assets/vendor/medicinestorm-dcss-32x32-supplemental.zip` |
 | Micro Roguelike | Kenney | CC0 | https://opengameart.org/content/micro-roguelike | shortlisted; vendor `assets/vendor/kenney-micro-roguelike.zip` |
@@ -49,6 +50,9 @@ Unless marked **imported**, assets are **shortlisted, not yet imported** into th
 |-------|--------|---------|------|
 | Material ramp swatches | Prism | project | `docs/art/swatches/` |
 | Ashford half/half mockup | Prism (composited from CC0 vendor tiles + overlays) | project mockup; underlying tiles CC0 as credited | `docs/art/mockups/ashford-half-and-half.png` |
+| 2.5D world target v2 | Prism (composited Tiny Town/Dungeon CC0 + hand lip/overhang/strata) | project mockup; tiles CC0 as credited | `docs/art/mockups/2.5d-world-target-v2.png` |
+| World kit sheets (biomes/roads/tiers/facilities/overview) | Prism | project kit; tiles CC0 | `docs/art/kit/` |
+| world-map-generated + settlement-closeup | Prism | project mockups | `docs/art/mockups/world-map-generated.png`, `settlement-closeup-despair-alive.png` |
 
 Attribution is not required for CC0 but is gladly given.
 
