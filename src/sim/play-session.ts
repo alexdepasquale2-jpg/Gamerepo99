@@ -10,7 +10,11 @@ import {
 } from './fabric/world-dump';
 import { assembleInhabitant } from './inhabitant';
 import { loadData, type DataTables } from './load-data';
-import { commitMethod } from './methods';
+import {
+  actMethod,
+  installPlayReactions,
+  listMethodActions,
+} from './play-session-act';
 import { createRng } from './rng';
 import type { PersonState, SimState } from './types/runtime';
 
@@ -40,8 +44,6 @@ export type PlaySession = {
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
   | { mode: 'play'; seed: number; archetypeId?: string; peopleCount?: number };
-
-type MethodRow = { id: string; family?: string };
 
 function peopleFromWorld(world: FabricWorld, data: DataTables): Record<string, PersonState> {
   const out: Record<string, PersonState> = {};
@@ -97,6 +99,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       data,
       rng: createRng(seed),
     };
+    installPlayReactions(state);
   }
 
   return {
@@ -104,28 +107,15 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
     listActions() {
-      if (!state?.data) return [];
-      return ((state.data as DataTables).methods as MethodRow[]).map((m) => ({
-        id: m.id,
-        family: m.family,
-      }));
+      if (!state) return [];
+      return listMethodActions(state);
     },
     act(actionId) {
       if (!state) {
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
-      const targetId = Object.keys(state.people)[0];
-      if (!targetId) {
-        eventLog.push({ type: 'act', methodId: actionId });
-        return;
-      }
-      try {
-        commitMethod(state, targetId, actionId);
-        eventLog.push({ type: 'method', methodId: actionId });
-      } catch {
-        eventLog.push({ type: 'act', methodId: actionId });
-      }
+      actMethod(state, actionId, eventLog);
     },
     tick() {
       if (!state) return;
