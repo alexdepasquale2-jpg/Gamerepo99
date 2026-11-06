@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "constraints": [
+    {
+      "id": "vc_no_warm_bite_spike",
+      "forbidTagsTogether": [
+        [
+          "mood:tender",
+          "mood:savage"
+        ]
+      ],
+      "neverContradict": [
+        {
+          "ifMemory": "mark:hollowness",
+          "forbidFragmentTag": "mood:naive_hope"
+        }
+      ]
+    }
+  ]
+}

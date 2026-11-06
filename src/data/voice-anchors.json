@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-baked-dynamism-design.md",
+  "anchors": [
+    {
+      "id": "va_marta_ellison",
+      "personId": "marta_ellison",
+      "tags": [],
+      "vector": {
+        "warmth": 0.55,
+        "bite": 0.35,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.35
+      }
+    },
+    {
+      "id": "va_jonah_pike",
+      "personId": "jonah_pike",
+      "tags": [
+        "child"
+      ],
+      "vector": {
+        "warmth": 0.4,
+        "bite": 0.15,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.35
+      }
+    },
+    {
+      "id": "va_harold_finch",
+      "personId": "harold_finch",
+      "tags": [],
+      "vector": {
+        "warmth": 0.4,
+        "bite": 0.35,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.5
+      }
+    },
+    {
+      "id": "va_ruth_calder",
+      "personId": "ruth_calder",
+      "tags": [
+        "civic_voice",
+        "doctrine_voice",
+        "leader"
+      ],
+      "vector": {
+        "warmth": 0.4,
+        "bite": 0.35,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.35
+      }
+    },
+    {
+      "id": "va_elias_boone",
+      "personId": "elias_boone",
+      "tags": [],
+      "vector": {
+        "warmth": 0.4,
+        "bite": 0.35,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.35
+      }
+    },
+    {
+      "id": "va_clara_whitby",
+      "personId": "clara_whitby",
+      "tags": [],
+      "vector": {
+        "warmth": 0.4,
+        "bite": 0.35,
+        "piety": 0.2,
+        "secrecy": 0.3,
+        "weariness": 0.35
+      }
+    }
+  ]
+}
