@@ -146,23 +146,55 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
   const trust = trustOf(ctx);
   const influence = curveInfluence(data, v);
   influence.warmth = (influence.warmth ?? 0) * (0.5 + 0.5 * clamp01(trust));
-  const scores = use.map((f) =>
+  // Extreme states: when axis-tagged alone frags exist, prefer that axis pool so
+  // weighted sampling cannot land on an unrelated mark/doctrine line (Probe-visible).
+  const highExtreme = trust > 0.75 && v.flame01 > 0.55 && v.hollowness < 0.15;
+  const lowExtreme = trust < 0.25 || v.hollowness > 0.4;
+  let pickPool = use;
+  if (highExtreme) {
+    const preferred = use.filter((f) => {
+      const tags = f.tags ?? [];
+      return (
+        tags.includes('axis:spark_high') ||
+        tags.includes('migration_verbatim') ||
+        tags.includes('fallback_mirror') ||
+        /_alone$/.test(f.id)
+      );
+    });
+    if (preferred.length) pickPool = preferred;
+  } else if (lowExtreme) {
+    const preferred = use.filter((f) => {
+      const tags = f.tags ?? [];
+      return (
+        tags.includes('axis:lonely') ||
+        tags.includes('axis:trust_low') ||
+        tags.includes('axis:spark_low') ||
+        tags.includes('mood:wary') ||
+        tags.includes('state:lonely') ||
+        tags.includes('axis:mark_hollowness') ||
+        tags.includes('axis:mark_dependence')
+      );
+    });
+    if (preferred.length) pickPool = preferred;
+  }
+
+  const scores = pickPool.map((f) =>
     scoreFragment(f, influence, memory, { trust, flame01: v.flame01, hollowness: v.hollowness }),
   );
-  // Hard bias: lonely/trust_low vs spark_high when state is extreme (Probe-visible).
-  for (let i = 0; i < use.length; i++) {
-    const tags = use[i]!.tags ?? [];
+  // Hard bias within the preferred pool.
+  for (let i = 0; i < pickPool.length; i++) {
+    const tags = pickPool[i]!.tags ?? [];
     const lonely = tags.includes('axis:lonely') || tags.includes('mood:wary') || tags.includes('state:lonely');
     const lowTrust = tags.includes('axis:trust_low');
     const highSpark = tags.includes('axis:spark_high');
-    if ((lonely || lowTrust) && (trust < 0.25 || v.hollowness > 0.4)) scores[i] = scores[i]! + 4;
-    if (highSpark && trust > 0.75 && v.flame01 > 0.55 && v.hollowness < 0.15) scores[i] = scores[i]! + 4;
+    if ((lonely || lowTrust) && lowExtreme) scores[i] = scores[i]! + 4;
+    if (highSpark && highExtreme) scores[i] = scores[i]! + 4;
     if (highSpark && trust < 0.25) scores[i] = Math.max(0.01, scores[i]! * 0.12);
-    if ((lonely || lowTrust) && trust > 0.75 && v.flame01 > 0.55) {
+    if ((lonely || lowTrust) && highExtreme) {
       scores[i] = Math.max(0.01, scores[i]! * 0.12);
     }
   }
-  const picked = pickWeighted(use, scores, ctx.seed, ctx.personId, ctx.methodId);
+  const picked = pickWeighted(pickPool, scores, ctx.seed, ctx.personId, ctx.methodId);
   return { lineId: picked.id, text: picked.text, source: 'blend' };
 }
 
