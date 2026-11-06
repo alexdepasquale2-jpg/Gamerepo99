@@ -13,7 +13,7 @@ Design (playthrough): `docs/superpowers/specs/2026-11-05-playthrough-bots-design
 
 # Playthrough bots (hybrid C) — **M3 gate**
 
-**Status:** Live. `connectBotSession()` → `createPlaySession` boots the Hybrid-C matrix (no longer `API_PENDING`). M3 gate report: `docs/qa/reports/m3-worth-playing.md`. Probe commits own QA docs when Alex/Niblet ask.
+**Status:** Live. M3 gate re-run @ `1db4736` → **SHIP-WITH-FIXES** (burnoutRate still 1.0; rest/travel listed, never picked). Report: `docs/qa/reports/m3-worth-playing.md`.
 
 ## Goal
 Headless bots exercise the **public sim API** (no Phaser) across playable archetypes × play styles, measuring feel/balance. Playwright stays UI-smoke only (`npm run test:e2e:m1`).
