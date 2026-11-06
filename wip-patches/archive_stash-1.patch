@@ -1,0 +1,1021 @@
+diff --git a/artifacts/25d/overworld-boot.png b/artifacts/25d/overworld-boot.png
+index 089aa1e..286076d 100644
+Binary files a/artifacts/25d/overworld-boot.png and b/artifacts/25d/overworld-boot.png differ
+diff --git a/artifacts/25d/overworld-canvas.png b/artifacts/25d/overworld-canvas.png
+index 9f850c7..70c06b2 100644
+Binary files a/artifacts/25d/overworld-canvas.png and b/artifacts/25d/overworld-canvas.png differ
+diff --git a/artifacts/25d/overworld-walk-east.png b/artifacts/25d/overworld-walk-east.png
+index 453d1c1..ab870fe 100644
+Binary files a/artifacts/25d/overworld-walk-east.png and b/artifacts/25d/overworld-walk-east.png differ
+diff --git a/artifacts/25d/prism-overworld-boot.png b/artifacts/25d/prism-overworld-boot.png
+index 089aa1e..286076d 100644
+Binary files a/artifacts/25d/prism-overworld-boot.png and b/artifacts/25d/prism-overworld-boot.png differ
+diff --git a/artifacts/25d/prism-overworld-canvas.png b/artifacts/25d/prism-overworld-canvas.png
+index 9f850c7..70c06b2 100644
+Binary files a/artifacts/25d/prism-overworld-canvas.png and b/artifacts/25d/prism-overworld-canvas.png differ
+diff --git a/artifacts/25d/prism-overworld-walk-behind.png b/artifacts/25d/prism-overworld-walk-behind.png
+new file mode 100644
+index 0000000..09d9df3
+Binary files /dev/null and b/artifacts/25d/prism-overworld-walk-behind.png differ
+diff --git a/artifacts/25d/prism-overworld-walk-east.png b/artifacts/25d/prism-overworld-walk-east.png
+index 453d1c1..ab870fe 100644
+Binary files a/artifacts/25d/prism-overworld-walk-east.png and b/artifacts/25d/prism-overworld-walk-east.png differ
+diff --git a/artifacts/25d/prism-settlement-despair.png b/artifacts/25d/prism-settlement-despair.png
+new file mode 100644
+index 0000000..997959e
+Binary files /dev/null and b/artifacts/25d/prism-settlement-despair.png differ
+diff --git a/artifacts/25d/prism-settlement-reignited.png b/artifacts/25d/prism-settlement-reignited.png
+new file mode 100644
+index 0000000..286076d
+Binary files /dev/null and b/artifacts/25d/prism-settlement-reignited.png differ
+diff --git a/artifacts/25d/prism-settlement-walk-behind.png b/artifacts/25d/prism-settlement-walk-behind.png
+new file mode 100644
+index 0000000..09d9df3
+Binary files /dev/null and b/artifacts/25d/prism-settlement-walk-behind.png differ
+diff --git a/assets/sprites/stamp-inn.png b/assets/sprites/stamp-inn.png
+new file mode 100644
+index 0000000..30e0a7e
+Binary files /dev/null and b/assets/sprites/stamp-inn.png differ
+diff --git a/assets/sprites/stamp-walkway.png b/assets/sprites/stamp-walkway.png
+new file mode 100644
+index 0000000..ddd320b
+Binary files /dev/null and b/assets/sprites/stamp-walkway.png differ
+diff --git a/docs/SCHEDULE.xlsx b/docs/SCHEDULE.xlsx
+index 76ba3df..8a1af32 100644
+Binary files a/docs/SCHEDULE.xlsx and b/docs/SCHEDULE.xlsx differ
+diff --git a/src/render/feel.ts b/src/render/feel.ts
+index 3eaa7f6..96a22b4 100644
+--- a/src/render/feel.ts
++++ b/src/render/feel.ts
+@@ -74,6 +74,30 @@ export const FEEL = {
+     camLerp: 0.18,
+     camDeadzoneX: 24,
+     camDeadzoneY: 16,
++    /** Default world warmth when no URL/debug override (1 = reignited) */
++    defaultWarmth: 1,
++  },
++
++  /**
++   * Despair (0) vs reignited (1) palette — applied via ColorMatrix postFX,
++   * never an overlay rect. Lerped by warmth ∈ [0,1].
++   */
++  palette: {
++    despair: {
++      /** Phaser ColorMatrix.saturate amount (negative = desaturate) */
++      saturation: -0.82,
++      /** ColorMatrix.brightness is a 0..1 scale (1 = identity) */
++      brightness: 0.88,
++      contrast: 0.06,
++      /** Hue rotate degrees toward cool/cyan */
++      hueShift: -28,
++    },
++    reignited: {
++      saturation: 0.08,
++      brightness: 1.0,
++      contrast: 0,
++      hueShift: 4,
++    },
+   },
+ 
+   /** HUD spark bar (presentation only) */
+diff --git a/src/render/overworld-scene.ts b/src/render/overworld-scene.ts
+index dddc882..856ecc4 100644
+--- a/src/render/overworld-scene.ts
++++ b/src/render/overworld-scene.ts
+@@ -17,6 +17,11 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
+ import { walkDelta } from './walk-delta';
+ import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
+ import { heroWalkAnim } from './painters/overworld-paint';
++import {
++  applyWarmthToCamera,
++  clampWarmth,
++  warmthFromUrl,
++} from './warmth-palette';
+ 
+ const CHUNK_MARGIN = 1;
+ const NEAR_TOWN_PX = TILE_PX * 2.5;
+@@ -38,7 +43,11 @@ export class OverworldScene extends Phaser.Scene {
+   private sparkFill = 1;
+   private sparkBar!: Phaser.GameObjects.Rectangle;
+   private hint!: Phaser.GameObjects.Text;
++  private warmthLabel!: Phaser.GameObjects.Text;
+   private lastChunkKey = '';
++  /** 0 despair → 1 reignited; URL ?warmth= / keys 9·0 override */
++  private warmth: number = FEEL.overworld.defaultWarmth;
++  private warmthFx: Phaser.FX.ColorMatrix | null = null;
+ 
+   constructor() {
+     super('overworld');
+@@ -59,7 +68,7 @@ export class OverworldScene extends Phaser.Scene {
+     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
+ 
+     this.add
+-      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
++      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town · 9 despair / 0 reignite', {
+         fontFamily: 'monospace',
+         fontSize: '12px',
+         color: '#f2e9e4',
+@@ -76,7 +85,19 @@ export class OverworldScene extends Phaser.Scene {
+       .setScrollFactor(0)
+       .setDepth(1_000_000);
+ 
++    this.warmthLabel = this.add
++      .text(8, 84, '', {
++        fontFamily: 'monospace',
++        fontSize: '11px',
++        color: '#8a7a68',
++      })
++      .setScrollFactor(0)
++      .setDepth(1_000_000);
++
+     this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
++    this.input.keyboard?.on('keydown-NINE', () => this.setWarmth(0));
++    this.input.keyboard?.on('keydown-ZERO', () => this.setWarmth(1));
++    this.bootWarmth();
+     this.syncChunks(true);
+     this.syncSparkFromSession(false);
+     const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
+@@ -219,6 +240,25 @@ export class OverworldScene extends Phaser.Scene {
+     }
+   }
+ 
++  private bootWarmth(): void {
++    const fromUrl = warmthFromUrl(
++      typeof window !== 'undefined' ? window.location.search : '',
++    );
++    this.warmth = fromUrl ?? clampWarmth(FEEL.overworld.defaultWarmth);
++    this.refreshWarmthFx();
++  }
++
++  private setWarmth(w: number): void {
++    this.warmth = clampWarmth(w);
++    this.refreshWarmthFx();
++  }
++
++  private refreshWarmthFx(): void {
++    this.warmthFx = applyWarmthToCamera(this.cameras.main, this.warmth, this.warmthFx);
++    const label = this.warmth <= 0.05 ? 'despair' : this.warmth >= 0.95 ? 'reignited' : `warmth ${this.warmth.toFixed(2)}`;
++    this.warmthLabel?.setText(`palette: ${label} (9/0 or ?warmth=)`);
++  }
++
+   private nearestTown(): { id: string; q: number; r: number } | null {
+     let best: { id: string; q: number; r: number } | null = null;
+     let bestD = Infinity;
+diff --git a/src/render/painters/overworld-paint.ts b/src/render/painters/overworld-paint.ts
+index f6328ee..ae6fcf3 100644
+--- a/src/render/painters/overworld-paint.ts
++++ b/src/render/painters/overworld-paint.ts
+@@ -8,8 +8,11 @@ import { applySpriteSort, tileFootWorld, tileToWorld } from '../depth-sort';
+ import {
+   GRASS_CALM_TEX,
+   HERO_TEX,
++  HOUSE2_TEX,
++  INN_TEX,
+   SETTLEMENT_TEX,
+   SHADOW_TEX,
++  WALKWAY_TEX,
+   sheetTextureKey,
+ } from '../sheet-frames';
+ import {
+@@ -460,30 +463,84 @@ function paintCrate(
+   container?.add(box);
+ }
+ 
+-export function paintTownMarker(
++
++/** Inn + covered walkway + house — each sorted by its own foot Y for walk-behind. */
++function paintSettlementParts(
+   host: PaintHost,
+   container: Phaser.GameObjects.Container | null,
+-  town: { id: string; q: number; r: number },
++  town: { q: number; r: number },
+ ): void {
+-  const foot = tileFootWorld(town.q, town.r);
+-
+-  // Single seamless settlement stamp (inn + walkway + house) — no join seam
+-  addSoftShadow(host, container, foot.x + TILE_PX, foot.y, 2.4);
+-  if (host.textures.exists(SETTLEMENT_TEX)) {
+-    const img = host.add.image(foot.x + TILE_PX * 0.8, foot.y, SETTLEMENT_TEX);
+-    applySpriteSort(img);
+-    img.setDisplaySize(TILE_PX * 6.4, TILE_PX * 3.8);
+-    container?.add(img);
+-  } else if (
++  // Inn (west). Prefer sheet-buildings named frame (full feet); stamp-inn fallback.
++  const innFoot = tileFootWorld(town.q + 0.15, town.r);
++  addSoftShadow(host, container, innFoot.x, innFoot.y, 1.8);
++  if (
+     host.textures.exists('sheet-buildings') &&
+     host.textures.get('sheet-buildings').has('inn')
+   ) {
+-    const img = host.add.image(foot.x, foot.y, 'sheet-buildings', 'inn');
+-    applySpriteSort(img);
+-    img.setDisplaySize(TILE_PX * 4.2, TILE_PX * 4.0);
+-    container?.add(img);
++    const inn = host.add.image(innFoot.x, innFoot.y, 'sheet-buildings', 'inn');
++    applySpriteSort(inn);
++    inn.setDisplaySize(TILE_PX * 3.8, TILE_PX * 4.2);
++    container?.add(inn);
++  } else if (host.textures.exists(INN_TEX)) {
++    const inn = host.add.image(innFoot.x, innFoot.y, INN_TEX);
++    applySpriteSort(inn);
++    inn.setDisplaySize(TILE_PX * 3.6, TILE_PX * 4.1);
++    container?.add(inn);
+   }
+ 
++  // Covered walkway between inn and house — foot north of road path (walk under = in front)
++  const walkFoot = tileFootWorld(town.q + 2.7, town.r - 0.45);
++  paintCoveredWalkway(host, container, walkFoot.x, walkFoot.y);
++
++  // House (east) — foot slightly south so it layers in front of walkway east end
++  const houseFoot = tileFootWorld(town.q + 4.5, town.r + 0.2);
++  addSoftShadow(host, container, houseFoot.x, houseFoot.y, 1.4);
++  if (host.textures.exists(HOUSE2_TEX)) {
++    const house = host.add.image(houseFoot.x, houseFoot.y, HOUSE2_TEX);
++    applySpriteSort(house);
++    house.setDisplaySize(TILE_PX * 2.5, TILE_PX * 3.9);
++    container?.add(house);
++  }
++}
++
++/** Simple covered walkway as its own depth-sorted sprite (roof + posts). */
++function paintCoveredWalkway(
++  host: PaintHost,
++  container: Phaser.GameObjects.Container | null,
++  x: number,
++  y: number,
++): void {
++  if (host.textures.exists(WALKWAY_TEX)) {
++    const walk = host.add.image(x, y, WALKWAY_TEX);
++    applySpriteSort(walk);
++    walk.setDisplaySize(TILE_PX * 1.6, TILE_PX * 2.2);
++    container?.add(walk);
++    return;
++  }
++  const roof = host.add.rectangle(x, y - 22, 44, 14, 0xa84532);
++  applySpriteSort(roof);
++  const beam = host.add.rectangle(x, y - 14, 40, 6, 0xc4b08a);
++  beam.setDepth(y + 0.05);
++  const postL = host.add.rectangle(x - 16, y - 6, 4, 14, 0x6b4423);
++  postL.setDepth(y + 0.02);
++  const postR = host.add.rectangle(x + 16, y - 6, 4, 14, 0x6b4423);
++  postR.setDepth(y + 0.02);
++  container?.add(roof);
++  container?.add(beam);
++  container?.add(postL);
++  container?.add(postR);
++}
++
++export function paintTownMarker(
++  host: PaintHost,
++  container: Phaser.GameObjects.Container | null,
++  town: { id: string; q: number; r: number },
++): void {
++  const foot = tileFootWorld(town.q, town.r);
++
++  // Depth-split settlement: inn / walkway / house as separate foot-Y sorted sprites
++  paintSettlementParts(host, container, town);
++
+   for (const [dq, dr, v] of [
+     [-2.6, 0.2, 0],
+     [-3.0, -0.5, 1],
+diff --git a/src/render/sheet-frames.ts b/src/render/sheet-frames.ts
+index 901fa7c..cfaa7de 100644
+--- a/src/render/sheet-frames.ts
++++ b/src/render/sheet-frames.ts
+@@ -23,6 +23,8 @@ export const GRASS_WORLD_TEX = 'grass-world';
+ export const DIRT_CALM_TEX = 'dirt-calm';
+ export const DIRT_EDGE_TEX = 'dirt-edge';
+ export const HOUSE2_TEX = 'stamp-house2';
++export const INN_TEX = 'stamp-inn';
++export const WALKWAY_TEX = 'stamp-walkway';
+ export const SETTLEMENT_TEX = 'stamp-settlement';
+ 
+ export type SheetFrameConfig = {
+@@ -48,6 +50,8 @@ export const NAMED_STAMP_RECTS = {
+   tree: { sheet: 'sheet-buildings', x: 8, y: 21, w: 30, h: 129 },
+   'tree-b': { sheet: 'sheet-buildings', x: 39, y: 18, w: 31, h: 132 },
+   house2: { sheet: HOUSE2_TEX, x: 0, y: 0, w: 88, h: 132 },
++  innStamp: { sheet: INN_TEX, x: 0, y: 0, w: 104, h: 120 },
++  walkway: { sheet: WALKWAY_TEX, x: 0, y: 0, w: 38, h: 72 },
+   settlement: { sheet: SETTLEMENT_TEX, x: 0, y: 0, w: 207, h: 120 },
+   'cliff-lip': { sheet: 'sheet-cliff', frame: '0' },
+   'cliff-face': { sheet: 'sheet-cliff', frame: '4' },
+@@ -87,6 +91,8 @@ export function preloadOverworldSheets(load: Phaser.Loader.LoaderPlugin): void {
+   load.image('sheet-buildings-side', toPublicUrl(BAKED_SHEETS.buildingsSide));
+   load.image(HERO_TEX, toPublicUrl('assets/vendor/ansimuz-hero.png'));
+   load.image(HOUSE2_TEX, toPublicUrl('assets/sprites/stamp-house2.png'));
++  load.image(INN_TEX, toPublicUrl('assets/sprites/stamp-inn.png'));
++  load.image(WALKWAY_TEX, toPublicUrl('assets/sprites/stamp-walkway.png'));
+   load.image(SETTLEMENT_TEX, toPublicUrl('assets/sprites/stamp-settlement.png'));
+   load.image(GRASS_WORLD_TEX, toPublicUrl('assets/sprites/grass-world.png'));
+ }
+diff --git a/src/render/warmth-palette.ts b/src/render/warmth-palette.ts
+new file mode 100644
+index 0000000..a343d35
+--- /dev/null
++++ b/src/render/warmth-palette.ts
+@@ -0,0 +1,92 @@
++/**
++ * Warmth (0 despair → 1 reignited) → ColorMatrix params.
++ * Presentation only; driven by FEEL.palette. Never an overlay rect.
++ */
++import type Phaser from 'phaser';
++import { FEEL } from './feel';
++
++export type WarmthMatrixParams = {
++  saturation: number;
++  brightness: number;
++  contrast: number;
++  hueShift: number;
++};
++
++function lerp(a: number, b: number, t: number): number {
++  return a + (b - a) * t;
++}
++
++/** Clamp warmth to [0,1]. */
++export function clampWarmth(w: number): number {
++  if (Number.isNaN(w)) return FEEL.overworld.defaultWarmth;
++  return Math.max(0, Math.min(1, w));
++}
++
++/** Lerp FEEL.palette despair→reignited by warmth. */
++export function warmthToMatrixParams(warmth: number): WarmthMatrixParams {
++  const t = clampWarmth(warmth);
++  const d = FEEL.palette.despair;
++  const r = FEEL.palette.reignited;
++  return {
++    saturation: lerp(d.saturation, r.saturation, t),
++    brightness: lerp(d.brightness, r.brightness, t),
++    contrast: lerp(d.contrast, r.contrast, t),
++    hueShift: lerp(d.hueShift, r.hueShift, t),
++  };
++}
++
++/**
++ * Approximate cool luminance bias for tests (despair pulls toward cooler gray).
++ * Not the shader itself — documents the intended despair/reignited mapping.
++ */
++export function warmthToSatBrightness(warmth: number): { sat: number; bright: number; hue: number } {
++  const p = warmthToMatrixParams(warmth);
++  return { sat: p.saturation, bright: p.brightness, hue: p.hueShift };
++}
++
++/** Read ?warmth=0|1 (or 0..1 float) from location search. */
++export function warmthFromUrl(search = typeof location !== 'undefined' ? location.search : ''): number | null {
++  const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
++  if (!q.has('warmth')) return null;
++  const v = Number(q.get('warmth'));
++  if (Number.isNaN(v)) return null;
++  return clampWarmth(v);
++}
++
++export type ColorMatrixHandle = {
++  reset: () => unknown;
++  saturate: (v: number, multiply?: boolean) => unknown;
++  brightness: (v: number, multiply?: boolean) => unknown;
++  contrast: (v: number, multiply?: boolean) => unknown;
++  hue: (rotation: number, multiply?: boolean) => unknown;
++};
++
++/** Apply warmth params onto a Phaser ColorMatrix FX controller. */
++export function applyWarmthToColorMatrix(cm: ColorMatrixHandle, warmth: number): void {
++  const p = warmthToMatrixParams(warmth);
++  cm.reset();
++  // Order: saturate → brightness → contrast → hue (cool shift for despair)
++  cm.saturate(p.saturation, false);
++  cm.brightness(p.brightness, true);
++  cm.contrast(p.contrast, true);
++  cm.hue(p.hueShift, true);
++}
++
++/** Attach / refresh camera ColorMatrix postFX for the given warmth. */
++export function applyWarmthToCamera(
++  camera: Phaser.Cameras.Scene2D.Camera,
++  warmth: number,
++  existing?: Phaser.FX.ColorMatrix | null,
++): Phaser.FX.ColorMatrix | null {
++  try {
++    const cm =
++      existing ??
++      (camera.postFX?.addColorMatrix?.() as Phaser.FX.ColorMatrix | undefined) ??
++      null;
++    if (!cm) return null;
++    applyWarmthToColorMatrix(cm as unknown as ColorMatrixHandle, warmth);
++    return cm;
++  } catch {
++    return existing ?? null;
++  }
++}
+diff --git a/src/sim/index.ts b/src/sim/index.ts
+index 9e42904..15fb0bf 100644
+--- a/src/sim/index.ts
++++ b/src/sim/index.ts
+@@ -64,7 +64,11 @@ export {
+   createInteractionRuntime,
+   resolveInteraction,
+   REIGNITE_MIN_KINDS,
+-} from './interactions';
++  createCompatRuntime,
++  expandMethodAct,
++  loadMigrationMap,
++  loadInteractionTables,
++} from './interaction';
+ export type {
+   InteractionDef,
+   InteractionResult,
+@@ -73,9 +77,12 @@ export type {
+   InteractionScoring,
+   InteractionTouch,
+   MarkAdd,
+-} from './interactions';
+-export type { InteractionPerson, PromiseStatus } from './interaction-state';
+-export { createCompatRuntime, expandMethodAct, loadMigrationMap } from './interaction-compat';
++  InteractionPerson,
++  PromiseStatus,
++  CompatRuntime,
++  InteractionTables,
++  MigrationTable,
++} from './interaction';
+ 
+ /** Map TileSource seam (stamp now; native later). */
+ export { fingerprintHex } from './map/fingerprint';
+diff --git a/src/sim/interaction-compat.ts b/src/sim/interaction-compat.ts
+deleted file mode 100644
+index d75da73..0000000
+--- a/src/sim/interaction-compat.ts
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/** Method → interaction compat adapter (spec §7). Remove once Probe uses interaction ids. */
+-import catalogJson from '../data/systems/interactions/catalog.json';
+-import migrationJson from '../data/systems/interactions/migration.json';
+-import scoringJson from '../data/systems/interactions/scoring.json';
+-import {
+-  createInteractionRuntime,
+-  type InteractionDef,
+-  type InteractionRuntime,
+-  type InteractionScoring,
+-} from './interactions';
+-import type { InteractionPerson } from './interaction-state';
+-
+-export function loadMigrationMap(): Map<string, string[]> {
+-  const rows = (migrationJson as { map: { methodId: string; recipeDefault: string[] }[] }).map;
+-  return new Map(rows.map((r) => [r.methodId, r.recipeDefault]));
+-}
+-
+-/** First recipeDefault interaction id for a legacy method id, if mapped. */
+-export function expandMethodAct(methodId: string): string | undefined {
+-  return loadMigrationMap().get(methodId)?.[0];
+-}
+-
+-export function createCompatRuntime(person: InteractionPerson): InteractionRuntime {
+-  return createInteractionRuntime({
+-    catalog: catalogJson as unknown as { interactions: InteractionDef[] },
+-    scoring: scoringJson as unknown as InteractionScoring,
+-    person,
+-  });
+-}
+diff --git a/src/sim/interaction/interaction-compat.ts b/src/sim/interaction/interaction-compat.ts
+new file mode 100644
+index 0000000..4b242ef
+--- /dev/null
++++ b/src/sim/interaction/interaction-compat.ts
+@@ -0,0 +1,25 @@
++/** Method → interaction compat adapter (spec §7). Remove once Probe uses interaction ids. */
++import { createInteractionRuntime } from './interactions';
++import type { InteractionPerson } from './interaction-state';
++import type { InteractionRuntime } from './interaction-types';
++import type { InteractionTables } from './load-interactions';
++
++/** Interaction runtime plus the method→interaction map it was built with. */
++export interface CompatRuntime extends InteractionRuntime {
++  migration: ReadonlyMap<string, string[]>;
++}
++
++/** First recipeDefault interaction id for a legacy method id, if mapped. */
++export function expandMethodAct(
++  migration: ReadonlyMap<string, string[]>,
++  methodId: string,
++): string | undefined {
++  return migration.get(methodId)?.[0];
++}
++
++export function createCompatRuntime(tables: InteractionTables, person: InteractionPerson): CompatRuntime {
++  return {
++    ...createInteractionRuntime({ catalog: tables.catalog, scoring: tables.scoring, person }),
++    migration: tables.migration,
++  };
++}
+diff --git a/src/sim/interaction-state.ts b/src/sim/interaction/interaction-state.ts
+similarity index 100%
+rename from src/sim/interaction-state.ts
+rename to src/sim/interaction/interaction-state.ts
+diff --git a/src/sim/interactions.ts b/src/sim/interaction/interactions.ts
+similarity index 69%
+rename from src/sim/interactions.ts
+rename to src/sim/interaction/interactions.ts
+index dc58ee8..281dce2 100644
+--- a/src/sim/interactions.ts
++++ b/src/sim/interaction/interactions.ts
+@@ -1,94 +1,27 @@
+-import { clamp, type InteractionPerson, type PromiseStatus } from './interaction-state';
+-
+-export interface MarkAdd { markId: string; stacks?: number }
++/** Interaction runtime: build from catalog/scoring tables and resolve one interaction. */
+ 
+-export interface InteractionTouch {
+-  flame01?: number;
+-  trust?: number;
+-  marksAdd?: MarkAdd[];
+-  marksRemove?: string[];
+-  woundPressure?: { woundId: string; delta: number }[];
+-}
+-
+-export interface InteractionDef {
+-  id: string;
+-  kind: string;
+-  baseStrain: number;
+-  sparkGain: number;
+-  touch?: InteractionTouch;
+-  bondDelta?: number;
+-  /** Legacy flat form (mark → signed delta). Catalog uses touch.marksAdd/marksRemove. */
+-  marksAdd?: Record<string, number>;
+-  ripple?: string;
+-  tags?: string[];
+-  requires?: { promisePending?: boolean };
+-  promise?: { op: 'make' | 'keep' | 'break'; idFrom?: string };
+-  presenceDelta?: number;
+-  presenceThresholdBonus?: {
+-    minPresence: number;
+-    requireNoHarm?: boolean;
+-    touch: { flame01?: number; trust?: number };
+-  };
+-  touchModifiers?: {
+-    requireMarksAny?: string[];
+-    touch?: { flame01?: number; trust?: number };
+-    touchScoreFlat?: number;
+-  }[];
+-  touchScoreFlat?: number;
+-  meaning?: boolean;
+-  giftAccepted?: boolean;
+-  stoodUp?: boolean;
+-  scoreBrokenPromiseOnly?: boolean;
+-}
+-
+-export interface InteractionScoring {
+-  spark: { sparkMax: number; situationMulDefault: number };
+-  touchScoreWeights: Record<string, number>;
+-  reignite: {
+-    touchScoreMin: number;
+-    flame01Min: number;
+-    requireHollownessStacks: number;
+-    minDistinctKinds?: number;
+-    alternate?: { requireMark: string; touchScoreMin: number; flame01Min: number };
+-  };
+-  onReignite?: {
+-    removeMarks?: string[];
+-    addMarks?: Record<string, number>;
+-    marksRemove?: string[];
+-    marksAdd?: MarkAdd[];
+-  };
+-}
++import { clamp, type InteractionPerson, type PromiseStatus } from './interaction-state';
++import type {
++  InteractionDef,
++  InteractionResult,
++  InteractionRuntime,
++  InteractionRuntimeInit,
++  InteractionScoring,
++  MarkAdd,
++} from './interaction-types';
++
++export type {
++  InteractionDef,
++  InteractionResult,
++  InteractionRuntime,
++  InteractionRuntimeInit,
++  InteractionScoring,
++  InteractionTouch,
++  MarkAdd,
++} from './interaction-types';
+ 
+ export const REIGNITE_MIN_KINDS = 3;
+ 
+-export interface InteractionRuntimeInit {
+-  catalog: { interactions: InteractionDef[] };
+-  scoring: InteractionScoring;
+-  person: InteractionPerson;
+-}
+-
+-export interface InteractionRuntime {
+-  catalog: Map<string, InteractionDef>;
+-  scoring: InteractionScoring;
+-  people: Map<string, InteractionPerson>;
+-}
+-
+-export interface InteractionResult {
+-  flame01: number;
+-  trust: number;
+-  bond: number;
+-  spark: number;
+-  touchScore: number;
+-  reignited: boolean;
+-  /** True when a reignite is held back by hollowness stacks above the allowed count. */
+-  reigniteBlocked: boolean;
+-  presence: number;
+-  marks: Record<string, number>;
+-  /** Status of the promise this interaction touched (make/keep/break), if any. */
+-  promise?: PromiseStatus;
+-  usedMethodSparkCost: false;
+-}
+-
+ export function createInteractionRuntime(init: InteractionRuntimeInit): InteractionRuntime {
+   return {
+     catalog: new Map(init.catalog.interactions.map((i) => [i.id, i])),
+diff --git a/src/sim/load-data.ts b/src/sim/load-data.ts
+index 94cf299..ab2a05c 100644
+--- a/src/sim/load-data.ts
++++ b/src/sim/load-data.ts
+@@ -19,6 +19,7 @@ import kinshipJson from '../data/people/kinship.json';
+ import lettersJson from '../data/dialogue/letters.json';
+ import doctrinesJson from '../data/systems/doctrines.json';
+ import { loadLineFragmentsTable } from './load-fragments';
++import { loadInteractionTables, type InteractionTables } from './interaction/load-interactions';
+ import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
+ import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
+ import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
+@@ -100,6 +101,8 @@ export type DataTables = {
+   voiceAnchors: VoiceAnchorsTable;
+   reactionCurves: ReactionCurvesTable;
+   voiceConstraints: VoiceConstraintsTable;
++  /** Interaction catalog/scoring/migration (interaction/). */
++  interactions: InteractionTables;
+   hooksById: Map<string, HookDef>;
+ };
+ 
+@@ -179,6 +182,7 @@ export function loadData(): DataTables {
+     voiceAnchors: voiceAnchorsJson as VoiceAnchorsTable,
+     reactionCurves: reactionCurvesJson as ReactionCurvesTable,
+     voiceConstraints: voiceConstraintsJson as VoiceConstraintsTable,
++    interactions: loadInteractionTables(),
+     hooksById,
+   };
+ }
+diff --git a/src/sim/play-session/play-session-act.ts b/src/sim/play-session/play-session-act.ts
+index 9e08623..5ec006d 100644
+--- a/src/sim/play-session/play-session-act.ts
++++ b/src/sim/play-session/play-session-act.ts
+@@ -12,8 +12,7 @@ import {
+ import type { PlayLastResolve } from './play-session-types';
+ import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
+ import type { SimState } from '../types/runtime';
+-import { expandMethodAct } from '../interaction-compat';
+-import { resolveInteraction, type InteractionRuntime } from '../interactions';
++import { expandMethodAct, resolveInteraction, type CompatRuntime } from '../interaction';
+ 
+ type PlayAction = { id: string; family?: string };
+ type PlayEvent = { type: string; methodId?: string };
+@@ -70,7 +69,7 @@ export function actMethod(
+   actionId: string,
+   eventLog: PlayEvent[],
+   extras?: ActExtras,
+-  opts?: { interactionCompat?: InteractionRuntime },
++  opts?: { interactionCompat?: CompatRuntime },
+ ): void {
+   if (actionId.startsWith('approach@')) {
+     if (extras && extras.metrics.firstChoiceAtTick == null) {
+@@ -107,7 +106,7 @@ export function actMethod(
+     return;
+   }
+   const compat = opts?.interactionCompat;
+-  const interactionId = compat ? expandMethodAct(parsed.methodId) : undefined;
++  const interactionId = compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
+   if (compat && interactionId && compat.people.has(parsed.personId)) {
+     resolveInteraction(compat, interactionId, parsed.personId);
+     eventLog.push({ type: 'interaction', methodId: interactionId });
+diff --git a/src/sim/play-session/play-session-boot.ts b/src/sim/play-session/play-session-boot.ts
+index c8c8115..4575768 100644
+--- a/src/sim/play-session/play-session-boot.ts
++++ b/src/sim/play-session/play-session-boot.ts
+@@ -6,8 +6,7 @@ import { siteKindFromSiteId } from '../scenario/scenario-resolve';
+ import { isBurnedOut } from '../succession';
+ import type { PlaySnapshot } from './play-session-types';
+ import type { PersonState, SimState } from '../types/runtime';
+-import { createCompatRuntime } from '../interaction-compat';
+-import type { InteractionRuntime } from '../interactions';
++import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
+ 
+ /** Default trust for people seeded into the interaction compat runtime (no trust in PersonState yet). */
+ export const COMPAT_TRUST_DEFAULT = 0.35;
+@@ -16,7 +15,8 @@ export const COMPAT_TRUST_DEFAULT = 0.35;
+ export function interactionRuntimeFromPeople(
+   people: Record<string, PersonState>,
+   playerSpark: number,
+-): InteractionRuntime {
++  tables: InteractionTables,
++): CompatRuntime {
+   const seeds = Object.values(people).map((p) => ({
+     id: p.id,
+     flame01: Math.min(1, Math.max(0, p.flame / 100)),
+@@ -28,6 +28,7 @@ export function interactionRuntimeFromPeople(
+     spark: playerSpark,
+   }));
+   const rt = createCompatRuntime(
++    tables,
+     seeds[0] ?? { id: '__none__', flame01: 0, trust: 0, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: playerSpark },
+   );
+   if (!seeds[0]) rt.people.clear();
+diff --git a/src/sim/play-session/play-session.ts b/src/sim/play-session/play-session.ts
+index 9d939a9..436caae 100644
+--- a/src/sim/play-session/play-session.ts
++++ b/src/sim/play-session/play-session.ts
+@@ -22,7 +22,7 @@ import {
+   listMethodActions,
+   parseMethodAction,
+ } from './play-session-act';
+-import type { InteractionRuntime } from '../interactions';
++import type { CompatRuntime } from '../interaction';
+ import { createRng } from '../rng';
+ import {
+   listRoutesFrom,
+@@ -89,7 +89,7 @@ function createPlayModeSession(defaults: {
+   let successionUi: SuccessionUi = lockedSuccessionUi();
+   const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
+   let lastResolveVal: PlayLastResolve | undefined;
+-  let interactionRt: InteractionRuntime | undefined;
++  let interactionRt: CompatRuntime | undefined;
+ 
+   function boot(nextSeed: number, nextArchetype: string): void {
+     seed = nextSeed;
+@@ -125,7 +125,7 @@ function createPlayModeSession(defaults: {
+     };
+     installPlayReactions(state);
+     interactionRt = useInteractionCompat
+-      ? interactionRuntimeFromPeople(state.people, player.spark)
++      ? interactionRuntimeFromPeople(state.people, player.spark, data.interactions)
+       : undefined;
+   }
+ 
+diff --git a/tests/e2e/m3-25d-screenshot.spec.ts b/tests/e2e/m3-25d-screenshot.spec.ts
+index b4d938f..d75fe00 100644
+--- a/tests/e2e/m3-25d-screenshot.spec.ts
++++ b/tests/e2e/m3-25d-screenshot.spec.ts
+@@ -12,7 +12,6 @@ test('capture continuous overworld screenshots', async ({ page }) => {
+   await page.waitForTimeout(1000);
+   await page.screenshot({ path: path.join(OUT, 'overworld-boot.png'), fullPage: false });
+   await page.screenshot({ path: path.join(OUT, 'prism-overworld-boot.png'), fullPage: false });
+-  // Walk a bit east to show road corridor streaming
+   for (let i = 0; i < 40; i++) {
+     await page.keyboard.down('D');
+     await page.waitForTimeout(50);
+@@ -24,3 +23,33 @@ test('capture continuous overworld screenshots', async ({ page }) => {
+   await canvas.screenshot({ path: path.join(OUT, 'overworld-canvas.png') });
+   await canvas.screenshot({ path: path.join(OUT, 'prism-overworld-canvas.png') });
+ });
++
++test('capture despair vs reignited settlement + walk-behind', async ({ page }) => {
++  fs.mkdirSync(OUT, { recursive: true });
++
++  await page.goto('/?warmth=0');
++  const canvas = page.locator('#game canvas');
++  await expect(canvas).toBeVisible({ timeout: 20_000 });
++  await page.waitForTimeout(1200);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-despair.png'), fullPage: false });
++
++  await page.goto('/?warmth=1');
++  await expect(canvas).toBeVisible({ timeout: 20_000 });
++  await page.waitForTimeout(1200);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-reignited.png'), fullPage: false });
++
++  // Walk into the gap between inn and house, then north behind the walkway
++  for (let i = 0; i < 28; i++) {
++    await page.keyboard.down('D');
++    await page.waitForTimeout(35);
++  }
++  await page.keyboard.up('D');
++  for (let i = 0; i < 48; i++) {
++    await page.keyboard.down('W');
++    await page.waitForTimeout(35);
++  }
++  await page.keyboard.up('W');
++  await page.waitForTimeout(500);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-walk-behind.png'), fullPage: false });
++  await page.screenshot({ path: path.join(OUT, 'prism-overworld-walk-behind.png'), fullPage: false });
++});
+diff --git a/tests/render/warmth-palette.test.ts b/tests/render/warmth-palette.test.ts
+new file mode 100644
+index 0000000..fdb3cb6
+--- /dev/null
++++ b/tests/render/warmth-palette.test.ts
+@@ -0,0 +1,66 @@
++import { describe, expect, it } from 'vitest';
++import { FEEL } from '../../src/render/feel';
++import {
++  clampWarmth,
++  warmthFromUrl,
++  warmthToMatrixParams,
++  warmthToSatBrightness,
++  applyWarmthToColorMatrix,
++} from '../../src/render/warmth-palette';
++
++describe('warmth → palette ColorMatrix mapping', () => {
++  it('exposes FEEL.palette despair vs reignited tunables', () => {
++    expect(FEEL.palette.despair.saturation).toBeLessThan(0);
++    expect(FEEL.palette.despair.hueShift).toBeLessThan(0);
++    expect(FEEL.palette.reignited.saturation).toBeGreaterThan(FEEL.palette.despair.saturation);
++    expect(FEEL.palette.reignited.hueShift).toBeGreaterThan(FEEL.palette.despair.hueShift);
++  });
++
++  it('maps warmth 0 to despair params and 1 to reignited', () => {
++    const d = warmthToMatrixParams(0);
++    const r = warmthToMatrixParams(1);
++    expect(d.saturation).toBeCloseTo(FEEL.palette.despair.saturation);
++    expect(d.hueShift).toBeCloseTo(FEEL.palette.despair.hueShift);
++    expect(r.saturation).toBeCloseTo(FEEL.palette.reignited.saturation);
++    expect(r.brightness).toBeCloseTo(FEEL.palette.reignited.brightness);
++  });
++
++  it('lerps mid warmth between despair and reignited', () => {
++    const mid = warmthToMatrixParams(0.5);
++    const d = FEEL.palette.despair;
++    const r = FEEL.palette.reignited;
++    expect(mid.saturation).toBeCloseTo((d.saturation + r.saturation) / 2);
++    expect(mid.hueShift).toBeCloseTo((d.hueShift + r.hueShift) / 2);
++  });
++
++  it('despair is cooler/desaturated vs reignited (satBrightness helper)', () => {
++    const despair = warmthToSatBrightness(0);
++    const alive = warmthToSatBrightness(1);
++    expect(despair.sat).toBeLessThan(alive.sat);
++    expect(despair.hue).toBeLessThan(alive.hue);
++  });
++
++  it('clamps warmth and parses ?warmth= URL', () => {
++    expect(clampWarmth(-1)).toBe(0);
++    expect(clampWarmth(2)).toBe(1);
++    expect(warmthFromUrl('?warmth=0')).toBe(0);
++    expect(warmthFromUrl('?warmth=1')).toBe(1);
++    expect(warmthFromUrl('?warmth=0.5')).toBeCloseTo(0.5);
++    expect(warmthFromUrl('')).toBeNull();
++  });
++
++  it('applies params onto a ColorMatrix-like handle', () => {
++    const calls: string[] = [];
++    const fake = {
++      reset: () => calls.push('reset'),
++      saturate: (v: number) => calls.push(`sat:${v.toFixed(2)}`),
++      brightness: (v: number) => calls.push(`bri:${v.toFixed(2)}`),
++      contrast: (v: number) => calls.push(`con:${v.toFixed(2)}`),
++      hue: (v: number) => calls.push(`hue:${v.toFixed(1)}`),
++    };
++    applyWarmthToColorMatrix(fake, 0);
++    expect(calls[0]).toBe('reset');
++    expect(calls.some((c) => c.startsWith('sat:'))).toBe(true);
++    expect(calls.some((c) => c.startsWith('hue:'))).toBe(true);
++  });
++});
+diff --git a/tests/sim/interaction-compat.test.ts b/tests/sim/interaction/interaction-compat.test.ts
+similarity index 58%
+rename from tests/sim/interaction-compat.test.ts
+rename to tests/sim/interaction/interaction-compat.test.ts
+index 4f03824..b1322f5 100644
+--- a/tests/sim/interaction-compat.test.ts
++++ b/tests/sim/interaction/interaction-compat.test.ts
+@@ -1,20 +1,23 @@
+ import { describe, expect, it } from 'vitest';
+ import {
+   expandMethodAct,
+-  loadMigrationMap,
+   createCompatRuntime,
+-} from '../../src/sim/interaction-compat';
+-import { actMethod } from '../../src/sim/play-session/play-session-act';
+-import { resolveInteraction } from '../../src/sim/interactions';
+-import type { SimState } from '../../src/sim/types/runtime';
++} from '../../../src/sim/interaction/interaction-compat';
++import { loadInteractionTables } from '../../../src/sim/interaction/load-interactions';
++import { actMethod } from '../../../src/sim/play-session/play-session-act';
++import { resolveInteraction } from '../../../src/sim/interaction/interactions';
++import type { SimState } from '../../../src/sim/types/runtime';
++
++const tables = loadInteractionTables();
+ 
+ describe('migration map', () => {
+   it('expands method ids to recipeDefault interaction id', () => {
+-    expect(loadMigrationMap().get('inspire')).toEqual(['talk_gentle']);
+-    expect(expandMethodAct('inspire')).toBe('talk_gentle');
+-    expect(expandMethodAct('carry_burden')).toBe('favor_do');
+-    expect(expandMethodAct('shame')).toBe('talk_hard_shame');
+-    expect(expandMethodAct('nope')).toBeUndefined();
++    const { migration } = tables;
++    expect(migration.get('inspire')).toEqual(['talk_gentle']);
++    expect(expandMethodAct(migration, 'inspire')).toBe('talk_gentle');
++    expect(expandMethodAct(migration, 'carry_burden')).toBe('favor_do');
++    expect(expandMethodAct(migration, 'shame')).toBe('talk_hard_shame');
++    expect(expandMethodAct(migration, 'nope')).toBeUndefined();
+   });
+ });
+ 
+@@ -22,12 +25,12 @@ describe('actMethod compat flag', () => {
+   const person = { id: 'marta', flame01: 0.28, trust: 0.35, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: 86 };
+ 
+   it('inspire@marta resolves via interaction recipe strain, not methods.sparkCost', () => {
+-    const rt = createCompatRuntime(person);
++    const rt = createCompatRuntime(tables, person);
+     const log: { type: string; methodId?: string }[] = [];
+     // state is never touched on the compat path
+     actMethod({} as SimState, 'inspire@marta', log, undefined, { interactionCompat: rt });
+     const p = rt.people.get('marta')!;
+-    const expected = createCompatRuntime(person);
++    const expected = createCompatRuntime(tables, person);
+     const exp = resolveInteraction(expected, 'talk_gentle', 'marta');
+     expect(p.spark).toBe(exp.spark);
+     expect(p.flame01).toBeCloseTo(0.31, 5);
+@@ -35,7 +38,7 @@ describe('actMethod compat flag', () => {
+   });
+ 
+   it('unmapped methods fall through to legacy path when flag set', () => {
+-    const rt = createCompatRuntime(person);
++    const rt = createCompatRuntime(tables, person);
+     const log: { type: string; methodId?: string }[] = [];
+     actMethod({ player: { spark: 1 } } as unknown as SimState, 'zzz@marta', log, undefined, { interactionCompat: rt });
+     expect(rt.people.get('marta')!.spark).toBe(86);
+diff --git a/tests/sim/interaction-examples.test.ts b/tests/sim/interaction/interaction-examples.test.ts
+similarity index 87%
+rename from tests/sim/interaction-examples.test.ts
+rename to tests/sim/interaction/interaction-examples.test.ts
+index 76baf52..0a082a6 100644
+--- a/tests/sim/interaction-examples.test.ts
++++ b/tests/sim/interaction/interaction-examples.test.ts
+@@ -1,13 +1,13 @@
+ import { describe, expect, it } from 'vitest';
+-import catalogJson from '../../src/data/systems/interactions/catalog.json';
+-import examplesJson from '../../src/data/systems/interactions/examples.json';
+-import scoringJson from '../../src/data/systems/interactions/scoring.json';
++import catalogJson from '../../../src/data/systems/interactions/catalog.json';
++import examplesJson from '../../../src/data/systems/interactions/examples.json';
++import scoringJson from '../../../src/data/systems/interactions/scoring.json';
+ import {
+   createInteractionRuntime,
+   resolveInteraction,
+   type InteractionDef,
+   type InteractionScoring,
+-} from '../../src/sim/interactions';
++} from '../../../src/sim/interaction/interactions';
+ 
+ interface Step {
+   day: number;
+diff --git a/tests/sim/interaction-exports.test.ts b/tests/sim/interaction/interaction-exports.test.ts
+similarity index 95%
+rename from tests/sim/interaction-exports.test.ts
+rename to tests/sim/interaction/interaction-exports.test.ts
+index feaef4f..96344df 100644
+--- a/tests/sim/interaction-exports.test.ts
++++ b/tests/sim/interaction/interaction-exports.test.ts
+@@ -6,7 +6,7 @@ import {
+   createCompatRuntime,
+   loadMigrationMap,
+   REIGNITE_MIN_KINDS,
+-} from '../../src/sim';
++} from '../../../src/sim';
+ import type {
+   InteractionDef,
+   InteractionResult,
+@@ -17,7 +17,7 @@ import type {
+   InteractionPerson,
+   MarkAdd,
+   PromiseStatus,
+-} from '../../src/sim';
++} from '../../../src/sim';
+ 
+ describe('sim barrel: interaction APIs', () => {
+   it('exports interaction runtime + compat functions', () => {
+diff --git a/tests/sim/interaction-play-session.test.ts b/tests/sim/interaction/interaction-play-session.test.ts
+similarity index 93%
+rename from tests/sim/interaction-play-session.test.ts
+rename to tests/sim/interaction/interaction-play-session.test.ts
+index d900c45..8aa50a8 100644
+--- a/tests/sim/interaction-play-session.test.ts
++++ b/tests/sim/interaction/interaction-play-session.test.ts
+@@ -1,6 +1,6 @@
+ import { describe, it, expect } from 'vitest';
+-import { createPlaySession } from '../../src/sim';
+-import type { PlaySession } from '../../src/sim/play-session/play-session';
++import { createPlaySession } from '../../../src/sim';
++import type { PlaySession } from '../../../src/sim/play-session/play-session';
+ 
+ function playSession(compat = true): PlaySession {
+   const s = createPlaySession({
+diff --git a/tests/sim/interaction-touch.test.ts b/tests/sim/interaction/interaction-touch.test.ts
+similarity index 98%
+rename from tests/sim/interaction-touch.test.ts
+rename to tests/sim/interaction/interaction-touch.test.ts
+index bd2e042..7fa792d 100644
+--- a/tests/sim/interaction-touch.test.ts
++++ b/tests/sim/interaction/interaction-touch.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import { createInteractionRuntime, resolveInteraction } from '../../src/sim/interactions';
++import { createInteractionRuntime, resolveInteraction } from '../../../src/sim/interaction/interactions';
+ 
+ describe('resolveInteraction', () => {
+   it('work_alongside changes flame01 and spark by table (no methods.sparkCost)', () => {
