@@ -41,3 +41,9 @@ export type {
   PlayAction,
   PlayEvent,
 } from './fabric';
+
+export { townsFromDump } from './towns-from-dump';
+export type { TownMarker } from './towns-from-dump';
+export { getWorldRenderSnapshot } from './world-render-snapshot';
+export type { WorldRenderSnapshot } from './world-render-snapshot';
+

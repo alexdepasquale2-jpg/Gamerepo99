@@ -96,7 +96,7 @@ export function isBurnedOut(
  * Returns true when succession is open after this call.
  */
 export function maybeOpenSuccession(
-  state: SimState & { data?: DataTables },
+  state: SimState,
   eventLog: PlayEvent[],
   alreadyOpen: { value: boolean },
 ): boolean {
