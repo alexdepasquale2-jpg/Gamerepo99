@@ -1,4 +1,4 @@
-/** Play-session state assembly: generate world, seed player/people, optional interaction compat runtime. */
+/** Play-session state assembly: generate world, seed player/people, interaction compat runtime. */
 
 import { createEventBus } from '../event-bus';
 import { generateWorld } from '../fabric/fabric-bake';
@@ -22,12 +22,12 @@ export interface PlayBoot {
   world: FabricWorld;
   routes: TravelRoute[];
   state: TravelSimState;
-  /** Set only when interaction compat is opted in. */
-  interactionRt?: CompatRuntime;
+  /** Resolves method@person acts (always on; legacy spark-spend path removed). */
+  interactionRt: CompatRuntime;
 }
 
 /** Fresh world + SimState for one play run (seed + archetype). */
-export function bootPlayState(seed: number, archetypeId: string, interactionCompat: boolean): PlayBoot {
+export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
   const data = loadData();
   const world = generateWorld({ seed, includeAnchors: true });
   const routes = toTravelRoutes(world.routes ?? []);
@@ -51,8 +51,6 @@ export function bootPlayState(seed: number, archetypeId: string, interactionComp
     sizeTravelMuls: loadSizeTravelMuls(),
   };
   installPlayReactions(state);
-  const interactionRt = interactionCompat
-    ? interactionRuntimeFromPeople(state.people, player.spark, data.interactions)
-    : undefined;
+  const interactionRt = interactionRuntimeFromPeople(state.people, player.spark, data.interactions);
   return { world, routes, state, interactionRt };
 }

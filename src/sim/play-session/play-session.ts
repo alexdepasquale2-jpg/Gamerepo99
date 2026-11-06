@@ -8,7 +8,7 @@ import {
 } from '../fabric/world-dump';
 import type { CompatRuntime } from '../interaction';
 import { buildPlaySnapshot } from './play-session-boot';
-import { actMethod, listMethodActions, parseMethodAction } from './play-session-act';
+import { actMethod, listMethodActions } from './play-session-act';
 import { bootPlayState } from './play-session-state';
 import {
   listRoutesFrom,
@@ -56,10 +56,7 @@ function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
 function createPlayModeSession(defaults: {
   seed: number;
   archetypeId: string;
-  /** Opt-in interaction compat (default off). */
-  interactionCompat?: boolean;
 }): PlaySession {
-  const useInteractionCompat = defaults.interactionCompat === true;
   let seed = defaults.seed;
   let archetypeId = defaults.archetypeId;
   let world: FabricWorld | null = null;
@@ -83,7 +80,7 @@ function createPlayModeSession(defaults: {
     metrics.firstChoiceAtTick = undefined;
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
-    ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId, useInteractionCompat));
+    ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId));
   }
 
   function appendJuiceSince(beforeLen: number): void {
@@ -100,11 +97,6 @@ function createPlayModeSession(defaults: {
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
-      // Player spark is the single source of truth: seed the target's runtime spark, write back on resolve.
-      const parsed = parseMethodAction(actionId);
-      const ip = parsed ? interactionRt?.people.get(parsed.personId) : undefined;
-      if (ip) ip.spark = state.player.spark;
-      const logLen = eventLog.length;
       actMethod(
         state,
         actionId,
@@ -118,9 +110,6 @@ function createPlayModeSession(defaults: {
         },
         interactionRt ? { interactionCompat: interactionRt } : undefined,
       );
-      if (ip && eventLog.slice(logLen).some((e) => e.type === 'interaction')) {
-        state.player.spark = ip.spark;
-      }
       maybeOpenSuccession(state, eventLog, successionOpen);
     },
     tick() {
@@ -174,7 +163,6 @@ export function createPlaySession(
     return createPlayModeSession({
       seed: opts.seed,
       archetypeId: opts.archetypeId ?? 'marrow',
-      interactionCompat: opts.interactionCompat,
     });
   }
   return null;

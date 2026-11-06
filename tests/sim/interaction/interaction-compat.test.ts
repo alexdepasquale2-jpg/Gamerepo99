@@ -6,7 +6,7 @@ import {
 import { loadInteractionTables } from '../../../src/sim/interaction/load-interactions';
 import { actMethod } from '../../../src/sim/play-session/play-session-act';
 import { resolveInteraction } from '../../../src/sim/interaction/interactions';
-import type { SimState } from '../../../src/sim/types/runtime';
+import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
 
 const tables = loadInteractionTables();
 
@@ -22,26 +22,42 @@ describe('migration map', () => {
 });
 
 describe('actMethod compat flag', () => {
-  const person = { id: 'marta', flame01: 0.28, trust: 0.35, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: 86 };
-
-  it('inspire@marta resolves via interaction recipe strain, not methods.sparkCost', () => {
-    const rt = createCompatRuntime(tables, person);
+  it('inspire@p resolves via interaction recipe strain, not methods.sparkCost', () => {
+    const { state, interactionRt: rt } = bootPlayState(42, 'marrow');
+    const personId = Object.keys(state.people)[0]!;
+    const flameBefore = state.people[personId]!.flame;
+    const sparkBefore = state.player.spark;
+    const expected = createCompatRuntime(tables, { ...rt.people.get(personId)!, spark: sparkBefore });
+    const exp = resolveInteraction(expected, 'talk_gentle', personId);
     const log: { type: string; methodId?: string }[] = [];
-    // state is never touched on the compat path
-    actMethod({} as SimState, 'inspire@marta', log, undefined, { interactionCompat: rt });
-    const p = rt.people.get('marta')!;
-    const expected = createCompatRuntime(tables, person);
-    const exp = resolveInteraction(expected, 'talk_gentle', 'marta');
-    expect(p.spark).toBe(exp.spark);
-    expect(p.flame01).toBeCloseTo(0.31, 5);
+
+    actMethod(state, `inspire@${personId}`, log, undefined, { interactionCompat: rt });
+
+    expect(state.player.spark).toBe(exp.spark);
+    expect(state.player.spark).toBe(sparkBefore - 1);
+    expect(state.people[personId]!.flame).toBe(flameBefore + 3);
+    expect(state.people[personId]!.trust).toBeCloseTo(exp.trust, 9);
     expect(log).toContainEqual({ type: 'interaction', methodId: 'talk_gentle' });
+    expect(log.some((e) => e.type === 'spark.spend')).toBe(false);
   });
 
-  it('unmapped methods fall through to legacy path when flag set', () => {
-    const rt = createCompatRuntime(tables, person);
+  it('unmapped methods log a bare act (no legacy spend path)', () => {
+    const { state, interactionRt: rt } = bootPlayState(42, 'marrow');
+    const personId = Object.keys(state.people)[0]!;
+    const sparkBefore = state.player.spark;
     const log: { type: string; methodId?: string }[] = [];
-    actMethod({ player: { spark: 1 } } as unknown as SimState, 'zzz@marta', log, undefined, { interactionCompat: rt });
-    expect(rt.people.get('marta')!.spark).toBe(86);
-    expect(log.some((e) => e.type === 'interaction')).toBe(false);
+    actMethod(state, `zzz@${personId}`, log, undefined, { interactionCompat: rt });
+    expect(state.player.spark).toBe(sparkBefore);
+    expect(log).toEqual([{ type: 'act', methodId: `zzz@${personId}` }]);
+  });
+
+  it('without a runtime, method acts do not fall back to commitMethod', () => {
+    const { state } = bootPlayState(42, 'marrow');
+    const personId = Object.keys(state.people)[0]!;
+    const sparkBefore = state.player.spark;
+    const log: { type: string; methodId?: string }[] = [];
+    actMethod(state, `inspire@${personId}`, log);
+    expect(state.player.spark).toBe(sparkBefore);
+    expect(log).toEqual([{ type: 'act', methodId: `inspire@${personId}` }]);
   });
 });

@@ -52,8 +52,8 @@ export type CreatePlaySessionOpts =
       archetypeId?: string;
       peopleCount?: number;
       /**
-       * Opt-in: route method acts through the interaction compat adapter (resolveInteraction).
-       * Default off until legacy commitMethod side effects are ported.
+       * @deprecated Interaction compat is always on: method acts resolve via resolveInteraction
+       * (legacy commitMethod spark-spend path removed). Accepted for callers that still pass `true`.
        */
       interactionCompat?: boolean;
     };

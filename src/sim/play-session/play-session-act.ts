@@ -1,8 +1,7 @@
-/** Play-session act helpers: methodId@personId → commitMethod + juice events. */
+/** Play-session act helpers: methodId@personId → interaction bridge + juice events. */
 
 import { installFabricReactionSelector } from '../dyn/line-select';
 import type { DataTables } from '../load-data';
-import { commitMethod } from '../methods';
 import {
   advanceDays,
   advanceToDawn,
@@ -12,7 +11,8 @@ import {
 import type { PlayLastResolve } from './play-session-types';
 import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
 import type { SimState } from '../types/runtime';
-import { expandMethodAct, resolveInteraction, type CompatRuntime } from '../interaction';
+import { expandMethodAct, type CompatRuntime } from '../interaction';
+import { actInteraction } from './play-session-interaction';
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };
@@ -63,7 +63,10 @@ function appendJuice(state: SimState, eventLog: PlayEvent[], beforeLen: number, 
   }
 }
 
-/** Commit methodId@personId / advance:* / travel:* / approach@personId; append juice to eventLog. */
+/**
+ * Resolve methodId@personId (via interaction compat) / advance:* / travel:* / approach@personId;
+ * append juice to eventLog. Unmapped methods or a missing runtime log a bare 'act' (no legacy spend).
+ */
 export function actMethod(
   state: SimState,
   actionId: string,
@@ -107,44 +110,9 @@ export function actMethod(
   }
   const compat = opts?.interactionCompat;
   const interactionId = compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
-  if (compat && interactionId && compat.people.has(parsed.personId)) {
-    resolveInteraction(compat, interactionId, parsed.personId);
-    eventLog.push({ type: 'interaction', methodId: interactionId });
+  if (!compat || !interactionId || !compat.people.has(parsed.personId) || !state.people?.[parsed.personId]) {
+    eventLog.push({ type: 'act', methodId: actionId });
     return;
   }
-  const beforeLen = state.bus?.lastIds?.length ?? 0;
-  const sparkBefore = state.player.spark;
-  try {
-    const result = commitMethod(state, parsed.personId, parsed.methodId);
-    appendJuice(state, eventLog, beforeLen, parsed.methodId);
-    if ((state.bus?.lastIds?.length ?? 0) === beforeLen) {
-      eventLog.push({ type: 'method', methodId: parsed.methodId });
-    }
-    if (result.kind === 'resolved') {
-      const method = ((state.data as DataTables | undefined)?.methods ?? []) as MethodRow[];
-      const row = method.find((m) => m.id === parsed.methodId);
-      if (row?.family === 'kind') state.flags.kindSuccessToday = true;
-      extras?.setLastResolve({
-        kind: 'resolved',
-        flameDelta: result.flameDelta,
-        sparkCost: sparkBefore - state.player.spark,
-        marks: result.marks,
-        personId: parsed.personId,
-        methodId: parsed.methodId,
-      });
-    } else {
-      extras?.setLastResolve({
-        kind: 'refused',
-        flameDelta: 0,
-        sparkCost: sparkBefore - state.player.spark,
-        personId: parsed.personId,
-        methodId: parsed.methodId,
-      });
-    }
-    if (extras && extras.metrics.firstConsequenceAtTick == null) {
-      extras.metrics.firstConsequenceAtTick = extras.tickN;
-    }
-  } catch {
-    eventLog.push({ type: 'act', methodId: actionId });
-  }
+  actInteraction(state, compat, { ...parsed, interactionId }, eventLog, extras);
 }
