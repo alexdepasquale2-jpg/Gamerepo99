@@ -1,5 +1,6 @@
 /** Advance play clocks (dusk/dawn/day/ticks) and fire dusk personal-cost hooks. */
 
+import { tickEconomyLod } from '../economy/economy-lod';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
@@ -69,7 +70,7 @@ export function advanceToDusk(state: SimState): void {
   state.flags.kindSuccessToday = false;
 }
 
-/** Advance one dawn: recovery hooks + clamp spark to sparkMax. */
+/** Advance one dawn: recovery hooks + economy LOD + clamp spark to sparkMax. */
 export function advanceToDawn(state: SimState): void {
   state.day += 1;
   state.flags.kindSuccessToday = false;
@@ -78,6 +79,7 @@ export function advanceToDawn(state: SimState): void {
   if (data && rng) {
     runHooks(state, 'dawn', { data, rng });
   }
+  tickEconomyLod(state);
   clampPlayerSpark(state);
 }
 

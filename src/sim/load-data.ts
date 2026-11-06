@@ -20,6 +20,18 @@ import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
 import { loadLineFragmentsTable } from './load-fragments';
 import { loadInteractionTables, type InteractionTables } from './interaction/load-interactions';
+import economyLodJson from '../data/economy/economy-lod.json';
+import dawnStockJson from '../data/economy/dawn-stock.json';
+import facilitiesJson from '../data/economy/facilities.json';
+import economyResourcesJson from '../data/economy/economy-resources.json';
+import routesJson from '../data/world/routes.json';
+import type {
+  DawnStockTable,
+  EconomyLodTable,
+  EconomyResourceRow,
+  EconomyRouteState,
+  FacilityRow,
+} from './economy/economy-lod-types';
 import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
 import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
 import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
@@ -104,6 +116,16 @@ export type DataTables = {
   /** Interaction catalog/scoring/migration (interaction/). */
   interactions: InteractionTables;
   hooksById: Map<string, HookDef>;
+  /** M4 dawn economy LOD (economy/economy-lod.json). */
+  economyLod: EconomyLodTable;
+  /** M4 dawn stock seeds/spoil (economy/dawn-stock.json). */
+  dawnStock: DawnStockTable;
+  /** economy/facilities.json rows (LOD produce). */
+  facilities: FacilityRow[];
+  /** economy/economy-resources.json rows (spoilPerDawn). */
+  economyResources: EconomyResourceRow[];
+  /** world/routes.json rows (LOD flow; condition/broken/receiveShare). */
+  economyRoutes: EconomyRouteState[];
 };
 
 const HOOK_PARTS = [
@@ -184,5 +206,19 @@ export function loadData(): DataTables {
     voiceConstraints: voiceConstraintsJson as VoiceConstraintsTable,
     interactions: loadInteractionTables(),
     hooksById,
+    economyLod: economyLodJson as unknown as EconomyLodTable,
+    dawnStock: dawnStockJson as unknown as DawnStockTable,
+    facilities: (facilitiesJson.facilities ?? []) as unknown as FacilityRow[],
+    economyResources: (economyResourcesJson.resources ?? []) as unknown as EconomyResourceRow[],
+    economyRoutes: (routesJson.routes ?? []).map((r) => ({
+      id: r.id,
+      fromTownId: r.fromTownId,
+      toTownId: r.toTownId,
+      condition: typeof r.condition === 'number' ? r.condition : 1,
+      broken: r.broken === true,
+      extractive: r.extractive === true,
+      receiveShare: r.receiveShare as unknown as Record<string, number> | undefined,
+      facilityIds: [...(r.facilityIds ?? [])],
+    })),
   };
 }

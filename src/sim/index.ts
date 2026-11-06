@@ -42,6 +42,16 @@ export type {
   PlayEvent,
 } from './fabric';
 
+/** M4 dawn economy LOD (packet-01). */
+export { tickEconomyLod } from './economy';
+export type {
+  CaravanDawnHook,
+  DoctrineSupplyHook,
+  EconomyLodHooks,
+  EconomyLodResult,
+  TownEconomyState,
+} from './economy';
+
 export { townsFromDump } from './towns-from-dump';
 export type { TownMarker } from './towns-from-dump';
 export { getWorldRenderSnapshot } from './world-render-snapshot';

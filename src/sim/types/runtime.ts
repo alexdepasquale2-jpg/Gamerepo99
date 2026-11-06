@@ -1,5 +1,11 @@
 /** Runtime sim shapes assembled from data + tick state. */
 
+import type {
+  EconomyLodHooks,
+  EconomyRouteState,
+  TownEconomyState,
+} from '../economy/economy-lod-types';
+
 export const RUNTIME_TYPES_MODULE = 'runtime' as const;
 
 export type EmbodimentState = {
@@ -69,4 +75,10 @@ export type SimState = {
   reactionLineSelector?: unknown;
   /** Fabric kinship graph for cross-town ripples. */
   kinEdges?: { from: string; to: string; kind?: string }[];
+  /** M4 dawn economy LOD: per-town stock/despair (seeded lazily from towns.json). */
+  towns?: Record<string, TownEconomyState>;
+  /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
+  economyRoutes?: EconomyRouteState[];
+  /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
+  economyHooks?: EconomyLodHooks;
 };
