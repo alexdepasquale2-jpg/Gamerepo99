@@ -67,7 +67,7 @@ See `docs/art/OVERWORLD_SHORTLIST.md` for despair/alive notes and Loom asset-key
 |-------|--------|---------|-----|--------|
 | pastoral overworld (32×32) | pebonius | CC0 | https://opengameart.org/content/pastoral-overworld | **imported** · `assets/vendor/pebonius-pastoral-overworld-db32.png` · new biomes |
 | Pixelsphere 32×32 Tileset + Grass + Trees | cynicmusic | CC0 | https://opengameart.org/content/pixelsphere-32x32-tileset-grass-trees | shortlisted, not yet imported |
-| Trees & Bushes | ansimuz (Luis Zuno) | CC0 | https://opengameart.org/content/trees-bushes | shortlisted, not yet imported |
+| Trees & Bushes | ansimuz (Luis Zuno) | CC0 | https://opengameart.org/content/trees-bushes | **imported** · `assets/vendor/ansimuz-trees-and-bushes.png` · trees (town-olive remap) |
 | Roguelike Caves & Dungeons | Kenney | CC0 | https://kenney.nl/assets/roguelike-caves-dungeons · https://opengameart.org/content/roguelike-caves-dungeons-pack | **imported** · `assets/vendor/kenney-roguelike-caves-dungeons.zip` · ore/slag |
 | Farming crops 16×16 | josehzz | CC0 | https://opengameart.org/content/farming-crops-16x16 | **imported** · `assets/vendor/josehzz-farming-crops-16x16.zip` · crops |
 | Pixel Platformer Farm Expansion | Kenney | CC0 | https://kenney.nl/assets/pixel-platformer-farm-expansion | shortlisted, not yet imported (side-view props only) |
