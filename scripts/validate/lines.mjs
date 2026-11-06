@@ -72,51 +72,6 @@ export function validateLines(data, ctx) {
     }
   }
 
-  // Optional migration lock while lines.json still present
-  const linesPeople = data['lines.json']?.people || null;
-  if (linesPeople) {
-    let migTotal = 0;
-    let migCovered = 0;
-    let migKeyedOnly = 0;
-    const migMissing = [];
-    for (const pid of Object.keys(linesPeople)) {
-      const L = linesPeople[pid] || {};
-      for (const [mid, text] of Object.entries(L.methods || {})) {
-        migTotal += 1;
-        const hits = aloneByKey.get(`method:${pid}:${mid}`) || [];
-        if (!hits.length) {
-          migMissing.push(`method ${pid}.${mid}`);
-          req(false, `MIGRATION: no fragment for lines.json method ${pid}.${mid}`);
-        } else if (hits.some((h) => h.text === text)) {
-          migCovered += 1;
-        } else {
-          migKeyedOnly += 1;
-          req(false, `MIGRATION: fragment for ${pid}.${mid} exists but text differs from lines.json`);
-        }
-      }
-      for (const [mk, text] of Object.entries(L.marks || {})) {
-        migTotal += 1;
-        const hits = aloneByKey.get(`mark:${pid}:${mk}`) || [];
-        if (!hits.length) {
-          migMissing.push(`mark ${pid}.${mk}`);
-          req(false, `MIGRATION: no fragment for lines.json mark ${pid}.${mk}`);
-        } else if (hits.some((h) => h.text === text)) {
-          migCovered += 1;
-        } else {
-          migKeyedOnly += 1;
-          req(false, `MIGRATION: fragment for mark ${pid}.${mk} exists but text differs from lines.json`);
-        }
-      }
-    }
-    const migOk = migMissing.length === 0 && migKeyedOnly === 0 && migCovered === migTotal;
-    console.log(
-      `MIGRATION lines→fragments: ${migCovered}/${migTotal} covered verbatim` +
-        (migKeyedOnly ? `; ${migKeyedOnly} keyed-but-text-mismatch` : '') +
-        (migMissing.length ? `; MISSING ${migMissing.length}` : '') +
-        (migOk ? ' — OK (safe for Forge to delete lines.json)' : ' — NOT SAFE TO DELETE'),
-    );
-    req(migOk, `lines.json→fragments migration incomplete: ${migCovered}/${migTotal} verbatim`);
-  } else {
-    console.log('MIGRATION lines→fragments: lines.json absent — fragments-only mode');
-  }
+  // lines.json retired — fragments-only mode
+  console.log('MIGRATION lines→fragments: lines.json absent — fragments-only mode');
 }
