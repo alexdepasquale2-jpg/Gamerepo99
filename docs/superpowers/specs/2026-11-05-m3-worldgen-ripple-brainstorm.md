@@ -1,3 +1,5 @@
+> **REPLAN 2026-11-05 — REMAPPED.** Worldgen → **M2 Fabric**; ripples in play → **M3**.
+
 # M3 World-Gen & Ripple Deepen — Brainstorm & Decision
 
 **Date:** 2026-11-05  

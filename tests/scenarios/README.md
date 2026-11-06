@@ -96,3 +96,10 @@ Ship bar: **≥3 memorable** scenarios pass + first-10-min metrics within caps (
 - No Phaser in scenario runner
 - No archetypeId branches in runner code
 - No commits from Loom — Forge batches land the runner + any `tests/scenarios/*.test.ts`
+
+
+## M2 locks (do not violate in scenarios)
+
+- `player.features.bakedDynamismLines` **false** for all ship scenarios (fixed lines fallback path).
+- Basilisk Brood: `bodySlots: 3`, **`activeBodiesMax: 1`** (Forge commit 595d722). No scenario may require two simultaneous active bodies in M2.
+- Line picker is pluggable via methods/hooks; scenarios assert state/bus first, not a single hardcoded string when flag may later turn on in optional tests.

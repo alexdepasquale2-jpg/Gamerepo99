@@ -56,6 +56,9 @@ Route-graph economy between settlements; travel takes days while the world ticks
 ### Asynchronous legacy NPCs (pointer)
 No co-op. Import/export versioned world files (seed + delta log + protagonist imprint); former PCs live on as legends/NPCs/graves. Zero-cost files first; free host only as M8 option with Niblet+Alex clearance. — `specs/2026-11-05-async-legacy-npc-design.md`. M2: save `version` + reserved optional `imprint` slot only.
 
+### Baked dynamism (pointer)
+AI-like lines/gossip without runtime AI: baked anchors, seeded interpolation, constraint fallbacks. Optional M2 flag `bakedDynamismLines` (default off). Pluggable via methods/hooks. — `specs/2026-11-05-baked-dynamism-design.md`.
+
 ### Hoarder path & notoriety (pointer)
 Valid playstyle that never reignites: stash/coin, dual-edge notoriety, kingdom patrons (polities×doctrine). Neglect raises despair but is not a lose state — legitimate ending/legacy via succession + async imprint. — `specs/2026-11-05-hoarder-notoriety-design.md`. M2: optional `coin` field only.
 
@@ -106,7 +109,7 @@ Dawn: run spark_recovery hooks whose when{} matches
 |----|----------------|
 | `marrow` | Large body / fear access; Carry strong; `cost_loneliness_tax`; den recovery |
 | `ivy_quill` | Civic trust/status; Shame/Lie strong; `cost_ink_integrity`; truth-dawn recovery |
-| `basilisk_brood` | `embodiment.mode=multi`, `bodySlots=3`, **`activeBodiesMax=2`** (M3 data; M2 plan may still ship swap-1 until Task M3.1); shared spark; `cost_brood_strain`; idle eavesdrop; gaze refusal on children |
+| `basilisk_brood` | `embodiment.mode=multi`, `bodySlots=3`, **`activeBodiesMax=1` in M2** (Forge 595d722; swap control, 3 slots); shared spark; `cost_brood_strain`; idle eavesdrop; gaze refusal on children. M3: +1 via optional trait/hook data, not archetype branch |
 
 Brood kept: multi-body is generic embodiment fields. Simultaneous multi-control = raise `activeBodiesMax` in data (M3).
 
@@ -273,44 +276,40 @@ Hooks wrap triggers + `when` + effects[].
 | `methods.json` / `wounds.json` / `marks.json` | chemistry |
 | `people.json` / `towns.json` / `links.json` | world |
 | `proofs.json` / `events.json` / `time.json` / `ripples.json` | content/sim |
-| `lines.json` | voice, give-up tell, per-method & per-mark reaction lines |
+| `line-fragments.json` (canonical) / deprecated `lines.json` | dialogue fragments + authored anchors; lines.json retires after Fabric Task G |
 
 Validator fails if any archetype references an unknown hook/trait id.
 
 ---
 
-## 10. Milestones (uncapped · M2 Fri 8 AM · M3–M5 Fri · polish Sat · showcase Sun)
+## 10. Milestones (replan 2026-11-05 · quality > schedule)
 
-| Milestone | When | Spec / plan | Ruthless focus |
-|-----------|------|-------------|----------------|
-| **M1** | pre-Fri | skeleton inside M2 Task 1–2 | Boot, data gate, rng |
-| **M2** | **Fri 8 AM** | `plans/2026-11-05-last-spark-m2.md` **LOCKED** | Closed loop: 3 archetypes, methods/marks/hooks, packets, succession stub, Phaser+debug |
-| **M3** | **Fri (after M2)** | `specs/2026-11-05-last-spark-m3-design.md` | Brood `activeBodiesMax:2`, LOD distant towns, letters/rumor UI, +1 settlement |
-| **M4** | **Fri** | `specs/2026-11-05-last-spark-m4-design.md` | Full succession/generational, history tables, +2 data archetypes, relapse arcs |
-| **M5** | **Fri → polish Sat → showcase Sun** | `specs/2026-11-05-last-spark-m5-outline.md` | Polish, balance, showcase build |
+| Milestone | Focus | Spec / plan |
+|-----------|--------|-------------|
+| **M1 Foundation** | Done — tick, RNG, bus, tests, build | landed |
+| **M2 Fabric** | Prebaked dynamism + seeded worldgen (history, gap-axis settlements, kin/friend/pen-pal, doctrines, biomes, routes, facilities); headless determinism + coherence + dump | `specs/2026-11-05-m2-dynamic-fabric-design.md` · `plans/2026-11-05-m2-fabric.md` |
+| **M3 First playable world** | Walk generated overworld/settlements; methods/marks/spark/succession/travel/encounters/ripples; Probe quality gate; special bar on gen world | `specs/2026-11-05-m3-first-playable-world-design.md` · `plans/2026-11-05-m3-first-playable-world.md` |
+| **M4 Living world** | Off-screen economy, caravans, doctrine competition/collapse, letters/rumors at scale | remap ex-M3/M4 systems |
+| **M5 Depth** | Hoarder/kingdom path, legacy NPCs, async world files, generational play | hoarder + async specs |
+| **M6 Feel & polish** | Art, juice, audio, menus, saves | Prism |
+| **M7 Hardening** | Balance bots, bugs, perf | Probe |
+| **M8 Showcase** | Hosted build, trailer, devlog | clearance for public host |
 
-### M2 (locked detail)
-All 5 methods + matrix/marks; 3 data archetypes; refusal/cost/recovery hooks; Brood swap-only (`activeBodiesMax:1`); Ashford+Lowmere+den; ripples + packets; costly fear-road; succession stub + `inherited_dependence`; debug overlay; validator unknown-hook check. Save `version:1` + optional `imprint`/`coin` reserved only.
+**Ashford is not special** — authored people/lines are **fabric anchors** (fragments canonical). Old town-loop M2 plan **superseded** (`docs/archive/plans/2026-11-05-last-spark-m2.md`).
 
-**Team priority:** quality and depth outrank the schedule. Breadth that does not deepen M2 feel is deferred.
+### M2 Fabric acceptance (headless)
+Deterministic `generateWorld(seed)`; coherence asserts pass; reaction selector via `setReactionLineSelector`; dump/inspect session; Brood `activeBodiesMax: 1`; no LLM; no archetype branches.
 
-### What makes this special (M2 acceptance bar — testable)
+### Remap (old → new)
+| Old | New |
+|-----|-----|
+| Old M2 town loop | Archived; playable walk → **M3** |
+| Old M3 connected/LOD/letters | Split: gen in **M2 Fabric**; play/letters UI scale → **M3/M4** |
+| Old M4 living/off-screen | **M4** |
+| Old M5 polish/showcase depth | **M5** depth systems; polish → **M6**; showcase → **M8** |
 
-Full tables/checks: `plans/2026-11-05-last-spark-m2.md` § What makes this special.
-
-1. **Memorable moments (systems-produced):** ≥3 of the 5 emergent scripts above pass seeded tests (Task 10).  
-2. **Choices that matter:** every method resolve changes a later state or line vs control; witnesses change marks/ripples; refusal is readable, not a disabled menu item.  
-3. **First 10 minutes that hook:** time-to-first-meaningful-choice ≤ 2 min; time-to-first-consequence ≤ 4 min; by 10 min player can name one relationship change. Beat sheet in M2 plan.
-
-### Deepening hooks → later milestones
-- Simultaneous multi-body → **M3** (`activeBodiesMax: 2` now in `traits.json`; wire in M3 plan Task 1)  
-- Full LOD far towns → **M3**  
-- Letters/rumor discovery UI → **M3**  
-- Extra settlements → **M3** (one hamlet)  
-- Full generational / history gen → **M4**  
-- More generated archetypes → **M4**  
-- Relapse arcs on cleared towns → **M4**  
-- Juice / balance / showcase → **M5**
+### What makes this special
+Systems-produced moments and first-10-min bar apply at **M3** on a **generated world** (anchors preferred when present). See M3 design §5 and plan Task 7. Fabric M2 makes those moments possible via anchors + gen. Probe quality gate binds M3 ship.
 
 
 ## 11. Implementation Notes for Forge
@@ -329,6 +328,8 @@ Full tables/checks: `plans/2026-11-05-last-spark-m2.md` § What makes this speci
 - Shame vs children = diegetic refusal hook (Niblet).  
 - Early Lowmere fear-road stays costly (Niblet).  
 - M2 archetypes: Marrow, Ivy, Brood (`activeBodiesMax: 1`).  
+- **Milestone replan:** M2 Fabric → M3 playable world → M4 living → M5 depth → M6–M8 (Alex/Niblet 2026-11-05).  
+- Dialogue canonical = `line-fragments`; Ashford cast = anchors not fixed scripts.  
 - Succession UI copy + default Continue / Quit never shamed (Alex).  
 - Dependence bonds keep ×0.5; dependence-chosen successors get `inherited_dependence` with cling cost + decay (Alex).  
 - Quality / depth outranks schedule; M2 ships the **What makes this special** bar (Alex / team).  

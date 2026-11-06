@@ -1,3 +1,5 @@
+> **REPLAN 2026-11-05 — SUPERSEDED.** Backlog finish pass archived; use root `docs/BACKLOG.md` under new M1–M8 numbering.
+
 # BACKLOG + M3 Finish Queue — Brainstorm & Decision
 
 **Date:** 2026-11-05  

@@ -1,3 +1,5 @@
+> **REPLAN 2026-11-05 — SUPERSEDED for milestone numbering.** Worldgen/LOD/letters pieces: gen→**M2 Fabric**; playable walk/ripples→**M3**; off-screen/LOD economy scale→**M4**. Active playable plan: `plans/2026-11-05-m3-first-playable-world.md` + `specs/2026-11-05-m3-first-playable-world-design.md`.
+
 # Last Spark — M3 Design (Fri · after M2 8 AM · ~½–1 day)
 
 **Depends on:** M2 closed loop + feel pass (`DESIGN.md` §3.5, `plans/2026-11-05-last-spark-m2.md`)  

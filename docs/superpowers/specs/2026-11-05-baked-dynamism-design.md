@@ -1,3 +1,5 @@
+**Superseding parent:** M2 Fabric spec `2026-11-05-m2-dynamic-fabric-design.md` (this note remains the dialogue/interpolation detail).
+
 # Baked Dynamism (AI-like, no runtime AI) — Brainstorm & Decision
 
 **Date:** 2026-11-05  

@@ -1,3 +1,5 @@
+> **REPLAN 2026-11-05 — REMAPPED → new **M4 Living world** / parts of M5.** Succession/generational depth → **M5**; living off-screen + doctrine competition → **M4**. See DESIGN §10.
+
 # Last Spark — M4 Design (LOCKED schedule: Sat Nov 7 midday · ~½ day)
 
 **Depends on:** M3 LOD + multi-body + letters  

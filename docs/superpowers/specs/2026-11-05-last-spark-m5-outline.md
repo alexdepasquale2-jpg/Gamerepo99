@@ -1,3 +1,5 @@
+> **REPLAN 2026-11-05 — REMAPPED → new **M6 Feel & polish** / **M8 Showcase**.** Depth systems (hoarder/async) → **M5**; juice/showcase polish → **M6**/**M8**.
+
 # Last Spark — M5 Outline (Sat Nov 7 PM · ~½ day · Showcase)
 
 **Goal:** Polish, balance, showcase build for demo — not new systems.
