@@ -9,7 +9,7 @@ import {
   type GeneratePeopleOpts,
   type GeneratePersonDraftOpts,
 } from './gen/people';
-import { pickPool, scoreBakeCandidate } from './fabric-bake-score';
+import { leadingWordPrefix, pickPool, scoreBakeCandidate } from './fabric-bake-score';
 
 function pickBakedLine(
   seed: number,
@@ -36,6 +36,12 @@ function pickBakedLine(
     poolIndexById.set(pool[i]!.id, i);
   }
 
+  const usedLeadingPrefixes = new Set<string>();
+  for (const t of usedTexts) {
+    const prefix = leadingWordPrefix(t, 5);
+    if (prefix) usedLeadingPrefixes.add(prefix);
+  }
+
   let best = candidates[0]!;
   let bestScore = -Infinity;
   for (const frag of candidates) {
@@ -47,6 +53,8 @@ function pickBakedLine(
       seed,
       usedPoolIndices,
       fragId: frag.id,
+      candidateText: frag.text,
+      usedLeadingPrefixes,
     });
     // When fresh is empty, keep used texts as last resort.
     if (usedTexts.has(frag.text) || usedIds.has(frag.id)) score -= 1e9;

@@ -41,9 +41,17 @@ function hashId(id: string): number {
   return h >>> 0;
 }
 
+/** Leading N words, lowercased; null if the line is shorter than N. */
+export function leadingWordPrefix(text: string, n = 5): string | null {
+  const w = text.trim().split(/\s+/).filter(Boolean);
+  if (w.length < n) return null;
+  return w.slice(0, n).join(' ').toLowerCase();
+}
+
 /**
  * Higher is better. Deterministic from seed + personIndex + used set + fragId.
  * Rotation pulls toward a per-person band; novelty penalizes sitting near recent picks.
+ * Optional leading-prefix penalty reduces audible chorus when fresh-prefix options exist.
  */
 export function scoreBakeCandidate(args: {
   poolIndex: number;
@@ -52,8 +60,21 @@ export function scoreBakeCandidate(args: {
   seed: number;
   usedPoolIndices: readonly number[];
   fragId: string;
+  candidateText?: string;
+  usedLeadingPrefixes?: ReadonlySet<string>;
+  prefixWords?: number;
 }): number {
-  const { poolIndex, poolLength, personIndex, seed, usedPoolIndices, fragId } = args;
+  const {
+    poolIndex,
+    poolLength,
+    personIndex,
+    seed,
+    usedPoolIndices,
+    fragId,
+    candidateText,
+    usedLeadingPrefixes,
+    prefixWords = 5,
+  } = args;
   if (poolLength <= 0) return 0;
 
   const stride = Math.max(1, Math.floor(poolLength / 16));
@@ -72,5 +93,11 @@ export function scoreBakeCandidate(args: {
     createRng((seed ^ Math.imul(personIndex + 1, 0x85ebca6b) ^ hashId(fragId)) >>> 0).next() *
     (stride * 0.5);
 
-  return rotationBonus * 4 - noveltyPenalty * 8 + jitter;
+  let prefixPenalty = 0;
+  if (candidateText && usedLeadingPrefixes && usedLeadingPrefixes.size > 0) {
+    const prefix = leadingWordPrefix(candidateText, prefixWords);
+    if (prefix && usedLeadingPrefixes.has(prefix)) prefixPenalty = 1e6;
+  }
+
+  return rotationBonus * 4 - noveltyPenalty * 8 + jitter - prefixPenalty;
 }

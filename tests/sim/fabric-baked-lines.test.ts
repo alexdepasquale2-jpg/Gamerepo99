@@ -120,6 +120,29 @@ describe('fabric facade baked lines (Probe seam)', () => {
     );
   });
 
+  it('scoreBakeCandidate prefers a fresh leading-5-word prefix when alternatives exist', () => {
+    // Same poolIndex/fragId → identical base score; only prefix penalty may differ.
+    const usedLeadingPrefixes = new Set(['if i start, will you']);
+    const base = {
+      poolIndex: 10,
+      poolLength: 100,
+      personIndex: 1,
+      seed: 99,
+      usedPoolIndices: [] as number[],
+      fragId: 'same-id',
+      usedLeadingPrefixes,
+    };
+    const shared = scoreBakeCandidate({
+      ...base,
+      candidateText: "If I start, will you look away until I'm done?. Keep talking.",
+    });
+    const fresh = scoreBakeCandidate({
+      ...base,
+      candidateText: "Paper can be an oath. Your shout isn't. The notice says so.",
+    });
+    expect(fresh).toBeGreaterThan(shared);
+  });
+
   it('scoreBakeCandidate prefers rotated band and penalizes recent neighbors', () => {
     const poolLength = 1000;
     const seed = 42;
