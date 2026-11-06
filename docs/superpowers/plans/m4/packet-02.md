@@ -1,17 +1,18 @@
 # M4 Packet 02 — Caravans from schedules (Task B)
 
-**For:** Forge  
+**For:** Forge (commits this packet)  
 **HEAD APIs:** `b6d2681`+ (`tickEconomyLod`, `CaravanDawnHook`, `ensureEconomyState`, `advanceToDawn`, `pushJuice`, `createPlaySession`)  
-**Depends on:** Task A merged @ `b6d2681` (Vitest economy-lod 10/10; suite 316/316).  
+**Depends on:** Task A merged @ `b6d2681` (Vitest economy-lod 10/10). Social-graph **05** on main @ `986c26f`.  
+**Sequencing:** Implement **after** social-graph **06 Blessings and Burdens** runtime/handoff work; then Forge commits packet-02. Do not start caravan sim before 06 is in flight / landed per Niblet queue.  
 **Plans:** [index](./index.md) · [Task A](./task-a-economy-lod.md) · [Task B](./task-b-caravans.md) · [packet-01](./packet-01.md) · [C doctrine](./task-c-doctrine-collapse.md)  
-**Specs:** [road-content](../../specs/2026-11-06-road-content-design.md) · [wilderness-economy](../../specs/2026-11-05-wilderness-economy-design.md) · [M4 design](../../specs/2026-11-05-last-spark-m4-design.md)  
-**Data (already in tree, validated by `scripts/validate/road-content.mjs`):** `src/data/world/caravan-schedules.json` (5 schedules), `world/routes.json` (`days`/`condition`/`broken`), `world/encounter-density.json` (travel only — **do not retune**), `economy/travel-trades.json`, `economy/dawn-stock.json`, `economy/economy-lod.json`
+**Specs:** [road-content](../../specs/2026-11-06-road-content-design.md) · [wilderness-economy](../../specs/2026-11-05-wilderness-economy-design.md) · social-graph [05](../../specs/2026-11-06-social-graph/05-forge-handoff.md) · [06 Blessings and Burdens](../../specs/2026-11-06-social-graph/06-blessings-and-burdens.md)  
+**Data (in tree; `scripts/validate/road-content.mjs`):** `world/caravan-schedules.json` (5 schedules — add optional `maxConcurrent`, default **2**), `world/routes.json` (`days`/`condition`/`broken`), `encounter-density.json` (**do not retune**), `economy/travel-trades.json`, `dawn-stock.json`, `economy-lod.json`
 
 ---
 
 ## Goal
 
-One implementable slice: **scheduled off-screen caravans** that spawn, progress, and deliver cargo into town stock on dawn — filling the Task A `CaravanDawnHook` slot. No Phaser; no encounter-density / travel-trades edits; no `archetypeId` branching.
+One implementable slice: **scheduled off-screen caravans** that spawn, progress both ways on a living trade route, slow on damaged roads, and deliver cargo into town stock on dawn — filling Task A’s `CaravanDawnHook`. No Phaser; no encounter-density / travel-trades edits; no `archetypeId` branching.
 
 ---
 
@@ -20,12 +21,13 @@ One implementable slice: **scheduled off-screen caravans** that spawn, progress,
 | Action | Path |
 |--------|------|
 | **Create** | `src/sim/caravans.ts` — `loadCaravanSchedules`, `tickCaravans`, default `CaravanDawnHook` |
-| **Create** | `src/sim/caravans-types.ts` — `CaravanMobile`, schedule row type (keep `caravans.ts` focused) |
+| **Create** | `src/sim/caravans-types.ts` — `CaravanMobile`, schedule row (+ `maxConcurrent`) |
 | **Create** | `tests/sim/caravans.test.ts` |
-| **Modify** | `src/sim/load-data.ts` — import + expose `caravanSchedules` on `DataTables` |
+| **Modify** | `src/sim/load-data.ts` — expose `caravanSchedules` on `DataTables` |
 | **Modify** | `src/sim/index.ts` — export `tickCaravans` / types |
-| **Modify** | Boot / play-session attach path — register `state.economyHooks.caravan = (s) => { tickCaravans(s, s.day); }` once (so `tickEconomyLod` → existing hook call at `economy-lod.ts:79–81` runs it). Prefer registry over editing `advanceToDawn` signature. |
-| Optional | `dump` / `snapshot` include `state.caravans` mobiles list (Probe-visible) |
+| **Modify** | Boot / play-session — register `state.economyHooks.caravan = (s) => { tickCaravans(s, s.day); }` once (`economy-lod.ts:79–81`). Prefer registry over changing `advanceToDawn` signature. |
+| **Modify** | `caravan-schedules.json` + `road-content.mjs` — optional `maxConcurrent` (≥1; default 2 when omitted) |
+| Optional | `dump` / `snapshot` include `state.caravans` + per-route `breakJuiced` / broken flags |
 
 Do **not** edit Phaser/`src/render`. Do **not** retune LOD despair, interaction strain, or encounter-density.
 
@@ -40,32 +42,50 @@ caravan(state); // ← fill this; do not change advanceToDawn's call site
 ```
 
 - `advanceToDawn` (`scenario-advance.ts:74–84`): `state.day += 1` → dawn hooks → `tickEconomyLod(state)` → spark clamp.  
-- **Dawn index** for schedules = `state.day` at hook time (post-increment).  
-- Deliveries mutate `state.towns[dest].stock` via `ensureEconomyState` so same-dawn spoil/starve see the cargo.  
-- Juice: schedule `prism` (e.g. `route.caravan`, `caravan.carter`) on move/arrive; cargo land also emits `stock.deliver` (LOD table id) so Probe/bus stays consistent with Task A.
+- **Dawn index** = `state.day` at hook time (post-increment).  
+- Deliveries mutate `state.towns[dest].stock` via `ensureEconomyState` so same-dawn spoil/starve see cargo.  
+- Juice: schedule `prism` on move/arrive; cargo land also emits `stock.deliver`.
 
 ---
 
-## Behavior (data-driven)
+## Behavior (data-driven; Niblet-resolved)
 
-From `caravan-schedules.json` schedules (ids: `cav_strand_grain`, `cav_strand_timber`, `cav_glare_ore`, `cav_glare_wool`, `cav_brine_fish`):
+From `caravan-schedules.json` (`cav_strand_grain`, `cav_strand_timber`, `cav_glare_ore`, `cav_glare_wool`, `cav_brine_fish`):
 
-1. **Spawn:** when `dawnIndex % periodDays === departDawnMod` and no live mobile already owns that `scheduleId`, create `CaravanMobile` on `routeId` at `progress01 = 0`, cargo from row. Skip if route `broken === true` (optionally juice `route.break` once — see open Q).
-2. **Advance:** each dawn `progress01 += 1 / max(1, route.days)` using `economyRoutes`/`routes.json` `days` (strand 2, glare 3, brine 1).
-3. **Arrive** (`progress01 >= 1`): add `qty` of `cargoResourceId` to **destination** town stock (`toTownId`); `pushJuice` schedule prism + `stock.deliver`; remove mobile (turn-around = later packet / open Q).
-4. **Low condition:** if `route.condition` below a data threshold (default: treat only `broken`, not soft condition — open Q), skip spawn/progress; do not invent RNG.
+1. **Spawn:** when `dawnIndex % periodDays === departDawnMod` **and** live mobiles with that `scheduleId` &lt; `maxConcurrent` (default **2**), create `CaravanMobile` at outbound origin (`progress01 = 0`, `heading: 'outbound'`). Skip spawn if route `broken === true` (persistent). Overlap allowed up to the cap.
+2. **Advance (condition-scaled):** each dawn  
+   `progress01 += (1 / max(1, route.days)) * clamp(route.condition, 0, 1)`  
+   Damaged roads **slow** caravans before break; `condition === 1` ⇒ full speed; lower condition ⇒ longer travel. When `broken`, mobiles already en-route freeze or are culled (pick freeze-in-place until repaired — document in commit); no new spawns.
+3. **Arrive outbound** (`progress01 >= 1`, heading outbound): deliver `qty` of `cargoResourceId` into **`toTownId`** stock (incl. **Ashford** even when `economyOptIn:false`); juice prism + `stock.deliver`; **turn around** — set `heading: 'return'`, `progress01 = 0` (return measures progress back toward `fromTownId`).
+4. **Arrive return:** deliver again into **`fromTownId`** (same qty/cargo unless data adds a return cargo later — MVP same row); juice; **remove** mobile (next period may spawn fresh under cap). Living trade route = continuous outbound/return legs, not one-shot delete on first arrive.
+5. **Route break transition:** track prior `broken` per route on sim state. On edge `false → true`, emit `route.break` **once**; afterward only persistent `broken` (no repeat juice each dawn). Repair `true → false` clears the one-shot latch so a future break can juice again.
 
-Deterministic: same seed + same dawn sequence ⇒ same mobiles + stock deltas. No `Math.random`. No `archetypeId ===` / brood branches — schedules are global tables.
+Deterministic: same seed + same dawn sequence ⇒ same mobiles + stock deltas. No `Math.random`. No `archetypeId ===`.
 
 ```ts
+export type CaravanHeading = 'outbound' | 'return';
+
 export type CaravanMobile = {
-  id: string;           // `${scheduleId}@${dawnSpawned}` or stable counter from day+id
+  id: string;              // stable: `${scheduleId}@${dawnSpawned}` (+ suffix if concurrent)
   scheduleId: string;
   routeId: string;
-  progress01: number;   // 0 at from, 1 at to
+  progress01: number;      // 0 at current leg start, 1 at leg end
+  heading: CaravanHeading;
   cargoResourceId: string;
   qty: number;
   dawnSpawned: number;
+};
+
+export type CaravanScheduleRow = {
+  id: string;
+  routeId: string;
+  departDawnMod: number;
+  periodDays: number;
+  cargoResourceId: string;
+  qty: number;
+  lean: string;
+  prism?: string;
+  maxConcurrent?: number;  // default 2
 };
 
 export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[];
@@ -77,12 +97,15 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
 
 `tests/sim/caravans.test.ts`:
 
-1. **loads schedules:** `loadCaravanSchedules()` includes `cav_strand_grain` (period 3, mod 0, `food_grain`×4 on `route_ashford_lowmere`).
-2. **fires in window:** `createPlaySession({ mode:'play', seed:7, archetypeId:'marrow' })` → `start` → ≤6× `act('advance:dawn')` ⇒ ≥1 `route.caravan` (or schedule prism) on bus / events.
+1. **loads schedules:** includes `cav_strand_grain`; omitted `maxConcurrent` reads as **2**.
+2. **fires in window:** seed 7, ≤6× `advance:dawn` ⇒ ≥1 schedule prism / `route.caravan` on bus.
 3. **deterministic:** seed 7, 6 dawns twice ⇒ identical mobile ids + stock deltas.
-4. **broken skips:** mark `route_ashford_lowmere` `broken` → no strand spawn; glare/brine may still move; optional single `route.break` juice.
-5. **delivery:** force arrive (short route / progress stub) ⇒ dest `stock[cargo]` += qty and `stock.deliver` present; Ashford `economyOptIn:false` still receives cargo into stock (starve/despair remain opt-in-gated in LOD).
-6. **grep guard:** no `archetypeId ===` introduced under `src/sim/caravans*.ts`.
+4. **turn-around / return leg:** after outbound arrive, mobile remains with `heading:'return'` and `progress01` reset; later dawn delivers into `fromTownId` then removes.
+5. **condition slows:** same route `days`, `condition:0.5` takes ~2× dawns to arrive vs `condition:1` (progress step halves).
+6. **break once:** flip `broken false→true` ⇒ exactly one `route.break` juice; further dawns while broken ⇒ no extra `route.break`; no new spawns on that route.
+7. **Ashford receives:** arrive into ashford stock while `economyOptIn:false` ⇒ `stock[cargo]` += qty; despair unchanged by delivery alone.
+8. **overlap cap:** force period shorter than travel so two mobiles can coexist; third spawn blocked while `maxConcurrent:2`; with `maxConcurrent:1` only one live.
+9. **grep guard:** no `archetypeId ===` under `src/sim/caravans*.ts`.
 
 Run: `npx vitest run tests/sim/caravans.test.ts` — expect FAIL until implemented. Keep `tests/sim/economy` green.
 
@@ -90,22 +113,23 @@ Run: `npx vitest run tests/sim/caravans.test.ts` — expect FAIL until implement
 
 ## Acceptance
 
-- [ ] Schedules loaded on `DataTables`; validator still green (`road-content.mjs` ≥3 schedules, route+cargo ids).
+- [ ] Schedules on `DataTables`; `maxConcurrent` default 2; validator accepts optional field.
 - [ ] ≥1 schedule fires within 6 dawns on seed 7.
-- [ ] Arrival writes dest stock + juice; caravan hook replaces Task A no-op without changing `advanceToDawn` signature.
-- [ ] Broken route skips (or one `route.break`); no soft-RNG from encounter-density.
-- [ ] Same seed ⇒ same outcomes; hybrid-C burnout not regressed (no new spark fuse).
+- [ ] Outbound arrive → return leg → return arrive delivers both ends; Ashford may receive cargo.
+- [ ] Progress scales with `route.condition`; broken blocks new spawns; `route.break` juices once per transition.
+- [ ] Concurrent mobiles allowed up to per-schedule cap.
+- [ ] Hook fills Task A no-op; `advanceToDawn` signature unchanged; same seed ⇒ same outcomes; no spark fuse regression.
 
 ## Out of scope
 
-Doctrine collapse (C), letters (D), social-graph / Blessings-Burdens runtime, encounter-density retune, travel-trades combat, player `startTravel` rewrite, Phaser, Loom commits.
+Doctrine collapse (C), letters (D), Blessings-Burdens **runtime** (sequenced before this packet but not implemented here), encounter-density retune, travel-trades combat, player `startTravel` rewrite, Phaser, Loom commits.
 
 ---
 
-## Open questions (Forge may pick defaults; note in commit)
+## Resolved decisions (Niblet)
 
-1. **Turn-around:** remove on arrive (MVP) vs reverse `from`/`to` next period?
-2. **Soft condition:** skip only when `broken`, or also when `condition < 0.5`?
-3. **`route.break` juice:** once per broken dawn per route, or only on transition into broken?
-4. **Ashford stock:** confirm cargo may land on opt-out towns (recommended: yes; despair still inert).
-5. **Parallel mobiles:** one live mobile per `scheduleId`, or allow overlap if period &lt; travel days?
+1. **Turn-around:** caravans reverse and run a **return leg** (living trade route); remove only after return arrive.
+2. **Damaged roads:** speed scales with `route.condition` (`progress01` step × condition); slow before break — do not treat soft damage as hard skip.
+3. **`route.break` juice:** **once** on `broken` false→true transition; then persistent broken state (no per-dawn repeat).
+4. **Ashford stock:** **yes** — opt-out towns still receive cargo; starve/despair stay opt-in-gated in LOD.
+5. **Overlap:** concurrent mobiles **allowed**, capped by schedule `maxConcurrent` (data; **default 2**).
