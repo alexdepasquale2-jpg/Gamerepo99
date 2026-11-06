@@ -1,11 +1,11 @@
 /** Fabric worldgen shared types. Pure; no dyn/. */
 
-import type { PersonDraft } from './people';
-import type { SettlementGen } from './settlements-gen';
-import type { RouteGen } from './routes-gen';
-import type { DoctrineGen } from './doctrines-gen';
-import type { FacilityGen } from './facilities-gen';
-import type { BiomeGen } from './biomes-gen';
+import type { PersonDraft } from './society/people';
+import type { SettlementGen } from './places/settlements-gen';
+import type { RouteGen } from './places/routes-gen';
+import type { DoctrineGen } from './society/doctrines-gen';
+import type { FacilityGen } from './places/facilities-gen';
+import type { BiomeGen } from './places/biomes-gen';
 
 export type KinEdge = { from: string; to: string; kind?: string };
 export type GapSite = { id: string; gap01: number };

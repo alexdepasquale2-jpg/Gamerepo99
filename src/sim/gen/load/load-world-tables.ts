@@ -1,12 +1,12 @@
 /** Load towns / routes / doctrines / shapes / kin for worldgen. Pure; no dyn/. */
 
-import townsJson from '../../data/world/towns.json';
-import gapPolesJson from '../../data/world/towns/gap-poles.json';
-import routesJson from '../../data/world/routes.json';
-import doctrinesJson from '../../data/systems/doctrines.json';
-import shapesJson from '../../data/world/world-shapes.json';
-import kinPatternsJson from '../../data/world/kin-patterns.json';
-import type { Rng } from '../rng';
+import townsJson from '../../../data/world/towns.json';
+import gapPolesJson from '../../../data/world/towns/gap-poles.json';
+import routesJson from '../../../data/world/routes.json';
+import doctrinesJson from '../../../data/systems/doctrines.json';
+import shapesJson from '../../../data/world/world-shapes.json';
+import kinPatternsJson from '../../../data/world/kin-patterns.json';
+import type { Rng } from '../../rng';
 
 export type TownRow = {
   id: string;

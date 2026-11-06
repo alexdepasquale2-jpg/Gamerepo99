@@ -1,8 +1,8 @@
 /** Seeded biome selection from routes + shape biomeTags. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { WorldShape } from './load-world-tables';
-import type { BiomeRow } from './load-facilities-biomes';
+import type { Rng } from '../../rng';
+import type { WorldShape } from '../load/load-world-tables';
+import type { BiomeRow } from '../load/load-facilities-biomes';
 import type { RouteGen } from './routes-gen';
 
 export type BiomeGen = {

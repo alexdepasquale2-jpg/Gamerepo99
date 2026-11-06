@@ -9,13 +9,14 @@ hearthfall/
     sim/      Pure game logic. No Phaser, no DOM, no Math.random (use seeded RNG passed in).
       gen/      World generation (M2 Fabric): seeded, deterministic builders for regions, settlements, people.
                 Same seed + same data = same world. Writes plain world state; no render/ui imports.
+                Stage folders: load/ (load-*.ts tables), places/ (settlements/routes/facilities/biomes/gap-sites),
+                society/ (history/kin/doctrines/people). world.ts + world-types.ts stay at gen/ root.
+                Tests mirror under tests/sim/gen/{load,places,society}/. gen/ never imports dyn/.
       dyn/      Dynamism engine (M2 Fabric): prebaked tables, interpolation, assertions over live state.
                 May import gen/ types and core sim; gen/ never imports dyn/.
       Both stay pure (headless-testable); tests mirror them under tests/sim/gen/ and tests/sim/dyn/.
       fabric.ts Public Fabric API facade (e.g. connectFabricApi for bots). Thin re-export shim; Probe hardcodes this path.
       fabric/ holds fabric-bake.ts (only place gen output and dyn are composed), fabric-bake-score.ts, and world-dump.ts; facade re-exports them.
-      gen/ worldgen helpers (history/gap/kin/settlements/routes/doctrines/facilities/biomes/anchors) stay pure.
-      Split each into subfolders by stage once it passes ~8 files.
     data/     JSON content (units, items, levels, tuning). No code. Large registries split by category (e.g. hooks/).
       Grouped by domain subfolders (final layout pending Loom's M2 data redesign).
       New tables go in the matching group; a new group needs a STRUCTURE.md line.

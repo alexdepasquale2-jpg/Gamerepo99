@@ -1,9 +1,9 @@
 /** Seeded kin/friend/pen_pal graph from kin-patterns. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { KinPattern } from './load-world-tables';
+import type { Rng } from '../../rng';
+import type { KinPattern } from '../load/load-world-tables';
 import type { PersonDraft } from './people';
-import type { KinEdge } from './world-types';
+import type { KinEdge } from '../world-types';
 
 function edgeKey(a: string, b: string): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;

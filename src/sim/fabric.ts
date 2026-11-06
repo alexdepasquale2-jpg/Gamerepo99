@@ -19,7 +19,7 @@ export type {
   PersonDraft,
   GeneratePeopleOpts,
   GeneratePersonDraftOpts,
-} from './gen/people';
+} from './gen/society/people';
 
 export {
   interpolateLine,

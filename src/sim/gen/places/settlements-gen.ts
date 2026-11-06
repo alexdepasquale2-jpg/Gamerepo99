@@ -1,7 +1,7 @@
 /** Seeded settlement selection from towns + world-shapes. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { DoctrineRow, TownRow, WorldShape } from './load-world-tables';
+import type { Rng } from '../../rng';
+import type { DoctrineRow, TownRow, WorldShape } from '../load/load-world-tables';
 
 export type SettlementGen = {
   id: string;

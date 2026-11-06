@@ -1,7 +1,7 @@
 /** Seeded route selection with shape routePolicy. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { RouteRow, WorldShape } from './load-world-tables';
+import type { Rng } from '../../rng';
+import type { RouteRow, WorldShape } from '../load/load-world-tables';
 import type { SettlementGen } from './settlements-gen';
 
 export type RouteGen = {

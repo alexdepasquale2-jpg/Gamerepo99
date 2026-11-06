@@ -1,6 +1,6 @@
 /** Seeded person drafts for Fabric worldgen. Pure; no dyn/ imports. */
 
-import { createRng, type Rng } from '../rng';
+import { createRng, type Rng } from '../../rng';
 
 export type PersonDraft = {
   id: string;

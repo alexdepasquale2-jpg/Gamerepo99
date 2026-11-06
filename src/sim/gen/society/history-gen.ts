@@ -1,9 +1,9 @@
 /** Seeded history beat selection with branching arcs. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { WorldShape } from './load-world-tables';
-import type { HistoryBeat, HistoryTables } from './load-history';
-import type { HistoryEvent } from './world-types';
+import type { Rng } from '../../rng';
+import type { WorldShape } from '../load/load-world-tables';
+import type { HistoryBeat, HistoryTables } from '../load/load-history';
+import type { HistoryEvent } from '../world-types';
 import type { PersonDraft } from './people';
 
 function tagsFromBeat(beat: HistoryBeat): string[] {

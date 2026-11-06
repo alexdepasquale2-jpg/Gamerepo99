@@ -1,7 +1,7 @@
 /** Load facilities + biomes tables for worldgen. Pure; no dyn/. */
 
-import facilitiesJson from '../../data/economy/facilities.json';
-import biomesJson from '../../data/world/biomes.json';
+import facilitiesJson from '../../../data/economy/facilities.json';
+import biomesJson from '../../../data/world/biomes.json';
 
 export type FacilityRow = {
   id: string;

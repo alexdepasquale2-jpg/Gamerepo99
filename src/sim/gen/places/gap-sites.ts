@@ -1,9 +1,9 @@
 /** Seeded gap-axis settlement sites with shape gapBias. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { GapBias } from './load-world-tables';
-import type { SettlementSize } from './load-history';
-import type { GapSite } from './world-types';
+import type { Rng } from '../../rng';
+import type { GapBias } from '../load/load-world-tables';
+import type { SettlementSize } from '../load/load-history';
+import type { GapSite } from '../world-types';
 
 function sizeForGap(gap01: number, sizes: SettlementSize[]): SettlementSize {
   const ordered = [...sizes].sort((a, b) => a.gapAxisMax - b.gapAxisMax);

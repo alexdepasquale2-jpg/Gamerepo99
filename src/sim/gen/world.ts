@@ -1,23 +1,23 @@
 /** Seeded Fabric worldgen: history + gap + kin + geo + facilities/biomes. Pure; no dyn/. */
 
 import { createRng } from '../rng';
-import { generatePeople, type PersonDraft } from './people';
-import { loadHistoryTables } from './load-history';
-import { generateHistoryEvents, historyChainCoherent } from './history-gen';
-import { generateGapSites } from './gap-sites';
-import { generateKinEdges } from './kin-gen';
-import { loadAuthoredAnchors } from './load-anchors';
+import { generatePeople, type PersonDraft } from './society/people';
+import { loadHistoryTables } from './load/load-history';
+import { generateHistoryEvents, historyChainCoherent } from './society/history-gen';
+import { generateGapSites } from './places/gap-sites';
+import { generateKinEdges } from './society/kin-gen';
+import { loadAuthoredAnchors } from './load/load-anchors';
 import {
   loadWorldTables,
   pickKinPattern,
   pickWorldShape,
-} from './load-world-tables';
-import { generateSettlements, type SettlementGen } from './settlements-gen';
-import { generateRoutes, type RouteGen } from './routes-gen';
-import { generateDoctrines, type DoctrineGen } from './doctrines-gen';
-import { loadFacilitiesBiomesTables } from './load-facilities-biomes';
-import { generateFacilities, type FacilityGen } from './facilities-gen';
-import { generateBiomes, type BiomeGen } from './biomes-gen';
+} from './load/load-world-tables';
+import { generateSettlements, type SettlementGen } from './places/settlements-gen';
+import { generateRoutes, type RouteGen } from './places/routes-gen';
+import { generateDoctrines, type DoctrineGen } from './society/doctrines-gen';
+import { loadFacilitiesBiomesTables } from './load/load-facilities-biomes';
+import { generateFacilities, type FacilityGen } from './places/facilities-gen';
+import { generateBiomes, type BiomeGen } from './places/biomes-gen';
 import type {
   FabricWorld,
   GapSite,

@@ -1,7 +1,7 @@
 /** Load authored people.json anchors for worldgen merge. Pure; no dyn/. */
 
-import peopleJson from '../../data/people/people.json';
-import type { PersonDraft } from './people';
+import peopleJson from '../../../data/people/people.json';
+import type { PersonDraft } from '../society/people';
 
 type PersonRow = {
   id: string;

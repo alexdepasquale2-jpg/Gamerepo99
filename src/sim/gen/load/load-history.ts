@@ -1,8 +1,8 @@
 /** Assemble world/history/** into typed tables (index order). Pure; no dyn/. */
 
-import historyIndex from '../../data/world/history/index.json';
+import historyIndex from '../../../data/world/history/index.json';
 
-const historyModules = import.meta.glob('../../data/world/history/**/*.json', {
+const historyModules = import.meta.glob('../../../data/world/history/**/*.json', {
   eager: true,
 }) as Record<string, { default?: unknown } | Record<string, unknown>>;
 

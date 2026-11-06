@@ -1,7 +1,7 @@
 /** Seeded facility selection from facilities.json. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { FacilityRow } from './load-facilities-biomes';
+import type { Rng } from '../../rng';
+import type { FacilityRow } from '../load/load-facilities-biomes';
 import type { SettlementGen } from './settlements-gen';
 import type { RouteGen } from './routes-gen';
 

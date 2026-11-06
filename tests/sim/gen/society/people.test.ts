@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generatePeople, generatePersonDraft } from '../../../src/sim/gen/people';
+import { generatePeople, generatePersonDraft } from '../../../../src/sim/gen/society/people';
 
 describe('generatePeople / generatePersonDraft', () => {
   it('same seed+index yields identical drafts', () => {

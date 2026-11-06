@@ -1,8 +1,8 @@
 /** Seeded doctrine selection by polity size + shape pressure. Pure; no dyn/. */
 
-import type { Rng } from '../rng';
-import type { DoctrineRow, WorldShape } from './load-world-tables';
-import type { SettlementGen } from './settlements-gen';
+import type { Rng } from '../../rng';
+import type { DoctrineRow, WorldShape } from '../load/load-world-tables';
+import type { SettlementGen } from '../places/settlements-gen';
 
 export type DoctrineGen = {
   id: string;
