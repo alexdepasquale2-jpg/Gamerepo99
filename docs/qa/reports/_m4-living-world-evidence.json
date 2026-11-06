@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-11-06T15:52:44.916Z",
+  "kind": "m4-living-world-evidence",
+  "status": "STUB",
+  "prep": true,
+  "hold": true,
+  "notes": [
+    "PREP STUB — living-world gate remains HOLD until Forge lists LOD+caravans+doctrine+letters + green validate/test/build.",
+    "Do not treat this JSON as a go-time verdict. Full metrics + determinism double-run fill in later.",
+    "Verdict file docs/qa/reports/m4-living-world.md is intentionally NOT written by this stub."
+  ],
+  "modules": {
+    "lod": {
+      "status": "OK",
+      "path": "src/sim/economy/economy-lod.ts",
+      "present": true,
+      "notes": [
+        "packet-01 LOD in tree; light sample only (prep stub)"
+      ]
+    },
+    "caravans": {
+      "status": "API_PENDING",
+      "path": "src/sim/caravans.ts",
+      "present": false,
+      "notes": [
+        "caravans not in tree yet — await Forge; soft-skip (prep stub)"
+      ]
+    },
+    "doctrine": {
+      "status": "API_PENDING",
+      "path": "src/sim/doctrine-tick.ts",
+      "present": false,
+      "notes": [
+        "doctrine-tick not in tree yet — await Forge; soft-skip (prep stub)"
+      ]
+    },
+    "letters": {
+      "status": "API_PENDING",
+      "path": "src/sim/letters-scale.ts",
+      "present": false,
+      "notes": [
+        "letters-scale not in tree yet — await Forge; soft-skip (prep stub)"
+      ]
+    }
+  },
+  "lod": {
+    "attempted": true,
+    "seed": 42,
+    "dawns": 3,
+    "notes": [
+      "prep stub: short dawn sample only; full 10–20 dawn + determinism double-run at go-time",
+      "LOD available; advanced 3 dawn(s) seed=42"
+    ],
+    "histogram": {},
+    "towns": {
+      "marrow_den": {
+        "economyOptIn": false,
+        "despair": 0.05,
+        "stock": {}
+      },
+      "ashford": {
+        "economyOptIn": false,
+        "despair": 0.15,
+        "stock": {
+          "food_grain": 12,
+          "timber": 6,
+          "fuel_cord": 4,
+          "ore_iron": 0,
+          "wool": 2
+        }
+      },
+      "lowmere": {
+        "economyOptIn": false,
+        "despair": 0.15,
+        "stock": {
+          "food_grain": 8,
+          "timber": 4,
+          "fuel_cord": 3,
+          "ore_iron": 0,
+          "wool": 3
+        }
+      },
+      "city_reach": {
+        "economyOptIn": false,
+        "despair": 0.15,
+        "stock": {
+          "food_grain": 20,
+          "timber": 10,
+          "fuel_cord": 5,
+          "ore_iron": 15,
+          "wool": 8
+        }
+      }
+    }
+  },
+  "determinism": {
+    "attempted": false,
+    "note": "full at go-time"
+  },
+  "ok": true
+}

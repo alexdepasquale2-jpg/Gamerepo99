@@ -1,0 +1,11 @@
+ M scripts/validate/lines.mjs
+ M scripts/validate/load.mjs
+ M src/data/people/people.json
+ M src/data/systems/scenarios/index.json
+ M src/sim/dyn/line-select.ts
+ M src/sim/load-data.ts
+ M src/sim/method-reactions.ts
+?? tests/sim/fixtures/
+?? tests/sim/lines-migration.test.ts
+?? tests/sim/load-data-no-lines.test.ts
+?? tests/sim/method-reactions-fragments.test.ts

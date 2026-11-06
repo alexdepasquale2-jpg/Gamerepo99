@@ -1,0 +1,176 @@
+{
+  "generatedAt": "2026-11-06T15:30:52.352Z",
+  "mode": "all",
+  "ok": true,
+  "modes": {
+    "kindle": {
+      "status": "OK",
+      "ok": true,
+      "histogram": {
+        "mark.applied": 18,
+        "person.reaction": 18,
+        "interaction": 18,
+        "tick": 20,
+        "advance": 1,
+        "route.travel_step": 4,
+        "encounter.spawn": 4,
+        "travel": 1,
+        "site.kindle": 14
+      },
+      "sparkSpendCount": 0,
+      "notes": [],
+      "actLog": [
+        "inspire@marta_ellison",
+        "advance:dawn",
+        "travel:route_marrow_den_chalk_warren",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison",
+        "inspire@marta_ellison"
+      ],
+      "seed": 42,
+      "archetypeId": "marrow",
+      "maxTicks": 20,
+      "ticksRun": 20,
+      "stopReason": "maxTicks",
+      "eventCount": 98,
+      "interactionEvents": 18,
+      "talkGentleViaMethodId": true,
+      "picks": {
+        "inspire": 18,
+        "advance": 1,
+        "travel": 1,
+        "other": 0
+      },
+      "snapshot": {
+        "spark": 100,
+        "burnedOut": false,
+        "hollowCount": 0,
+        "reignitedCount": 1,
+        "tick": 20
+      },
+      "botPlaySessionOpts": {
+        "mode": "play",
+        "seed": 0,
+        "archetypeId": "marrow",
+        "interactionCompat": true
+      }
+    },
+    "packet": {
+      "status": "OK",
+      "ok": true,
+      "histogram": {
+        "mark.applied": 1,
+        "packet.emit": 1,
+        "person.reaction": 1,
+        "interaction": 1,
+        "tick": 5,
+        "packet.deliver": 1
+      },
+      "sparkSpendCount": 0,
+      "notes": [],
+      "actLog": [
+        "inspire@gen_p_11_1",
+        "(tick)",
+        "(tick)",
+        "(tick)",
+        "(tick)",
+        "(tick)"
+      ],
+      "seed": 11,
+      "archetypeId": "marrow",
+      "ticks": 5,
+      "target": {
+        "personId": "gen_p_11_1",
+        "crossTown": true,
+        "kinTo": "ruth_calder",
+        "actionId": "inspire@gen_p_11_1",
+        "listedAtBoot": true
+      },
+      "packetEmit": true,
+      "packetDeliver": true,
+      "lastResolve": {
+        "kind": "resolved",
+        "flameDelta": 3,
+        "sparkCost": 0,
+        "marks": [
+          {
+            "markId": "genuine_growth",
+            "stacks": 1
+          }
+        ],
+        "personId": "gen_p_11_1",
+        "methodId": "inspire"
+      },
+      "sparkBefore": 88,
+      "snapshot": {
+        "spark": 88,
+        "burnedOut": false,
+        "hollowCount": 0,
+        "reignitedCount": 0,
+        "tick": 5
+      }
+    },
+    "refusal": {
+      "status": "OK",
+      "ok": true,
+      "histogram": {
+        "refusal.coal_flicker": 1
+      },
+      "sparkSpendCount": 0,
+      "notes": [],
+      "actLog": [
+        "shame@jonah_pike"
+      ],
+      "seed": 42,
+      "archetypeId": "marrow",
+      "query": {
+        "preferAnchorId": "jonah_pike",
+        "tagsAny": [
+          "child"
+        ],
+        "woundId": "fear"
+      },
+      "target": {
+        "personId": "jonah_pike",
+        "resolvedViaQuery": true,
+        "actionId": "shame@jonah_pike"
+      },
+      "refusalCoalFlicker": true,
+      "refusalTypes": [
+        "refusal.coal_flicker"
+      ],
+      "lastResolve": {
+        "kind": "refused",
+        "flameDelta": 0,
+        "sparkCost": 1,
+        "personId": "jonah_pike",
+        "methodId": "shame"
+      },
+      "sparkBefore": 88,
+      "sparkAfter": 87
+    }
+  },
+  "coverage": {
+    "packetEmit": true,
+    "packetDeliver": true,
+    "refusalCoalFlicker": true,
+    "sparkSpendCount": 0,
+    "siteKindle": true,
+    "markApplied": true,
+    "interaction": true
+  }
+}

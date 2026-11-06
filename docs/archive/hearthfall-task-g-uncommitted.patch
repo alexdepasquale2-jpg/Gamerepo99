@@ -1,0 +1,511 @@
+diff --git a/scripts/validate/lines.mjs b/scripts/validate/lines.mjs
+index cd46aec..a3554d9 100644
+--- a/scripts/validate/lines.mjs
++++ b/scripts/validate/lines.mjs
+@@ -1,54 +1,19 @@
+ export function validateLines(data, ctx) {
+   const { req, people, methods, marks } = ctx;
+-  // Canonical dialogue = line-fragments; lines.json may be deprecated mirror.
+-  const linesPeople = data['lines.json']?.people || {};
++  const frags = data['line-fragments.json']?.fragments || [];
++  req(frags.length >= 1, 'line-fragments.json must be canonical dialogue source');
++  req(
++    data['line-fragments.json']?.canonical === true ||
++      data['line-fragments.json']?.replaces === 'lines.json',
++    'line-fragments.json must be marked canonical (or replaces lines.json)',
++  );
++
+   const methodIds = [...methods];
+   const markIds = [...marks];
+   req(methodIds.length >= 5, 'expected at least 5 methods for line coverage');
+-  for (const pid of people) {
+-    const L = linesPeople[pid];
+-    req(!!L, `lines.json missing person ${pid}`);
+-    if (!L) continue;
+-    req(!!L.voice && !!L.woundLine && !!L.tellGivenUp, `lines.json ${pid}: need voice, woundLine, tellGivenUp`);
+-    for (const mid of methodIds) {
+-      req(typeof L.methods?.[mid] === 'string' && L.methods[mid].trim().length > 0, `lines.json ${pid}: missing method line for ${mid}`);
+-    }
+-    for (const mk of markIds) {
+-      req(typeof L.marks?.[mk] === 'string' && L.marks[mk].trim().length > 0, `lines.json ${pid}: missing mark line for ${mk}`);
+-    }
+-  }
+-  for (const pid of Object.keys(linesPeople)) {
+-    req(people.has(pid), `lines.json unknown person ${pid}`);
+-  }
+-  for (const person of data['people.json']?.people || []) {
+-    req(typeof person.voice === 'string' && person.voice.trim(), `people.json ${person.id}: voice required`);
+-    req(typeof person.woundLine === 'string' && person.woundLine.trim(), `people.json ${person.id}: woundLine required`);
+-    req(typeof person.tellGivenUp === 'string' && person.tellGivenUp.trim(), `people.json ${person.id}: tellGivenUp required`);
+-    const L = linesPeople[person.id];
+-    if (L) {
+-      req(person.voice === L.voice, `people.json ${person.id}: voice must match lines.json`);
+-      req(person.woundLine === L.woundLine, `people.json ${person.id}: woundLine must match lines.json`);
+-      req(person.tellGivenUp === L.tellGivenUp, `people.json ${person.id}: tellGivenUp must match lines.json`);
+-    }
+-  }
+-  const archRefusals = data['lines.json']?.archetypeRefusals || {};
+-  for (const a of (data['archetypes.json']?.archetypes || []).filter((x) => x.m2Playable)) {
+-    const block = archRefusals[a.id];
+-    req(!!block, `lines.json archetypeRefusals missing ${a.id}`);
+-    for (const hid of a.refusalHookIds || []) {
+-      const arr = block?.[hid];
+-      req(
+-        Array.isArray(arr) && arr.length > 0 && arr.every((s) => typeof s === 'string' && s.trim()),
+-        `lines.json ${a.id} needs refusal lines for hook ${hid}`,
+-      );
+-    }
+-  }
+-
+-  // --- lines.json → line-fragments migration check (Niblet: nothing lost) ---
+-  const frags = data['line-fragments.json']?.fragments || [];
+-  req(frags.length >= 1, 'line-fragments.json must be canonical dialogue source');
+ 
+-  const aloneByKey = new Map(); // key -> [{id,text}]
++  // Index alone fragments by person+method / person+mark
++  const aloneByKey = new Map();
+   for (const f of frags) {
+     if (f.slot !== 'alone') continue;
+     const tags = f.tags || [];
+@@ -60,62 +25,101 @@ export function validateLines(data, ctx) {
+     if (methodTag) {
+       const key = `method:${pid}:${String(methodTag).slice('method:'.length)}`;
+       if (!aloneByKey.has(key)) aloneByKey.set(key, []);
+-      aloneByKey.get(key).push({ id: f.id, text: f.text });
++      aloneByKey.get(key).push({ id: f.id, text: f.text, tags });
+     }
+     if (markTag) {
+       const key = `mark:${pid}:${String(markTag).slice('mark:'.length)}`;
+       if (!aloneByKey.has(key)) aloneByKey.set(key, []);
+-      aloneByKey.get(key).push({ id: f.id, text: f.text });
++      aloneByKey.get(key).push({ id: f.id, text: f.text, tags });
+     }
+   }
+ 
+-  let migTotal = 0;
+-  let migCovered = 0; // keyed + verbatim text
+-  let migKeyedOnly = 0; // keyed but text differs
+-  const migMissing = [];
+-  for (const pid of Object.keys(linesPeople)) {
+-    const L = linesPeople[pid] || {};
+-    for (const [mid, text] of Object.entries(L.methods || {})) {
+-      migTotal += 1;
++  // Canonical fragment coverage: every person × method and person × mark has an alone fragment
++  for (const pid of people) {
++    for (const mid of methodIds) {
+       const hits = aloneByKey.get(`method:${pid}:${mid}`) || [];
+-      if (!hits.length) {
+-        migMissing.push(`method ${pid}.${mid}`);
+-        req(false, `MIGRATION: no fragment for lines.json method ${pid}.${mid}`);
+-      } else if (hits.some((h) => h.text === text)) {
+-        migCovered += 1;
+-      } else {
+-        migKeyedOnly += 1;
+-        req(false, `MIGRATION: fragment for ${pid}.${mid} exists but text differs from lines.json`);
+-      }
++      req(hits.length >= 1, `line-fragments missing alone method ${pid}.${mid}`);
+     }
+-    for (const [mk, text] of Object.entries(L.marks || {})) {
+-      migTotal += 1;
++    for (const mk of markIds) {
+       const hits = aloneByKey.get(`mark:${pid}:${mk}`) || [];
+-      if (!hits.length) {
+-        migMissing.push(`mark ${pid}.${mk}`);
+-        req(false, `MIGRATION: no fragment for lines.json mark ${pid}.${mk}`);
+-      } else if (hits.some((h) => h.text === text)) {
+-        migCovered += 1;
+-      } else {
+-        migKeyedOnly += 1;
+-        req(false, `MIGRATION: fragment for mark ${pid}.${mk} exists but text differs from lines.json`);
+-      }
++      req(hits.length >= 1, `line-fragments missing alone mark ${pid}.${mk}`);
+     }
+   }
+ 
+-  const migOk = migMissing.length === 0 && migKeyedOnly === 0 && migCovered === migTotal;
+-  console.log(
+-    `MIGRATION lines→fragments: ${migCovered}/${migTotal} covered verbatim` +
+-      (migKeyedOnly ? `; ${migKeyedOnly} keyed-but-text-mismatch` : '') +
+-      (migMissing.length ? `; MISSING ${migMissing.length}` : '') +
+-      (migOk ? ' — OK (safe for Forge to delete lines.json)' : ' — NOT SAFE TO DELETE'),
+-  );
+-  req(migOk, `lines.json→fragments migration incomplete: ${migCovered}/${migTotal} verbatim`);
+-
+-  if (data['lines.json']?.deprecated) {
++  // people.json voice fields (moved off lines.json)
++  for (const person of data['people.json']?.people || []) {
++    req(typeof person.voice === 'string' && person.voice.trim(), `people.json ${person.id}: voice required`);
++    req(
++      typeof person.woundLine === 'string' && person.woundLine.trim(),
++      `people.json ${person.id}: woundLine required`,
++    );
+     req(
+-      data['line-fragments.json']?.canonical === true || data['line-fragments.json']?.replaces === 'lines.json',
+-      'deprecated lines.json requires canonical line-fragments',
++      typeof person.tellGivenUp === 'string' && person.tellGivenUp.trim(),
++      `people.json ${person.id}: tellGivenUp required`,
++    );
++  }
++
++  // Archetype refusal lines live on hooks (not lines.json)
++  const hookById = new Map((data['hooks.json']?.hooks || []).map((h) => [h.id, h]));
++  for (const a of (data['archetypes.json']?.archetypes || []).filter((x) => x.m2Playable)) {
++    for (const hid of a.refusalHookIds || []) {
++      const hook = hookById.get(hid);
++      req(!!hook, `archetype ${a.id}: missing refusal hook ${hid}`);
++      const bag = hook?.lines || {};
++      const arr = bag[a.id] || bag.default || [];
++      req(
++        Array.isArray(arr) && arr.length > 0 && arr.every((s) => typeof s === 'string' && s.trim()),
++        `hooks ${hid}: need refusal lines for archetype ${a.id} (or default)`,
++      );
++    }
++  }
++
++  // Optional migration check — only while lines.json still present
++  const linesPeople = data['lines.json']?.people || null;
++  if (linesPeople) {
++    let migTotal = 0;
++    let migCovered = 0;
++    let migKeyedOnly = 0;
++    const migMissing = [];
++    for (const pid of Object.keys(linesPeople)) {
++      req(people.has(pid), `lines.json unknown person ${pid}`);
++      const L = linesPeople[pid] || {};
++      for (const [mid, text] of Object.entries(L.methods || {})) {
++        migTotal += 1;
++        const hits = aloneByKey.get(`method:${pid}:${mid}`) || [];
++        if (!hits.length) {
++          migMissing.push(`method ${pid}.${mid}`);
++          req(false, `MIGRATION: no fragment for lines.json method ${pid}.${mid}`);
++        } else if (hits.some((h) => h.text === text)) {
++          migCovered += 1;
++        } else {
++          migKeyedOnly += 1;
++          req(false, `MIGRATION: fragment for ${pid}.${mid} exists but text differs from lines.json`);
++        }
++      }
++      for (const [mk, text] of Object.entries(L.marks || {})) {
++        migTotal += 1;
++        const hits = aloneByKey.get(`mark:${pid}:${mk}`) || [];
++        if (!hits.length) {
++          migMissing.push(`mark ${pid}.${mk}`);
++          req(false, `MIGRATION: no fragment for lines.json mark ${pid}.${mk}`);
++        } else if (hits.some((h) => h.text === text)) {
++          migCovered += 1;
++        } else {
++          migKeyedOnly += 1;
++          req(false, `MIGRATION: fragment for mark ${pid}.${mk} exists but text differs from lines.json`);
++        }
++      }
++    }
++    const migOk = migMissing.length === 0 && migKeyedOnly === 0 && migCovered === migTotal;
++    console.log(
++      `MIGRATION lines→fragments: ${migCovered}/${migTotal} covered verbatim` +
++        (migKeyedOnly ? `; ${migKeyedOnly} keyed-but-text-mismatch` : '') +
++        (migMissing.length ? `; MISSING ${migMissing.length}` : '') +
++        (migOk ? ' — OK (safe for Forge to delete lines.json)' : ' — NOT SAFE TO DELETE'),
+     );
++    req(migOk, `lines.json→fragments migration incomplete: ${migCovered}/${migTotal} verbatim`);
++  } else {
++    console.log('MIGRATION lines→fragments: lines.json absent — fragment canonical checks only');
+   }
+ }
+diff --git a/scripts/validate/load.mjs b/scripts/validate/load.mjs
+index ec13733..e1f4c9e 100644
+--- a/scripts/validate/load.mjs
++++ b/scripts/validate/load.mjs
+@@ -13,7 +13,7 @@ export function resolveDataFile(...parts) {
+   return join(dataDir, ...parts);
+ }
+ 
+-/** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json until Task G. */
++/** Subfolders from Loom §5 / Tidy layout. */
+ const DATA_SUBDIRS = ['dialogue', 'people', 'world', 'economy', 'systems'];
+ 
+ const loadHooksDir = (dataDir, errors) => {
+@@ -65,6 +65,15 @@ export const loadAll = (errors) => {
+     }
+     loadJsonFilesInDir(dir, files, errors);
+   }
++  // dialogue/fragments/ folder merge when monofile line-fragments.json is absent (Loom hard-cap split)
++  if (!files['line-fragments.json']) {
++    try {
++      files['line-fragments.json'] = loadLineFragmentsDir(dataDir, errors);
++    } catch (e) {
++      errors.push(`PARSE dialogue/fragments/: ${e.message}`);
++    }
++  }
++
+   try {
+     files['hooks.json'] = loadHooksDir(dataDir, errors);
+   } catch (e) {
+@@ -105,7 +114,6 @@ export const REQUIRED_FILES = [
+   'proofs.json',
+   'time.json',
+   'ripples.json',
+-  'lines.json',
+   'kinship.json',
+   'letters.json',
+   'doctrines.json',
+diff --git a/src/data/people/people.json b/src/data/people/people.json
+index ee98567..272b961 100644
+--- a/src/data/people/people.json
++++ b/src/data/people/people.json
+@@ -19,11 +19,11 @@
+       "lifeLoop": "Bakes; opens the shutter; feeds whoever still queues",
+       "firstLine": "The dough's gone quiet. So have I.",
+       "reigniteLine": "Heat first. Then flour. Then we see who shows up.",
+-      "backstory": "Marta ran Ellison Bakery for nineteen years. When the mill cut shifts, fewer boots stopped at her door. She baked anyway \u2014 until the morning she measured flour, stared at it, and walked away. The cloth over the dough has been there four days. She tells herself it is practical. It is not.",
++      "backstory": "Marta ran Ellison Bakery for nineteen years. When the mill cut shifts, fewer boots stopped at her door. She baked anyway — until the morning she measured flour, stared at it, and walked away. The cloth over the dough has been there four days. She tells herself it is practical. It is not.",
+       "voice": "Dry flour. Short sentences. Pretends practicality is a personality.",
+       "woundLine": "Nothing's worth the first knead.",
+       "tellGivenUp": "Cloth over the dough four days; she dusts the counter instead of lifting it.",
+-      "linesRef": "lines.json#people.marta_ellison",
++      "linesRef": "dialogue/line-fragments.json#person:marta_ellison",
+       "tags": [],
+       "driftHint": "City folk buy bread like it's a rumor. Used to be they knew the crust.",
+       "cityKinHint": "Cousin Priya's still on the strand. Farther kin went into the glare and stopped writing recipes.",
+@@ -50,11 +50,11 @@
+       "lifeLoop": "Draws on the stoop; shows Ruth; runs errands with charcoal on his fingers",
+       "firstLine": "If I finish it, people will look. Looking is worse.",
+       "reigniteLine": "It's a bird. It's a bad bird. It's mine.",
+-      "backstory": "Jonah used to fill margins with ships and foxes. A visiting clerk laughed at one \u2014 not cruelly, just carelessly \u2014 and Jonah closed the book like a door. The plague of quiet found him early: better a blank page than a wrong line. His mother works night shifts at the mill. She thinks he is 'resting his eyes.'",
++      "backstory": "Jonah used to fill margins with ships and foxes. A visiting clerk laughed at one — not cruelly, just carelessly — and Jonah closed the book like a door. The plague of quiet found him early: better a blank page than a wrong line. His mother works night shifts at the mill. She thinks he is 'resting his eyes.'",
+       "voice": "Quiet, precise, afraid of being seen; sharper than adults expect.",
+       "woundLine": "Finished things get looked at.",
+       "tellGivenUp": "Pencil idle on a blank bird; he erases lines that aren't there.",
+-      "linesRef": "lines.json#people.jonah_pike",
++      "linesRef": "dialogue/line-fragments.json#person:jonah_pike",
+       "driftHint": "Grown-ups talk about the city like a monster under the bed. I just hate being looked at.",
+       "cityKinHint": "Mama says auntie went where the lights never sleep. I drew it once. Erased it.",
+       "authored": true,
+@@ -77,11 +77,11 @@
+       "lifeLoop": "Works the late crew; comes home; cooks for his kids when he can stand",
+       "firstLine": "Leave the boots. The floor's softer.",
+       "reigniteLine": "One foot. Then the other. Don't clap.",
+-      "backstory": "Harold is a father of two and a mill hand who has not missed a week in eleven years \u2014 until this one. His wife left in spring for river work upcountry; the letters slowed. He kept the house upright on fumes. Then the fumes ran out. The children eat at Clara's counter on credit he hates. He can hear them through the wall. He still does not rise.",
++      "backstory": "Harold is a father of two and a mill hand who has not missed a week in eleven years — until this one. His wife left in spring for river work upcountry; the letters slowed. He kept the house upright on fumes. Then the fumes ran out. The children eat at Clara's counter on credit he hates. He can hear them through the wall. He still does not rise.",
+       "voice": "Exhausted father; humor like a bruise; hates pity.",
+       "woundLine": "The floor asks less than the boots.",
+       "tellGivenUp": "Boots by the door laced for nobody; afternoon light on an unmade bed.",
+-      "linesRef": "lines.json#people.harold_finch",
++      "linesRef": "dialogue/line-fragments.json#person:harold_finch",
+       "tags": [],
+       "driftHint": "Hardship used to make us stand. Now it just makes the floor look honest.",
+       "cityKinHint": "Wife took river work toward the cities. Letters slowed like cooling bread.",
+@@ -109,7 +109,7 @@
+       "voice": "Precise, bitter, still a teacher even when she hates the lesson.",
+       "woundLine": "Promises filed under closed.",
+       "tellGivenUp": "Bell rope untouched; chalk tin closed like a held breath.",
+-      "linesRef": "lines.json#people.ruth_calder",
++      "linesRef": "dialogue/line-fragments.json#person:ruth_calder",
+       "tags": [
+         "civic_voice",
+         "doctrine_voice",
+@@ -141,7 +141,7 @@
+       "voice": "Grief like banked coal; talks to the absent brother without saying the name.",
+       "woundLine": "He took the heat with him.",
+       "tellGivenUp": "Forge dark; orders on a nail; he sits where sparks used to land.",
+-      "linesRef": "lines.json#people.elias_boone",
++      "linesRef": "dialogue/line-fragments.json#person:elias_boone",
+       "tags": [],
+       "authored": true,
+       "anchor": true
+@@ -163,11 +163,11 @@
+       "lifeLoop": "Keeps shop; extends quiet credit; knows everyone's shortages",
+       "firstLine": "I shorted a sack of flour in '09. They forgot. I didn't.",
+       "reigniteLine": "Light on the books. If I'm a thief, at least I'm an open one.",
+-      "backstory": "Years ago Clara skimmed inventory during a hard winter to keep her sister fed. No one proved it. She repaid it twice over in secret. The quiet plague found the old bruise and pressed: every customer felt like a witness. She nailed the shutters herself. Harold's children still knock. She pretends not to hear \u2014 and hates herself for the talent.",
++      "backstory": "Years ago Clara skimmed inventory during a hard winter to keep her sister fed. No one proved it. She repaid it twice over in secret. The quiet plague found the old bruise and pressed: every customer felt like a witness. She nailed the shutters herself. Harold's children still knock. She pretends not to hear — and hates herself for the talent.",
+       "voice": "Shopkeeper steel; old guilt polished daily; dry as inventory.",
+       "woundLine": "They forgot the theft. I didn't.",
+       "tellGivenUp": "Shutters nailed from inside; ledger slammed; she pretends not to hear knocks.",
+-      "linesRef": "lines.json#people.clara_whitby",
++      "linesRef": "dialogue/line-fragments.json#person:clara_whitby",
+       "tags": [],
+       "driftHint": "When Mira's letters started sounding like another country, I nailed the shutters.",
+       "cityKinHint": "My sister lives where the days don't match ours. I still owe her a true ledger line.",
+@@ -195,7 +195,7 @@
+       "voice": "Midwife practical; soft where it counts; haunted by a quiet that wasn't hers.",
+       "woundLine": "The last one didn't cry.",
+       "tellGivenUp": "Bag by the door unopened; kettle cold; she flinches at knocks.",
+-      "linesRef": "lines.json#people.nora_voss",
++      "linesRef": "dialogue/line-fragments.json#person:nora_voss",
+       "tags": []
+     },
+     {
+@@ -219,7 +219,7 @@
+       "voice": "Ex-port wit gone flat; music metaphors he half-resents.",
+       "woundLine": "Silence started winning.",
+       "tellGivenUp": "Fiddle cased; he drinks where music used to stand.",
+-      "linesRef": "lines.json#people.samir_okafor",
++      "linesRef": "dialogue/line-fragments.json#person:samir_okafor",
+       "tags": []
+     },
+     {
+@@ -239,11 +239,11 @@
+       "lifeLoop": "Runs the strand crossing; carries news and midwives and grain",
+       "firstLine": "River's got a temper. I used to match it. Not today.",
+       "reigniteLine": "Rope's wet. Hands still know. Push off.",
+-      "backstory": "Tom has ferried Lowmere for forty years. A spring swell nearly took him and a passenger last year; he got them both ashore and then could not make his hands untie the rope again. He invents weather. The river is calm. He is not. Nora's tragedy sits partly on that unlaunched boat \u2014 he knows, and the knowing is a stone in his coat.",
++      "backstory": "Tom has ferried Lowmere for forty years. A spring swell nearly took him and a passenger last year; he got them both ashore and then could not make his hands untie the rope again. He invents weather. The river is calm. He is not. Nora's tragedy sits partly on that unlaunched boat — he knows, and the knowing is a stone in his coat.",
+       "voice": "Old ferryman; invents weather; guilt about Nora's storm sits in his coat.",
+       "woundLine": "River's calm. I'm not.",
+       "tellGivenUp": "Ferry unlaunched; rope soft with salt; he watches both shores like debts.",
+-      "linesRef": "lines.json#people.tom_briggs",
++      "linesRef": "dialogue/line-fragments.json#person:tom_briggs",
+       "tags": []
+     },
+     {
+@@ -267,7 +267,7 @@
+       "voice": "Tired grower; dirt under nails even when she stopped; wry with plants.",
+       "woundLine": "People stopped being hungry for tomorrow.",
+       "tellGivenUp": "Plot a fist of thistle; seed packets yellow in a tin; sleeps in the shed.",
+-      "linesRef": "lines.json#people.priya_sen",
++      "linesRef": "dialogue/line-fragments.json#person:priya_sen",
+       "tags": []
+     },
+     {
+@@ -287,11 +287,11 @@
+       "lifeLoop": "Organizes odd jobs; matches hands to needs; keeps the board honest",
+       "firstLine": "I posted hope for a living. The county called it 'unofficial.'",
+       "reigniteLine": "Ink. Paper. A job that exists because I say it does.",
+-      "backstory": "Leon was the unofficial labor exchange \u2014 the man who knew who could caulk a hull or mind a child for an afternoon. A magistrate branded his board 'disorderly assembly' after a wage dispute he only mediated. He took the notices down and discovered how fast a town forgets how to ask for help. The board is bare wood now. So is he.",
++      "backstory": "Leon was the unofficial labor exchange — the man who knew who could caulk a hull or mind a child for an afternoon. A magistrate branded his board 'disorderly assembly' after a wage dispute he only mediated. He took the notices down and discovered how fast a town forgets how to ask for help. The board is bare wood now. So is he.",
+       "voice": "Organizer bitterness; ink-stained; believes paper can be an oath.",
+       "woundLine": "They called hope disorderly.",
+       "tellGivenUp": "Notice board bare wood; he stands beside it like a fired guard.",
+-      "linesRef": "lines.json#people.leon_march",
++      "linesRef": "dialogue/line-fragments.json#person:leon_march",
+       "tags": [
+         "civic_voice",
+         "doctrine_voice",
+@@ -318,7 +318,7 @@
+       "lifeLoop": "City clerking Clara no longer understands",
+       "firstLine": "You would not recognize my days.",
+       "reigniteLine": "I wrote. Do not expect me on the road.",
+-      "backstory": "Clara's elder sister. Took city board work a decade ago. The slow drift made her life illegible to Ashford \u2014 and Ashford illegible to her. She is a packet endpoint, not a street you walk in M3.",
++      "backstory": "Clara's elder sister. Took city board work a decade ago. The slow drift made her life illegible to Ashford — and Ashford illegible to her. She is a packet endpoint, not a street you walk in M3.",
+       "voice": "Cool, tired, precise; misses home without knowing how to say dirt.",
+       "woundLine": "Home and here stopped meaning the same hardship.",
+       "tellGivenUp": "Unanswered letters from Clara stacked under a glass paperweight.",
+@@ -328,7 +328,7 @@
+         "doctrine_voice",
+         "leader"
+       ],
+-      "linesRef": "lines.json#people.mira_whitby",
++      "linesRef": "dialogue/line-fragments.json#person:mira_whitby",
+       "driftHint": "We used to rise together. Then our days stopped rhyming.",
+       "cityKinHint": "Clara thinks I abandoned Ashford. I think Ashford abandoned time."
+     }
+diff --git a/src/data/systems/scenarios/index.json b/src/data/systems/scenarios/index.json
+index 831e82c..f91fabf 100644
+--- a/src/data/systems/scenarios/index.json
++++ b/src/data/systems/scenarios/index.json
+@@ -19,7 +19,7 @@
+   "features": {
+     "bakedDynamismLines": false
+   },
+-  "notes": "All scenarios run with bakedDynamismLines=false so fixed lines.json paths hold. Brood M2: bodySlots=3, activeBodiesMax=1 (Forge 595d722) \u2014 scenarios must not require multi-active bodies. Line text asserts should prefer bus/marks/flame; if asserting text, allow lineIdAny including fallback mirrors.",
++  "notes": "All scenarios run with bakedDynamismLines=false so fixed fragment alone paths hold. Brood M2: bodySlots=3, activeBodiesMax=1 (Forge 595d722) \u2014 scenarios must not require multi-active bodies. Line text asserts should prefer bus/marks/flame; if asserting text, allow lineIdAny including fallback mirrors.",
+   "m2Brood": {
+     "bodySlots": 3,
+     "activeBodiesMax": 1,
+diff --git a/src/sim/dyn/line-select.ts b/src/sim/dyn/line-select.ts
+index 8d49bc7..369b166 100644
+--- a/src/sim/dyn/line-select.ts
++++ b/src/sim/dyn/line-select.ts
+@@ -111,14 +111,15 @@ function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: s
+ }
+ 
+ function fixedFromCandidates(cands: Frag[], ctx: ReactionPickCtx): ReactionLineResult {
++  const noAxis = cands.filter((f) => !(f.tags ?? []).some((t) => t.startsWith('axis:')));
++  const pool = noAxis.length ? noAxis : cands;
+   const preferred =
+-    cands.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
+-    cands.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
+-    cands[0];
++    pool.find((f) => (f.tags ?? []).includes('verbatim_mirror')) ??
++    pool.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
++    pool.find((f) => !(f.tags ?? []).includes('authored_anchor')) ??
++    pool[0];
+   if (preferred?.text) return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
+-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> }).people;
+-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
+-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
++  return { lineId: `${ctx.personId}.${ctx.methodId}`, text: '', source: 'fallback' };
+ }
+ 
+ function trustOf(ctx: ReactionPickCtx): number {
+diff --git a/src/sim/load-data.ts b/src/sim/load-data.ts
+index 20a0bf1..758d6e4 100644
+--- a/src/sim/load-data.ts
++++ b/src/sim/load-data.ts
+@@ -15,7 +15,6 @@ import eventsJson from '../data/systems/events.json';
+ import proofsJson from '../data/people/proofs.json';
+ import timeJson from '../data/systems/time.json';
+ import ripplesJson from '../data/systems/ripples.json';
+-import linesJson from '../data/lines.json';
+ import kinshipJson from '../data/people/kinship.json';
+ import lettersJson from '../data/dialogue/letters.json';
+ import doctrinesJson from '../data/systems/doctrines.json';
+@@ -172,7 +171,7 @@ export function loadData(): DataTables {
+     proofs: (proofsJson.proofs ?? []) as unknown[],
+     time: timeJson,
+     ripples: ripplesJson,
+-    lines: linesJson,
++    lines: { deprecated: true, people: {}, replaces: 'line-fragments.json' },
+     kinship: kinshipJson,
+     letters: lettersJson,
+     doctrines: doctrinesJson,
+diff --git a/src/sim/method-reactions.ts b/src/sim/method-reactions.ts
+index 96cb132..daa850a 100644
+--- a/src/sim/method-reactions.ts
++++ b/src/sim/method-reactions.ts
+@@ -30,11 +30,41 @@ export type ReactionLineResult = {
+ };
+ export type ReactionLineSelector = (ctx: ReactionPickCtx) => ReactionLineResult;
+ 
++function isAloneSlotFrag(f: { slot?: string; tags?: string[] }): boolean {
++  const tags = f.tags ?? [];
++  return (
++    f.slot === 'alone' ||
++    tags.includes('slot:alone') ||
++    (!f.slot && !tags.some((t) => t.startsWith('slot:') && t !== 'slot:alone'))
++  );
++}
++
++/** Fixed path: prefer non-axis alone (old lines.json verbatim), then mirrors. */
++function pickPreferredAlone(
++  alone: Array<{ id: string; text: string; tags?: string[] }>,
++): { id: string; text: string; tags?: string[] } | undefined {
++  const noAxis = alone.filter((f) => !(f.tags ?? []).some((t) => t.startsWith('axis:')));
++  const pool = noAxis.length ? noAxis : alone;
++  return (
++    pool.find((f) => (f.tags ?? []).includes('verbatim_mirror')) ??
++    pool.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
++    pool.find((f) => !(f.tags ?? []).includes('authored_anchor')) ??
++    pool[0]
++  );
++}
++
+ export function pickFixedReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
+-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> })
+-    .people;
+-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
+-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
++  const personTag = `person:${ctx.personId}`;
++  const methodTag = `method:${ctx.methodId}`;
++  const frags = ctx.state.data.lineFragments?.fragments ?? [];
++  const alone = frags.filter(
++    (f) => isAloneSlotFrag(f) && (f.tags ?? []).includes(personTag) && (f.tags ?? []).includes(methodTag),
++  );
++  const preferred = pickPreferredAlone(alone);
++  if (preferred?.text) {
++    return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
++  }
++  return { lineId: `${ctx.personId}.${ctx.methodId}`, text: '', source: 'fallback' };
+ }
+ 
+ /** Set per-state selector; null resets to pickFixedReactionLine. No cross-state leaks. */
