@@ -6,6 +6,7 @@ import { CHUNK_SIZE } from '../sim/map/constants';
 import {
   paintChunkContents,
   paintCliffStrip,
+  paintLowerTerraceShade,
   paintProp,
   paintTownMarker,
   type PaintHost,
@@ -39,7 +40,10 @@ export function createChunkLayer(
   }
   if (townMarkers[0]) {
     const t = townMarkers[0];
-    paintCliffStrip(host, null, t.q - 3, t.r + 3, 12);
+    const cq = t.q - 4;
+    const cr = t.r + 4;
+    paintCliffStrip(host, null, cq, cr, 14);
+    paintLowerTerraceShade(host, null, cq, cr, 14, 6);
   }
 
   return {

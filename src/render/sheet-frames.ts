@@ -1,6 +1,16 @@
 /**
  * Atlas frame configs for BAKED_SHEETS + ansimuz hero.
  * Call registerSheetFrames after images are loaded (BootScene.create).
+ *
+ * Named stamp rects (sheet-buildings, after near-white scrub):
+ *   inn   (39,9)-(188,150)  149×141
+ *   house (300,8)-(396,150) 96×142  — side fragments; prefer geometric house2
+ *   tree  (8,21)-(38,150)   30×129
+ *   tree-b(39,18)-(70,150)  31×132
+ *
+ * Cliff grid (sheet-cliff 64×32): lip 0–3, face 4–7, base 8–11
+ * Ground (sheet-ground 32×32): grass 0–2, edge 6–11, dirt 12–17
+ * Hero (ansimuz 16×16): row0 side 0–2, row1 back 3–5, row2 front 6–8
  */
 import type Phaser from 'phaser';
 import { BAKED_SHEETS } from './asset-manifest';
@@ -10,9 +20,9 @@ export const HERO_TEX = 'hero-ansimuz';
 export const SHADOW_TEX = 'soft-shadow';
 export const GRASS_CALM_TEX = 'grass-calm';
 export const DIRT_CALM_TEX = 'dirt-calm';
+export const DIRT_EDGE_TEX = 'dirt-edge';
 
 export type SheetFrameConfig = {
-  /** Texture key after load (basename without .png preferred). */
   key: string;
   repoPath: string;
   frameWidth: number;
@@ -31,6 +41,21 @@ export const SHEET_FRAME_CONFIGS: SheetFrameConfig[] = [
   { key: 'sheet-cliff', repoPath: BAKED_SHEETS.cliff, frameWidth: 64, frameHeight: 32 },
 ];
 
+/** Documented named-stamp rects for Forge review. */
+export const NAMED_STAMP_RECTS = {
+  inn: { sheet: 'sheet-buildings', x: 39, y: 9, w: 149, h: 141 },
+  house: { sheet: 'sheet-buildings', x: 300, y: 8, w: 96, h: 142 },
+  tree: { sheet: 'sheet-buildings', x: 8, y: 21, w: 30, h: 129 },
+  'tree-b': { sheet: 'sheet-buildings', x: 39, y: 18, w: 31, h: 132 },
+  'cliff-lip': { sheet: 'sheet-cliff', frame: '0' },
+  'cliff-face': { sheet: 'sheet-cliff', frame: '4' },
+  'cliff-base': { sheet: 'sheet-cliff', frame: '8' },
+  'grass-calm': { keys: ['grass-calm-0', 'grass-calm-1', 'grass-calm-2'] },
+  'road-dirt': { sheet: 'sheet-ground', frames: [12, 13, 14] },
+  'road-edge-ns': { sheet: 'sheet-ground', frames: [6, 7, 8] },
+  hero: { sheet: HERO_TEX, frameW: 16, frameH: 16, idle: 7, walkDown: [6, 7, 8], walkUp: [3, 4, 5], walkSide: [0, 1, 2] },
+} as const;
+
 export function sheetTextureKey(sheetId: string): string {
   if (sheetId.startsWith('sheet-')) return sheetId;
   const map: Record<string, string> = {
@@ -47,7 +72,6 @@ export function sheetTextureKey(sheetId: string): string {
   return map[sheetId] ?? sheetId;
 }
 
-/** Queue image loads for all baked sheets + hero. */
 export function preloadOverworldSheets(load: Phaser.Loader.LoaderPlugin): void {
   for (const cfg of SHEET_FRAME_CONFIGS) {
     load.image(cfg.key, toPublicUrl(cfg.repoPath));
@@ -88,67 +112,135 @@ function addNamedFrame(
 ): void {
   if (!textures.exists(key)) return;
   const tex = textures.get(key);
-  if (tex.has(frameName)) return;
+  if (tex.has(frameName)) {
+    // Replace stale rects from earlier boots in HMR — remove then re-add
+    try {
+      tex.remove(frameName);
+    } catch {
+      /* ignore */
+    }
+  }
   tex.add(frameName, 0, x, y, w, h);
 }
 
-/** Inn/tree/terrace crops that match mockup v4 better than uniform grids. */
+/** Connected-component stamps (warm half only; white scrubbed on sheet). */
 export function registerNamedStamps(textures: Phaser.Textures.TextureManager): void {
-  // Alive inn complex (trees + two-story INN) — covers cells 0/1/4/5 of the 160×100 grid
-  addNamedFrame(textures, 'sheet-buildings', 'inn', 0, 0, 320, 200);
-  addNamedFrame(textures, 'sheet-buildings', 'inn-roof', 0, 0, 320, 100);
-  addNamedFrame(textures, 'sheet-buildings', 'tree', 4, 8, 56, 180);
-  addNamedFrame(textures, 'sheet-buildings', 'tree-b', 48, 20, 48, 160);
-  // Waystation / camp-ish side wing (cell 2+6 area)
-  addNamedFrame(textures, 'sheet-buildings', 'wing', 320, 0, 160, 200);
-  // Terrace cliff strip (grass lip + dirt face)
-  addNamedFrame(textures, 'sheet-cliff', 'terrace', 0, 0, 256, 100);
+  addNamedFrame(textures, 'sheet-buildings', 'inn', 39, 9, 149, 141);
+  addNamedFrame(textures, 'sheet-buildings', 'house', 300, 8, 96, 142);
+  addNamedFrame(textures, 'sheet-buildings', 'tree', 8, 21, 30, 129);
+  addNamedFrame(textures, 'sheet-buildings', 'tree-b', 39, 18, 31, 132);
+  // Cliff lip / face / base = grid frames 0, 4, 8 (also aliased by name)
   addNamedFrame(textures, 'sheet-cliff', 'lip', 0, 0, 64, 32);
   addNamedFrame(textures, 'sheet-cliff', 'face', 0, 32, 64, 32);
   addNamedFrame(textures, 'sheet-cliff', 'base', 0, 64, 64, 32);
-  addNamedFrame(textures, 'sheet-cliff', 'face-l', 2, 104, 78, 24);
-  addNamedFrame(textures, 'sheet-cliff', 'face-r', 83, 104, 45, 24);
 }
 
-/** Soft elliptical shadow under stamps / hero. */
 export function generateSoftShadow(scene: Phaser.Scene): void {
   if (scene.textures.exists(SHADOW_TEX)) return;
   const g = scene.make.graphics({ x: 0, y: 0 });
-  g.fillStyle(0x000000, 0.28);
+  g.fillStyle(0x000000, 0.22);
   g.fillEllipse(16, 6, 28, 10);
   g.generateTexture(SHADOW_TEX, 32, 12);
   g.destroy();
 }
 
 /**
- * Calm grass + dirt (v4): solid mean color, ±2 micro noise, soft blob tint.
- * Avoids sheet-ground frame hashing that reads as a checkerboard.
+ * Calm grass (v4): flat base + ±2 micro noise + soft low-freq blob tint.
+ * No fillCircle swirls (those read as repeating polka dots).
  */
 export function generateCalmGround(scene: Phaser.Scene): void {
-  const mk = (key: string, rgb: number, blobRgb: number, size = 32) => {
+  const size = 32;
+  const mkGrass = (key: string, br: number, bg: number, bb: number, seed: number) => {
     if (scene.textures.exists(key)) return;
-    const g = scene.make.graphics({ x: 0, y: 0 });
-    g.fillStyle(rgb, 1);
-    g.fillRect(0, 0, size, size);
-    // Soft irregular blob (not square tile structure)
-    g.fillStyle(blobRgb, 0.18);
-    g.fillCircle(size * 0.35, size * 0.4, size * 0.45);
-    g.fillStyle(blobRgb, 0.12);
-    g.fillCircle(size * 0.7, size * 0.65, size * 0.35);
-    g.generateTexture(key, size, size);
-    g.destroy();
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const img = ctx.createImageData(size, size);
+    // Low-freq value noise via bilinear upsample of 4×4
+    const cell = 4;
+    const grid: number[][] = [];
+    let s = seed >>> 0;
+    const rnd = () => {
+      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+      return (s & 0xffff) / 0xffff;
+    };
+    for (let gy = 0; gy <= cell; gy++) {
+      grid[gy] = [];
+      for (let gx = 0; gx <= cell; gx++) grid[gy]![gx] = rnd();
+    }
+    const sample = (x: number, y: number) => {
+      const fx = (x / size) * cell;
+      const fy = (y / size) * cell;
+      const x0 = Math.floor(fx);
+      const y0 = Math.floor(fy);
+      const tx = fx - x0;
+      const ty = fy - y0;
+      const v00 = grid[y0]![x0]!;
+      const v10 = grid[y0]![Math.min(cell, x0 + 1)]!;
+      const v01 = grid[Math.min(cell, y0 + 1)]![x0]!;
+      const v11 = grid[Math.min(cell, y0 + 1)]![Math.min(cell, x0 + 1)]!;
+      const a = v00 + (v10 - v00) * tx;
+      const b = v01 + (v11 - v01) * tx;
+      return a + (b - a) * ty;
+    };
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        const micro = ((Math.imul(x + seed, 374761393) ^ Math.imul(y, 668265263)) & 7) - 3;
+        const blob = sample(x, y); // 0..1
+        const warm = (blob - 0.42) * 18;
+        img.data[i] = Math.max(0, Math.min(255, br + micro + warm));
+        img.data[i + 1] = Math.max(0, Math.min(255, bg + micro + warm * 0.6));
+        img.data[i + 2] = Math.max(0, Math.min(255, bb + micro - warm * 0.4));
+        img.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    scene.textures.addCanvas(key, canvas);
   };
-  // Mean of ansimuz grass (~138,184,65) nudged greener like v4 reignited
-  mk(`${GRASS_CALM_TEX}-0`, 0x82b84a, 0x6a9e38);
-  mk(`${GRASS_CALM_TEX}-1`, 0x84ba4c, 0x5f9434);
-  mk(`${GRASS_CALM_TEX}-2`, 0x80b648, 0x72a840);
-  // Alias primary
+
+  mkGrass(`${GRASS_CALM_TEX}-0`, 128, 186, 68, 0x11);
+  mkGrass(`${GRASS_CALM_TEX}-1`, 118, 168, 58, 0x22); // cooler moss patch
+  mkGrass(`${GRASS_CALM_TEX}-2`, 140, 192, 78, 0x33); // warmer sun patch
   if (!scene.textures.exists(GRASS_CALM_TEX)) {
-    mk(GRASS_CALM_TEX, 0x82b84a, 0x6a9e38);
+    mkGrass(GRASS_CALM_TEX, 130, 184, 70, 0x11);
   }
-  // Dirt / road fill (tan)
-  mk(DIRT_CALM_TEX, 0x9a7a48, 0x8a6a3a);
-  mk(`${DIRT_CALM_TEX}-edge`, 0x8e7344, 0x7a6238);
+
+  // Solid dirt fill
+  if (!scene.textures.exists(DIRT_CALM_TEX)) {
+    const g = scene.make.graphics({ x: 0, y: 0 });
+    g.fillStyle(0x9a7a48, 1);
+    g.fillRect(0, 0, 32, 32);
+    g.fillStyle(0x8a6a3a, 0.25);
+    g.fillRect(4, 6, 8, 5);
+    g.fillRect(18, 20, 7, 4);
+    g.generateTexture(DIRT_CALM_TEX, 32, 32);
+    g.destroy();
+  }
+
+  // Dirt with soft N/S alpha fade for 1-tile road edges over grass
+  if (!scene.textures.exists(DIRT_EDGE_TEX)) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    const img = ctx.createImageData(32, 32);
+    for (let y = 0; y < 32; y++) {
+      for (let x = 0; x < 32; x++) {
+        const i = (y * 32 + x) * 4;
+        const edge = Math.min(y, 31 - y);
+        const a = edge <= 5 ? Math.floor((edge / 5) * 220) : 255;
+        const micro = ((x * 13 + y * 7) & 5) - 2;
+        img.data[i] = 154 + micro;
+        img.data[i + 1] = 122 + micro;
+        img.data[i + 2] = 72 + micro;
+        img.data[i + 3] = a;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    scene.textures.addCanvas(DIRT_EDGE_TEX, canvas);
+  }
 }
 
 export function registerSheetFrames(textures: Phaser.Textures.TextureManager): void {
@@ -169,7 +261,6 @@ export function createHeroAnims(anims: Phaser.Animations.AnimationManager): void
       repeat: -1,
     });
   };
-  // Rows: 0 side, 1 back, 2 front — cols walk cycle (16×16 ansimuz)
   mk('hero-walk-down', [6, 7, 8]);
   mk('hero-walk-up', [3, 4, 5]);
   mk('hero-walk-left', [0, 1, 2]);

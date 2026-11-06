@@ -68,7 +68,7 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(1_000_000);
 
     this.hint = this.add
-      .text(8, 26, `settlements: ${this.layout.settlements.length}`, {
+      .text(8, 48, `settlements: ${this.layout.settlements.length}`, {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#8a7a68',
