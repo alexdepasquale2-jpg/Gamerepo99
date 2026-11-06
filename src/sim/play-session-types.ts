@@ -1,5 +1,7 @@
 /** Play session public types (soft-cap extract from play-session). */
 
+import type { ScenarioPersonView } from './scenario-resolve';
+
 export type PlayAction = { id: string; family?: string };
 export type PlayEvent = { type: string; methodId?: string };
 export type PlaySnapshot = {
@@ -13,6 +15,18 @@ export type PlaySnapshot = {
   reignitedCount: number;
   hollowCount: number;
 };
+export type PlayMetrics = {
+  firstChoiceAtTick?: number;
+  firstConsequenceAtTick?: number;
+};
+export type PlayLastResolve = {
+  flameDelta: number;
+  sparkCost: number;
+  kind: 'resolved' | 'refused';
+  marks?: { markId: string; stacks: number }[];
+  personId?: string;
+  methodId?: string;
+};
 export type PlaySession = {
   start(opts?: { seed?: number; archetypeId?: string }): void;
   listActions(): PlayAction[];
@@ -23,6 +37,9 @@ export type PlaySession = {
   listRoutes(): string[];
   travel(routeId: string): void;
   dump(): string;
+  listPeople(): ScenarioPersonView[];
+  metrics(): PlayMetrics;
+  lastResolve(): PlayLastResolve | undefined;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }

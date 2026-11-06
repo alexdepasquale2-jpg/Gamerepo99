@@ -58,6 +58,8 @@
   "generatedWorld": true,
   "resolvePerson": {
     "preferAnchorId": "marta_ellison",
+    "woundId": "apathy",
+    "siteKind": "bakery",
     "fallback": "first_matching_tags"
   },
   "specialBar": true

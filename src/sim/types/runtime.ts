@@ -33,11 +33,13 @@ export type PersonState = {
   marks?: { markId: string; stacks: number }[];
   townId?: string;
   siteId?: string;
+  siteKind?: string;
   woundId?: string;
   tags?: string[];
   age?: number;
   x?: number;
   y?: number;
+  anchor?: boolean;
 };
 
 export type PacketState = {

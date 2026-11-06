@@ -66,5 +66,14 @@
   },
   "features": {
     "bakedDynamismLines": false
+  },
+  "worldSeed": 11,
+  "generatedWorld": true,
+  "specialBar": true,
+  "resolvePerson": {
+    "preferAnchorId": "marta_ellison",
+    "woundId": "apathy",
+    "siteKind": "bakery",
+    "fallback": "first_matching_tags"
   }
 }

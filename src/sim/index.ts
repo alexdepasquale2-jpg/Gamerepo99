@@ -47,3 +47,14 @@ export type { TownMarker } from './towns-from-dump';
 export { getWorldRenderSnapshot } from './world-render-snapshot';
 export type { WorldRenderSnapshot } from './world-render-snapshot';
 
+
+export {
+  resolveScenarioPerson,
+  siteKindFromSiteId,
+} from './scenario-resolve';
+export type {
+  ScenarioPersonQuery,
+  ScenarioPersonView,
+  ScenarioPeopleSource,
+} from './scenario-resolve';
+export type { PlayMetrics, PlayLastResolve } from './play-session-types';

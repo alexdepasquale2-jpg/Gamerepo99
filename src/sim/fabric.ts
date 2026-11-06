@@ -53,4 +53,22 @@ export {
   type PlaySnapshot,
   type PlayAction,
   type PlayEvent,
+  type PlayMetrics,
+  type PlayLastResolve,
 } from './play-session';
+
+export {
+  resolveScenarioPerson,
+  siteKindFromSiteId,
+  type ScenarioPersonQuery,
+  type ScenarioPersonView,
+  type ScenarioPeopleSource,
+} from './scenario-resolve';
+
+export {
+  parseAdvanceAction,
+  advanceToDusk,
+  advanceToDawn,
+  advanceDays,
+  type AdvanceTarget,
+} from './scenario-advance';

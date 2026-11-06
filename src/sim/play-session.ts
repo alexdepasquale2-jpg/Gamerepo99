@@ -9,13 +9,9 @@ import {
   type InspectSession,
 } from './fabric/world-dump';
 import { assembleInhabitant } from './inhabitant';
-import { loadData, type DataTables } from './load-data';
-import { peopleFromWorld, pickTownId } from './play-session-boot';
-import {
-  actMethod,
-  installPlayReactions,
-  listMethodActions,
-} from './play-session-act';
+import { loadData } from './load-data';
+import { buildPlaySnapshot, peopleFromWorld, pickTownId } from './play-session-boot';
+import { actMethod, installPlayReactions, listMethodActions } from './play-session-act';
 import { createRng } from './rng';
 import {
   listRoutesFrom,
@@ -30,25 +26,39 @@ import {
 import { tickPackets } from './packets';
 import {
   attachSuccessionHandle,
-  isBurnedOut,
   lockedSuccessionUi,
   maybeOpenSuccession,
   type SuccessionUi,
 } from './succession';
+import { siteKindFromSiteId, type ScenarioPersonView } from './scenario-resolve';
 
 export type {
   PlayAction,
   PlayEvent,
   PlaySnapshot,
   PlaySession,
+  PlayMetrics,
+  PlayLastResolve,
   CreatePlaySessionOpts,
 } from './play-session-types';
 import type {
   PlayEvent,
   PlaySession,
-  PlaySnapshot,
+  PlayLastResolve,
   CreatePlaySessionOpts,
 } from './play-session-types';
+
+function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
+  return {
+    id: p.id,
+    woundId: p.woundId,
+    tags: p.tags,
+    siteId: p.siteId,
+    siteKind: p.siteKind ?? siteKindFromSiteId(p.siteId),
+    anchor: p.anchor,
+    marks: p.marks?.map((m) => ({ ...m })),
+  };
+}
 
 function createPlayModeSession(defaults: { seed: number; archetypeId: string }): PlaySession {
   let seed = defaults.seed;
@@ -60,6 +70,8 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
   const eventLog: PlayEvent[] = [];
   const successionOpen = { value: false };
   let successionUi: SuccessionUi = lockedSuccessionUi();
+  const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
+  let lastResolveVal: PlayLastResolve | undefined;
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
@@ -68,6 +80,9 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
     eventLog.length = 0;
     successionOpen.value = false;
     successionUi = lockedSuccessionUi();
+    metrics.firstChoiceAtTick = undefined;
+    metrics.firstConsequenceAtTick = undefined;
+    lastResolveVal = undefined;
     const data = loadData();
     world = generateWorld({ seed, includeAnchors: true });
     routes = toTravelRoutes(world.routes ?? []);
@@ -94,26 +109,26 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
   }
 
   function appendJuiceSince(beforeLen: number): void {
-    const ids = state?.bus?.lastIds ?? [];
-    for (const type of ids.slice(beforeLen)) {
-      eventLog.push({ type });
-    }
+    for (const type of state?.bus?.lastIds?.slice(beforeLen) ?? []) eventLog.push({ type });
   }
 
   const session: PlaySession = {
     start(opts) {
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
-    listActions() {
-      if (!state) return [];
-      return listMethodActions(state);
-    },
+    listActions: () => (state ? listMethodActions(state) : []),
     act(actionId) {
       if (!state) {
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
-      actMethod(state, actionId, eventLog);
+      actMethod(state, actionId, eventLog, {
+        tickN,
+        metrics,
+        setLastResolve: (r) => {
+          lastResolveVal = r;
+        },
+      });
       maybeOpenSuccession(state, eventLog, successionOpen);
     },
     tick() {
@@ -126,35 +141,11 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'tick' });
     },
-    snapshot(): PlaySnapshot {
-      const player = state?.player;
-      const spark = player?.spark ?? 0;
-      const burnAt = (state?.data as DataTables | undefined)?.reigniteThreshold ?? 35;
-      let reignitedCount = 0;
-      let hollowCount = 0;
-      for (const p of Object.values(state?.people ?? {})) {
-        if (p.flame >= burnAt) reignitedCount += 1;
-        if ((p.marks ?? []).some((m) => m.markId === 'hollowness')) hollowCount += 1;
-      }
-      return {
-        tick: tickN,
-        day: state?.day ?? 0,
-        spark,
-        burnedOut:
-          successionOpen.value ||
-          (player ? isBurnedOut(player, state?.data as DataTables | undefined) : spark <= 0),
-        townId: player?.townId ?? 'unknown',
-        townCount: world?.gapSites?.length ?? world?.settlements?.length ?? 0,
-        fingerprint: `${world?.fingerprint ?? 'unbooted'}-t${tickN}`,
-        reignitedCount,
-        hollowCount,
-      };
-    },
+    snapshot: () =>
+      buildPlaySnapshot({ tickN, state, world, successionOpen: successionOpen.value }),
     events: () => [...eventLog],
-    listRoutes() {
-      if (!state?.player.townId) return [];
-      return listRoutesFrom(routes, state.player.townId);
-    },
+    listRoutes: () =>
+      state?.player.townId ? listRoutesFrom(routes, state.player.townId) : [],
     travel(routeId) {
       if (!state) return;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
@@ -165,6 +156,9 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       eventLog.push({ type: 'travel' });
     },
     dump: () => (world ? dumpWorld(world).text : ''),
+    listPeople: () => Object.values(state?.people ?? {}).map(toPersonView),
+    metrics: () => ({ ...metrics }),
+    lastResolve: () => (lastResolveVal ? { ...lastResolveVal } : undefined),
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

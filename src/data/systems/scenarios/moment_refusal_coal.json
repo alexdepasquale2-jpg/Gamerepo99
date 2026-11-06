@@ -50,6 +50,10 @@
   "generatedWorld": true,
   "resolvePerson": {
     "preferAnchorId": "jonah_pike",
+    "woundId": "fear",
+    "tagsAny": [
+      "child"
+    ],
     "fallback": "first_matching_tags"
   },
   "specialBar": true

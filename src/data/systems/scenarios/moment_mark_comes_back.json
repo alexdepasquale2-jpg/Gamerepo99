@@ -80,6 +80,7 @@
   "generatedWorld": true,
   "resolvePerson": {
     "preferAnchorId": "harold_finch",
+    "woundId": "exhaustion",
     "fallback": "first_matching_tags"
   },
   "specialBar": true

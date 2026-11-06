@@ -3,11 +3,24 @@
 import { installFabricReactionSelector } from './dyn/line-select';
 import type { DataTables } from './load-data';
 import { commitMethod } from './methods';
+import {
+  advanceDays,
+  advanceToDawn,
+  advanceToDusk,
+  parseAdvanceAction,
+} from './scenario-advance';
+import type { PlayLastResolve } from './play-session-types';
 import type { SimState } from './types/runtime';
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };
 type MethodRow = { id: string; family?: string };
+
+export type ActExtras = {
+  tickN: number;
+  metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number };
+  setLastResolve: (r: PlayLastResolve | undefined) => void;
+};
 
 export function installPlayReactions(state: SimState): void {
   installFabricReactionSelector(state);
@@ -31,22 +44,76 @@ export function parseMethodAction(actionId: string): { methodId: string; personI
   return { methodId: actionId.slice(0, at), personId: actionId.slice(at + 1) };
 }
 
-/** Commit methodId@personId; append juice ids (spark.spend, …) to eventLog. */
-export function actMethod(state: SimState, actionId: string, eventLog: PlayEvent[]): void {
+function appendJuice(state: SimState, eventLog: PlayEvent[], beforeLen: number, methodId?: string): void {
+  const ids = state.bus?.lastIds ?? [];
+  for (const type of ids.slice(beforeLen)) {
+    eventLog.push(methodId ? { type, methodId } : { type });
+  }
+}
+
+/** Commit methodId@personId / advance:* / approach@personId; append juice to eventLog. */
+export function actMethod(
+  state: SimState,
+  actionId: string,
+  eventLog: PlayEvent[],
+  extras?: ActExtras,
+): void {
+  if (actionId.startsWith('approach@')) {
+    if (extras && extras.metrics.firstChoiceAtTick == null) {
+      extras.metrics.firstChoiceAtTick = extras.tickN;
+    }
+    eventLog.push({ type: 'approach', methodId: actionId.slice('approach@'.length) });
+    return;
+  }
+
+  const advance = parseAdvanceAction(actionId);
+  if (advance) {
+    const beforeLen = state.bus?.lastIds?.length ?? 0;
+    if (advance === 'dusk') advanceToDusk(state);
+    else if (advance === 'dawn') advanceToDawn(state);
+    else if (advance === 'day') advanceDays(state, 1);
+    else advanceDays(state, advance.ticks);
+    appendJuice(state, eventLog, beforeLen);
+    eventLog.push({ type: 'advance', methodId: actionId });
+    return;
+  }
+
   const parsed = parseMethodAction(actionId);
   if (!parsed) {
     eventLog.push({ type: 'act', methodId: actionId });
     return;
   }
   const beforeLen = state.bus?.lastIds?.length ?? 0;
+  const sparkBefore = state.player.spark;
   try {
-    commitMethod(state, parsed.personId, parsed.methodId);
-    const ids = state.bus?.lastIds ?? [];
-    for (const type of ids.slice(beforeLen)) {
-      eventLog.push({ type, methodId: parsed.methodId });
-    }
-    if (ids.length === beforeLen) {
+    const result = commitMethod(state, parsed.personId, parsed.methodId);
+    appendJuice(state, eventLog, beforeLen, parsed.methodId);
+    if ((state.bus?.lastIds?.length ?? 0) === beforeLen) {
       eventLog.push({ type: 'method', methodId: parsed.methodId });
+    }
+    if (result.kind === 'resolved') {
+      const method = ((state.data as DataTables | undefined)?.methods ?? []) as MethodRow[];
+      const row = method.find((m) => m.id === parsed.methodId);
+      if (row?.family === 'kind') state.flags.kindSuccessToday = true;
+      extras?.setLastResolve({
+        kind: 'resolved',
+        flameDelta: result.flameDelta,
+        sparkCost: sparkBefore - state.player.spark,
+        marks: result.marks,
+        personId: parsed.personId,
+        methodId: parsed.methodId,
+      });
+    } else {
+      extras?.setLastResolve({
+        kind: 'refused',
+        flameDelta: 0,
+        sparkCost: sparkBefore - state.player.spark,
+        personId: parsed.personId,
+        methodId: parsed.methodId,
+      });
+    }
+    if (extras && extras.metrics.firstConsequenceAtTick == null) {
+      extras.metrics.firstConsequenceAtTick = extras.tickN;
     }
   } catch {
     eventLog.push({ type: 'act', methodId: actionId });

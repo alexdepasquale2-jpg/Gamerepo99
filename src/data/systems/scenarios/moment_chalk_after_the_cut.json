@@ -56,5 +56,13 @@
   },
   "features": {
     "bakedDynamismLines": false
+  },
+  "worldSeed": 13,
+  "generatedWorld": true,
+  "specialBar": true,
+  "resolvePerson": {
+    "preferAnchorId": "ruth_calder",
+    "woundId": "disillusionment",
+    "fallback": "first_matching_tags"
   }
 }

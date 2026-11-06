@@ -103,3 +103,13 @@ Ship bar: **≥3 memorable** scenarios pass + first-10-min metrics within caps (
 - `player.features.bakedDynamismLines` **false** for all ship scenarios (fixed lines fallback path).
 - Basilisk Brood: `bodySlots: 3`, **`activeBodiesMax: 1`** (Forge commit 595d722). No scenario may require two simultaneous active bodies in M2.
 - Line picker is pluggable via methods/hooks; scenarios assert state/bus first, not a single hardcoded string when flag may later turn on in optional tests.
+
+
+## M3 generated-world special bar
+
+Memorable moments retarget via `worldSeed` + `resolvePerson` on each scenario JSON under `src/data/systems/scenarios/`.
+
+- Resolver: `resolveScenarioPerson(session, { preferAnchorId?, woundId?, tagsAny?, siteKind? })` (anchors preferred when present).
+- Advance: `act('advance:dusk'|'advance:dawn'|…)` fires dusk personal-cost hooks.
+- Metrics: `session.metrics()` records `firstChoiceAtTick` / `firstConsequenceAtTick` on `approach@` / method commit.
+- Gate test: `npx vitest run tests/scenarios/special-bar-gen.test.ts` — BAR ≥3 of 5 memorable moments on gen seeds.

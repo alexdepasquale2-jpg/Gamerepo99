@@ -51,5 +51,14 @@
   },
   "features": {
     "bakedDynamismLines": false
+  },
+  "worldSeed": 21,
+  "generatedWorld": true,
+  "specialBar": true,
+  "resolvePerson": {
+    "preferAnchorId": "elias_boone",
+    "woundId": "grief",
+    "siteKind": "forge",
+    "fallback": "first_matching_tags"
   }
 }
