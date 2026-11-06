@@ -1,0 +1,140 @@
+{
+  "kind": "refusal",
+  "hooks": [
+    {
+      "id": "refusal_shame_child",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "shame",
+      "when": {
+        "any": [
+          {
+            "targetAgeLt": 16
+          },
+          {
+            "targetHasTag": "child"
+          },
+          {
+            "targetIdIn": [
+              "jonah_pike"
+            ]
+          }
+        ]
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "Shame? On a cub? No. The coal in me won't take that air.",
+          "I could break them with a word. That's why I won't."
+        ],
+        "marrow": [
+          "Shame? On a cub? No. The coal in me won't take that air.",
+          "I could break him with a word. That's why I won't.",
+          "He's small. My voice isn't. Put it away."
+        ],
+        "ivy_quill": [
+          "I will not put that in the book. Children are not ledgers.",
+          "Cross it out. We do not shame the unfinished."
+        ],
+        "basilisk_brood": [
+          "We will not look at the small one that way.",
+          "Our gaze is for equals. Turn aside."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [
+        {
+          "id": "fx_refuse_coal_flicker",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "tell",
+            "coal_flicker",
+            "refusal"
+          ]
+        }
+      ],
+      "tells": [
+        {
+          "id": "tell_chest_coal_flicker",
+          "view": "coal_flicker",
+          "durationTicks": 3
+        }
+      ]
+    },
+    {
+      "id": "refusal_gaze_child",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "challenge",
+      "when": {
+        "any": [
+          {
+            "targetAgeLt": 16
+          },
+          {
+            "targetHasTag": "child"
+          }
+        ],
+        "requireTraitTag": "gaze_challenge"
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "Not the child. Soften the eyes."
+        ],
+        "basilisk_brood": [
+          "Not the child. Soften the eyes. Gaze elsewhere."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [
+        {
+          "id": "fx_gaze_avert",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "tell",
+            "refusal"
+          ]
+        }
+      ],
+      "tells": [
+        {
+          "id": "tell_gaze_avert",
+          "view": "gaze_avert",
+          "durationTicks": 2
+        }
+      ]
+    },
+    {
+      "id": "refusal_burn_ledger",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "shame",
+      "when": {
+        "targetHasTag": "ledger_keeper",
+        "methodTagsContain": [
+          "destroy_record"
+        ]
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "The record stays. Even ugly truth stays."
+        ],
+        "ivy_quill": [
+          "I will not burn a ledger to win a soul. Find another cut."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [],
+      "tells": []
+    }
+  ]
+}

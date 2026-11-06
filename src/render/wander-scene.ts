@@ -8,6 +8,14 @@ const TILE_COLORS: Record<string, number> = {
   stone: 0x4a4e57,
 };
 
+/** Presentation-only NPC palette — kept out of sim. */
+const NPC_COLORS = [0xe8a87c, 0x85dcb8, 0xc38d9e, 0x41b3a3, 0xe27d60];
+
+function npcColor(id: string): number {
+  const n = Number.parseInt(id.replace(/\D/g, ''), 10) || 0;
+  return NPC_COLORS[(Math.max(n, 1) - 1) % NPC_COLORS.length];
+}
+
 export class WanderScene extends Phaser.Scene {
   private world!: World;
   private npcGfx = new Map<string, Phaser.GameObjects.Arc>();
@@ -81,7 +89,7 @@ export class WanderScene extends Phaser.Scene {
         npc.x * this.tileSize + this.tileSize / 2,
         npc.y * this.tileSize + this.tileSize / 2,
         this.tileSize * 0.32,
-        npc.color,
+        npcColor(npc.id),
       );
       circle.setStrokeStyle(2, 0xffffff, 0.7);
       circle.setDepth(5);

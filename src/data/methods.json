@@ -207,5 +207,5 @@
       "flavorTag": "mask"
     }
   ],
-  "refusalSource": "hooks.json kind=refusal matched by methodId + when"
+  "refusalSource": "src/data/hooks/refusal.json kind=refusal matched by methodId + when"
 }

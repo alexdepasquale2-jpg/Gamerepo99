@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "description": "Registry of all protagonist hooks. Archetypes may only reference ids listed here.",
+  "files": [
+    "spark-recovery.json",
+    "personal-cost.json",
+    "refusal.json",
+    "legacy.json"
+  ]
+}

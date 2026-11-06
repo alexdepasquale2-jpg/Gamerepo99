@@ -12,6 +12,21 @@ const dataDir = join(root, 'src', 'data');
 const errors = [];
 const warnings = [];
 
+const loadHooksDir = () => {
+  const hooksDir = join(dataDir, 'hooks');
+  const index = JSON.parse(readFileSync(join(hooksDir, 'index.json'), 'utf8'));
+  const hooks = [];
+  for (const name of index.files || []) {
+    const part = JSON.parse(readFileSync(join(hooksDir, name), 'utf8'));
+    hooks.push(...(part.hooks || []));
+  }
+  return {
+    version: index.version,
+    description: index.description,
+    hooks,
+  };
+};
+
 const loadAll = () => {
   const files = {};
   for (const name of readdirSync(dataDir).filter((f) => f.endsWith('.json'))) {
@@ -20,6 +35,14 @@ const loadAll = () => {
     } catch (e) {
       errors.push(`PARSE ${name}: ${e.message}`);
     }
+  }
+  try {
+    files['hooks.json'] = loadHooksDir();
+  } catch (e) {
+    errors.push(`PARSE hooks/: ${e.message}`);
+  }
+  if (readdirSync(dataDir).includes('hooks.json')) {
+    errors.push('hooks.json must be removed — use src/data/hooks/ split by category');
   }
   return files;
 };
@@ -51,7 +74,10 @@ const required = [
   'events.json',
   'proofs.json',
   'time.json',
-  'ripples.json'
+  'ripples.json',
+  'lines.json',
+  'kinship.json',
+  'letters.json'
 ];
 for (const f of required) req(!!data[f], `missing ${f}`);
 
@@ -235,6 +261,66 @@ for (const key of ['help', 'harm', 'cling']) {
 const broodBody = (data['traits.json'].embodiment || []).find((e) => e.id === 'body_basilisk_brood');
 req(broodBody?.mode === 'multi' && broodBody?.bodySlots >= 2, 'brood embodiment must be multi-slot');
 req(broodBody?.activeBodiesMax >= 1, 'brood activeBodiesMax required');
+
+
+// lines.json + people.json writing pass: voice/wound/tell + every method line + marks + archetype refusals
+const linesPeople = data['lines.json']?.people || {};
+const methodIds = [...methods];
+const markIds = [...marks];
+req(methodIds.length >= 5, 'expected at least 5 methods for line coverage');
+for (const pid of people) {
+  const L = linesPeople[pid];
+  req(!!L, `lines.json missing person ${pid}`);
+  if (!L) continue;
+  req(!!L.voice && !!L.woundLine && !!L.tellGivenUp, `lines.json ${pid}: need voice, woundLine, tellGivenUp`);
+  for (const mid of methodIds) {
+    req(typeof L.methods?.[mid] === 'string' && L.methods[mid].trim().length > 0, `lines.json ${pid}: missing method line for ${mid}`);
+  }
+  for (const mk of markIds) {
+    req(typeof L.marks?.[mk] === 'string' && L.marks[mk].trim().length > 0, `lines.json ${pid}: missing mark line for ${mk}`);
+  }
+}
+for (const pid of Object.keys(linesPeople)) {
+  req(people.has(pid), `lines.json unknown person ${pid}`);
+}
+// people.json mirrors voice/wound/tell
+for (const person of data['people.json']?.people || []) {
+  req(typeof person.voice === 'string' && person.voice.trim(), `people.json ${person.id}: voice required`);
+  req(typeof person.woundLine === 'string' && person.woundLine.trim(), `people.json ${person.id}: woundLine required`);
+  req(typeof person.tellGivenUp === 'string' && person.tellGivenUp.trim(), `people.json ${person.id}: tellGivenUp required`);
+  const L = linesPeople[person.id];
+  if (L) {
+    req(person.voice === L.voice, `people.json ${person.id}: voice must match lines.json`);
+    req(person.woundLine === L.woundLine, `people.json ${person.id}: woundLine must match lines.json`);
+    req(person.tellGivenUp === L.tellGivenUp, `people.json ${person.id}: tellGivenUp must match lines.json`);
+  }
+}
+// archetype refusal lines for all m2 playable archetypes
+const archRefusals = data['lines.json']?.archetypeRefusals || {};
+const m2Arch = (data['archetypes.json']?.archetypes || []).filter((a) => a.m2Playable);
+for (const a of m2Arch) {
+  const block = archRefusals[a.id];
+  req(!!block, `lines.json archetypeRefusals missing ${a.id}`);
+  for (const hid of a.refusalHookIds || []) {
+    const arr = block?.[hid];
+    req(Array.isArray(arr) && arr.length > 0 && arr.every((s) => typeof s === 'string' && s.trim()), `lines.json ${a.id} needs refusal lines for hook ${hid}`);
+  }
+}
+
+
+// kinship edges + letters templates (M3 stubs)
+const kinEdges = data['kinship.json']?.edges || [];
+req(kinEdges.length >= 6, 'kinship.json needs authored edges (>=6)');
+for (const e of kinEdges) {
+  req(people.has(e.fromPersonId), `kinship ${e.id}: fromPerson missing`);
+  req(people.has(e.toPersonId), `kinship ${e.id}: toPerson missing`);
+  for (const lid of e.townPath || []) req(links.has(lid), `kinship ${e.id}: link ${lid} missing`);
+  req(typeof e.weight === 'number' && e.weight > 0 && e.weight <= 1, `kinship ${e.id}: weight`);
+}
+const letterTpls = data['letters.json']?.templates || [];
+req(letterTpls.length >= 5, 'letters.json needs >=5 templates');
+const packetTypes = new Set(letterTpls.map((x) => x.packetType));
+req(packetTypes.has('proof_packet') && packetTypes.has('relapse_pressure'), 'letters need proof_packet and relapse_pressure templates');
 
 console.log('Files:', Object.keys(data).sort().join(', '));
 console.log(

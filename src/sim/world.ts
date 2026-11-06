@@ -13,8 +13,6 @@ export type World = {
   bus: EventBus;
 };
 
-const NPC_COLORS = [0xe8a87c, 0x85dcb8, 0xc38d9e, 0x41b3a3, 0xe27d60];
-
 function buildTiles(width: number, height: number, rng: Rng): Tile[][] {
   const tiles: Tile[][] = [];
   for (let y = 0; y < height; y++) {
@@ -55,7 +53,6 @@ function spawnNpcs(count: number, width: number, height: number, tiles: Tile[][]
       id: `npc-${npcs.length + 1}`,
       x,
       y,
-      color: NPC_COLORS[npcs.length % NPC_COLORS.length],
     });
   }
   return npcs;

@@ -1,0 +1,99 @@
+{
+  "kind": "personal_cost",
+  "hooks": [
+    {
+      "id": "cost_loneliness_tax",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "kindSuccessToday": true,
+        "noBurningAdjacent": true
+      },
+      "effects": [
+        {
+          "id": "fx_loneliness",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "loneliness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_ink_integrity",
+      "kind": "personal_cost",
+      "trigger": "on_method_resolve",
+      "when": {
+        "methodId": "lie"
+      },
+      "effects": [
+        {
+          "id": "fx_ink_cost",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "ink"
+          ]
+        },
+        {
+          "id": "fx_ink_trust",
+          "target": "player.perception.trust",
+          "op": "add",
+          "value": -0.05,
+          "durationDays": 3,
+          "tags": [
+            "cost",
+            "reputation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_brood_strain",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "bodiesInMultipleTowns": true
+      },
+      "effects": [
+        {
+          "id": "fx_brood_strain",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "brood"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_inherited_dependence_cling",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "playerHasStatusTrait": "inherited_dependence",
+        "noCarryUsedToday": true
+      },
+      "effects": [
+        {
+          "id": "fx_dep_cling_mood",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "inherited_dependence",
+            "cling"
+          ]
+        }
+      ]
+    }
+  ]
+}

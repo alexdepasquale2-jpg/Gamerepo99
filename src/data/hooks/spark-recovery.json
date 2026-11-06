@@ -1,0 +1,102 @@
+{
+  "kind": "spark_recovery",
+  "hooks": [
+    {
+      "id": "recovery_den_hearth",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "playerAtHome": true
+      },
+      "effects": [
+        {
+          "id": "fx_den_recovery",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "tags": [
+            "recovery",
+            "den"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_base_dawn",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_base_dawn",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "tags": [
+            "recovery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_ledger_truth",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "methodsUsedYesterdayNotContains": [
+          "lie"
+        ]
+      },
+      "effects": [
+        {
+          "id": "fx_ledger_truth",
+          "target": "player.spark",
+          "op": "add",
+          "value": 10,
+          "tags": [
+            "recovery",
+            "ink"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_witness_genuine",
+      "kind": "spark_recovery",
+      "trigger": "on_witness_genuine_growth",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_witness",
+          "target": "player.spark",
+          "op": "add",
+          "value": 6,
+          "tags": [
+            "recovery",
+            "witness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_brood_bask",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "allBodiesSameTown": true
+      },
+      "effects": [
+        {
+          "id": "fx_brood_bask",
+          "target": "player.spark",
+          "op": "add",
+          "value": 12,
+          "tags": [
+            "recovery",
+            "brood"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,6 @@ export type Npc = {
   id: string;
   x: number;
   y: number;
-  color: number;
 };
 
 export type Tile = {
