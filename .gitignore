@@ -18,3 +18,4 @@ tests/e2e/artifacts/
 
 # Large vendor art archives (Prism tracks extracts / CREDITS separately)
 assets/vendor/*.zip
+.worktrees/
