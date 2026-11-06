@@ -4,3 +4,17 @@ dist/
 *.log
 .vite/
 coverage/
+tests/e2e/artifacts/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Superpowers process temps (keep sdd reports; ignore bulky scratch)
+.superpowers/**/tmp/
+.superpowers/**/*.diff
+.superpowers/**/*-package.md
+.superpowers/**/*.patch
+
+# Large vendor art archives (Prism tracks extracts / CREDITS separately)
+assets/vendor/*.zip
