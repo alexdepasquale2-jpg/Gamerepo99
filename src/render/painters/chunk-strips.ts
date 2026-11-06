@@ -13,9 +13,15 @@ function hash2(a: number, b: number): number {
   return Math.abs((a * 73856093) ^ (b * 19349663)) >>> 0;
 }
 
-/** Meander offset in tiles for visual road curve. */
+/** Continuous meander offset in tiles (float) for smooth ribbon curves. */
+export function roadMeanderOffsetFloat(q: number): number {
+  // Lower spatial frequency → gentler Catmull-Rom curves
+  return 0.75 * Math.sin(q * 0.07) + 0.35 * Math.sin(q * 0.17 + 1.1);
+}
+
+/** Integer meander for tile-key expansion / grass skip. */
 export function roadMeanderOffset(q: number): number {
-  return Math.round(0.85 * Math.sin(q * 0.11) + 0.4 * Math.sin(q * 0.29 + 1.1));
+  return Math.round(roadMeanderOffsetFloat(q));
 }
 
 /** Expand sim road cells into a meandering visual ribbon. */
@@ -68,12 +74,20 @@ export function bakeCliffStrip(
   for (let x = 0; x < w; x++) {
     const cy = cliffContourY(x, baseY);
     const end = Math.min(x, w - 1 - x);
-    const taper = end < 48 ? end / 48 : 1;
-    if (taper < 0.06) continue;
+    // Wide soft terminus (~128px): slope/ramp into grass, no hard vertical cut
+    const taper = end < 128 ? end / 128 : 1;
+    if (taper < 0.015) continue;
+    const endFade = Math.min(1, end / 96);
+    const rampZone = taper < 0.7; // wide grassy ramp termini
 
-    const faceHt = Math.max(10, Math.floor(faceH * (0.4 + 0.6 * taper)));
-    const lipHt = Math.max(5, Math.floor(lipH * Math.min(1, taper + 0.15)));
-    const baseHt = Math.max(3, Math.floor(baseH * taper));
+    // Smooth ease into rock face (no sudden vertical wall)
+    const faceT = rampZone ? 0 : (taper - 0.7) / 0.3;
+    const faceEase = faceT * faceT * (3 - 2 * faceT);
+    const faceHt = Math.max(0, Math.floor(faceH * faceEase));
+    const lipHt = rampZone
+      ? Math.max(2, Math.floor(14 * Math.pow(taper, 0.7)))
+      : Math.max(5, Math.floor(lipH));
+    const baseHt = faceHt > 8 ? Math.max(2, Math.floor(baseH * faceEase)) : 0;
 
     // Low-freq rock noise (no 64 period)
     const n =
@@ -87,9 +101,29 @@ export function bakeCliffStrip(
       const y = Math.round(cy - lipHt + dy);
       if (y < 0 || y >= h) continue;
       const t = dy / lipHt;
-      put(img, w, x, y, 95 + n * 20, 140 + n * 25, 55 + n * 10, 255);
-      if (t > 0.7) put(img, w, x, y, 150 + n * 15, 125 + n * 10, 80, 255);
+      // Ends: reignited grass ramp; middle: rocky lip
+      if (rampZone) {
+        const gr = 110 + n * 12;
+        const gg = 175 + n * 18;
+        const gb = 60 + n * 8;
+        put(img, w, x, y, gr, gg, gb, Math.floor(255 * endFade * (0.55 + 0.45 * taper)));
+      } else {
+        put(img, w, x, y, 95 + n * 20, 140 + n * 25, 55 + n * 10, Math.floor(255 * endFade));
+        if (t > 0.7) put(img, w, x, y, 150 + n * 15, 125 + n * 10, 80, Math.floor(255 * endFade));
+      }
     }
+    // Grass ramp wedge at termini (slopes into lower terrace)
+    if (rampZone && taper > 0.05) {
+      const rampH = Math.floor(28 * taper);
+      for (let dy = 0; dy < rampH; dy++) {
+        const y = Math.round(cy + dy);
+        if (y < 0 || y >= h) continue;
+        const t = dy / rampH;
+        const a = Math.floor((180 * (1 - t) * taper) * endFade);
+        put(img, w, x, y, 100 + n * 10, 160 + n * 15, 55 + n * 6, a);
+      }
+    }
+
     // Face — continuous rock, pebble flecks
     for (let dy = 0; dy < faceHt; dy++) {
       const y = Math.round(cy + dy);
@@ -111,20 +145,21 @@ export function bakeCliffStrip(
         g *= 0.88;
         b *= 0.88;
       }
-      put(img, w, x, y, r, g, b, 255);
+      put(img, w, x, y, r, g, b, Math.floor(255 * endFade));
     }
     // Base tuck
     for (let dy = 0; dy < baseHt; dy++) {
       const y = Math.round(cy + faceHt + dy);
       if (y < 0 || y >= h) continue;
-      put(img, w, x, y, 65, 50, 32, 210 - dy * 15);
+      put(img, w, x, y, 65, 50, 32, Math.floor((210 - dy * 15) * endFade));
     }
-    // Lower terrace shade (baked, not tile grid)
-    for (let dy = 0; dy < lowerShade; dy++) {
+    // Lower terrace shade (baked). Ramp ends: soft grass darkening only.
+    const shadeDepth = rampZone ? Math.floor(lowerShade * 0.45 * taper) : lowerShade;
+    for (let dy = 0; dy < shadeDepth; dy++) {
       const y = Math.round(cy + faceHt + baseHt + dy);
       if (y < 0 || y >= h) continue;
-      const a = Math.max(20, 150 - dy * 1.6);
-      put(img, w, x, y, 45, 85, 35, a);
+      const a = Math.max(12, (rampZone ? 70 : 150) - dy * 1.6);
+      put(img, w, x, y, 45, 85, 35, Math.floor(a * endFade));
     }
   }
 
@@ -205,32 +240,46 @@ export function bakeRoadRibbon(
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, size, size);
 
-  const qs = [...roadKeys]
-    .map((k) => Number(k.split(',')[0]))
-    .filter((q) => q >= chunkOriginQ - 1 && q < chunkOriginQ + chunkTiles + 1);
-  const uniq = [...new Set(qs)].sort((a, b) => a - b);
-  if (uniq.length < 1) return null;
+  // Prefer raw sim road cells; apply continuous float meander for smooth Catmull-Rom
+  const raw: { q: number; r: number }[] = [];
+  for (const k of roadKeys) {
+    const [qq, rr] = k.split(',').map(Number);
+    if (qq! < chunkOriginQ - 2 || qq! >= chunkOriginQ + chunkTiles + 2) continue;
+    raw.push({ q: qq!, r: rr! });
+  }
+  // Dedup by q (keep median r) — strip prior integer-meander duplicates
+  const byQ = new Map<number, number[]>();
+  for (const p of raw) {
+    const arr = byQ.get(p.q) ?? [];
+    arr.push(p.r);
+    byQ.set(p.q, arr);
+  }
+  const uniqQ = [...byQ.keys()].sort((a, b) => a - b);
+  if (uniqQ.length < 1) return null;
 
   const pts: { x: number; y: number }[] = [];
-  for (const q of uniq) {
-    let r: number | null = null;
-    for (const k of roadKeys) {
-      const [qq, rr] = k.split(',').map(Number);
-      if (qq === q) {
-        r = rr!;
-        break;
-      }
-    }
-    if (r == null) continue;
-    const off = roadMeanderOffset(q);
+  for (const q of uniqQ) {
+    const rs = byQ.get(q)!;
+    // Base r: if values look meander-expanded (span), take min as approx sim r
+    const baseR = Math.min(...rs);
+    const yTile = baseR + roadMeanderOffsetFloat(q);
     pts.push({
       x: (q - chunkOriginQ) * TILE_PX + TILE_PX / 2,
-      y: (r + off - chunkOriginR) * TILE_PX + TILE_PX / 2,
+      y: (yTile - chunkOriginR) * TILE_PX + TILE_PX / 2,
     });
   }
   if (pts.length < 2) return null;
 
-  const samples = densifyPolyline(pts, 3);
+  // Insert midpoints so Catmull-Rom has denser controls at bends
+  const denser: { x: number; y: number }[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i]!;
+    const b = pts[i + 1]!;
+    denser.push(a);
+    denser.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  }
+  denser.push(pts[pts.length - 1]!);
+  const samples = densifyCatmullRom(denser, 2);
   // Build left/right edge polygons for a continuous ribbon
   const left: { x: number; y: number }[] = [];
   const right: { x: number; y: number }[] = [];
@@ -315,25 +364,41 @@ export function bakeRoadRibbon(
   return img;
 }
 
-function densifyPolyline(
+function densifyCatmullRom(
   pts: { x: number; y: number }[],
   step: number,
 ): { x: number; y: number }[] {
+  if (pts.length < 2) return pts.slice();
   const out: { x: number; y: number }[] = [];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i]!;
-    const b = pts[i + 1]!;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const dist = Math.hypot(dx, dy);
-    const n = Math.max(1, Math.ceil(dist / step));
-    for (let k = 0; k < n; k++) {
-      const t = k / n;
-      const s = t * t * (3 - 2 * t);
-      out.push({ x: a.x + dx * s, y: a.y + dy * s });
+  const n = pts.length;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)]!;
+    const p1 = pts[i]!;
+    const p2 = pts[i + 1]!;
+    const p3 = pts[Math.min(n - 1, i + 2)]!;
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    const segs = Math.max(1, Math.ceil(dist / step));
+    for (let k = 0; k < segs; k++) {
+      const t = k / segs;
+      const t2 = t * t;
+      const t3 = t2 * t;
+      // Centripetal-ish Catmull-Rom (uniform form)
+      const x =
+        0.5 *
+        ((2 * p1.x) +
+          (-p0.x + p2.x) * t +
+          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+      const y =
+        0.5 *
+        ((2 * p1.y) +
+          (-p0.y + p2.y) * t +
+          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+      out.push({ x, y });
     }
   }
-  out.push(pts[pts.length - 1]!);
+  out.push(pts[n - 1]!);
   return out;
 }
 
@@ -389,16 +454,18 @@ export function addGrassTintOverlay(
       for (let x = 0; x < size; x++) {
         const wx = originQ * TILE_PX + x;
         const wy = originR * TILE_PX + y;
+        // Period >= 256px (2π/256 ≈ 0.0245); keep coeffs well under that
         const n =
-          0.55 +
-          0.22 * Math.sin(wx * 0.009 + 0.3) +
-          0.16 * Math.sin(wy * 0.0075 - 0.7) +
-          0.1 * Math.sin((wx + wy) * 0.0055);
+          Math.sin(wx * 0.012 + 0.2) * 0.5 +
+          Math.sin(wy * 0.011 - 0.5) * 0.35 +
+          Math.sin((wx + wy) * 0.009) * 0.15;
         const i = (y * size + x) * 4;
-        img.data[i] = Math.floor(195 + n * 45);
-        img.data[i + 1] = Math.floor(205 + n * 35);
-        img.data[i + 2] = Math.floor(175 + (1 - n) * 45);
-        img.data[i + 3] = Math.floor(32 + n * 22);
+        // Multiply identity ≈ 255; <=3% amplitude
+        const v = Math.floor(255 * (1 + n * 0.03));
+        img.data[i] = v;
+        img.data[i + 1] = v;
+        img.data[i + 2] = v;
+        img.data[i + 3] = 255;
       }
     }
     ctx.putImageData(img, 0, 0);
@@ -408,6 +475,6 @@ export function addGrassTintOverlay(
   overlay.setOrigin(0, 0);
   overlay.setDepth(0.12);
   overlay.setBlendMode(2); // MULTIPLY
-  overlay.setAlpha(0.4);
+  overlay.setAlpha(1);
   container.add(overlay);
 }

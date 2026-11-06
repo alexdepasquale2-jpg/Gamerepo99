@@ -7,7 +7,6 @@ import { lookupAsset } from '../asset-manifest';
 import { applySpriteSort, tileFootWorld, tileToWorld } from '../depth-sort';
 import {
   GRASS_CALM_TEX,
-  GRASS_WORLD_TEX,
   HERO_TEX,
   SETTLEMENT_TEX,
   SHADOW_TEX,
@@ -69,8 +68,8 @@ export function groundPaintFor(tile: TileRenderView): GroundPaint {
     const entry = lookupAsset('road.road') ?? lookupAsset('road.track');
     return { kind: 'road', key: 'sheet-ground', frame: String(entry?.frame ?? 5) };
   }
-  const { frame } = grassFrameHashed(tile.q, tile.r);
-  return { kind: 'grass', key: GRASS_WORLD_TEX, frame };
+  // Pass 4: single calm base — no per-tile color variation
+  return { kind: 'grass', key: GRASS_CALM_TEX, frame: '0' };
 }
 
 export function biomeAccentFor(
@@ -111,6 +110,37 @@ export function addSoftShadow(
   return sh;
 }
 
+
+function paintChunkGrassFill(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container,
+  originQ: number,
+  originR: number,
+  chunkTiles: number,
+): void {
+  const size = chunkTiles * TILE_PX;
+  const key = `${GRASS_CALM_TEX}-0`;
+  const tex = host.textures.exists(key) ? key : GRASS_CALM_TEX;
+  // Single stretched image — no per-tile hue variation possible
+  if (host.textures.exists(tex)) {
+    const img = host.add.image(originQ * TILE_PX, originR * TILE_PX, tex);
+    img.setOrigin(0, 0);
+    img.setDisplaySize(size + 2, size + 2);
+    img.setDepth(0);
+    container.add(img);
+  } else {
+    const rect = host.add.rectangle(
+      originQ * TILE_PX + size / 2,
+      originR * TILE_PX + size / 2,
+      size + 2,
+      size + 2,
+      0x7ebe49,
+    );
+    rect.setDepth(0);
+    container.add(rect);
+  }
+}
+
 function paintGrassTile(
   host: PaintHost,
   container: Phaser.GameObjects.Container,
@@ -119,35 +149,51 @@ function paintGrassTile(
   const { x, y } = tileToWorld(tile.q, tile.r);
   const cx = x + TILE_PX / 2;
   const cy = y + TILE_PX / 2;
-  const { frame, flipX, flipY } = grassFrameHashed(tile.q, tile.r);
-  if (host.textures.exists(GRASS_WORLD_TEX) && host.textures.get(GRASS_WORLD_TEX).has(frame)) {
-    const img = host.add.image(cx, cy, GRASS_WORLD_TEX, frame);
-    img.setDisplaySize(TILE_PX + 3, TILE_PX + 3);
-    img.setFlipX(flipX);
-    img.setFlipY(flipY);
-    img.setDepth(0);
-    container.add(img);
-  } else {
-    const key = `${GRASS_CALM_TEX}-0`;
-    const img = host.add.image(cx, cy, host.textures.exists(key) ? key : GRASS_CALM_TEX);
-    img.setDisplaySize(TILE_PX + 3, TILE_PX + 3);
-    img.setDepth(0);
-    container.add(img);
-  }
+  // Pass 4: single calm base color — detail comes from world-space poisson tufts
+  const key = `${GRASS_CALM_TEX}-0`;
+  const img = host.add.image(cx, cy, host.textures.exists(key) ? key : GRASS_CALM_TEX);
+  img.setDisplaySize(TILE_PX + 2, TILE_PX + 2);
+  img.setDepth(0);
+  container.add(img);
+}
 
-  if (hash2(tile.q * 3, tile.r * 7) % 13 === 0) {
-    const foot = tileFootWorld(tile.q, tile.r);
-    const ox = (hash2(tile.r, tile.q) % 9) - 4;
-    const g = host.add.rectangle(foot.x + ox, foot.y - 5, 2, 5, 0x3d6b28);
-    g.setAlpha(0.7);
-    g.setDepth(0.15);
-    container.add(g);
-  }
-  if (hash2(tile.q + 9, tile.r + 2) % 31 === 0) {
-    const foot = tileFootWorld(tile.q, tile.r);
-    const fl = host.add.rectangle(foot.x - 3, foot.y - 7, 2, 2, 0xf0d878);
-    fl.setDepth(0.16);
-    container.add(fl);
+/** Sparse world-space poisson tufts/flowers (not per-tile hash). */
+function paintPoissonGrassDetail(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container,
+  originQ: number,
+  originR: number,
+  chunkTiles: number,
+): void {
+  const minDist = 28; // px between detail marks
+  const cell = minDist;
+  const ox = originQ * TILE_PX;
+  const oy = originR * TILE_PX;
+  const size = chunkTiles * TILE_PX;
+  const cols = Math.ceil(size / cell);
+  const rows = Math.ceil(size / cell);
+  for (let gy = -1; gy <= rows; gy++) {
+    for (let gx = -1; gx <= cols; gx++) {
+      const h = hash2(originQ * 64 + gx * 3 + 11, originR * 64 + gy * 5 + 19);
+      // ~18% of cells get a candidate → sparse after jitter
+      if (h % 100 > 17) continue;
+      const jx = ((h >> 8) % cell) - cell / 2;
+      const jy = ((h >> 16) % cell) - cell / 2;
+      const wx = ox + gx * cell + cell / 2 + jx;
+      const wy = oy + gy * cell + cell / 2 + jy;
+      if (wx < ox - 4 || wy < oy - 4 || wx > ox + size + 4 || wy > oy + size + 4) continue;
+      const kind = h % 7;
+      if (kind <= 4) {
+        const g = host.add.rectangle(wx, wy - 3, 2, 5, 0x3d6b28);
+        g.setAlpha(0.65);
+        g.setDepth(0.15);
+        container.add(g);
+      } else {
+        const fl = host.add.rectangle(wx, wy - 4, 2, 2, kind === 5 ? 0xf0d878 : 0xe8a0c0);
+        fl.setDepth(0.16);
+        container.add(fl);
+      }
+    }
   }
 }
 
@@ -301,6 +347,37 @@ function paintFence(
   }
 }
 
+/** Fence posts along the road's northern edge east of the courtyard. */
+function paintFenceAlongRoad(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container | null,
+  townQ: number,
+  townR: number,
+  posts = 10,
+): void {
+  // Start east of the settlement stamp so fence follows the visible road, not the yard
+  for (let i = 0; i < posts; i++) {
+    const q = townQ + 2.2 + i * 0.7;
+    const roadR = townR + 0.35 + roadMeanderOffset(Math.floor(q));
+    const r = roadR - 0.5; // north edge of road ribbon (~halfW)
+    const foot = tileFootWorld(q, r);
+    const post = host.add.rectangle(foot.x, foot.y - 6, 3, 12, 0x6b4423);
+    applySpriteSort(post);
+    container?.add(post);
+    if (i < posts - 1) {
+      const nextQ = q + 0.7;
+      const nextR = townR + 0.35 + roadMeanderOffset(Math.floor(nextQ)) - 0.5;
+      const nextFoot = tileFootWorld(nextQ, nextR);
+      const mx = (foot.x + nextFoot.x) / 2;
+      const my = (foot.y + nextFoot.y) / 2 - 10;
+      const len = Math.hypot(nextFoot.x - foot.x, nextFoot.y - foot.y) * 0.85;
+      const rail = host.add.rectangle(mx, my, Math.max(8, len), 2, 0x8b5a2b);
+      rail.setDepth(Math.max(foot.y, nextFoot.y) + 0.1);
+      container?.add(rail);
+    }
+  }
+}
+
 function paintVillager(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
@@ -367,15 +444,19 @@ export function paintTownMarker(
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
-  paintFence(host, container, town.q - 1.5, town.r + 1.45, 8);
-  paintCrate(host, container, town.q + 1.2, town.r + 0.85);
-  paintCrate(host, container, town.q + 1.6, town.r + 0.95);
-  paintCrate(host, container, town.q - 0.8, town.r + 0.65);
+  // Props + 3–4 villagers, min 24px from each other/crates/fence
+  paintCrate(host, container, town.q + 0.2, town.r + 0.5);
+  paintCrate(host, container, town.q + 1.15, town.r + 0.45);
+  paintCrate(host, container, town.q + 2.1, town.r + 0.5);
 
-  paintVillager(host, container, town.q + 0.6, town.r + 1.2, '7');
-  paintVillager(host, container, town.q + 2.0, town.r + 1.0, '4');
-  paintVillager(host, container, town.q - 0.4, town.r + 1.4, '1', true);
-  paintVillager(host, container, town.q + 3.5, town.r + 1.1, '7');
+  // Spread around settlement like v4 (west / porch / east) — 3 villagers + optional 4th SE
+  paintVillager(host, container, town.q - 1.8, town.r + 1.0, '1', true);
+  paintVillager(host, container, town.q + 0.4, town.r + 1.5, '7');
+  paintVillager(host, container, town.q + 3.2, town.r + 1.05, '4');
+  paintVillager(host, container, town.q + 5.2, town.r + 1.55, '7');
+
+  // Fence along road edge east of courtyard (does not cross villagers)
+  paintFenceAlongRoad(host, container, town.q, town.r, 9);
 
   const labelY = foot.y - TILE_PX * 4.2 - 12;
   const label = host.add
@@ -404,16 +485,15 @@ export function paintChunkContents(
   const baseQ = chunk.cx * CHUNK_SIZE;
   const baseR = chunk.cy * CHUNK_SIZE;
 
-  for (const tile of chunk.tiles) {
-    paintGroundTile(host, container, tile, roadKeys, meander);
-  }
-
+  // Pass 4: one solid calm fill per chunk — kills per-tile color blocks entirely
+  paintChunkGrassFill(host, container, baseQ, baseR, CHUNK_SIZE);
+  paintPoissonGrassDetail(host, container, baseQ, baseR, CHUNK_SIZE);
   addGrassTintOverlay(host, container, baseQ, baseR, CHUNK_SIZE);
 
   // Organic road ribbon (soft edges) — one bake per chunk
-  if (meander.size > 0) {
+  if (roadKeys.size > 0) {
     const key = `road-ribbon-${chunk.cx},${chunk.cy}`;
-    const ribbon = bakeRoadRibbon(host, key, meander, baseQ, baseR, CHUNK_SIZE);
+    const ribbon = bakeRoadRibbon(host, key, roadKeys, baseQ, baseR, CHUNK_SIZE);
     if (ribbon) container.add(ribbon);
   }
 

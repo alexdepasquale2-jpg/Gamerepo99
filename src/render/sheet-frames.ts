@@ -181,10 +181,11 @@ export function generateCalmGround(scene: Phaser.Scene): void {
     g.generateTexture(key, 32, 32);
     g.destroy();
   };
-  mkSolid(`${GRASS_CALM_TEX}-0`, 0x80ba44);
-  mkSolid(`${GRASS_CALM_TEX}-1`, 0x76a83a);
-  mkSolid(`${GRASS_CALM_TEX}-2`, 0x8cc850);
-  if (!scene.textures.exists(GRASS_CALM_TEX)) mkSolid(GRASS_CALM_TEX, 0x80ba44);
+  // Single calm base matching v4 reignited green — no per-tile variants
+  mkSolid(`${GRASS_CALM_TEX}-0`, 0x7ebe49);
+  mkSolid(`${GRASS_CALM_TEX}-1`, 0x7ebe49);
+  mkSolid(`${GRASS_CALM_TEX}-2`, 0x7ebe49);
+  if (!scene.textures.exists(GRASS_CALM_TEX)) mkSolid(GRASS_CALM_TEX, 0x7ebe49);
   if (!scene.textures.exists(DIRT_CALM_TEX)) {
     const g = scene.make.graphics({ x: 0, y: 0 });
     g.fillStyle(0x9a7a48, 1);

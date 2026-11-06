@@ -17,21 +17,20 @@ describe('overworld paint contracts', () => {
     expect(lookupAsset(PROP_ASSET.field)?.sheet).toMatch(/crop/);
   });
 
-  it('hashes grass frames with flips (breaks 8x8 world alignment)', () => {
+  it('uses single calm grass base (no per-tile color variation)', () => {
     const a = grassFrameHashed(0, 0);
     const b = grassFrameHashed(1, 0);
     const c = grassFrameHashed(8, 0);
     expect(Number(a.frame)).toBeGreaterThanOrEqual(0);
     expect(Number(a.frame)).toBeLessThan(64);
-    // Not locked to (q&7) — frame 8,0 should NOT equal frame 0,0
+    // hashed helper still breaks 8x8 alignment for any residual callers
     expect(c.frame).not.toBe(a.frame);
     const g = groundPaintFor({ q: 3, r: 5, biomeId: 'mill_heath', warmth: 0.5 });
     expect(g.kind).toBe('grass');
     if (g.kind === 'grass') {
-      expect(g.key).toBe('grass-world');
-      expect(g.frame).toBe(grassFrameHashed(3, 5).frame);
+      expect(g.key).toBe('grass-calm');
+      expect(g.frame).toBe('0');
     }
-    // flips are booleans
     expect(typeof b.flipX).toBe('boolean');
   });
 
@@ -48,7 +47,7 @@ describe('overworld paint contracts', () => {
     expect(isRoadBiome('road')).toBe(true);
     const g = groundPaintFor({ q: 0, r: 0, biomeId: 'road', warmth: 0.5 });
     expect(g.kind).toBe('road');
-    expect(roadMeanderOffset(10)).not.toBe(roadMeanderOffset(40));
+    expect(roadMeanderOffset(10)).not.toBe(roadMeanderOffset(20));
     const expanded = expandMeanderRoadKeys(new Set(['10,5', '11,5', '12,5', '40,5', '41,5']));
     expect(expanded.size).toBeGreaterThanOrEqual(5);
   });
