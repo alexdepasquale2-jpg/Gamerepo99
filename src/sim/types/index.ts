@@ -1,3 +1,4 @@
+/** M1 wander demo types (kept for world.ts). */
 export type Npc = {
   id: string;
   x: number;
@@ -15,3 +16,6 @@ export type WorldConfig = {
   height: number;
   npcCount: number;
 };
+
+export * from './data';
+export * from './runtime';
