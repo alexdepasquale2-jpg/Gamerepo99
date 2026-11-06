@@ -64,4 +64,5 @@ export const REQUIRED_FILES = [
   'notoriety.json',
   'stash-sites.json',
   'patrons.json',
+  'scenarios.json',
 ];

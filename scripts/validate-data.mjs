@@ -17,6 +17,7 @@ import { validateKinshipLetters } from './validate/kinship-letters.mjs';
 import { validateDoctrines } from './validate/doctrines.mjs';
 import { validateWilderness } from './validate/wilderness.mjs';
 import { validateHoarder } from './validate/hoarder.mjs';
+import { validateScenarios } from './validate/scenarios.mjs';
 
 const { errors, warnings, req, ids } = createBag();
 const data = loadAll(errors);
@@ -43,6 +44,7 @@ validateKinshipLetters(data, { req, people, links });
 validateDoctrines(data, { req, towns, people, methods, hooks });
 validateWilderness(data, { req, ids, towns, links, people, hooks });
 validateHoarder(data, { req, ids, towns, hooks });
+validateScenarios(data, { req, ids, people, methods, marks, hooks, archetypes });
 
 console.log('Files:', Object.keys(data).sort().join(', '));
 console.log(
