@@ -7,7 +7,11 @@ import { generateHistoryEvents, historyChainCoherent } from './history-gen';
 import { generateGapSites } from './gap-sites';
 import { generateKinEdges } from './kin-gen';
 import { loadAuthoredAnchors } from './load-anchors';
-import { loadWorldTables } from './load-world-tables';
+import {
+  loadWorldTables,
+  pickKinPattern,
+  pickWorldShape,
+} from './load-world-tables';
 import { generateSettlements, type SettlementGen } from './settlements-gen';
 import { generateRoutes, type RouteGen } from './routes-gen';
 import { generateDoctrines, type DoctrineGen } from './doctrines-gen';
@@ -97,22 +101,31 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
       : procedural;
 
   const tables = loadHistoryTables();
-  const rng = createRng(seed ^ 0xc0ffee);
+  const worldTables = loadWorldTables();
+  const metaRng = createRng(seed ^ 0xa11ce);
+  const shape = pickWorldShape(metaRng, worldTables.shapes);
+  const kinPattern = pickKinPattern(metaRng, worldTables.kinPatterns);
 
-  const history = generateHistoryEvents(rng, tables, people);
-  const gapSites = generateGapSites(rng, tables.settlementSizes);
-  const kinEdges = generateKinEdges(rng, people);
+  const rng = createRng(seed ^ 0xc0ffee);
+  const history = generateHistoryEvents(rng, tables, people, shape);
+  const gapSites = generateGapSites(rng, tables.settlementSizes, shape?.gapBias);
+  const kinEdges = generateKinEdges(rng, people, kinPattern);
   const lines = people.flatMap((p) => p.lines ?? []);
 
-  const worldTables = loadWorldTables();
   const geoRng = createRng(seed ^ 0x5e771e);
   const settlements = generateSettlements(
     geoRng,
     worldTables.towns,
     worldTables.doctrines,
+    shape,
   );
-  const routes = generateRoutes(geoRng, settlements, worldTables.routes);
-  const doctrines = generateDoctrines(geoRng, settlements, worldTables.doctrines);
+  const routes = generateRoutes(geoRng, settlements, worldTables.routes, shape);
+  const doctrines = generateDoctrines(
+    geoRng,
+    settlements,
+    worldTables.doctrines,
+    shape,
+  );
 
   // Facilities/biomes consume geoRng after doctrines so settlements/routes/doctrines stay stable.
   const fbTables = loadFacilitiesBiomesTables();
@@ -122,7 +135,7 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
     routes,
     fbTables.facilities,
   );
-  const biomes = generateBiomes(geoRng, routes, fbTables.biomes);
+  const biomes = generateBiomes(geoRng, routes, fbTables.biomes, shape);
 
   const chainOk = historyChainCoherent(history, tables);
   const historyCoherence = chainOk ? 1 : 0.5;

@@ -21,6 +21,7 @@ export type HistoryBeat = {
   chainsFrom?: string[];
   authoredSeed?: boolean;
   townId?: string | null;
+  arc?: string;
 };
 
 export type SettlementSize = {

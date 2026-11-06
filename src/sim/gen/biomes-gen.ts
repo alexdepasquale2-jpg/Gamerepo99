@@ -1,6 +1,7 @@
-/** Seeded biome selection from biomes.json. Pure; no dyn/. */
+/** Seeded biome selection from routes + shape biomeTags. Pure; no dyn/. */
 
 import type { Rng } from '../rng';
+import type { WorldShape } from './load-world-tables';
 import type { BiomeRow } from './load-facilities-biomes';
 import type { RouteGen } from './routes-gen';
 
@@ -22,13 +23,13 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
 }
 
 /**
- * Prefer biomes referenced by selected routes; otherwise draw from catalog.
- * Seed-varying subset; always ≥1.
+ * Union of route biomes plus 1–2 from shape biomeTags so sets diverge by seed.
  */
 export function generateBiomes(
   rng: Rng,
   routes: RouteGen[],
   catalog: BiomeRow[],
+  shape?: WorldShape,
 ): BiomeGen[] {
   const referenced = new Set<string>();
   for (const r of routes) {
@@ -36,18 +37,34 @@ export function generateBiomes(
   }
 
   const fromRoutes = catalog.filter((b) => referenced.has(b.id));
-  const pool = fromRoutes.length > 0 ? fromRoutes : catalog;
+  const tagSet = new Set(shape?.biomeTags ?? []);
+  const fromTags = catalog.filter(
+    (b) => (b.tags ?? []).some((t) => tagSet.has(t)) && !referenced.has(b.id),
+  );
 
-  if (pool.length === 0) {
-    return [{ id: 'biome_fallback', name: 'Open Country', tags: ['open'] }];
+  const picked: BiomeRow[] = [];
+  const used = new Set<string>();
+  const take = (b: BiomeRow | undefined) => {
+    if (!b || used.has(b.id)) return;
+    picked.push(b);
+    used.add(b.id);
+  };
+
+  for (const b of shuffle(rng, fromRoutes)) take(b);
+
+  const tagKeep = Math.min(fromTags.length, 1 + rng.int(0, 2)); // 1..2 when available
+  for (const b of shuffle(rng, fromTags).slice(0, tagKeep)) take(b);
+
+  if (picked.length === 0) {
+    const pool = catalog.length > 0 ? catalog : [];
+    if (pool.length === 0) {
+      return [{ id: 'biome_fallback', name: 'Open Country', tags: ['open'] }];
+    }
+    const keep = Math.max(1, rng.int(1, pool.length + 1));
+    return shuffle(rng, pool)
+      .slice(0, keep)
+      .map((b) => ({ id: b.id, name: b.name, tags: b.tags }));
   }
 
-  const keep = Math.max(1, rng.int(1, pool.length + 1));
-  return shuffle(rng, pool)
-    .slice(0, keep)
-    .map((b) => ({
-      id: b.id,
-      name: b.name,
-      tags: b.tags,
-    }));
+  return picked.map((b) => ({ id: b.id, name: b.name, tags: b.tags }));
 }

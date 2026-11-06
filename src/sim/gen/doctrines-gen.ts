@@ -1,7 +1,7 @@
-/** Seeded doctrine selection by polity size. Pure; no dyn/. */
+/** Seeded doctrine selection by polity size + shape pressure. Pure; no dyn/. */
 
 import type { Rng } from '../rng';
-import type { DoctrineRow } from './load-world-tables';
+import type { DoctrineRow, WorldShape } from './load-world-tables';
 import type { SettlementGen } from './settlements-gen';
 
 export type DoctrineGen = {
@@ -13,33 +13,34 @@ export type DoctrineGen = {
 
 /**
  * Non-empty doctrines drawn from catalog for selected towns.
- * Larger total politySize → more doctrines kept; seed shuffles the cut.
+ * Shape doctrinePressure sets a floor; polity size still scales the ceiling.
  */
 export function generateDoctrines(
   rng: Rng,
   settlements: SettlementGen[],
   catalog: DoctrineRow[],
+  shape?: WorldShape,
 ): DoctrineGen[] {
   const ids = new Set(settlements.map((s) => s.id));
   const matching = catalog.filter((d) => ids.has(d.townId));
 
   const polityTotal = settlements.reduce((n, s) => n + s.politySize, 0);
-  // Soft tiers from authored town areas (~120..560+).
   let target: number;
   if (polityTotal >= 900) target = matching.length;
   else if (polityTotal >= 500) target = Math.max(1, Math.min(matching.length, 2));
   else target = 1;
 
-  // Seed jitter: sometimes drop/add one within bounds.
+  const pressure = shape?.doctrinePressure ?? 1;
+  target = Math.max(target, Math.min(matching.length, pressure));
+
   if (matching.length > 1 && rng.next() < 0.35) {
-    target = Math.max(1, target - 1);
+    target = Math.max(pressure > 1 ? Math.min(pressure, matching.length) : 1, target - 1);
   } else if (matching.length > target && rng.next() < 0.35) {
     target = Math.min(matching.length, target + 1);
   }
   target = Math.max(1, Math.min(matching.length || 1, target));
 
   if (matching.length === 0) {
-    // Tables have no doctrine for this subset — synthesize from settlement name.
     const hub = settlements[settlements.length - 1] ?? settlements[0]!;
     return [
       {

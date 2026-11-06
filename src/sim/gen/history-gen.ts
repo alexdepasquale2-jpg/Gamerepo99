@@ -1,6 +1,7 @@
-/** Seeded history beat selection from world/history tables. Pure; no dyn/. */
+/** Seeded history beat selection with branching arcs. Pure; no dyn/. */
 
 import type { Rng } from '../rng';
+import type { WorldShape } from './load-world-tables';
 import type { HistoryBeat, HistoryTables } from './load-history';
 import type { HistoryEvent } from './world-types';
 import type { PersonDraft } from './people';
@@ -8,6 +9,7 @@ import type { PersonDraft } from './people';
 function tagsFromBeat(beat: HistoryBeat): string[] {
   const tags = new Set<string>();
   if (beat.kind) tags.add(beat.kind);
+  if (beat.arc) tags.add(`arc:${beat.arc}`);
   for (const fx of beat.effects ?? []) {
     if (fx.target === 'town.historyTags' && typeof fx.value === 'string') {
       tags.add(fx.value);
@@ -47,19 +49,47 @@ function eligible(
   );
 }
 
+/** Weight ×3 when chainsFrom intersects selected ids (branching preference). */
+function pickWeighted(
+  rng: Rng,
+  pool: HistoryBeat[],
+  selectedIds: Set<string>,
+): HistoryBeat {
+  const weights = pool.map((b) => {
+    const from = b.chainsFrom ?? [];
+    const chained = from.some((id) => selectedIds.has(id));
+    return chained ? 3 : 1;
+  });
+  const total = weights.reduce((a, b) => a + b, 0);
+  let ticket = rng.next() * total;
+  for (let i = 0; i < pool.length; i++) {
+    ticket -= weights[i]!;
+    if (ticket < 0) return pool[i]!;
+  }
+  return pool[pool.length - 1]!;
+}
+
 /**
  * Pick an ordered history chain for a seed.
- * Uses procedural (non-authored) beats first so Ashford anchors stay Task-E optional.
+ * Root arc + optional rival arc; prefer chainsFrom continuations.
  */
 export function generateHistoryEvents(
   rng: Rng,
   tables: HistoryTables,
   people: PersonDraft[],
+  shape?: WorldShape,
 ): HistoryEvent[] {
   const procedural = tables.historyBeats.filter((b) => !b.authoredSeed);
   const pool = procedural.length >= 4 ? procedural : tables.historyBeats;
   if (pool.length === 0) {
-    return [{ id: 'hb_empty', at: 1, tags: ['founding'], personIds: people.slice(0, 1).map((p) => p.id) }];
+    return [
+      {
+        id: 'hb_empty',
+        at: 1,
+        tags: ['founding'],
+        personIds: people.slice(0, 1).map((p) => p.id),
+      },
+    ];
   }
 
   const targetCount = Math.min(pool.length, Math.max(3, rng.int(3, 7)));
@@ -71,12 +101,25 @@ export function generateHistoryEvents(
   const first = rootPool[rng.int(0, rootPool.length)]!;
   selected.push(first);
   selectedIds.add(first.id);
+  const primaryArc = first.arc;
+
+  const rivalChance = shape?.rivalArcChance ?? 0.35;
+  if (rng.next() < rivalChance) {
+    const rivals = rootPool.filter(
+      (b) => !selectedIds.has(b.id) && (!primaryArc || b.arc !== primaryArc),
+    );
+    if (rivals.length > 0 && selected.length < targetCount) {
+      const second = rivals[rng.int(0, rivals.length)]!;
+      selected.push(second);
+      selectedIds.add(second.id);
+    }
+  }
 
   while (selected.length < targetCount) {
     const tags = collectHistoryTags(selected);
     const nextPool = eligible(pool, selectedIds, tags);
     if (nextPool.length === 0) break;
-    const pick = nextPool[rng.int(0, nextPool.length)]!;
+    const pick = pickWeighted(rng, nextPool, selectedIds);
     selected.push(pick);
     selectedIds.add(pick.id);
   }

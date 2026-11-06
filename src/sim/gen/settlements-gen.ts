@@ -1,7 +1,7 @@
-/** Seeded settlement selection from towns.json. Pure; no dyn/. */
+/** Seeded settlement selection from towns + world-shapes. Pure; no dyn/. */
 
 import type { Rng } from '../rng';
-import type { DoctrineRow, TownRow } from './load-world-tables';
+import type { DoctrineRow, TownRow, WorldShape } from './load-world-tables';
 
 export type SettlementGen = {
   id: string;
@@ -25,20 +25,24 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
 function politySize(t: TownRow): number {
   const w = t.mapWidth ?? 10;
   const h = t.mapHeight ?? 10;
-  // City pole may be 1×1 in data — fall back to gap-weighted size.
   const area = w * h;
   if (area <= 1) return Math.round(200 + t.gapAxis * 800);
   return area;
 }
 
+function inBand(gap: number, band: [number, number]): boolean {
+  return gap >= band[0] && gap <= band[1];
+}
+
 /**
- * ≥3 settlements drawn from authored towns. Always keeps ≥1 doctrine-bearing
- * town so doctrines-gen can stay non-empty. Subset varies by seed.
+ * ≥3 settlements drawn from authored towns. Shape drives count + gapBands.
+ * When catalog ≥6, leave ≥2 towns out so pairwise sets diverge.
  */
 export function generateSettlements(
   rng: Rng,
   towns: TownRow[],
   doctrines: DoctrineRow[],
+  shape?: WorldShape,
 ): SettlementGen[] {
   if (towns.length === 0) {
     return [
@@ -48,40 +52,58 @@ export function generateSettlements(
     ];
   }
 
-  const doctrineTowns = new Set(doctrines.map((d) => d.townId));
-  const withDoc = shuffle(
-    rng,
-    towns.filter((t) => doctrineTowns.has(t.id) || Boolean(t.doctrineId)),
-  );
-  const withoutDoc = shuffle(
-    rng,
-    towns.filter((t) => !doctrineTowns.has(t.id) && !t.doctrineId),
-  );
+  const [lo, hi] = shape?.settlementCount ?? [3, Math.min(4, towns.length)];
+  let target = Math.max(3, rng.int(lo, hi + 1));
+  // Never force the full catalog when towns.length ≥ 6 — leave ≥2 out.
+  if (towns.length >= 6) {
+    target = Math.min(target, towns.length - 2);
+  }
+  target = Math.max(3, Math.min(towns.length, target));
 
-  const target = Math.min(towns.length, Math.max(3, rng.int(3, towns.length + 1)));
+  const doctrineTowns = new Set(doctrines.map((d) => d.townId));
   const picked: TownRow[] = [];
+  const used = new Set<string>();
+
+  const take = (t: TownRow | undefined) => {
+    if (!t || used.has(t.id) || picked.length >= target) return;
+    picked.push(t);
+    used.add(t.id);
+  };
+
+  // Each gap band contributes ≥1 town when available.
+  for (const band of shape?.gapBands ?? []) {
+    const candidates = shuffle(
+      rng,
+      towns.filter((t) => !used.has(t.id) && inBand(t.gapAxis, band)),
+    );
+    take(candidates[0]);
+  }
 
   // Guarantee one doctrine-bearing town when any exist.
-  if (withDoc.length > 0) {
-    picked.push(withDoc[0]!);
+  if (![...used].some((id) => {
+    const t = towns.find((x) => x.id === id);
+    return t && (doctrineTowns.has(t.id) || Boolean(t.doctrineId));
+  })) {
+    const withDoc = shuffle(
+      rng,
+      towns.filter((t) => !used.has(t.id) && (doctrineTowns.has(t.id) || Boolean(t.doctrineId))),
+    );
+    take(withDoc[0]);
   }
 
-  const rest = shuffle(rng, [
-    ...withDoc.slice(picked.length > 0 ? 1 : 0),
-    ...withoutDoc,
-  ]);
+  const rest = shuffle(
+    rng,
+    towns.filter((t) => !used.has(t.id)),
+  );
   for (const t of rest) {
     if (picked.length >= target) break;
-    if (picked.some((p) => p.id === t.id)) continue;
-    picked.push(t);
+    take(t);
   }
 
-  // Pad from full list if tables are tiny.
   if (picked.length < 3) {
     for (const t of towns) {
       if (picked.length >= 3) break;
-      if (picked.some((p) => p.id === t.id)) continue;
-      picked.push(t);
+      take(t);
     }
   }
 
