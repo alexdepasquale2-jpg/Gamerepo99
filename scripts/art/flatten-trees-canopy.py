@@ -23,6 +23,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "assets/vendor/ansimuz-trees-and-bushes.src.png"
 OUT = ROOT / "assets/vendor/ansimuz-trees-and-bushes.png"
+RIGHT_COL_X = 220  # fir/bush/small props — gentle remap only (no hole-fill blob)
 
 # Town-olive canopy bands (match town sheet dark + prior remap mid/light)
 OUTLINE = np.array([0x3A, 0x42, 0x16, 255], dtype=np.uint8)
@@ -235,11 +236,71 @@ def remap_base(orig: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return base, trunk, canopy0
 
 
+
+def round_silhouette(mask: np.ndarray, passes: int = 5) -> np.ndarray:
+    """Soften blocky jaggies: fill notches, chamfer outer 90° corners, shave spikes."""
+    h, w = mask.shape
+    m = mask.copy()
+    for _ in range(passes):
+        fill: list[tuple[int, int]] = []
+        clear: list[tuple[int, int]] = []
+        for y in range(2, h - 2):
+            for x in range(2, w - 2):
+                n = bool(m[y - 1, x])
+                s = bool(m[y + 1, x])
+                e = bool(m[y, x + 1])
+                ww = bool(m[y, x - 1])
+                if not m[y, x]:
+                    n8 = sum(
+                        1
+                        for dy in (-1, 0, 1)
+                        for dx in (-1, 0, 1)
+                        if not (dy == 0 and dx == 0) and m[y + dy, x + dx]
+                    )
+                    # Concave notch / diagonal step fill
+                    if ((n and e) or (n and ww) or (s and e) or (s and ww)) and n8 >= 3:
+                        fill.append((y, x))
+                    elif n8 >= 5:
+                        fill.append((y, x))
+                else:
+                    card = int(n) + int(s) + int(e) + int(ww)
+                    n8 = sum(
+                        1
+                        for dy in (-1, 0, 1)
+                        for dx in (-1, 0, 1)
+                        if not (dy == 0 and dx == 0) and m[y + dy, x + dx]
+                    )
+                    # Spike
+                    if card <= 1 and n8 <= 2:
+                        clear.append((y, x))
+                        continue
+                    # Chamfer sharp outer 90° corner when both arms are ≥2px
+                    # SE-open corner
+                    if (not e) and (not s) and ww and n and m[y, x - 2] and m[y - 2, x]:
+                        clear.append((y, x))
+                    # SW-open
+                    elif (not ww) and (not s) and e and n and m[y, x + 2] and m[y - 2, x]:
+                        clear.append((y, x))
+                    # NE-open
+                    elif (not e) and (not n) and ww and s and m[y, x - 2] and m[y + 2, x]:
+                        clear.append((y, x))
+                    # NW-open
+                    elif (not ww) and (not n) and e and s and m[y, x + 2] and m[y + 2, x]:
+                        clear.append((y, x))
+        for y, x in fill:
+            m[y, x] = True
+        for y, x in clear:
+            m[y, x] = False
+    return m
+
+
 def flatten(base: np.ndarray, trunk: np.ndarray, canopy0: np.ndarray) -> np.ndarray:
     h, w, _ = base.shape
     closed = erode(dilate(canopy0, 2), 2) & ~trunk
     canopy = fill_holes(closed | canopy0, trunk, max_hole=250)
     canopy &= dilate(canopy0, 2) & ~trunk
+    canopy = round_silhouette(canopy, passes=5)
+    canopy &= ~trunk
 
     val = np.full((h, w), 0.55, dtype=np.float32)
     val[(base[:, :, 0] == LIGHT[0]) & (base[:, :, 1] == LIGHT[1]) & (base[:, :, 2] == LIGHT[2]) & (base[:, :, 3] > 0)] = 0.80
@@ -321,6 +382,22 @@ def flatten(base: np.ndarray, trunk: np.ndarray, canopy0: np.ndarray) -> np.ndar
             role[y, x] = 4
 
     role = despeckle(role, canopy & ~ground, (1, 2, 3, 4), passes=12, own_max=3)
+
+    # Round silhouette again after band paint intent, then rebuild outline on new rim
+    canopy = round_silhouette(canopy, passes=2)
+    canopy &= ~trunk
+    # Drop role where silhouette shaved; fill new pixels as mid then outline
+    role[~canopy & (role > 0) & (role != 5)] = 0
+    new_leaf = canopy & ~ground & (role == 0)
+    role[new_leaf] = 3
+    for y, x in zip(*np.where(canopy & ~ground)):
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            ny, nx = y + dy, x + dx
+            if not (0 <= ny < h and 0 <= nx < w) or not canopy[ny, nx]:
+                role[y, x] = 1
+                break
+    role = despeckle(role, canopy & ~ground, (1, 2, 3, 4), passes=4, own_max=2)
+    # Final outer outline (after despeckle)
     for y, x in zip(*np.where(canopy & ~ground)):
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
             ny, nx = y + dy, x + dx
@@ -336,12 +413,82 @@ def flatten(base: np.ndarray, trunk: np.ndarray, canopy0: np.ndarray) -> np.ndar
     return out
 
 
+def gentle_right_column(orig: np.ndarray, baked: np.ndarray) -> np.ndarray:
+    """Keep fir/bush/small sprites from hole-fill blobbing; light flat bands only."""
+    h, w, _ = orig.shape
+    base, trunk, _canopy0 = remap_base(orig)
+    out = baked.copy()
+    out[:, RIGHT_COL_X:, :] = base[:, RIGHT_COL_X:, :]
+    right = np.zeros((h, w), dtype=bool)
+    right[:, RIGHT_COL_X:] = True
+    leaf = (out[:, :, 3] > 0) & ~trunk & right
+    role = np.zeros((h, w), dtype=np.uint8)
+    role[leaf & (out[:, :, 0] == LIGHT[0]) & (out[:, :, 1] == LIGHT[1])] = 4
+    role[leaf & (role == 0)] = 3
+    for y, x in zip(*np.where(leaf)):
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            ny, nx = y + dy, x + dx
+            if not (0 <= ny < h and 0 <= nx < w) or out[ny, nx, 3] == 0 or trunk[ny, nx]:
+                role[y, x] = 1
+                break
+    # Upper third of each component → light; lower → shadow
+    labels = np.zeros((h, w), dtype=np.int32)
+    lab = 0
+    for y in range(h):
+        for x in range(RIGHT_COL_X, w):
+            if not leaf[y, x] or labels[y, x]:
+                continue
+            lab += 1
+            q: deque[tuple[int, int]] = deque([(y, x)])
+            labels[y, x] = lab
+            cells = [(y, x)]
+            while q:
+                cy, cx = q.popleft()
+                for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                    ny, nx = cy + dy, cx + dx
+                    if 0 <= ny < h and 0 <= nx < w and leaf[ny, nx] and labels[ny, nx] == 0:
+                        labels[ny, nx] = lab
+                        q.append((ny, nx))
+                        cells.append((ny, nx))
+            ys = [c[0] for c in cells]
+            y0, y1 = min(ys), max(ys)
+            span = max(1, y1 - y0)
+            for yy, xx in cells:
+                if role[yy, xx] == 1:
+                    continue
+                ty = (yy - y0) / span
+                role[yy, xx] = 4 if ty < 0.35 else (2 if ty > 0.72 else 3)
+    pal = {1: OUTLINE, 2: SHADOW, 3: MID, 4: LIGHT}
+    for rid, col in pal.items():
+        out[(role == rid) & leaf] = col
+    out[trunk & right] = base[trunk & right]
+    # Soft round on right-col leaf only (1 pass)
+    leaf_mask = (out[:, :, 3] > 0) & ~trunk & right
+    leaf_mask = round_silhouette(leaf_mask, passes=2)
+    # clear shaved
+    drop = right & ~trunk & (baked[:, :, 3] > 0)  # noqa — use previous leaf
+    # Rebuild alpha for right leaf from leaf_mask + trunks
+    for y in range(h):
+        for x in range(RIGHT_COL_X, w):
+            if trunk[y, x]:
+                continue
+            if leaf_mask[y, x]:
+                if out[y, x, 3] == 0:
+                    out[y, x] = MID
+            else:
+                if not trunk[y, x]:
+                    out[y, x] = (0, 0, 0, 0)
+    return out
+
+
+
 def main() -> None:
     if not SRC.exists():
         raise SystemExit(f"missing pristine source: {SRC}")
     orig = np.array(Image.open(SRC).convert("RGBA"))
     base, trunk, canopy0 = remap_base(orig)
     out = flatten(base, trunk, canopy0)
+    out = gentle_right_column(orig, out)
     Image.fromarray(out, "RGBA").save(OUT)
     opaque = int((out[:, :, 3] > 0).sum())
     colors = Counter(tuple(out[y, x, :3]) for y in range(out.shape[0]) for x in range(out.shape[1]) if out[y, x, 3] > 0)

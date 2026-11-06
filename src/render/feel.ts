@@ -103,14 +103,14 @@ export const FEEL = {
     tuftH: 6,
     flowerPx: 3,
     /** Meadow scatter min gap — dense but non-overlapping */
-    scatterMinPx: 36,
+    scatterMinPx: 32,
     /** Poisson grass detail — Stardew meadow density */
     poissonCellA: 18,
-    poissonKeepA: 22,
+    poissonKeepA: 24,
     poissonCellB: 26,
-    poissonKeepB: 14,
+    poissonKeepB: 16,
     poissonCellC: 32,
-    poissonKeepC: 10,
+    poissonKeepC: 12,
     bushR: 8,
     rockR: 6,
     logW: 22,
