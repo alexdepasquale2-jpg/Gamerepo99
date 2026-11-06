@@ -1,14 +1,18 @@
-# Spark/Reignite VFX Implementation Plan
+# Spark / Reignite VFX Prototype Plan
 
-> Inline Prism execution.
+> Inline Prism executor.
 
-**Goal:** Prototype spark spend + reignite VFX in Phaser render, plus UI/juice spec.
+**Goal:** Presentation-only spark/reignite VFX (particles, bloom, color wash, hit-stop, shake, cost-to-self) driven by bus events + warmth; FEEL tunables; UI_JUICE_SPEC; frame capture; build green.
 
-**Architecture:** EventBus → SparkFx presenter; feel constants in render; WanderScene demo keys.
+**Architecture:** Expand `feel.ts` + `spark-fx.ts`; optional player feedback hook; demo player marker in WanderScene; Pillow PNG sequence for docs.
 
-**Tech Stack:** TypeScript, Phaser 3, existing EventBus.
+**Tech:** Phaser 3, Vitest, Pillow
 
-### Task 1: feel.ts + spark-fx.ts
-### Task 2: Wire WanderScene demo + ensure world/bus available
-### Task 3: UI_JUICE.md
-### Task 4: Schedule + tsc/build verify
+## Tasks
+1. Expand FEEL config (wash, costSelf, reignite hitStop)
+2. Enhance spark-fx (wash, cost-to-self, bloom)
+3. WanderScene player marker + spark bar HUD demo
+4. Vitest for FEEL shape
+5. UI_JUICE_SPEC.md
+6. Capture frame sequence PNGs
+7. Build/test, CREDITS, schedule, commit Prism files only

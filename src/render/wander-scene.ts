@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import mapData from '../data/world/map.json';
 import { createWorld, tick, type World } from '../sim';
+import { FEEL } from './feel';
 import { attachSparkFx } from './spark-fx';
 
 const TILE_COLORS: Record<string, number> = {
@@ -20,6 +21,11 @@ function npcColor(id: string): number {
 export class WanderScene extends Phaser.Scene {
   private world!: World;
   private npcGfx = new Map<string, Phaser.GameObjects.Arc>();
+  private player!: Phaser.GameObjects.Arc;
+  private sparkFill = 1;
+  private sparkBarBg!: Phaser.GameObjects.Rectangle;
+  private sparkBarFill!: Phaser.GameObjects.Rectangle;
+  private sparkBarOutline!: Phaser.GameObjects.Rectangle;
   private readonly tileSize: number;
   private accum = 0;
   private readonly stepMs = 280;
@@ -39,6 +45,8 @@ export class WanderScene extends Phaser.Scene {
 
     this.drawTiles();
     this.spawnNpcSprites();
+    this.spawnPlayer();
+    this.createSparkHud();
 
     this.add
       .text(8, 8, 'The Last Spark — M1 wander demo', {
@@ -55,8 +63,16 @@ export class WanderScene extends Phaser.Scene {
       this.world.width * this.tileSize,
       this.world.height * this.tileSize,
     );
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
-    attachSparkFx(this, this.world.bus);
+    attachSparkFx(this, this.world.bus, {
+      getPlayerPos: () => ({ x: this.player.x, y: this.player.y }),
+      onSparkSpentHud: (amount01) => {
+        this.sparkFill = Math.max(0, this.sparkFill - amount01);
+        this.redrawSparkHud();
+      },
+    });
+
     this.add
       .text(8, 28, 'VFX demo: 1 spark spend · 2 reignite · 3 refusal · 4 burnout', {
         fontFamily: 'monospace',
@@ -66,25 +82,30 @@ export class WanderScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(10);
 
-    const center = () => ({
-      x: (this.world.width * this.tileSize) / 2,
-      y: (this.world.height * this.tileSize) / 2,
-    });
     this.input.keyboard?.on('keydown-ONE', () => {
-      const c = center();
-      this.world.bus.emit('vfx.spark_spent', { ...c, amount01: 0.2 });
+      this.world.bus.emit('vfx.spark_spent', {
+        x: this.player.x,
+        y: this.player.y,
+        amount01: 0.2,
+      });
     });
     this.input.keyboard?.on('keydown-TWO', () => {
-      const c = center();
-      this.world.bus.emit('vfx.reignite', { ...c, warmthBefore: 0.2, warmthAfter: 0.8 });
+      this.world.bus.emit('vfx.reignite', {
+        x: this.player.x + 40,
+        y: this.player.y,
+        warmthBefore: 0.2,
+        warmthAfter: 0.8,
+      });
     });
     this.input.keyboard?.on('keydown-THREE', () => {
-      const c = center();
-      this.world.bus.emit('vfx.refusal', { ...c, kind: 'shame_child' });
+      this.world.bus.emit('vfx.refusal', {
+        x: this.player.x + 24,
+        y: this.player.y,
+        kind: 'shame_child',
+      });
     });
     this.input.keyboard?.on('keydown-FOUR', () => {
-      const c = center();
-      this.world.bus.emit('vfx.burnout', c);
+      this.world.bus.emit('vfx.burnout', { x: this.player.x, y: this.player.y });
     });
   }
 
@@ -95,6 +116,49 @@ export class WanderScene extends Phaser.Scene {
       tick(this.world);
       this.syncNpcSprites();
     }
+  }
+
+  private spawnPlayer(): void {
+    const x = (this.world.width * this.tileSize) / 2;
+    const y = (this.world.height * this.tileSize) / 2;
+    this.player = this.add.circle(x, y, this.tileSize * 0.38, 0xf2b84b);
+    this.player.setStrokeStyle(2, 0x5ec8c8, 1);
+    this.player.setDepth(8);
+  }
+
+  private createSparkHud(): void {
+    const h = FEEL.hud;
+    this.sparkBarBg = this.add
+      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight, h.emptyColor)
+      .setOrigin(0, 0.5)
+      .setScrollFactor(0)
+      .setDepth(40);
+    this.sparkBarFill = this.add
+      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight - 2, h.fillColor)
+      .setOrigin(0, 0.5)
+      .setScrollFactor(0)
+      .setDepth(41);
+    this.sparkBarOutline = this.add
+      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(2, h.outlineColor, 1)
+      .setFillStyle()
+      .setScrollFactor(0)
+      .setDepth(42);
+    this.add
+      .text(h.sparkBarX, h.sparkBarY - 14, 'SPARK', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#5ec8c8',
+      })
+      .setScrollFactor(0)
+      .setDepth(40);
+    this.redrawSparkHud();
+  }
+
+  private redrawSparkHud(): void {
+    const h = FEEL.hud;
+    this.sparkBarFill.width = Math.max(0, h.sparkBarWidth * this.sparkFill);
   }
 
   private drawTiles(): void {
