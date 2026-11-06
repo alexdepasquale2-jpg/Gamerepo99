@@ -88,11 +88,16 @@ describe('fabric-run', () => {
       expect(cell.world?.fingerprint).toBeTruthy();
     }
     expect(result.aggregates.determinism).toBe(true);
-    // Stub scaffold lines must fail assertVoice — floor stays at cap 0 (honest fail).
-    expect(result.aggregates.assertionViolationRate).toBeGreaterThan(0);
-    expect(result.aggregates.assertionViolationRate).toBeGreaterThan(
+    // Facade bakes real fragment lines — assertion floor clears (cap untouched).
+    expect(result.aggregates.assertionViolationRate).toBeLessThanOrEqual(
       thresholds.assertionViolationRateCap,
     );
+    for (const cell of result.cells) {
+      const lines = cell.world?.lines ?? cell.world?.people.flatMap((p) => p.lines ?? []) ?? [];
+      for (const line of lines) {
+        expect(line.text).not.toMatch(/^stub-voice-/);
+      }
+    }
   });
 
   it('documents API_PENDING cell shape when no api is supplied to pending helper path', async () => {

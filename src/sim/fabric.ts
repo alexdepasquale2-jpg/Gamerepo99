@@ -1,21 +1,24 @@
-/** Public Fabric API facade — re-exports from gen/ and dyn/ only; no logic. */
+/** Public Fabric API facade — gen shape + dyn voice; bake lines on worldgen path. */
 
 export {
   generateWorld,
-  type FabricWorld,
-  type GenerateWorldOpts,
-  type KinEdge,
-  type GapSite,
-  type HistoryEvent,
-  type AssertionResult,
-} from './gen/world';
-
-export {
   generatePeople,
   generatePersonDraft,
-  type PersonDraft,
-  type GeneratePeopleOpts,
-  type GeneratePersonDraftOpts,
+} from './fabric-bake';
+
+export type {
+  FabricWorld,
+  GenerateWorldOpts,
+  KinEdge,
+  GapSite,
+  HistoryEvent,
+  AssertionResult,
+} from './gen/world';
+
+export type {
+  PersonDraft,
+  GeneratePeopleOpts,
+  GeneratePersonDraftOpts,
 } from './gen/people';
 
 export {
