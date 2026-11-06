@@ -4,83 +4,21 @@
  * Returns null until enough surface exists to run generator quality bots.
  */
 
-/** Generated person sample used by diversity / anti-template metrics. */
-export type FabricPerson = {
-  id: string;
-  fingerprint: string;
-  /** Optional continuous voice/trait vector for distance metrics. */
-  vector?: Record<string, number>;
-  lines?: FabricLine[];
-};
+export type {
+  FabricPerson,
+  FabricLine,
+  KinEdge,
+  GapSite,
+  HistoryEvent,
+  AssertionResult,
+  FabricWorld,
+  GenerateWorldOpts,
+  FabricApi,
+} from './fabric-api-types';
 
-export type FabricLine = {
-  id: string;
-  text: string;
-  source?: 'fixed' | 'blend' | 'fallback';
-};
+import type { FabricApi, FabricPerson, FabricWorld } from './fabric-api-types';
 
-/** Kin edge for connectedness. */
-export type KinEdge = { from: string; to: string; kind?: string };
-
-/** Settlement / site placement along city↔village gap (0 = village, 1 = city). */
-export type GapSite = {
-  id: string;
-  /** Position on city↔village axis in [0, 1]. */
-  gap01: number;
-};
-
-export type HistoryEvent = {
-  id: string;
-  at?: number;
-  tags?: string[];
-  personIds?: string[];
-};
-
-export type AssertionResult = {
-  ok: boolean;
-  violationId?: string;
-  message?: string;
-};
-
-/** One generated world (or fabric snapshot) for multi-seed quality checks. */
-export type FabricWorld = {
-  seed: number;
-  fingerprint: string;
-  people: FabricPerson[];
-  lines?: FabricLine[];
-  history?: HistoryEvent[];
-  /** Optional precomputed coherence in [0, 1]; metrics may also derive from history. */
-  historyCoherence?: number;
-  kinEdges?: KinEdge[];
-  gapSites?: GapSite[];
-  assertions?: AssertionResult[];
-};
-
-export type GenerateWorldOpts = {
-  seed: number;
-  peopleCount?: number;
-};
-
-export type FabricApi = {
-  /** Preferred: generate a full world sample for one seed. */
-  generateWorld?(opts: GenerateWorldOpts): FabricWorld | Promise<FabricWorld>;
-  createFabric?(opts?: unknown): unknown;
-  createWorldFabric?(opts?: unknown): unknown;
-  generatePeople?(opts: {
-    seed: number;
-    count?: number;
-  }): FabricPerson[] | Promise<FabricPerson[]>;
-  generatePersonDraft?(opts: {
-    seed: number;
-    index?: number;
-  }): FabricPerson | Promise<FabricPerson>;
-  interpolateLine?(opts: unknown): FabricLine | Promise<FabricLine>;
-  assertVoice?(opts: unknown): AssertionResult | Promise<AssertionResult>;
-  runFabricAssertions?(
-    opts: unknown,
-  ): AssertionResult[] | Promise<AssertionResult[]>;
-};
-
+/** Prefer Forge facade first; index fallback last. No dead fabric/ folder. */
 const MODULE_CANDIDATES = [
   '../../src/sim/fabric.ts',
   '../../src/sim/index.ts',
@@ -107,56 +45,87 @@ function isFunction(v: unknown): v is (...args: never[]) => unknown {
   return typeof v === 'function';
 }
 
+/**
+ * Normalize a Forge world/person shape into Probe's FabricWorld.
+ * PersonDraft already matches FabricPerson; this is a thin pass-through
+ * that fills missing optional arrays so metrics never see undefined as FAIL.
+ */
+export function normalizeWorld(raw: unknown, seedFallback = 0): FabricWorld {
+  const w = (raw ?? {}) as Partial<FabricWorld> & { people?: unknown[] };
+  const people: FabricPerson[] = Array.isArray(w.people)
+    ? w.people.map((p, i) => {
+        const person = (p ?? {}) as Partial<FabricPerson>;
+        return {
+          id: typeof person.id === 'string' ? person.id : `unknown-${i}`,
+          fingerprint:
+            typeof person.fingerprint === 'string'
+              ? person.fingerprint
+              : `fp-missing-${i}`,
+          vector: person.vector,
+          lines: person.lines,
+        };
+      })
+    : [];
+  return {
+    seed: typeof w.seed === 'number' ? w.seed : seedFallback,
+    fingerprint:
+      typeof w.fingerprint === 'string' && w.fingerprint.length > 0
+        ? w.fingerprint
+        : `wf-missing-${seedFallback}`,
+    people,
+    lines: w.lines,
+    history: w.history,
+    historyCoherence: w.historyCoherence,
+    kinEdges: w.kinEdges,
+    gapSites: w.gapSites,
+    assertions: w.assertions,
+  };
+}
+
+function wrapGenerateWorld(
+  fn: NonNullable<FabricApi['generateWorld']>,
+): NonNullable<FabricApi['generateWorld']> {
+  return (opts) => {
+    const out = fn(opts);
+    if (out && typeof (out as Promise<FabricWorld>).then === 'function') {
+      return (out as Promise<FabricWorld>).then((w) =>
+        normalizeWorld(w, opts.seed),
+      );
+    }
+    return normalizeWorld(out, opts.seed);
+  };
+}
+
 function pickApi(mod: Record<string, unknown>): FabricApi | null {
   const api: FabricApi = {};
-  let hit = 0;
 
   if (isFunction(mod.createFabric)) {
     api.createFabric = mod.createFabric as FabricApi['createFabric'];
-    hit++;
   }
   if (isFunction(mod.createWorldFabric)) {
     api.createWorldFabric = mod.createWorldFabric as FabricApi['createWorldFabric'];
-    hit++;
   }
   if (isFunction(mod.generateWorld)) {
-    api.generateWorld = mod.generateWorld as FabricApi['generateWorld'];
-    hit++;
+    api.generateWorld = wrapGenerateWorld(
+      mod.generateWorld as NonNullable<FabricApi['generateWorld']>,
+    );
   }
   if (isFunction(mod.generatePeople)) {
     api.generatePeople = mod.generatePeople as FabricApi['generatePeople'];
-    hit++;
   }
   if (isFunction(mod.generatePersonDraft)) {
     api.generatePersonDraft =
       mod.generatePersonDraft as FabricApi['generatePersonDraft'];
-    hit++;
   }
   if (isFunction(mod.interpolateLine)) {
     api.interpolateLine = mod.interpolateLine as FabricApi['interpolateLine'];
-    hit++;
   }
   if (isFunction(mod.assertVoice)) {
     api.assertVoice = mod.assertVoice as FabricApi['assertVoice'];
-    hit++;
   }
   if (isFunction(mod.runFabricAssertions)) {
     api.runFabricAssertions =
       mod.runFabricAssertions as FabricApi['runFabricAssertions'];
-    hit++;
-  }
-
-  // Helper exports that may sit beside factories (recorded as presence via hit)
-  for (const name of [
-    'worldFingerprint',
-    'historySummary',
-    'kinGraph',
-    'gapAxisSpread',
-    'assertionResults',
-  ] as const) {
-    if (isFunction(mod[name]) || (mod[name] !== undefined && mod[name] !== null)) {
-      hit++;
-    }
   }
 
   // Usable when we can produce a world or a people sample.
@@ -168,7 +137,6 @@ function pickApi(mod: Record<string, unknown>): FabricApi | null {
     return api;
   }
 
-  void hit;
   void NAMED_EXPORTS;
   return null;
 }

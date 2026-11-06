@@ -1,0 +1,11 @@
+{
+  "defaultSeeds": [1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29],
+  "peopleCountPerWorld": 8,
+  "worldDiversityFloor": 0.9,
+  "peopleDiversityFloor": 0.75,
+  "historyCoherenceFloor": 0.95,
+  "kinConnectednessFloor": 0.5,
+  "gapSpreadFloor": 0.55,
+  "assertionViolationRateCap": 0,
+  "repeatLineRateCap": 0.15
+}

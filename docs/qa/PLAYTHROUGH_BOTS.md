@@ -1,8 +1,19 @@
-# Automated playthrough bots (hybrid C)
+# Automated bots (Probe)
 
-**Status:** Harness ready. Live matrix is `API_PENDING` until Forge exports an M2 play-session factory from `src/sim` (e.g. `createPlaySession`).
+## Milestone split (Alex replan)
+| Milestone | Bots | Report |
+|-----------|------|--------|
+| **M2 Fabric** | Generator quality — `tests/bots/fabric-*` (world diversity, history, kin, gap, assertions, people distinctness, determinism, anti-template) | `docs/qa/reports/m2-fabric-alive.md` |
+| **M3** First playable world | Playthrough matrix below (stuck/boredom/dominance/burnout/hollow) | playable-town / worth-playing (M3) |
 
-Design: `docs/superpowers/specs/2026-11-05-playthrough-bots-design.md`
+Design (fabric): `docs/superpowers/specs/2026-11-05-fabric-quality-bots-design.md`  
+Design (playthrough): `docs/superpowers/specs/2026-11-05-playthrough-bots-design.md`
+
+---
+
+# Playthrough bots (hybrid C) — **M3 gate**
+
+**Status:** Harness ready. Live matrix is `API_PENDING` until Forge exports a play-session factory from `src/sim` (e.g. `createPlaySession`). **Not required to clear M2.**
 
 ## Goal
 Headless bots exercise the **public sim API** (no Phaser) across playable archetypes × play styles, measuring feel/balance. Playwright stays UI-smoke only (`npm run test:e2e:m1`).
@@ -39,17 +50,25 @@ Thresholds: `tests/bots/thresholds.json` (data, not code).
 ## Layout
 ```
 tests/bots/
+  # M2 fabric / worldgen
+  fabric-api.ts           # connectFabricApi feature-detect (src/sim/fabric.ts)
+  fabric-metrics.ts       # world/people diversity, history, kin, gap, assertions, …
+  fabric-run.ts           # multi-seed suite (API_PENDING | fake | live)
+  fabric-thresholds.json
+  fabric-*.test.ts
+  # M3 playthrough
   bot-session.ts      # BotSession + connectBotSession feature-detect
   style-policy.ts     # savage/kind/mixed
   metrics.ts          # pure aggregators
   run-matrix.ts       # matrix driver
   thresholds.json
   *.test.ts
-docs/qa/reports/m2-playable-town-bots.md
+docs/qa/reports/m2-fabric-alive.md
+docs/qa/reports/m2-playable-town-bots.md   # legacy name; M3 gate
 ```
 
 ## Report
 `docs/qa/reports/m2-playable-town-bots.md` — update after each real matrix run; send summary to Niblet.
 
 ## Forge handoff
-Probe does not commit. Batch for Forge includes everything under `tests/bots/`, `docs/qa/PLAYTHROUGH_BOTS.md`, `docs/qa/reports/m2-playable-town-bots.md`, `package.json` (`test:bots`), and `vitest.config.ts` (bots no longer excluded).
+Probe does not commit. Batch for Forge includes `tests/bots/**` (fabric-* + playthrough), `docs/qa/PLAYTHROUGH_BOTS.md`, `docs/qa/reports/m2-fabric-alive.md`, `docs/qa/reports/m2-playable-town-bots.md`, `package.json` (`test:bots`).
