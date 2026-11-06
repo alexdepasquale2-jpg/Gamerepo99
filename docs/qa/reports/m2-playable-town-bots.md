@@ -35,3 +35,8 @@ npm run test:bots
 npm test
 npm run build
 ```
+
+---
+
+## Quality gate note
+Per `docs/qa/QUALITY_GATE.md`, M2 also requires `docs/qa/reports/m2-worth-playing.md` after a **live** matrix (not API_PENDING). That verdict is currently **blocked** on Forge `createPlaySession`.
