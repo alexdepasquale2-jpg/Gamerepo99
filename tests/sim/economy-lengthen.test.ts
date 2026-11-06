@@ -101,7 +101,7 @@ describe('economy lengthen (M3 burnout fix)', () => {
     expect(play.snapshot().townId).not.toBe(townBefore);
   });
 
-  it('each travel day regenerates spark (dawn path or +8 capped)', () => {
+  it('each travel day nets +2 spark (Loom pacing; not full dawn hooks)', () => {
     const routes = [
       { id: 'route_a_b', fromId: 'town_a', toId: 'town_b', days: 2, biomeIds: [] as string[] },
     ];
@@ -128,11 +128,23 @@ describe('economy lengthen (M3 burnout fix)', () => {
       rng: createRng(1),
     };
     const sparkBefore = state.player.spark;
+    const dayBefore = state.day;
     const result = startTravel(state, 'route_a_b');
     expect(result.daysEff).toBeGreaterThanOrEqual(2);
-    // Dawn hooks (+12 base) preferred over bare +8
-    expect(state.player.spark).toBeGreaterThanOrEqual(sparkBefore + 8 * result.daysEff);
+    // Loom: +2 spark per travel day (not dawn +12)
+    expect(state.player.spark).toBe(sparkBefore + 2 * result.daysEff);
+    expect(state.day).toBe(dayBefore + result.daysEff);
     expect(state.player.spark).toBeLessThanOrEqual(100);
+
+    // Clamp to sparkMax
+    state.player.townId = 'town_b';
+    state.player.spark = 99;
+    const routes2 = [
+      { id: 'route_b_a', fromId: 'town_b', toId: 'town_a', days: 1, biomeIds: [] as string[] },
+    ];
+    state.routes = routes2;
+    startTravel(state, 'route_b_a');
+    expect(state.player.spark).toBe(100);
   });
 
   it('careful kind play with dawn keeps spark > ember zone after 10 kind acts', () => {

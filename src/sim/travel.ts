@@ -1,7 +1,6 @@
 /** Travel days + roadside encounters. Pure sim; no Phaser/DOM/Math.random; no gen/ imports. */
 
 import type { Rng } from './rng';
-import { advanceToDawn } from './scenario-advance';
 import {
   loadBiomeTerrainMuls,
   loadEncounterTables,
@@ -86,8 +85,8 @@ function resolveDaysEff(route: TravelRoute, state: TravelSimState): number {
 }
 
 /**
- * Advance daysEff dawns along route; emit route.travel_step each day;
- * roll encounter table and emit encounter.spawn when an entry hits.
+ * Advance daysEff travel days along route (+2 spark/day, Loom pacing);
+ * emit route.travel_step each day; roll encounter table and emit encounter.spawn when an entry hits.
  */
 export function startTravel(state: TravelSimState, routeId: string): { daysEff: number } {
   const routes = state.routes ?? [];
@@ -105,9 +104,20 @@ export function startTravel(state: TravelSimState, routeId: string): { daysEff: 
   const table = tables.find((t) => t.id === tableId) ?? tables[0];
   const rng = state.rng as Rng | undefined;
 
+  const defaultsSparkMax = (
+    state.data as { player?: { defaults?: { sparkMax?: number } } } | undefined
+  )?.player?.defaults?.sparkMax;
+  const sparkMax =
+    typeof state.player.sparkMax === 'number'
+      ? state.player.sparkMax
+      : typeof defaultsSparkMax === 'number'
+        ? defaultsSparkMax
+        : 100;
+
   for (let i = 0; i < daysEff; i++) {
-    // Same dawn recovery path as advance:dawn so road days regenerate spark.
-    advanceToDawn(state);
+    // Loom pacing: +2 spark per travel day (not full dawn hooks).
+    state.day += 1;
+    state.player.spark = Math.min(sparkMax, (state.player.spark ?? 0) + 2);
     pushJuice(state, 'route.travel_step', { routeId, step: i + 1, daysEff, day: state.day });
     const entry = pickEncounter(table, rng);
     if (entry) {
