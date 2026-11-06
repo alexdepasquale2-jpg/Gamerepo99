@@ -28,7 +28,7 @@ export type AssetEntry = {
   aliveHint?: string;
 };
 
-/** Square ortho bridge until Loom locks hex. */
+/** Loom-locked square ortho grid. */
 export const GRID = {
   kind: 'square_ortho' as const,
   /** Loom LOCKED: q = x (column), r = y (row). */
@@ -86,9 +86,9 @@ function entry(
 
 /** Canonical overworld key → entry. Aliases redirect via aliasOf. */
 export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
-  // —— Biomes (biomes.json) ——
+  // —— Biomes (world/biomes.json) ——
   'biome.river_margin': entry('biome.river_margin', 'kit-biomes', 0, {
-    notes: 'Tiny Town grass/cobble + reed props',
+    notes: 'Tiny Town grass/cobble + reed props; pastoral wet verge',
     despairHint: 'grey mud, still water',
     aliveHint: 'teal water, green reeds',
   }),
@@ -98,7 +98,7 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
     aliveHint: 'full green',
   }),
   'biome.mill_heath': entry('biome.mill_heath', 'kit-biomes', 2, {
-    notes: 'open heath + autumn trees',
+    notes: 'open heath + autumn trees; pastoral grass',
     despairHint: 'dead scrub',
     aliveHint: 'golden heath, flowers',
   }),
@@ -106,6 +106,30 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
     notes: 'dirt 39-42 + stone verge',
     despairHint: 'dust bleach',
     aliveHint: 'cobble verge',
+  }),
+  'biome.peat_fen': entry('biome.peat_fen', 'pebonius-pastoral', 4, {
+    status: 'stub',
+    notes: 'Imported pastoral-overworld db32; kit-biomes frame TBD',
+    despairHint: 'brown peat, dead reed',
+    aliveHint: 'wet moss, alive reed beds',
+  }),
+  'biome.chalk_downs': entry('biome.chalk_downs', 'pebonius-pastoral', 5, {
+    status: 'stub',
+    notes: 'Pastoral pale grass / chalk soil',
+    despairHint: 'bleached chalk, sparse scrub',
+    aliveHint: 'short green turf, wildflowers',
+  }),
+  'biome.brine_marsh': entry('biome.brine_marsh', 'pebonius-pastoral', 6, {
+    status: 'stub',
+    notes: 'Pastoral wet + Tiny Town water tiles',
+    despairHint: 'salt crust, grey flats',
+    aliveHint: 'tidal green, shimmering pools',
+  }),
+  'biome.slag_verge': entry('biome.slag_verge', 'kenney-roguelike-caves', 7, {
+    status: 'stub',
+    notes: 'Imported Kenney caves/dungeons rock + slag props',
+    despairHint: 'ash slag, cold cinder',
+    aliveHint: 'warm cinder, sparse green reclaim',
   }),
 
   // —— Roads ——
@@ -119,14 +143,56 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   ...facilityBlock('waystation', 'kit-facilities', 2),
   ...facilityBlock('mine', 'kit-facilities', 3),
 
-  // —— Ore / cargo ——
-  'ore.ore_iron': entry('ore.ore_iron', 'vendor-caves-ore', 0, {
+  // —— Ore (economy-resources mineral ids) ——
+  'ore.ore_iron': entry('ore.ore_iron', 'kenney-roguelike-caves', 0, {
     status: 'stub',
-    notes: 'Import Kenney Caves & Dungeons / Jetrel / DCSS',
+    notes: 'Imported Kenney Roguelike Caves & Dungeons — frame bake TBD',
   }),
-  'cargo.food_grain': entry('cargo.food_grain', 'vendor-crops', 0, {
+  'ore.ore_copper': entry('ore.ore_copper', 'kenney-roguelike-caves', 1, {
     status: 'stub',
-    notes: 'Crop visuals map here (no separate crop ids). CC0: josehzz Farming crops 16x16.',
+    notes: 'Caves pack ore tint / DCSS supplemental copper',
+  }),
+  'ore.ore_slag_tin': entry('ore.ore_slag_tin', 'kenney-roguelike-caves', 2, {
+    status: 'stub',
+    notes: 'Slag/tin from caves rock + ash tint',
+  }),
+
+  // —— Crops (economy/crops.json → crop.<id>) ——
+  'crop.crop_wheat': entry('crop.crop_wheat', 'josehzz-farming-crops', 0, {
+    status: 'stub',
+    notes: 'Imported josehzz FarmingCrops16x16 — wheat stages',
+    despairHint: 'wilted stalks',
+    aliveHint: 'golden heads',
+  }),
+  'crop.crop_barley': entry('crop.crop_barley', 'josehzz-farming-crops', 1, {
+    status: 'stub',
+    notes: 'josehzz rice/corn stand-in until barley row mapped',
+    despairHint: 'grey chaff',
+    aliveHint: 'ripe barley',
+  }),
+  'crop.crop_root': entry('crop.crop_root', 'josehzz-farming-crops', 2, {
+    status: 'stub',
+    notes: 'josehzz potato/cassava',
+    despairHint: 'shrivelled tops',
+    aliveHint: 'leafy root mash',
+  }),
+  'crop.crop_reed': entry('crop.crop_reed', 'josehzz-farming-crops', 3, {
+    status: 'stub',
+    notes: 'No reed in josehzz — pastoral wet prop / Tiny Town reed until dedicated',
+    despairHint: 'broken stems',
+    aliveHint: 'tall green reed',
+  }),
+  'crop.crop_flax': entry('crop.crop_flax', 'josehzz-farming-crops', 4, {
+    status: 'stub',
+    notes: 'No flax in josehzz — sunflower/blue flower stand-in',
+    despairHint: 'dry fibre',
+    aliveHint: 'blue flax bloom',
+  }),
+
+  // —— Cargo (non-ore resources) ——
+  'cargo.food_grain': entry('cargo.food_grain', 'josehzz-farming-crops', 0, {
+    status: 'stub',
+    notes: 'Resource pile; field art uses crop.* keys',
   }),
   'cargo.timber': entry('cargo.timber', 'kenney-tiny-town', 93, {
     status: 'ready',
@@ -201,31 +267,46 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
     status: 'ready',
   }),
 
-  // —— Fauna placeholders (no fauna ids in src/data) ——
-  'fauna.rabbit': entry('fauna.rabbit', 'vendor-grey-roguelike', 0, {
+  // —— Fauna (world/fauna.json) — sheets imported; frame indices stub ——
+  'fauna.rabbit': entry('fauna.rabbit', 'gaymoo-monochrome-critters', 0, {
     heading: '4',
-    status: 'placeholder',
-    notes: 'Placeholder until Loom adds fauna table',
+    status: 'stub',
+    notes: 'Imported gaymoo 50 monochrome 32×32; recolor for warmth',
   }),
-  'fauna.deer': entry('fauna.deer', 'vendor-andhegames', 0, {
+  'fauna.deer': entry('fauna.deer', 'andhegames-creatures', 0, {
     heading: '4',
-    status: 'placeholder',
+    status: 'stub',
+    notes: 'Imported AndHeGames more-creatures-32',
   }),
-  'fauna.bird': entry('fauna.bird', 'vendor-davidcrybao', 0, {
+  'fauna.bird': entry('fauna.bird', 'davidcrybao-animals', 0, {
     heading: '4',
-    status: 'placeholder',
+    status: 'stub',
+    notes: 'Imported davidcrybao all-sheet',
   }),
-  'fauna.pig': entry('fauna.pig', 'vendor-pig-look', 0, {
+  'fauna.pig': entry('fauna.pig', 'natural-privateer-pig-look', 0, {
     heading: '4',
-    status: 'placeholder',
+    status: 'stub',
+    notes: 'Imported Pig_Look 32×32 anim sheet',
   }),
-  'fauna.fox': entry('fauna.fox', 'vendor-andhegames', 1, {
+  'fauna.fox': entry('fauna.fox', 'andhegames-creatures', 1, {
     heading: '4',
-    status: 'placeholder',
+    status: 'stub',
+    notes: 'AndHeGames / gaymoo recolor',
   }),
-  'fauna.fish': entry('fauna.fish', 'vendor-davidcrybao', 1, {
+  'fauna.fish': entry('fauna.fish', 'davidcrybao-animals', 1, {
     heading: '4',
-    status: 'placeholder',
+    status: 'stub',
+    notes: 'davidcrybao water critters',
+  }),
+  'fauna.heron': entry('fauna.heron', 'davidcrybao-animals', 2, {
+    heading: '4',
+    status: 'stub',
+    notes: 'davidcrybao tall wader stand-in; dedicated heron TBD',
+  }),
+  'fauna.rat': entry('fauna.rat', 'gaymoo-monochrome-critters', 1, {
+    heading: '4',
+    status: 'stub',
+    notes: 'gaymoo / sardonic grey-roguelike rat',
   }),
 };
 
@@ -233,10 +314,9 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
 export const PROPOSED_FACILITY_KINDS = {
   farm: {
     states: ['idle', 'working', 'abandoned'] as const,
-    sheet: 'vendor-josehzz-crops',
+    sheet: 'josehzz-farming-crops',
     notes:
-      'Not a data type. Crop art maps to resource/cargo food_grain. CC0: josehzz Farming crops 16x16.',
-    cropResourceId: 'food_grain' as const,
+      'Not a facilities.json kind. Field stamps use crop.<id>; cargo uses food_grain / wool / timber.',
   },
 } as const;
 
@@ -295,8 +375,17 @@ export function listStubKeys(): string[] {
     .sort();
 }
 
-/** Loom-final biome ids (biomes.json canonical set for M3 handoff). */
-export const DATA_BIOME_IDS = ['river_margin', 'ash_wood', 'mill_heath', 'glare_approach'] as const;
+/** Biome ids from world/biomes.json (fallback list if file absent). */
+export const DATA_BIOME_IDS = [
+  'river_margin',
+  'ash_wood',
+  'mill_heath',
+  'glare_approach',
+  'peat_fen',
+  'chalk_downs',
+  'brine_marsh',
+  'slag_verge',
+] as const;
 
 /** Facility kinds present in facilities.json */
 export const DATA_FACILITY_KINDS = ['mill', 'lumber_camp', 'waystation', 'mine'] as const;
@@ -316,7 +405,37 @@ export const DATA_CARAVAN_ROLES = [
 ] as const;
 
 /** Mineral resource ids for ore.* */
-export const DATA_ORE_IDS = ['ore_iron'] as const;
+export const DATA_ORE_IDS = ['ore_iron', 'ore_copper', 'ore_slag_tin'] as const;
 
-/** All economy-resources.json ids Loom locked for cargo/ore mapping. */
-export const DATA_RESOURCE_IDS = ['food_grain', 'timber', 'ore_iron', 'wool', 'fuel_cord', 'coin'] as const;
+/** Fauna ids from world/fauna.json */
+export const DATA_FAUNA_IDS = [
+  'rabbit',
+  'deer',
+  'bird',
+  'pig',
+  'fox',
+  'fish',
+  'heron',
+  'rat',
+] as const;
+
+/** Crop ids from economy/crops.json */
+export const DATA_CROP_IDS = [
+  'crop_wheat',
+  'crop_barley',
+  'crop_root',
+  'crop_reed',
+  'crop_flax',
+] as const;
+
+/** Economy resource ids (cargo / ore mapping). */
+export const DATA_RESOURCE_IDS = [
+  'food_grain',
+  'timber',
+  'ore_iron',
+  'wool',
+  'fuel_cord',
+  'coin',
+  'ore_copper',
+  'ore_slag_tin',
+] as const;

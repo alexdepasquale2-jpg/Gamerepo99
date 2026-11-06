@@ -64,17 +64,17 @@ See `docs/art/OVERWORLD_SHORTLIST.md` for despair/alive notes and Loom asset-key
 
 | Asset | Author | License | URL | Status |
 |-------|--------|---------|-----|--------|
-| pastoral overworld (32×32) | pebonius | CC0 | https://opengameart.org/content/pastoral-overworld | shortlisted, not yet imported |
+| pastoral overworld (32×32) | pebonius | CC0 | https://opengameart.org/content/pastoral-overworld | **imported** · `assets/vendor/pebonius-pastoral-overworld-db32.png` · new biomes |
 | Pixelsphere 32×32 Tileset + Grass + Trees | cynicmusic | CC0 | https://opengameart.org/content/pixelsphere-32x32-tileset-grass-trees | shortlisted, not yet imported |
 | Trees & Bushes | ansimuz (Luis Zuno) | CC0 | https://opengameart.org/content/trees-bushes | shortlisted, not yet imported |
-| Roguelike Caves & Dungeons | Kenney | CC0 | https://kenney.nl/assets/roguelike-caves-dungeons · https://opengameart.org/content/roguelike-caves-dungeons-pack | shortlisted, not yet imported |
-| Farming crops 16×16 | josehzz | CC0 | https://opengameart.org/content/farming-crops-16x16 | shortlisted, not yet imported |
+| Roguelike Caves & Dungeons | Kenney | CC0 | https://kenney.nl/assets/roguelike-caves-dungeons · https://opengameart.org/content/roguelike-caves-dungeons-pack | **imported** · `assets/vendor/kenney-roguelike-caves-dungeons.zip` · ore/slag |
+| Farming crops 16×16 | josehzz | CC0 | https://opengameart.org/content/farming-crops-16x16 | **imported** · `assets/vendor/josehzz-farming-crops-16x16.zip` · crops |
 | Pixel Platformer Farm Expansion | Kenney | CC0 | https://kenney.nl/assets/pixel-platformer-farm-expansion | shortlisted, not yet imported (side-view props only) |
-| Grey Roguelike Tileset (32×32) | Sardonic | CC0 | https://opengameart.org/content/grey-roguelike-tileset | shortlisted, not yet imported |
-| 50 monochrome 32×32 critters | gaymoo | CC0 | https://opengameart.org/content/50-monochrome-32-by-32-critters-cc0 | shortlisted, not yet imported |
-| More assorted 32×32 creatures | AndHeGames | CC0 | https://opengameart.org/content/more-assorted-32x32-creatures | shortlisted, not yet imported |
-| Pig_Look Sprite Sheet 32×32 | Natural_Privateer | CC0 | https://opengameart.org/content/piglook-sprite-sheet-32x32 | shortlisted, not yet imported |
-| 16×16/32×32 animals sheet | davidcrybao | CC0 | https://opengameart.org/content/1616-27-types-of-animals-3232-3-types-of-animals-for-a-total-of-97 | shortlisted, not yet imported |
+| Grey Roguelike Tileset (32×32) | Sardonic | CC0 | https://opengameart.org/content/grey-roguelike-tileset | **imported** · `assets/vendor/sardonic-grey-roguelike-32.png` · fauna |
+| 50 monochrome 32×32 critters | gaymoo | CC0 | https://opengameart.org/content/50-monochrome-32-by-32-critters-cc0 | **imported** · `assets/vendor/gaymoo-50-monochrome-critters-32.png` · fauna |
+| More assorted 32×32 creatures | AndHeGames | CC0 | https://opengameart.org/content/more-assorted-32x32-creatures | **imported** · `assets/vendor/andhegames-more-creatures-32.png` · fauna |
+| Pig_Look Sprite Sheet 32×32 | Natural_Privateer | CC0 | https://opengameart.org/content/piglook-sprite-sheet-32x32 | **imported** · `assets/vendor/natural-privateer-pig-look-32.png` · fauna.pig |
+| 16×16/32×32 animals sheet | davidcrybao | CC0 | https://opengameart.org/content/1616-27-types-of-animals-3232-3-types-of-animals-for-a-total-of-97 | **imported** · `assets/vendor/davidcrybao-animals-all-sheet.png` · fauna |
 | RPG item set | Jetrel | CC0 | https://opengameart.org/content/rpg-item-set | shortlisted, not yet imported |
 | RPG character sprites | GrafxKid | CC0 | https://opengameart.org/content/rpg-character-sprites | shortlisted, not yet imported |
 | Pixel People | TokyoGeisha | CC0 | https://opengameart.org/content/pixel-people | shortlisted, not yet imported |

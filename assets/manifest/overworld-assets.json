@@ -11,7 +11,11 @@
       "river_margin",
       "ash_wood",
       "mill_heath",
-      "glare_approach"
+      "glare_approach",
+      "peat_fen",
+      "chalk_downs",
+      "brine_marsh",
+      "slag_verge"
     ],
     "facilities": [
       "mill",
@@ -25,10 +29,31 @@
       "ore_iron",
       "wool",
       "fuel_cord",
-      "coin"
+      "coin",
+      "ore_copper",
+      "ore_slag_tin"
     ],
     "ores": [
-      "ore_iron"
+      "ore_iron",
+      "ore_copper",
+      "ore_slag_tin"
+    ],
+    "fauna": [
+      "rabbit",
+      "deer",
+      "bird",
+      "pig",
+      "fox",
+      "fish",
+      "heron",
+      "rat"
+    ],
+    "crops": [
+      "crop_wheat",
+      "crop_barley",
+      "crop_root",
+      "crop_reed",
+      "crop_flax"
     ],
     "caravanRoles": [
       "carter",
@@ -50,9 +75,8 @@
         "working",
         "abandoned"
       ],
-      "sheet": "vendor-josehzz-crops",
-      "notes": "Not a data type. Crop art maps to resource/cargo food_grain. CC0: josehzz Farming crops 16x16.",
-      "cropResourceId": "food_grain"
+      "sheet": "josehzz-farming-crops",
+      "notes": "Not a facilities.json kind. Field stamps use crop.<id>; cargo uses food_grain / wool / timber."
     }
   },
   "assets": {
@@ -63,7 +87,9 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "Tiny Town grass/cobble + reed props"
+      "notes": "Tiny Town grass/cobble + reed props; pastoral wet verge",
+      "despairHint": "grey mud, still water",
+      "aliveHint": "teal water, green reeds"
     },
     "biome.ash_wood": {
       "key": "biome.ash_wood",
@@ -72,7 +98,9 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "Tiny Town trees 15-16, 27-28"
+      "notes": "Tiny Town trees 15-16, 27-28",
+      "despairHint": "bare canopy",
+      "aliveHint": "full green"
     },
     "biome.mill_heath": {
       "key": "biome.mill_heath",
@@ -81,7 +109,9 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "open heath + autumn trees"
+      "notes": "open heath + autumn trees; pastoral grass",
+      "despairHint": "dead scrub",
+      "aliveHint": "golden heath, flowers"
     },
     "biome.glare_approach": {
       "key": "biome.glare_approach",
@@ -90,7 +120,53 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "dirt 39-42 + stone verge"
+      "notes": "dirt 39-42 + stone verge",
+      "despairHint": "dust bleach",
+      "aliveHint": "cobble verge"
+    },
+    "biome.peat_fen": {
+      "key": "biome.peat_fen",
+      "sheet": "pebonius-pastoral",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported pastoral-overworld db32; kit-biomes frame TBD",
+      "despairHint": "brown peat, dead reed",
+      "aliveHint": "wet moss, alive reed beds"
+    },
+    "biome.chalk_downs": {
+      "key": "biome.chalk_downs",
+      "sheet": "pebonius-pastoral",
+      "frame": 5,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Pastoral pale grass / chalk soil",
+      "despairHint": "bleached chalk, sparse scrub",
+      "aliveHint": "short green turf, wildflowers"
+    },
+    "biome.brine_marsh": {
+      "key": "biome.brine_marsh",
+      "sheet": "pebonius-pastoral",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Pastoral wet + Tiny Town water tiles",
+      "despairHint": "salt crust, grey flats",
+      "aliveHint": "tidal green, shimmering pools"
+    },
+    "biome.slag_verge": {
+      "key": "biome.slag_verge",
+      "sheet": "kenney-roguelike-caves",
+      "frame": 7,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported Kenney caves/dungeons rock + slag props",
+      "despairHint": "ash slag, cold cinder",
+      "aliveHint": "warm cinder, sparse green reclaim"
     },
     "road.track": {
       "key": "road.track",
@@ -229,21 +305,94 @@
     },
     "ore.ore_iron": {
       "key": "ore.ore_iron",
-      "sheet": "vendor-caves-ore",
+      "sheet": "kenney-roguelike-caves",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "Import Kenney Caves & Dungeons / Jetrel / DCSS"
+      "notes": "Imported Kenney Roguelike Caves & Dungeons — frame bake TBD"
+    },
+    "ore.ore_copper": {
+      "key": "ore.ore_copper",
+      "sheet": "kenney-roguelike-caves",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Caves pack ore tint / DCSS supplemental copper"
+    },
+    "ore.ore_slag_tin": {
+      "key": "ore.ore_slag_tin",
+      "sheet": "kenney-roguelike-caves",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Slag/tin from caves rock + ash tint"
+    },
+    "crop.crop_wheat": {
+      "key": "crop.crop_wheat",
+      "sheet": "josehzz-farming-crops",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported josehzz FarmingCrops16x16 — wheat stages",
+      "despairHint": "wilted stalks",
+      "aliveHint": "golden heads"
+    },
+    "crop.crop_barley": {
+      "key": "crop.crop_barley",
+      "sheet": "josehzz-farming-crops",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "josehzz rice/corn stand-in until barley row mapped",
+      "despairHint": "grey chaff",
+      "aliveHint": "ripe barley"
+    },
+    "crop.crop_root": {
+      "key": "crop.crop_root",
+      "sheet": "josehzz-farming-crops",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "josehzz potato/cassava",
+      "despairHint": "shrivelled tops",
+      "aliveHint": "leafy root mash"
+    },
+    "crop.crop_reed": {
+      "key": "crop.crop_reed",
+      "sheet": "josehzz-farming-crops",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "No reed in josehzz — pastoral wet prop / Tiny Town reed until dedicated",
+      "despairHint": "broken stems",
+      "aliveHint": "tall green reed"
+    },
+    "crop.crop_flax": {
+      "key": "crop.crop_flax",
+      "sheet": "josehzz-farming-crops",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "No flax in josehzz — sunflower/blue flower stand-in",
+      "despairHint": "dry fibre",
+      "aliveHint": "blue flax bloom"
     },
     "cargo.food_grain": {
       "key": "cargo.food_grain",
-      "sheet": "vendor-crops",
+      "sheet": "josehzz-farming-crops",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "Crop visuals map here (no separate crop ids). CC0: josehzz Farming crops 16x16."
+      "notes": "Resource pile; field art uses crop.* keys"
     },
     "cargo.timber": {
       "key": "cargo.timber",
@@ -400,52 +549,75 @@
     },
     "fauna.rabbit": {
       "key": "fauna.rabbit",
-      "sheet": "vendor-grey-roguelike",
+      "sheet": "gaymoo-monochrome-critters",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder",
-      "notes": "Placeholder until Loom adds fauna table"
+      "status": "stub",
+      "notes": "Imported gaymoo 50 monochrome 32×32; recolor for warmth"
     },
     "fauna.deer": {
       "key": "fauna.deer",
-      "sheet": "vendor-andhegames",
+      "sheet": "andhegames-creatures",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder"
+      "status": "stub",
+      "notes": "Imported AndHeGames more-creatures-32"
     },
     "fauna.bird": {
       "key": "fauna.bird",
-      "sheet": "vendor-davidcrybao",
+      "sheet": "davidcrybao-animals",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder"
+      "status": "stub",
+      "notes": "Imported davidcrybao all-sheet"
     },
     "fauna.pig": {
       "key": "fauna.pig",
-      "sheet": "vendor-pig-look",
+      "sheet": "natural-privateer-pig-look",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder"
+      "status": "stub",
+      "notes": "Imported Pig_Look 32×32 anim sheet"
     },
     "fauna.fox": {
       "key": "fauna.fox",
-      "sheet": "vendor-andhegames",
+      "sheet": "andhegames-creatures",
       "frame": 1,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder"
+      "status": "stub",
+      "notes": "AndHeGames / gaymoo recolor"
     },
     "fauna.fish": {
       "key": "fauna.fish",
-      "sheet": "vendor-davidcrybao",
+      "sheet": "davidcrybao-animals",
       "frame": 1,
       "variant": "palette",
       "heading": "4",
-      "status": "placeholder"
+      "status": "stub",
+      "notes": "davidcrybao water critters"
+    },
+    "fauna.heron": {
+      "key": "fauna.heron",
+      "sheet": "davidcrybao-animals",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "davidcrybao tall wader stand-in; dedicated heron TBD"
+    },
+    "fauna.rat": {
+      "key": "fauna.rat",
+      "sheet": "gaymoo-monochrome-critters",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "gaymoo / sardonic grey-roguelike rat"
     }
   }
 }
