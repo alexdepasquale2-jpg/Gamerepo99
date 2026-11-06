@@ -15,7 +15,6 @@ import eventsJson from '../data/systems/events.json';
 import proofsJson from '../data/people/proofs.json';
 import timeJson from '../data/systems/time.json';
 import ripplesJson from '../data/systems/ripples.json';
-import linesJson from '../data/lines.json';
 import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
@@ -172,7 +171,7 @@ export function loadData(): DataTables {
     proofs: (proofsJson.proofs ?? []) as unknown[],
     time: timeJson,
     ripples: ripplesJson,
-    lines: linesJson,
+    lines: { deprecated: true, replaces: 'line-fragments' },
     kinship: kinshipJson,
     letters: lettersJson,
     doctrines: doctrinesJson,

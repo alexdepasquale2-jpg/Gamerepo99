@@ -30,11 +30,39 @@ export type ReactionLineResult = {
 };
 export type ReactionLineSelector = (ctx: ReactionPickCtx) => ReactionLineResult;
 
+type Frag = {
+  id: string;
+  text: string;
+  tags?: string[];
+  slot?: string;
+};
+
+function isAloneSlot(f: Frag): boolean {
+  const tags = f.tags ?? [];
+  return f.slot === 'alone' || tags.includes('slot:alone');
+}
+
+/** Authored alone-slot fragment by person:+method: tags (fragments-only; no lines.json). */
 export function pickFixedReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> })
-    .people;
-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
+  const frags = (ctx.state.data.lineFragments?.fragments ?? []) as Frag[];
+  const personTag = `person:${ctx.personId}`;
+  const methodTag = `method:${ctx.methodId}`;
+  const alone = frags.filter(
+    (f) => isAloneSlot(f) && (f.tags ?? []).includes(personTag) && (f.tags ?? []).includes(methodTag),
+  );
+  const noAxis = alone.filter(
+    (f) => !(f.tags ?? []).some((t) => String(t).startsWith('axis:')),
+  );
+  const pool = noAxis.length ? noAxis : alone;
+  const preferred =
+    pool.find((f) => (f.tags ?? []).includes('migration_verbatim')) ??
+    pool.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
+    pool.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
+    pool[0];
+  if (preferred?.text) {
+    return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
+  }
+  return { lineId: `${ctx.personId}.${ctx.methodId}`, text: '', source: 'fallback' };
 }
 
 /** Set per-state selector; null resets to pickFixedReactionLine. No cross-state leaks. */

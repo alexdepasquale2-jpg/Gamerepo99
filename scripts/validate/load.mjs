@@ -13,7 +13,7 @@ export function resolveDataFile(...parts) {
   return join(dataDir, ...parts);
 }
 
-/** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json until Task G. */
+/** Subfolders from Loom §5 / Tidy layout. lines.json retired (Task G); fragments are canonical. */
 const DATA_SUBDIRS = ['dialogue', 'people', 'world', 'economy', 'systems'];
 
 const loadHooksDir = (dataDir, errors) => {
@@ -231,7 +231,6 @@ export const REQUIRED_FILES = [
   'proofs.json',
   'time.json',
   'ripples.json',
-  'lines.json',
   'kinship.json',
   'letters.json',
   'doctrines.json',

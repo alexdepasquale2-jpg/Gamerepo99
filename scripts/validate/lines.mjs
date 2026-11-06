@@ -1,52 +1,39 @@
 export function validateLines(data, ctx) {
   const { req, people, methods, marks } = ctx;
-  // Canonical dialogue = line-fragments; lines.json may be deprecated mirror.
-  const linesPeople = data['lines.json']?.people || {};
   const methodIds = [...methods];
   const markIds = [...marks];
   req(methodIds.length >= 5, 'expected at least 5 methods for line coverage');
-  for (const pid of people) {
-    const L = linesPeople[pid];
-    req(!!L, `lines.json missing person ${pid}`);
-    if (!L) continue;
-    req(!!L.voice && !!L.woundLine && !!L.tellGivenUp, `lines.json ${pid}: need voice, woundLine, tellGivenUp`);
-    for (const mid of methodIds) {
-      req(typeof L.methods?.[mid] === 'string' && L.methods[mid].trim().length > 0, `lines.json ${pid}: missing method line for ${mid}`);
-    }
-    for (const mk of markIds) {
-      req(typeof L.marks?.[mk] === 'string' && L.marks[mk].trim().length > 0, `lines.json ${pid}: missing mark line for ${mk}`);
-    }
-  }
-  for (const pid of Object.keys(linesPeople)) {
-    req(people.has(pid), `lines.json unknown person ${pid}`);
-  }
+
+  // people.json carries voice / wound / tell (no longer mirrored from lines.json)
   for (const person of data['people.json']?.people || []) {
     req(typeof person.voice === 'string' && person.voice.trim(), `people.json ${person.id}: voice required`);
     req(typeof person.woundLine === 'string' && person.woundLine.trim(), `people.json ${person.id}: woundLine required`);
     req(typeof person.tellGivenUp === 'string' && person.tellGivenUp.trim(), `people.json ${person.id}: tellGivenUp required`);
-    const L = linesPeople[person.id];
-    if (L) {
-      req(person.voice === L.voice, `people.json ${person.id}: voice must match lines.json`);
-      req(person.woundLine === L.woundLine, `people.json ${person.id}: woundLine must match lines.json`);
-      req(person.tellGivenUp === L.tellGivenUp, `people.json ${person.id}: tellGivenUp must match lines.json`);
-    }
   }
-  const archRefusals = data['lines.json']?.archetypeRefusals || {};
+
+  // Archetype refusal lines live on hooks (lineVoiceFrom: archetypeId)
+  const hooks = data['hooks.json']?.hooks || [];
+  const hookById = new Map(hooks.map((h) => [h.id, h]));
   for (const a of (data['archetypes.json']?.archetypes || []).filter((x) => x.m2Playable)) {
-    const block = archRefusals[a.id];
-    req(!!block, `lines.json archetypeRefusals missing ${a.id}`);
     for (const hid of a.refusalHookIds || []) {
-      const arr = block?.[hid];
+      const hook = hookById.get(hid);
+      req(!!hook, `archetype ${a.id} refusal hook ${hid} missing`);
+      const bag = hook?.lines || {};
+      const arr = bag[a.id] || bag.default;
       req(
         Array.isArray(arr) && arr.length > 0 && arr.every((s) => typeof s === 'string' && s.trim()),
-        `lines.json ${a.id} needs refusal lines for hook ${hid}`,
+        `hook ${hid} needs refusal lines for archetype ${a.id} (or default)`,
       );
     }
   }
 
-  // --- lines.json → line-fragments migration check (Niblet: nothing lost) ---
+  // Canonical dialogue = dialogue/fragments (virtual line-fragments.json)
   const frags = data['line-fragments.json']?.fragments || [];
-  req(frags.length >= 1, 'line-fragments.json must be canonical dialogue source');
+  req(frags.length >= 1, 'line-fragments must be canonical dialogue source');
+  req(
+    data['line-fragments.json']?.canonical === true || data['line-fragments.json']?.replaces === 'lines.json',
+    'line-fragments must be marked canonical (replaces lines.json)',
+  );
 
   const aloneByKey = new Map(); // key -> [{id,text}]
   for (const f of frags) {
@@ -69,53 +56,67 @@ export function validateLines(data, ctx) {
     }
   }
 
-  let migTotal = 0;
-  let migCovered = 0; // keyed + verbatim text
-  let migKeyedOnly = 0; // keyed but text differs
-  const migMissing = [];
-  for (const pid of Object.keys(linesPeople)) {
-    const L = linesPeople[pid] || {};
-    for (const [mid, text] of Object.entries(L.methods || {})) {
-      migTotal += 1;
-      const hits = aloneByKey.get(`method:${pid}:${mid}`) || [];
-      if (!hits.length) {
-        migMissing.push(`method ${pid}.${mid}`);
-        req(false, `MIGRATION: no fragment for lines.json method ${pid}.${mid}`);
-      } else if (hits.some((h) => h.text === text)) {
-        migCovered += 1;
-      } else {
-        migKeyedOnly += 1;
-        req(false, `MIGRATION: fragment for ${pid}.${mid} exists but text differs from lines.json`);
-      }
+  // Structural coverage: every authored person × method/mark has an alone fragment
+  for (const pid of people) {
+    for (const mid of methodIds) {
+      req(
+        (aloneByKey.get(`method:${pid}:${mid}`) || []).length > 0,
+        `fragments missing alone method ${pid}.${mid}`,
+      );
     }
-    for (const [mk, text] of Object.entries(L.marks || {})) {
-      migTotal += 1;
-      const hits = aloneByKey.get(`mark:${pid}:${mk}`) || [];
-      if (!hits.length) {
-        migMissing.push(`mark ${pid}.${mk}`);
-        req(false, `MIGRATION: no fragment for lines.json mark ${pid}.${mk}`);
-      } else if (hits.some((h) => h.text === text)) {
-        migCovered += 1;
-      } else {
-        migKeyedOnly += 1;
-        req(false, `MIGRATION: fragment for mark ${pid}.${mk} exists but text differs from lines.json`);
-      }
+    for (const mk of markIds) {
+      req(
+        (aloneByKey.get(`mark:${pid}:${mk}`) || []).length > 0,
+        `fragments missing alone mark ${pid}.${mk}`,
+      );
     }
   }
 
-  const migOk = migMissing.length === 0 && migKeyedOnly === 0 && migCovered === migTotal;
-  console.log(
-    `MIGRATION lines→fragments: ${migCovered}/${migTotal} covered verbatim` +
-      (migKeyedOnly ? `; ${migKeyedOnly} keyed-but-text-mismatch` : '') +
-      (migMissing.length ? `; MISSING ${migMissing.length}` : '') +
-      (migOk ? ' — OK (safe for Forge to delete lines.json)' : ' — NOT SAFE TO DELETE'),
-  );
-  req(migOk, `lines.json→fragments migration incomplete: ${migCovered}/${migTotal} verbatim`);
-
-  if (data['lines.json']?.deprecated) {
-    req(
-      data['line-fragments.json']?.canonical === true || data['line-fragments.json']?.replaces === 'lines.json',
-      'deprecated lines.json requires canonical line-fragments',
+  // Optional migration lock while lines.json still present
+  const linesPeople = data['lines.json']?.people || null;
+  if (linesPeople) {
+    let migTotal = 0;
+    let migCovered = 0;
+    let migKeyedOnly = 0;
+    const migMissing = [];
+    for (const pid of Object.keys(linesPeople)) {
+      const L = linesPeople[pid] || {};
+      for (const [mid, text] of Object.entries(L.methods || {})) {
+        migTotal += 1;
+        const hits = aloneByKey.get(`method:${pid}:${mid}`) || [];
+        if (!hits.length) {
+          migMissing.push(`method ${pid}.${mid}`);
+          req(false, `MIGRATION: no fragment for lines.json method ${pid}.${mid}`);
+        } else if (hits.some((h) => h.text === text)) {
+          migCovered += 1;
+        } else {
+          migKeyedOnly += 1;
+          req(false, `MIGRATION: fragment for ${pid}.${mid} exists but text differs from lines.json`);
+        }
+      }
+      for (const [mk, text] of Object.entries(L.marks || {})) {
+        migTotal += 1;
+        const hits = aloneByKey.get(`mark:${pid}:${mk}`) || [];
+        if (!hits.length) {
+          migMissing.push(`mark ${pid}.${mk}`);
+          req(false, `MIGRATION: no fragment for lines.json mark ${pid}.${mk}`);
+        } else if (hits.some((h) => h.text === text)) {
+          migCovered += 1;
+        } else {
+          migKeyedOnly += 1;
+          req(false, `MIGRATION: fragment for mark ${pid}.${mk} exists but text differs from lines.json`);
+        }
+      }
+    }
+    const migOk = migMissing.length === 0 && migKeyedOnly === 0 && migCovered === migTotal;
+    console.log(
+      `MIGRATION lines→fragments: ${migCovered}/${migTotal} covered verbatim` +
+        (migKeyedOnly ? `; ${migKeyedOnly} keyed-but-text-mismatch` : '') +
+        (migMissing.length ? `; MISSING ${migMissing.length}` : '') +
+        (migOk ? ' — OK (safe for Forge to delete lines.json)' : ' — NOT SAFE TO DELETE'),
     );
+    req(migOk, `lines.json→fragments migration incomplete: ${migCovered}/${migTotal} verbatim`);
+  } else {
+    console.log('MIGRATION lines→fragments: lines.json absent — fragments-only mode');
   }
 }

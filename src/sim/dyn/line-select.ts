@@ -2,6 +2,7 @@
 
 import type { DataTables } from '../load-data';
 import {
+  pickFixedReactionLine,
   setReactionLineSelector,
   type ReactionLineResult,
   type ReactionPickCtx,
@@ -111,14 +112,17 @@ function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: s
 }
 
 function fixedFromCandidates(cands: Frag[], ctx: ReactionPickCtx): ReactionLineResult {
+  const noAxis = cands.filter(
+    (f) => !(f.tags ?? []).some((t) => String(t).startsWith('axis:')),
+  );
+  const pool = noAxis.length ? noAxis : cands;
   const preferred =
-    cands.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
-    cands.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
-    cands[0];
+    pool.find((f) => (f.tags ?? []).includes('migration_verbatim')) ??
+    pool.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
+    pool.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
+    pool[0];
   if (preferred?.text) return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> }).people;
-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
+  return pickFixedReactionLine(ctx);
 }
 
 function trustOf(ctx: ReactionPickCtx): number {

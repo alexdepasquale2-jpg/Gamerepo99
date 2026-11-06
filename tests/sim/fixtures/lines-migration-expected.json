@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "note": "Frozen lines.json person×method/mark texts for Task G migration lock after lines.json deletion.",
+  "people": {
+    "marta_ellison": {
+      "methods": {
+        "challenge": "You want a fight with yeast? Fine. Heat's a kind of argument.",
+        "shame": "Say it. Call me lazy. The bread still won't rise for spite.",
+        "inspire": "…Someone ate. Alright. Flour. Water. Don't watch.",
+        "carry_burden": "Your hands are bigger. Doesn't mean the dough forgives you.",
+        "lie": "Tomorrow's full of customers? Sure. Lie closer to the oven."
+      },
+      "marks": {
+        "dependence": "Come back tomorrow or the oven forgets how.",
+        "hollowness": "I'm baking. Don't ask if I mean it.",
+        "genuine_growth": "Steam's real. So am I, for now.",
+        "resentment": "You pushed. The crust remembers.",
+        "fragile_hope": "One loaf. Don't make a parade."
+      }
+    },
+    "jonah_pike": {
+      "methods": {
+        "challenge": "You can't dare a blank page. …Okay. One wing.",
+        "shame": "…I don't want that word. Please pick another.",
+        "inspire": "Somebody else made a thing and lived. Fine. Bad bird. Mine.",
+        "carry_burden": "You held the paper still. That's… not nothing.",
+        "lie": "Nobody will laugh? People always laugh. But— okay."
+      },
+      "marks": {
+        "dependence": "Don't leave before I finish the eye.",
+        "hollowness": "I drew it. Looking still hurts.",
+        "genuine_growth": "It's crooked. I'm keeping it.",
+        "resentment": "You were loud. The page flinched.",
+        "fragile_hope": "Maybe Ruth won't say it's wrong."
+      }
+    },
+    "harold_finch": {
+      "methods": {
+        "challenge": "You calling me soft? Get out of the way of the boots.",
+        "shame": "I know. The kids know. Saying it louder doesn't feed them.",
+        "inspire": "Someone else stood up. Annoying. Pass me the left boot.",
+        "carry_burden": "You don't get to carry my kids. You can haul me to the yard.",
+        "lie": "It gets easier? Don't sell me weather. Just— hand me the lace."
+      },
+      "marks": {
+        "dependence": "If you're not here at dawn I stay horizontal.",
+        "hollowness": "I'm up. Don't celebrate.",
+        "genuine_growth": "Mill whistle. I'm answering it.",
+        "resentment": "You dragged me. My knees kept the receipt.",
+        "fragile_hope": "One shift. Then we see."
+      }
+    },
+    "ruth_calder": {
+      "methods": {
+        "challenge": "Argue with the county, not me— …Fine. One sentence on the board.",
+        "shame": "Low priority. I heard it. You don't get to grade me with it.",
+        "inspire": "Proof, not sermons. Show me someone kept a promise.",
+        "carry_burden": "Ring it yourself if you must. I'll write after the sound dies.",
+        "lie": "Funding's coming? Ink that lie elsewhere."
+      },
+      "marks": {
+        "dependence": "Come back when the chalk runs out.",
+        "hollowness": "Class is open. I am not.",
+        "genuine_growth": "We are not done. I wrote it. I meant it.",
+        "resentment": "You scraped the wound for sport.",
+        "fragile_hope": "One lesson. No inspectors."
+      }
+    },
+    "elias_boone": {
+      "methods": {
+        "challenge": "You want noise? Bellows. He was better. I'm what's left.",
+        "shame": "Shame me for mourning and I'll forge you a quieter mouth.",
+        "inspire": "A warm thing someone else made. …Alright. Coal.",
+        "carry_burden": "Haul the iron. I'll find his rhythm or invent a worse one.",
+        "lie": "He's proud? Don't. Just pump."
+      },
+      "marks": {
+        "dependence": "Don't let the fire die when you leave.",
+        "hollowness": "Nails for sale. Heart not included.",
+        "genuine_growth": "Still warm. He'd hate my form. Good.",
+        "resentment": "You kicked the damper open. Ash went everywhere.",
+        "fragile_hope": "One nail. Then maybe a hinge."
+      }
+    },
+    "clara_whitby": {
+      "methods": {
+        "challenge": "Open it or I will. Credit's uglier in the dark.",
+        "shame": "Call me thief again. I've rehearsed the bow.",
+        "inspire": "Light on the books. If I'm guilty, at least I'm legible.",
+        "carry_burden": "Pry the nails. I'll face the first customer.",
+        "lie": "Absolved? Save that for church. Hand me the crowbar."
+      },
+      "marks": {
+        "dependence": "Stand by the door when they come.",
+        "hollowness": "Shop's open. I'm restocking silence.",
+        "genuine_growth": "Ledger's honest. So is the flour this time.",
+        "resentment": "You enjoyed the confession.",
+        "fragile_hope": "Harold's kids can knock. Once."
+      }
+    },
+    "nora_voss": {
+      "methods": {
+        "challenge": "You think fear is unprofessional? Watch me pack anyway.",
+        "shame": "Shame won't un-quiet a child. Choose another tool.",
+        "inspire": "Someone else answered a door. I can hate that and still go.",
+        "carry_burden": "Carry the bag. I'll carry the part that shakes.",
+        "lie": "It won't happen again? Don't. Just walk with me."
+      },
+      "marks": {
+        "dependence": "If the ferry fails again I need you on the rope.",
+        "hollowness": "I'll deliver. Don't ask what I feel.",
+        "genuine_growth": "Bag's heavy. Good.",
+        "resentment": "You treated my grief like a lesson.",
+        "fragile_hope": "One call. One dawn."
+      }
+    },
+    "samir_okafor": {
+      "methods": {
+        "challenge": "Dare me to make noise? Three notes. Walls can sue me.",
+        "shame": "Lazy? I'm tired of performing hope. …Fine. Tune.",
+        "inspire": "Heard a phrase that wasn't dead. Annoying. Pass the bow.",
+        "carry_burden": "You keep time. I'll pretend the room deserves it.",
+        "lie": "They'll dance again? Sell it softer."
+      },
+      "marks": {
+        "dependence": "Don't leave mid-phrase.",
+        "hollowness": "I played. Clap if you need to feel useful.",
+        "genuine_growth": "Three notes. Mine.",
+        "resentment": "You tuned me like a tool.",
+        "fragile_hope": "One song. No encores demanded."
+      }
+    },
+    "tom_briggs": {
+      "methods": {
+        "challenge": "Call me yellow and untie it yourself— …No. My hands. Push off.",
+        "shame": "I know whose crossing I missed. Shame's already passenger.",
+        "inspire": "Someone else kept moving. Rope's wet. Hands still know.",
+        "carry_burden": "You haul the ramp. I'll take the current.",
+        "lie": "Safe as houses? River eats houses. Cast off anyway."
+      },
+      "marks": {
+        "dependence": "Stay on the gunwale till we dock.",
+        "hollowness": "Ferry runs. Captain's elsewhere.",
+        "genuine_growth": "Wake behind us. Nora can knock again.",
+        "resentment": "You shoved my fear like cargo.",
+        "fragile_hope": "One crossing. No storm talk."
+      }
+    },
+    "priya_sen": {
+      "methods": {
+        "challenge": "Argue with dirt, then. Thistle first.",
+        "shame": "I worked harder when demand died. Shame's late.",
+        "inspire": "Green somewhere else. Fine. One row.",
+        "carry_burden": "You clear. I'll plant what still believes in water.",
+        "lie": "Markets coming back? Plant anyway. Lying to seeds is free."
+      },
+      "marks": {
+        "dependence": "Come weed or it wins.",
+        "hollowness": "Sprouts for sale. Hope not stocked.",
+        "genuine_growth": "First green. I'll fight for the second.",
+        "resentment": "You treated my plot like a metaphor.",
+        "fragile_hope": "One row. No harvest speeches."
+      }
+    },
+    "leon_march": {
+      "methods": {
+        "challenge": "Post it or I will. Jobs exist when someone swears they do.",
+        "shame": "Disorderly? I mediated. You want shame, bill the magistrate.",
+        "inspire": "Show me a kept notice. Then I write.",
+        "carry_burden": "Hold the board steady. I'll risk the ink.",
+        "lie": "County approved? Don't forge seals. Forge work."
+      },
+      "marks": {
+        "dependence": "Stand when they tear it down.",
+        "hollowness": "Notices up. I'm not reading them.",
+        "genuine_growth": "Ink. Paper. An oath with a nail.",
+        "resentment": "You used my board like a prop.",
+        "fragile_hope": "One posting. No crowd."
+      }
+    },
+    "mira_whitby": {
+      "methods": {
+        "challenge": "Argue with the Reach if you want. I have a shift.",
+        "shame": "Shame me for leaving. I already did, yearly.",
+        "inspire": "A letter that sounds like home? …I will answer one.",
+        "carry_burden": "You cannot carry my city day. Carry the stamp to the post.",
+        "lie": "I'll visit spring? Don't. Write true instead."
+      },
+      "marks": {
+        "dependence": "Keep writing or I vanish into glare.",
+        "hollowness": "I answered. Do not call it love.",
+        "genuine_growth": "One true page. Ashford might still be real.",
+        "resentment": "You used my absence as a sermon.",
+        "fragile_hope": "One letter. No promises of roads."
+      }
+    }
+  }
+}
