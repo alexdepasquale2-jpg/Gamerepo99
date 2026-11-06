@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { generateWorld as generateWorldFacade } from '../../../src/sim/fabric';
 import { generateWorld } from '../../../src/sim/gen/world';
-import { connectFabricApi } from '../../bots/fabric-api';
 
 describe('generateWorld stub', () => {
   it('same seed yields deep-equal worlds', () => {
@@ -37,12 +37,10 @@ describe('generateWorld stub', () => {
   });
 });
 
-describe('connectFabricApi', () => {
-  it('finds generateWorld via fabric facade', async () => {
-    const api = await connectFabricApi();
-    expect(api).not.toBeNull();
-    expect(typeof api!.generateWorld).toBe('function');
-    const w = await api!.generateWorld!({ seed: 11 });
+describe('fabric facade generateWorld', () => {
+  it('re-exports generateWorld from gen/world', () => {
+    expect(typeof generateWorldFacade).toBe('function');
+    const w = generateWorldFacade({ seed: 11 });
     expect(w.seed).toBe(11);
     expect(w.people.length).toBeGreaterThanOrEqual(3);
   });
