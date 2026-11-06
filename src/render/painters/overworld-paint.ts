@@ -193,15 +193,14 @@ export function paintGroundTile(
 
 export function paintProp(
   host: PaintHost,
-  target: Phaser.GameObjects.Container | PaintHost,
+  container: Phaser.GameObjects.Container | null,
   prop: FacilityRenderView,
 ): void {
   const foot = tileFootWorld(prop.position.x, prop.position.y);
   const assetKey = PROP_ASSET[prop.type] ?? `facility.${prop.type}.${prop.state || 'idle'}`;
   const entry = lookupAsset(assetKey);
-  const container = 'add' in target && !('list' in (target as object)) ? null : (target as Phaser.GameObjects.Container);
   const addTo = (obj: Phaser.GameObjects.GameObject) => {
-    if (container && 'add' in container) container.add(obj);
+    container?.add(obj);
   };
 
   addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.15);

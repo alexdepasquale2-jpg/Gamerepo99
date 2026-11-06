@@ -14,21 +14,20 @@ describe('overworld paint contracts', () => {
     expect(lookupAsset(PROP_ASSET.field)?.sheet).toMatch(/crop/);
   });
 
-  it('picks sheet-ground grass frames 0-2 by tile hash', () => {
+  it('picks calm grass variants by tile hash (no sheet-ground checkerboard)', () => {
     const a = groundPaintFor({ q: 0, r: 0, biomeId: 'mill_heath', warmth: 0.5 });
     const b = groundPaintFor({ q: 1, r: 0, biomeId: 'mill_heath', warmth: 0.5 });
     const c = groundPaintFor({ q: 2, r: 0, biomeId: 'mill_heath', warmth: 0.5 });
     for (const g of [a, b, c]) {
       expect(g.kind).toBe('grass');
       if (g.kind === 'grass') {
-        expect(g.key).toBe('sheet-ground');
-        expect(['0', '1', '2']).toContain(g.frame);
+        expect(g.key).toMatch(/^grass-calm/);
       }
     }
     expect(groundPaintFor({ q: 0, r: 0, biomeId: 'mill_heath', warmth: 0.5 })).toEqual(a);
   });
 
-  it('offers biome accents for known biome ids', () => {
+  it('offers biome accents for known biome ids (helper; live paint skips squares)', () => {
     let hit: { key: string; frame: string } | null = null;
     for (let q = 0; q < 40 && !hit; q++) {
       hit = biomeAccentFor({ q, r: 4, biomeId: 'ash_wood', warmth: 0.6 });
@@ -46,7 +45,7 @@ describe('overworld paint contracts', () => {
     expect(g.kind).toBe('road');
     if (g.kind === 'road') {
       expect(g.key).toBe('sheet-ground');
-      expect(['12', '13', '14']).toContain(g.frame);
+      expect(['4', '5', '6']).toContain(g.frame);
     }
   });
 

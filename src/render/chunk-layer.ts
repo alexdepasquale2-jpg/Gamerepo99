@@ -19,8 +19,10 @@ export type ChunkLayer = {
 };
 
 /**
- * Stream TileSource chunks: ground in low-depth containers; towns/props/cliffs
- * on a shared y-sort layer so foot-Y depth works with the player sprite.
+ * Stream TileSource chunks.
+ * Ground tiles live in per-chunk containers (depth 0).
+ * Towns / props / cliffs are scene children with foot-Y depth so they
+ * sort correctly against the player (SPRITE_SORT).
  */
 export function createChunkLayer(
   host: ChunkLayerHost,
@@ -29,21 +31,16 @@ export function createChunkLayer(
 ): ChunkLayer {
   const mounted = new Map<string, Phaser.GameObjects.Container>();
   const keyOf = (c: ChunkCoord) => `${c.cx},${c.cy}`;
+  const paintedPropIds = new Set<string>();
 
-  // Y-sorted decoration layer (depth per child via applySpriteSort). Keep above ground.
-  const decor = host.add.container(0, 0);
-  decor.setDepth(500_000);
-
+  // Scene-level stamps (null container → foot-Y depth joins player sort)
   for (const town of townMarkers) {
-    paintTownMarker(host, decor, town);
+    paintTownMarker(host, null, town);
   }
-  // Cliff terrace just south of first settlement for 2.5D lip/face/base read
   if (townMarkers[0]) {
     const t = townMarkers[0];
-    paintCliffStrip(host, decor, t.q - 3, t.r + 3, 12);
+    paintCliffStrip(host, null, t.q - 3, t.r + 3, 12);
   }
-
-  const paintedPropIds = new Set<string>();
 
   return {
     sync(coords: ChunkCoord[]) {
@@ -59,21 +56,19 @@ export function createChunkLayer(
         if (mounted.has(k)) continue;
         const chunk = source.getChunk(coord);
         const painted = paintChunkContents(host, ensureFullChunkTiles(chunk));
-        // Ground stays under decor/player
         painted.setDepth(0);
         mounted.set(k, painted);
 
         for (const prop of chunk.props) {
           if (paintedPropIds.has(prop.id)) continue;
           paintedPropIds.add(prop.id);
-          paintProp(host, decor, prop);
+          paintProp(host, null, prop);
         }
       }
     },
     destroy() {
       for (const c of mounted.values()) c.destroy(true);
       mounted.clear();
-      decor.destroy(true);
       paintedPropIds.clear();
     },
   };
