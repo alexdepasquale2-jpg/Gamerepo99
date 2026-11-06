@@ -61,4 +61,7 @@ export const REQUIRED_FILES = [
   'routes.json',
   'road-encounters.json',
   'travel-trades.json',
+  'notoriety.json',
+  'stash-sites.json',
+  'patrons.json',
 ];

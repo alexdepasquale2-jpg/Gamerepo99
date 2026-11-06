@@ -1,5 +1,5 @@
 export function validateWilderness(data, ctx) {
-  const { req, ids, towns, links, people } = ctx;
+  const { req, ids, towns, links, people, hooks } = ctx;
   const biomes = ids(data['biomes.json']?.biomes);
   const ecoRes = ids(data['economy-resources.json']?.resources);
   const facilities = ids(data['facilities.json']?.facilities);
@@ -22,4 +22,5 @@ export function validateWilderness(data, ctx) {
     if (tr.requiresPersonBurning) req(people.has(tr.requiresPersonBurning), `trade ${tr.id} person`);
   }
   req((data['travel-trades.json']?.trades || []).length >= 8, 'travel-trades need full cast');
+  if (hooks) req(hooks.has('cost_road_labor'), 'cost_road_labor hook required');
 }

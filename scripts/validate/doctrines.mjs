@@ -1,5 +1,5 @@
 export function validateDoctrines(data, ctx) {
-  const { req, towns, people, methods, doctrineIds: _ } = ctx;
+  const { req, towns, people, methods, hooks, doctrineIds: _ } = ctx;
   const doctrines = data['doctrines.json']?.doctrines || [];
   const doctrineIds = new Set(doctrines.map((d) => d.id));
   req(doctrineIds.has('doctrine_mill_bread'), 'Ashford optional doctrine_mill_bread required');
@@ -22,5 +22,6 @@ export function validateDoctrines(data, ctx) {
   }
   const ash = (data['towns.json']?.towns || []).find((x) => x.id === 'ashford');
   if (ash?.doctrineId) req(doctrineIds.has(ash.doctrineId), 'ashford.doctrineId unknown');
+  if (hooks) req(hooks.has('cost_town_despair'), 'cost_town_despair hook required');
   return { doctrineIds };
 }

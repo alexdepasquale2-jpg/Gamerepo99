@@ -16,6 +16,7 @@ import { validateLines } from './validate/lines.mjs';
 import { validateKinshipLetters } from './validate/kinship-letters.mjs';
 import { validateDoctrines } from './validate/doctrines.mjs';
 import { validateWilderness } from './validate/wilderness.mjs';
+import { validateHoarder } from './validate/hoarder.mjs';
 
 const { errors, warnings, req, ids } = createBag();
 const data = loadAll(errors);
@@ -39,8 +40,9 @@ validateLinksEventsProofs(data, { req, people, towns, archetypes, wounds, marks,
 validateTimeRipples(data, { req, marks });
 validateLines(data, { req, people, methods, marks });
 validateKinshipLetters(data, { req, people, links });
-validateDoctrines(data, { req, towns, people, methods });
-validateWilderness(data, { req, ids, towns, links, people });
+validateDoctrines(data, { req, towns, people, methods, hooks });
+validateWilderness(data, { req, ids, towns, links, people, hooks });
+validateHoarder(data, { req, ids, towns, hooks });
 
 console.log('Files:', Object.keys(data).sort().join(', '));
 console.log(
