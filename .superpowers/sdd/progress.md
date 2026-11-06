@@ -1,17 +1,16 @@
 # SDD Progress — The Last Spark
-- M1 scaffold: complete (commit 1417e2b, npm test 12/12, build exit 0)
-- M2 plan: docs/superpowers/plans/2026-11-05-last-spark-m2.md
+- M1 scaffold: complete
+- M2 plan: docs/superpowers/plans/2026-11-05-m2-fabric.md (Dynamic Fabric)
 
-Task 1: complete (data gate test + validate alias)
-Task 1: complete (commits 1417e2b..9b80c2a, data gate green)
-Task 0: complete (commit 461d264, npm test 22/22, build exit 0, validate OK) — STOPPED for Niblet
+Task 1–6: complete (methods + Tidy fixes a7cc06a)
+Data move: complete (2dca344)
+Probe stub: complete (482da2f)
+assertVoice scaffolds: complete (257943e)
 
-Task 1: ALREADY_MET (prior commit 9b80c2a; re-verified npm test 22/22, validate OK, build exit 0) — STOPPED, no Task 2
+## M2 Fabric A–C (this dispatch)
+- Task A: complete — `848cdce` load fabric dialogue tables (flat or dialogue/)
+- Task B: complete — `7f8777b` per-person state vector + authored Ashford anchors
+- Task C: complete — (see git log) fabric reaction selector via state setReactionLineSelector
 
-Task 2: complete (commit 5a533f1; npm test 49/49, build exit 0) — STOPPED, no Task 3
-Task 3: complete (commit 6e71cd2, npm test 50/50, build exit 0) — STOPPED, no Task 4
-Task 4: complete (commit cc48d22, npm test 52/52, build exit 0) — STOPPED, no Task 5
-Task 5: complete (commit 595d722, npm test 61/61, build exit 0) — STOPPED, no Task 6
-Task 6: complete (commit 784681b, npm test 63/63, build exit 0) — STOPPED, no Task 7
-Fabric Probe stub: complete (see fabric-task-a-report.md) — generateWorld + fabric.ts facade
-Fabric Task A (load-data dialogue tables): DEFERRED — parent/sibling data git-mv in flight; do not edit load-data paths
+STOPPED after Task C — do not start D/E/F/G in this dispatch.
+lines.json still present (Task G later).
