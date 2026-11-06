@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "id": "dawn",
+      "name": "Dawn",
+      "tickStart": 0,
+      "tickEnd": 11,
+      "warmthMod": -5,
+      "light": 0.6
+    },
+    {
+      "id": "day",
+      "name": "Day",
+      "tickStart": 12,
+      "tickEnd": 35,
+      "warmthMod": 0,
+      "light": 1.0
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "tickStart": 36,
+      "tickEnd": 41,
+      "warmthMod": -5,
+      "light": 0.5
+    },
+    {
+      "id": "night",
+      "name": "Night",
+      "tickStart": 42,
+      "tickEnd": 47,
+      "warmthMod": -12,
+      "light": 0.25
+    }
+  ]
+}

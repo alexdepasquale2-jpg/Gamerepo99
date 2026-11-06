@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "traits": [
+    {
+      "id": "hardy",
+      "name": "Hardy",
+      "description": "Resists cold; warmth decays slower.",
+      "effects": [
+        {
+          "id": "effect_hardy_warmth",
+          "target": "need.warmth.decay",
+          "op": "mul",
+          "value": 0.85,
+          "durationTicks": null,
+          "tags": ["trait"]
+        }
+      ]
+    },
+    {
+      "id": "glutton",
+      "name": "Glutton",
+      "description": "Gets hungrier faster; eating restores more.",
+      "effects": [
+        {
+          "id": "effect_glutton_decay",
+          "target": "need.hunger.decay",
+          "op": "mul",
+          "value": 1.2,
+          "durationTicks": null,
+          "tags": ["trait"]
+        },
+        {
+          "id": "effect_glutton_eat",
+          "target": "need.hunger.restore",
+          "op": "mul",
+          "value": 1.15,
+          "durationTicks": null,
+          "tags": ["trait"]
+        }
+      ]
+    },
+    {
+      "id": "early_riser",
+      "name": "Early Riser",
+      "description": "Slight mood boost at dawn; rests a bit less well at night.",
+      "effects": [
+        {
+          "id": "effect_riser_dawn_mood",
+          "target": "need.mood",
+          "op": "add",
+          "value": 3,
+          "durationTicks": null,
+          "tags": ["trait", "dawn_only"]
+        }
+      ]
+    },
+    {
+      "id": "craftsman",
+      "name": "Craftsman",
+      "description": "Crafts and builds faster.",
+      "effects": [
+        {
+          "id": "effect_craftsman_craft",
+          "target": "job.craft.speed",
+          "op": "mul",
+          "value": 1.2,
+          "durationTicks": null,
+          "tags": ["trait"]
+        },
+        {
+          "id": "effect_craftsman_build",
+          "target": "job.build.speed",
+          "op": "mul",
+          "value": 1.1,
+          "durationTicks": null,
+          "tags": ["trait"]
+        }
+      ]
+    },
+    {
+      "id": "optimist",
+      "name": "Optimist",
+      "description": "Baseline mood a little higher.",
+      "effects": [
+        {
+          "id": "effect_optimist_mood",
+          "target": "need.mood.base",
+          "op": "add",
+          "value": 5,
+          "durationTicks": null,
+          "tags": ["trait"]
+        }
+      ]
+    }
+  ]
+}

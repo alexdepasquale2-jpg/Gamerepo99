@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "needs": [
+    {
+      "id": "hunger",
+      "min": 0,
+      "max": 100,
+      "start": 80,
+      "decayPerTick": 0.35,
+      "criticalBelow": 20,
+      "deathAtZeroTicks": 24,
+      "moodCurve": [
+        { "below": 100, "atLeast": 70, "mood": 10 },
+        { "below": 70, "atLeast": 40, "mood": 0 },
+        { "below": 40, "atLeast": 20, "mood": -15 },
+        { "below": 20, "atLeast": 0, "mood": -30 }
+      ],
+      "satisfy": {
+        "resourceId": "food_ration",
+        "fallbackResourceId": "food_raw",
+        "restore": 40,
+        "restoreFallback": 22
+      }
+    },
+    {
+      "id": "warmth",
+      "min": 0,
+      "max": 100,
+      "start": 75,
+      "decayPerTick": 0.2,
+      "criticalBelow": 15,
+      "deathAtZeroTicks": 24,
+      "approachRateHeated": 0.08,
+      "approachRateOutdoor": 0.05,
+      "heatedTarget": 85,
+      "indoorsUnheatedTarget": 60,
+      "moodCurve": [
+        { "below": 100, "atLeast": 70, "mood": 10 },
+        { "below": 70, "atLeast": 40, "mood": 0 },
+        { "below": 40, "atLeast": 20, "mood": -15 },
+        { "below": 20, "atLeast": 0, "mood": -30 }
+      ]
+    },
+    {
+      "id": "rest",
+      "min": 0,
+      "max": 100,
+      "start": 70,
+      "decayPerTickAwake": 0.25,
+      "restorePerTickSleep": 1.2,
+      "criticalBelow": 15,
+      "preferSleepBelow": 25,
+      "deathAtZeroTicks": null,
+      "moodCurve": [
+        { "below": 100, "atLeast": 70, "mood": 10 },
+        { "below": 70, "atLeast": 40, "mood": 0 },
+        { "below": 40, "atLeast": 20, "mood": -15 },
+        { "below": 20, "atLeast": 0, "mood": -30 }
+      ]
+    }
+  ],
+  "mood": {
+    "id": "mood",
+    "min": 0,
+    "max": 100,
+    "start": 60,
+    "base": 50,
+    "lerp": 0.15,
+    "criticalBelow": 10,
+    "shelterBonusBed": 5,
+    "shelterBonusBedroll": 0,
+    "workSpeed": { "min": 0.6, "max": 1.0 },
+    "crisisSpeedMul": 0.5,
+    "crisisNeedBelow": 10
+  }
+}

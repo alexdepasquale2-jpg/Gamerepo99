@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "startWidth": 24,
+  "startHeight": 24,
+  "maxWidth": 48,
+  "maxHeight": 48,
+  "tileSizePx": 32,
+  "growthIntervalDays": 6,
+  "growthMode": "ring",
+  "pathfinding": {
+    "diagonal": false,
+    "unwalkableTags": ["void", "unrevealed", "structure_blocking"]
+  },
+  "starting": {
+    "hearthAt": "center",
+    "colonists": 3,
+    "stockpileNearHearth": true,
+    "initialResources": [
+      { "resourceId": "wood", "qty": 20 },
+      { "resourceId": "food_ration", "qty": 6 },
+      { "resourceId": "fuel", "qty": 8 },
+      { "resourceId": "fiber", "qty": 4 }
+    ]
+  },
+  "nodeTables": {
+    "spring": [
+      { "resourceId": "wood", "weight": 40, "qtyMin": 3, "qtyMax": 8 },
+      { "resourceId": "stone", "weight": 20, "qtyMin": 2, "qtyMax": 5 },
+      { "resourceId": "fiber", "weight": 25, "qtyMin": 2, "qtyMax": 6 },
+      { "resourceId": "food_raw", "weight": 25, "qtyMin": 2, "qtyMax": 5 }
+    ],
+    "summer": [
+      { "resourceId": "wood", "weight": 35, "qtyMin": 3, "qtyMax": 8 },
+      { "resourceId": "stone", "weight": 20, "qtyMin": 2, "qtyMax": 5 },
+      { "resourceId": "fiber", "weight": 20, "qtyMin": 2, "qtyMax": 5 },
+      { "resourceId": "food_raw", "weight": 35, "qtyMin": 3, "qtyMax": 7 }
+    ],
+    "autumn": [
+      { "resourceId": "wood", "weight": 30, "qtyMin": 3, "qtyMax": 7 },
+      { "resourceId": "stone", "weight": 20, "qtyMin": 2, "qtyMax": 6 },
+      { "resourceId": "fiber", "weight": 15, "qtyMin": 2, "qtyMax": 4 },
+      { "resourceId": "food_raw", "weight": 45, "qtyMin": 4, "qtyMax": 9 }
+    ],
+    "winter": [
+      { "resourceId": "wood", "weight": 45, "qtyMin": 2, "qtyMax": 6 },
+      { "resourceId": "stone", "weight": 25, "qtyMin": 2, "qtyMax": 5 },
+      { "resourceId": "fiber", "weight": 10, "qtyMin": 1, "qtyMax": 3 },
+      { "resourceId": "food_raw", "weight": 10, "qtyMin": 1, "qtyMax": 3 }
+    ]
+  },
+  "nodesOnReveal": { "min": 4, "max": 10 }
+}

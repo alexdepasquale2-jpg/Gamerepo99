@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "resources": [
+    {
+      "id": "wood",
+      "name": "Wood",
+      "category": "raw",
+      "maxStack": 50,
+      "spoilPerDay": 0,
+      "tags": [
+        "fuel_source",
+        "build",
+        "craft"
+      ],
+      "haulPriority": 5
+    },
+    {
+      "id": "stone",
+      "name": "Stone",
+      "category": "raw",
+      "maxStack": 50,
+      "spoilPerDay": 0,
+      "tags": [
+        "build",
+        "craft"
+      ],
+      "haulPriority": 4
+    },
+    {
+      "id": "fiber",
+      "name": "Fiber",
+      "category": "raw",
+      "maxStack": 40,
+      "spoilPerDay": 0,
+      "tags": [
+        "craft",
+        "build"
+      ],
+      "haulPriority": 4
+    },
+    {
+      "id": "food_raw",
+      "name": "Raw Food",
+      "category": "food",
+      "maxStack": 20,
+      "spoilPerDay": 0.05,
+      "tags": [
+        "food",
+        "craft"
+      ],
+      "haulPriority": 8
+    },
+    {
+      "id": "food_ration",
+      "name": "Food Ration",
+      "category": "food",
+      "maxStack": 30,
+      "spoilPerDay": 0.01,
+      "tags": [
+        "food",
+        "eat_preferred"
+      ],
+      "haulPriority": 9
+    },
+    {
+      "id": "fuel",
+      "name": "Fuel",
+      "category": "processed",
+      "maxStack": 40,
+      "spoilPerDay": 0,
+      "tags": [
+        "hearth",
+        "craft"
+      ],
+      "haulPriority": 10
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "category": "processed",
+      "maxStack": 40,
+      "spoilPerDay": 0,
+      "tags": [
+        "build",
+        "craft"
+      ],
+      "haulPriority": 6
+    },
+    {
+      "id": "tool_basic",
+      "name": "Basic Tool",
+      "category": "gear",
+      "maxStack": 10,
+      "spoilPerDay": 0,
+      "tags": [
+        "tool",
+        "gather_boost"
+      ],
+      "haulPriority": 3,
+      "effects": [
+        {
+          "id": "effect_tool_gather",
+          "target": "job.gather.speed",
+          "op": "mul",
+          "value": 1.25,
+          "durationTicks": null,
+          "tags": [
+            "tool"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bedroll_item",
+      "name": "Bedroll Kit",
+      "category": "gear",
+      "maxStack": 5,
+      "spoilPerDay": 0,
+      "tags": [
+        "placeable",
+        "sleep"
+      ],
+      "haulPriority": 2,
+      "placeAsBuilding": "bedroll"
+    }
+  ]
+}

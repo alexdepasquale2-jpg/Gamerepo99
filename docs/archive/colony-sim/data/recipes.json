@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "recipes": [
+    {
+      "id": "recipe_fuel",
+      "name": "Split Fuel",
+      "station": "craft_stump",
+      "work": 20,
+      "inputs": [{ "resourceId": "wood", "qty": 1 }],
+      "outputs": [{ "resourceId": "fuel", "qty": 1 }],
+      "tags": ["fuel"]
+    },
+    {
+      "id": "recipe_plank",
+      "name": "Saw Planks",
+      "station": "craft_stump",
+      "work": 30,
+      "inputs": [{ "resourceId": "wood", "qty": 2 }],
+      "outputs": [{ "resourceId": "plank", "qty": 1 }],
+      "tags": ["build_mat"]
+    },
+    {
+      "id": "recipe_ration",
+      "name": "Cook Ration",
+      "station": "craft_stump",
+      "work": 25,
+      "inputs": [{ "resourceId": "food_raw", "qty": 2 }],
+      "outputs": [{ "resourceId": "food_ration", "qty": 1 }],
+      "tags": ["food"],
+      "notes": "M3 may move to kitchen_basic; M2 allows craft_stump"
+    },
+    {
+      "id": "recipe_bedroll",
+      "name": "Weave Bedroll",
+      "station": "craft_stump",
+      "work": 35,
+      "inputs": [
+        { "resourceId": "fiber", "qty": 2 },
+        { "resourceId": "plank", "qty": 1 }
+      ],
+      "outputs": [{ "resourceId": "bedroll_item", "qty": 1 }],
+      "tags": ["furniture"],
+      "placeAsBuilding": "bedroll"
+    },
+    {
+      "id": "recipe_tool_basic",
+      "name": "Carve Basic Tool",
+      "station": "craft_stump",
+      "work": 40,
+      "inputs": [
+        { "resourceId": "stone", "qty": 1 },
+        { "resourceId": "plank", "qty": 1 }
+      ],
+      "outputs": [{ "resourceId": "tool_basic", "qty": 1 }],
+      "tags": ["tool"],
+      "milestone": "m2_stretch"
+    }
+  ]
+}

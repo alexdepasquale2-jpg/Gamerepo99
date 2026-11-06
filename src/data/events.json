@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "grey_rain",
+      "name": "Grey Rain",
+      "weight": 12,
+      "durationDays": 1,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "The sky rinses color out of the streets. Even revived hands slow.",
+      "effects": [
+        {
+          "id": "effect_rain_relapse",
+          "target": "relapse.mul",
+          "op": "mul",
+          "value": 1.25,
+          "durationDays": 1,
+          "tags": [
+            "weather",
+            "cold"
+          ]
+        },
+        {
+          "id": "effect_rain_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "durationDays": null,
+          "tags": [
+            "drain"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stranger_embers",
+      "name": "Stranger with Embers",
+      "weight": 8,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "A traveler cups a dying coal and asks if you still know how.",
+      "effects": [
+        {
+          "id": "effect_stranger_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "durationDays": null,
+          "tags": [
+            "gift"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bad_news_rider",
+      "name": "Bad News Rider",
+      "weight": 10,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Hoofbeats. A letter. Someone's almost-healed crack splits.",
+      "effects": [
+        {
+          "id": "effect_rider_force_relapse",
+          "target": "person.flame",
+          "op": "add",
+          "value": -12,
+          "durationDays": null,
+          "tags": [
+            "crisis"
+          ],
+          "pick": "random_burning"
+        },
+        {
+          "id": "effect_rider_fragile",
+          "target": "person.mark",
+          "op": "grant_mark",
+          "value": 1,
+          "markId": "fragile_hope",
+          "durationDays": 2,
+          "tags": [
+            "crisis"
+          ],
+          "pick": "same"
+        }
+      ]
+    },
+    {
+      "id": "market_ghost",
+      "name": "Market Ghost",
+      "weight": 9,
+      "durationDays": 1,
+      "townBias": [
+        "ashford"
+      ],
+      "blurb": "Stalls stand like ribs. Trade feels like a rumor.",
+      "effects": [
+        {
+          "id": "effect_market_vit",
+          "target": "town.vitality",
+          "op": "add",
+          "value": -5,
+          "durationDays": 1,
+          "tags": [
+            "economy"
+          ]
+        },
+        {
+          "id": "effect_market_inspire",
+          "target": "method.effectiveness",
+          "op": "mul",
+          "value": 0.85,
+          "methodId": "inspire",
+          "durationDays": 1,
+          "tags": [
+            "economy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "child_laugh",
+      "name": "A Child Laughs",
+      "weight": 6,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Short. Bright. Unreasonable. It helps more than it should.",
+      "effects": [
+        {
+          "id": "effect_laugh_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": 5,
+          "durationDays": null,
+          "tags": [
+            "warm"
+          ]
+        },
+        {
+          "id": "effect_laugh_flame",
+          "target": "person.flame",
+          "op": "add",
+          "value": 4,
+          "durationDays": null,
+          "tags": [
+            "warm"
+          ],
+          "pick": "random_stalled_or_burning"
+        }
+      ]
+    },
+    {
+      "id": "hill_rumor",
+      "name": "Rumor of the Hill",
+      "weight": 7,
+      "durationDays": 1,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Children say the hill walks. A shutter unlatches from the wrong side \u2014 a breach for something large.",
+      "effects": [
+        {
+          "id": "effect_hill_fear",
+          "target": "town.fear",
+          "op": "add",
+          "value": -0.15,
+          "durationDays": 1,
+          "tags": [
+            "ogre",
+            "access"
+          ]
+        },
+        {
+          "id": "effect_hill_breach",
+          "target": "town.vitality",
+          "op": "add",
+          "value": 0,
+          "durationDays": 1,
+          "tags": [
+            "breach_open"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "den_cold",
+      "name": "Den Goes Cold",
+      "weight": 8,
+      "durationDays": 0,
+      "townBias": [
+        "marrow_den"
+      ],
+      "blurb": "You pushed through the night without banking the den fire. Morning takes its cut.",
+      "effects": [
+        {
+          "id": "effect_den_cold",
+          "target": "player.spark",
+          "op": "add",
+          "value": -6,
+          "durationDays": null,
+          "tags": [
+            "den",
+            "neglect"
+          ],
+          "requireSkippedDenRest": true
+        }
+      ]
+    }
+  ]
+}

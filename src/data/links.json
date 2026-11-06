@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "links": [
+    {
+      "id": "den_ashford_path",
+      "fromTownId": "marrow_den",
+      "toTownId": "ashford",
+      "bidirectional": true,
+      "days": 0,
+      "tags": [
+        "den_path",
+        "fear_road"
+      ],
+      "packetCapacity": 2,
+      "travelSparkCost": 0
+    },
+    {
+      "id": "ashford_lowmere_ferry",
+      "fromTownId": "ashford",
+      "toTownId": "lowmere",
+      "bidirectional": true,
+      "days": 1,
+      "tags": [
+        "ferry",
+        "rumor"
+      ],
+      "packetCapacity": 3,
+      "travelSparkCost": 4,
+      "requiresPersonBurning": "tom_briggs",
+      "fallbackTag": "fear_road"
+    },
+    {
+      "id": "ashford_lowmere_mill_road",
+      "fromTownId": "ashford",
+      "toTownId": "lowmere",
+      "bidirectional": true,
+      "days": 2,
+      "tags": [
+        "mill_road",
+        "rumor"
+      ],
+      "packetCapacity": 2,
+      "travelSparkCost": 3
+    },
+    {
+      "id": "den_lowmere_fear_road",
+      "fromTownId": "marrow_den",
+      "toTownId": "lowmere",
+      "bidirectional": true,
+      "days": 1,
+      "tags": [
+        "fear_road",
+        "den_path"
+      ],
+      "packetCapacity": 1,
+      "travelSparkCost": 6,
+      "earlyUnlock": {
+        "minDay": 4,
+        "minSpark": 40,
+        "bypassTownClear": true,
+        "eventId": "hill_rumor",
+        "status": "decided",
+        "decidedBy": "niblet",
+        "costly": true,
+        "notes": "Early Lowmere via fear-road stays available and stays costly (spark + hill_rumor)."
+      }
+    }
+  ],
+  "packetTypes": [
+    {
+      "id": "proof_packet",
+      "carries": [
+        "proofId"
+      ],
+      "defaultDelayDays": 1
+    },
+    {
+      "id": "relapse_pressure",
+      "carries": [
+        "relapseMulAdd"
+      ],
+      "defaultDelayDays": 1
+    },
+    {
+      "id": "vitality_echo",
+      "carries": [
+        "vitalityDelta"
+      ],
+      "defaultDelayDays": 2
+    }
+  ],
+  "decisions": {
+    "early_lowmere_fear_road": "decided_costly",
+    "shame_child_policy": "diegetic_refusal_not_disabled_button"
+  }
+}

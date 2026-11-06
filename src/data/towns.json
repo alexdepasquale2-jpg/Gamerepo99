@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "tileSizePx": 32,
+  "towns": [
+    {
+      "id": "marrow_den",
+      "name": "Marrow's Den",
+      "blurb": "A scraped hollow under a blackthorn hill. Coal-glow. Crooked carvings. The road forks toward Ashford and the strand.",
+      "mapWidth": 12,
+      "mapHeight": 10,
+      "starting": false,
+      "isDen": true,
+      "unlockRule": null,
+      "clearVitality": null,
+      "relapsePressure": 0,
+      "criticalFlameFloor": null,
+      "sites": [
+        {
+          "id": "site_marrow_den",
+          "name": "Den Hearth",
+          "x": 5,
+          "y": 5,
+          "personId": null,
+          "tags": [
+            "den",
+            "hearth",
+            "den_path",
+            "rest"
+          ],
+          "approachTags": [
+            "den_path"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ashford",
+      "name": "Ashford Crossing",
+      "blurb": "A mill town on a grey river. The wheel barely turns. Cold yeast. Wet ash.",
+      "mapWidth": 28,
+      "mapHeight": 20,
+      "starting": true,
+      "unlockRule": null,
+      "clearVitality": 70,
+      "relapsePressure": 1.0,
+      "criticalFlameFloor": 25,
+      "sites": [
+        {
+          "id": "site_bakery",
+          "name": "Ellison Bakery",
+          "x": 6,
+          "y": 8,
+          "personId": "marta_ellison",
+          "tags": [
+            "breach",
+            "food",
+            "lane",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "breach",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_stoop",
+          "name": "Pike Stoop",
+          "x": 11,
+          "y": 7,
+          "personId": "jonah_pike",
+          "tags": [
+            "child",
+            "home",
+            "lane",
+            "window_eaves",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard",
+            "window_eaves"
+          ]
+        },
+        {
+          "id": "site_finch_home",
+          "name": "Finch Cottage",
+          "x": 15,
+          "y": 10,
+          "personId": "harold_finch",
+          "tags": [
+            "home",
+            "lane",
+            "window_eaves",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard",
+            "window_eaves"
+          ]
+        },
+        {
+          "id": "site_school",
+          "name": "Ashford Schoolhouse",
+          "x": 20,
+          "y": 6,
+          "personId": "ruth_calder",
+          "tags": [
+            "civic",
+            "lane",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_forge",
+          "name": "Boone Forge",
+          "x": 8,
+          "y": 14,
+          "personId": "elias_boone",
+          "tags": [
+            "breach",
+            "fire",
+            "lane",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "breach",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_shop",
+          "name": "Whitby Goods",
+          "x": 18,
+          "y": 13,
+          "personId": "clara_whitby",
+          "tags": [
+            "breach",
+            "lane",
+            "trade",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "breach",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_ashford_square",
+          "name": "Mill Square",
+          "x": 13,
+          "y": 11,
+          "personId": null,
+          "tags": [
+            "hub",
+            "lane",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard"
+          ]
+        }
+      ],
+      "fearThresholdVitality": 40,
+      "baseFear": 0.55
+    },
+    {
+      "id": "lowmere",
+      "name": "Lowmere Strand",
+      "blurb": "A fishing hamlet. Nets dry on poles. The ferry rope has gone soft with salt and neglect.",
+      "mapWidth": 26,
+      "mapHeight": 18,
+      "starting": false,
+      "unlockRule": {
+        "type": "town_vitality",
+        "townId": "ashford",
+        "minVitality": 70
+      },
+      "clearVitality": 70,
+      "relapsePressure": 1.1,
+      "criticalFlameFloor": 25,
+      "sites": [
+        {
+          "id": "site_midwife",
+          "name": "Voss Cottage",
+          "x": 5,
+          "y": 8,
+          "personId": "nora_voss",
+          "tags": [
+            "care",
+            "home",
+            "lane",
+            "window_eaves",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard",
+            "window_eaves"
+          ]
+        },
+        {
+          "id": "site_tavern",
+          "name": "Strand Tavern",
+          "x": 12,
+          "y": 7,
+          "personId": "samir_okafor",
+          "tags": [
+            "lane",
+            "music",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_ferry",
+          "name": "Briggs Ferry",
+          "x": 20,
+          "y": 12,
+          "personId": "tom_briggs",
+          "tags": [
+            "breach",
+            "lane",
+            "transit",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "breach",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_garden",
+          "name": "Sen Plot",
+          "x": 8,
+          "y": 13,
+          "personId": "priya_sen",
+          "tags": [
+            "breach",
+            "food",
+            "lane",
+            "work",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "breach",
+            "yard"
+          ]
+        },
+        {
+          "id": "site_notice",
+          "name": "Harbor Notice Board",
+          "x": 14,
+          "y": 10,
+          "personId": "leon_march",
+          "tags": [
+            "civic",
+            "lane",
+            "yard"
+          ],
+          "approachTags": [
+            "lane",
+            "yard"
+          ]
+        }
+      ],
+      "fearThresholdVitality": 40,
+      "baseFear": 0.65
+    }
+  ]
+}

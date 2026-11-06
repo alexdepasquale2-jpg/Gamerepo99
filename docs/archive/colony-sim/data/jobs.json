@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "globals": {
+    "switchThreshold": 15,
+    "distancePenaltyPerTile": 0.5,
+    "playerBiasPerLevel": 20,
+    "playerPriorityDefault": 3,
+    "playerPriorityMin": 1,
+    "playerPriorityMax": 5,
+    "carryCapacityDefault": 5
+  },
+  "jobs": [
+    {
+      "id": "gather",
+      "name": "Gather",
+      "category": "gather",
+      "basePriority": 40,
+      "totalWork": 40,
+      "workPerTick": 1,
+      "needDrives": [],
+      "outputsFromNode": true,
+      "requiresBuilding": null,
+      "interruptible": true,
+      "tags": ["production"]
+    },
+    {
+      "id": "haul",
+      "name": "Haul",
+      "category": "haul",
+      "basePriority": 45,
+      "totalWork": 10,
+      "workPerTick": 1,
+      "needDrives": [],
+      "requiresBuilding": null,
+      "interruptible": true,
+      "deadlineBoostClaims": 25,
+      "tags": ["logistics"]
+    },
+    {
+      "id": "build",
+      "name": "Build",
+      "category": "build",
+      "basePriority": 50,
+      "totalWork": 60,
+      "workPerTick": 1,
+      "needDrives": [],
+      "requiresBuilding": null,
+      "requiresMaterialsDelivered": true,
+      "interruptible": true,
+      "tags": ["construction"]
+    },
+    {
+      "id": "craft",
+      "name": "Craft",
+      "category": "craft",
+      "basePriority": 42,
+      "totalWork": "from_recipe",
+      "workPerTick": 1,
+      "needDrives": [],
+      "requiresBuilding": "station",
+      "interruptible": true,
+      "tags": ["production"]
+    },
+    {
+      "id": "eat",
+      "name": "Eat",
+      "category": "personal",
+      "basePriority": 30,
+      "totalWork": 8,
+      "workPerTick": 1,
+      "needDrives": [
+        { "needId": "hunger", "below": 40, "urgencyBonus": 40 },
+        { "needId": "hunger", "below": 20, "urgencyBonus": 80 }
+      ],
+      "requiresBuilding": null,
+      "interruptible": false,
+      "tags": ["survival"]
+    },
+    {
+      "id": "sleep",
+      "name": "Sleep",
+      "category": "personal",
+      "basePriority": 25,
+      "totalWork": 48,
+      "workPerTick": 1,
+      "needDrives": [
+        { "needId": "rest", "below": 25, "urgencyBonus": 50 },
+        { "needId": "rest", "below": 15, "urgencyBonus": 85 }
+      ],
+      "requiresBuilding": null,
+      "requiresSleepSpot": true,
+      "interruptible": true,
+      "nightBonus": 20,
+      "tags": ["survival"]
+    },
+    {
+      "id": "tend_hearth",
+      "name": "Tend Hearth",
+      "category": "tend",
+      "basePriority": 55,
+      "totalWork": 12,
+      "workPerTick": 1,
+      "needDrives": [
+        { "needId": "warmth", "below": 30, "urgencyBonus": 30 }
+      ],
+      "requiresBuilding": "hearth",
+      "fuelResourceId": "fuel",
+      "deadlineBoostWhenFuelBelow": 5,
+      "deadlineBoost": 40,
+      "interruptible": false,
+      "tags": ["survival", "hearth"]
+    }
+  ]
+}

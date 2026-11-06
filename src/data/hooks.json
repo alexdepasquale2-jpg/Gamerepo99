@@ -1,0 +1,447 @@
+{
+  "version": 1,
+  "description": "Registry of all protagonist hooks. Archetypes may only reference ids listed here.",
+  "hooks": [
+    {
+      "id": "recovery_den_hearth",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "playerAtHome": true
+      },
+      "effects": [
+        {
+          "id": "fx_den_recovery",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "tags": [
+            "recovery",
+            "den"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_base_dawn",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_base_dawn",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "tags": [
+            "recovery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_ledger_truth",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "methodsUsedYesterdayNotContains": [
+          "lie"
+        ]
+      },
+      "effects": [
+        {
+          "id": "fx_ledger_truth",
+          "target": "player.spark",
+          "op": "add",
+          "value": 10,
+          "tags": [
+            "recovery",
+            "ink"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_witness_genuine",
+      "kind": "spark_recovery",
+      "trigger": "on_witness_genuine_growth",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_witness",
+          "target": "player.spark",
+          "op": "add",
+          "value": 6,
+          "tags": [
+            "recovery",
+            "witness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recovery_brood_bask",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "allBodiesSameTown": true
+      },
+      "effects": [
+        {
+          "id": "fx_brood_bask",
+          "target": "player.spark",
+          "op": "add",
+          "value": 12,
+          "tags": [
+            "recovery",
+            "brood"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_loneliness_tax",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "kindSuccessToday": true,
+        "noBurningAdjacent": true
+      },
+      "effects": [
+        {
+          "id": "fx_loneliness",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "loneliness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_ink_integrity",
+      "kind": "personal_cost",
+      "trigger": "on_method_resolve",
+      "when": {
+        "methodId": "lie"
+      },
+      "effects": [
+        {
+          "id": "fx_ink_cost",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "ink"
+          ]
+        },
+        {
+          "id": "fx_ink_trust",
+          "target": "player.perception.trust",
+          "op": "add",
+          "value": -0.05,
+          "durationDays": 3,
+          "tags": [
+            "cost",
+            "reputation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_brood_strain",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "bodiesInMultipleTowns": true
+      },
+      "effects": [
+        {
+          "id": "fx_brood_strain",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "brood"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "refusal_shame_child",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "shame",
+      "when": {
+        "any": [
+          {
+            "targetAgeLt": 16
+          },
+          {
+            "targetHasTag": "child"
+          },
+          {
+            "targetIdIn": [
+              "jonah_pike"
+            ]
+          }
+        ]
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "Shame? On a cub? No. The coal in me won't take that air.",
+          "I could break them with a word. That's why I won't."
+        ],
+        "marrow": [
+          "Shame? On a cub? No. The coal in me won't take that air.",
+          "I could break him with a word. That's why I won't.",
+          "He's small. My voice isn't. Put it away."
+        ],
+        "ivy_quill": [
+          "I will not put that in the book. Children are not ledgers.",
+          "Cross it out. We do not shame the unfinished."
+        ],
+        "basilisk_brood": [
+          "We will not look at the small one that way.",
+          "Our gaze is for equals. Turn aside."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [
+        {
+          "id": "fx_refuse_coal_flicker",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "tell",
+            "coal_flicker",
+            "refusal"
+          ]
+        }
+      ],
+      "tells": [
+        {
+          "id": "tell_chest_coal_flicker",
+          "view": "coal_flicker",
+          "durationTicks": 3
+        }
+      ]
+    },
+    {
+      "id": "refusal_gaze_child",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "challenge",
+      "when": {
+        "any": [
+          {
+            "targetAgeLt": 16
+          },
+          {
+            "targetHasTag": "child"
+          }
+        ],
+        "requireTraitTag": "gaze_challenge"
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "Not the child. Soften the eyes."
+        ],
+        "basilisk_brood": [
+          "Not the child. Soften the eyes. Gaze elsewhere."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [
+        {
+          "id": "fx_gaze_avert",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "tell",
+            "refusal"
+          ]
+        }
+      ],
+      "tells": [
+        {
+          "id": "tell_gaze_avert",
+          "view": "gaze_avert",
+          "durationTicks": 2
+        }
+      ]
+    },
+    {
+      "id": "refusal_burn_ledger",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "shame",
+      "when": {
+        "targetHasTag": "ledger_keeper",
+        "methodTagsContain": [
+          "destroy_record"
+        ]
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "The record stays. Even ugly truth stays."
+        ],
+        "ivy_quill": [
+          "I will not burn a ledger to win a soul. Find another cut."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [],
+      "tells": []
+    },
+    {
+      "id": "legacy_ember_standard",
+      "kind": "legacy",
+      "trigger": "on_burnout_or_death",
+      "effects": [
+        {
+          "id": "fx_ember_gift",
+          "target": "successor.sparkStart",
+          "op": "add",
+          "value": 15,
+          "tags": [
+            "legacy",
+            "ember"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "legacy_reputation_echo",
+      "kind": "legacy",
+      "trigger": "on_burnout_or_death",
+      "effects": [
+        {
+          "id": "fx_rep_fear",
+          "target": "town.fear",
+          "op": "add",
+          "value": -0.05,
+          "tags": [
+            "legacy",
+            "reputation"
+          ],
+          "scope": "townsTouched"
+        },
+        {
+          "id": "fx_rep_trust",
+          "target": "town.trust",
+          "op": "add",
+          "value": 0.08,
+          "tags": [
+            "legacy",
+            "reputation"
+          ],
+          "scope": "townsWhereGenuineGrowth"
+        }
+      ]
+    },
+    {
+      "id": "legacy_rumor_packet",
+      "kind": "legacy",
+      "trigger": "on_burnout_or_death",
+      "effects": [
+        {
+          "id": "fx_memory_packet",
+          "target": "link.packet",
+          "op": "emit_packet",
+          "value": 1,
+          "packetType": "vitality_echo",
+          "vitalityDelta": 2,
+          "tags": [
+            "legacy",
+            "memory"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_inherited_dependence_cling",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "playerHasStatusTrait": "inherited_dependence",
+        "noCarryUsedToday": true
+      },
+      "effects": [
+        {
+          "id": "fx_dep_cling_mood",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "inherited_dependence",
+            "cling"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resolve_inherited_dependence",
+      "kind": "legacy",
+      "trigger": "on_status_decay",
+      "when": {
+        "statusTraitId": "inherited_dependence"
+      },
+      "effects": [
+        {
+          "id": "fx_dep_resolve_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": 5,
+          "tags": [
+            "resolve",
+            "inherited_dependence"
+          ]
+        },
+        {
+          "id": "fx_dep_resolve_tell",
+          "target": "player.spark",
+          "op": "add",
+          "value": 0,
+          "tags": [
+            "tell",
+            "ember_steadies"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apply_inherited_dependence",
+      "kind": "legacy",
+      "trigger": "on_succession_continue",
+      "when": {
+        "successorChosenViaDependenceBond": true
+      },
+      "effects": [
+        {
+          "id": "fx_apply_inh_dep",
+          "target": "player.statusTrait",
+          "op": "set",
+          "value": "inherited_dependence",
+          "tags": [
+            "legacy",
+            "succession"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "ticksPerDay": 48,
+  "daysPerSeason": 12,
+  "seasons": [
+    {
+      "id": "spring",
+      "name": "Spring",
+      "order": 0,
+      "days": 12,
+      "baseOutdoorWarmth": 55,
+      "gatherMod": 1.0,
+      "eventChance": 0.3,
+      "weatherWeights": {
+        "clear": 40,
+        "rain": 30,
+        "fog": 15,
+        "storm": 10,
+        "snow": 0,
+        "heatwave": 5
+      }
+    },
+    {
+      "id": "summer",
+      "name": "Summer",
+      "order": 1,
+      "days": 12,
+      "baseOutdoorWarmth": 70,
+      "gatherMod": 1.1,
+      "eventChance": 0.3,
+      "weatherWeights": {
+        "clear": 45,
+        "rain": 15,
+        "fog": 5,
+        "storm": 10,
+        "snow": 0,
+        "heatwave": 25
+      }
+    },
+    {
+      "id": "autumn",
+      "name": "Autumn",
+      "order": 2,
+      "days": 12,
+      "baseOutdoorWarmth": 45,
+      "gatherMod": 1.0,
+      "eventChance": 0.35,
+      "weatherWeights": {
+        "clear": 30,
+        "rain": 30,
+        "fog": 20,
+        "storm": 15,
+        "snow": 5,
+        "heatwave": 0
+      }
+    },
+    {
+      "id": "winter",
+      "name": "Winter",
+      "order": 3,
+      "days": 12,
+      "baseOutdoorWarmth": 20,
+      "gatherMod": 0.7,
+      "eventChance": 0.4,
+      "weatherWeights": {
+        "clear": 20,
+        "rain": 5,
+        "fog": 10,
+        "storm": 15,
+        "snow": 50,
+        "heatwave": 0
+      }
+    }
+  ]
+}

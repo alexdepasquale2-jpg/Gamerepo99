@@ -1,0 +1,295 @@
+{
+  "version": 1,
+  "embodiment": [
+    {
+      "id": "body_ogre_large",
+      "tags": [
+        "ogre",
+        "large"
+      ],
+      "footprint": {
+        "w": 2,
+        "h": 2
+      },
+      "moveTicksPerTile": 2,
+      "denPathMoveTicks": 1,
+      "blockedTileTags": [
+        "door_front",
+        "interior_tight"
+      ],
+      "allowedApproachTags": [
+        "lane",
+        "breach",
+        "ford",
+        "den_path",
+        "yard",
+        "window_eaves"
+      ],
+      "mode": "single",
+      "bodySlots": 1,
+      "activeBodiesMax": 1,
+      "sharedSpark": true
+    },
+    {
+      "id": "body_human_standard",
+      "tags": [
+        "human"
+      ],
+      "footprint": {
+        "w": 1,
+        "h": 1
+      },
+      "moveTicksPerTile": 1,
+      "blockedTileTags": [],
+      "allowedApproachTags": [
+        "lane",
+        "door_front",
+        "interior",
+        "yard",
+        "civic"
+      ],
+      "mode": "single",
+      "bodySlots": 1,
+      "activeBodiesMax": 1,
+      "sharedSpark": true
+    },
+    {
+      "id": "body_basilisk_brood",
+      "tags": [
+        "basilisk",
+        "multi",
+        "gaze_challenge"
+      ],
+      "footprint": {
+        "w": 1,
+        "h": 1
+      },
+      "moveTicksPerTile": 1,
+      "blockedTileTags": [],
+      "allowedApproachTags": [
+        "lane",
+        "vent",
+        "window_eaves",
+        "yard",
+        "breach"
+      ],
+      "mode": "multi",
+      "bodySlots": 3,
+      "activeBodiesMax": 1,
+      "sharedSpark": true,
+      "idleBodyProvides": [
+        "eavesdrop_in_town"
+      ],
+      "notes": "M2: control one body at a time; raise activeBodiesMax in data for M3 simultaneous play."
+    }
+  ],
+  "perception": [
+    {
+      "id": "perc_feared_outsider",
+      "fear": 0.7,
+      "trust": 0.15,
+      "status": 0.2,
+      "approachTicksBonus": 4,
+      "fearThresholdVitality": 40
+    },
+    {
+      "id": "perc_civic_clerk",
+      "fear": 0.1,
+      "trust": 0.45,
+      "status": 0.65,
+      "approachTicksBonus": 0,
+      "civicSiteStatusBonus": 0.2
+    },
+    {
+      "id": "perc_uncanny_brood",
+      "fear": 0.55,
+      "trust": 0.2,
+      "status": 0.25,
+      "approachTicksBonus": 2,
+      "gazeUneaseMul": 1.2
+    }
+  ],
+  "methodModifiers": [
+    {
+      "id": "mods_marrow",
+      "byMethod": {
+        "challenge": {
+          "powerMul": 1.1,
+          "sparkCostMul": 1.0
+        },
+        "shame": {
+          "powerMul": 1.0,
+          "sparkCostMul": 1.0
+        },
+        "inspire": {
+          "powerMul": 0.95,
+          "sparkCostMul": 1.05
+        },
+        "carry_burden": {
+          "powerMul": 1.15,
+          "sparkCostMul": 0.9
+        },
+        "lie": {
+          "powerMul": 1.05,
+          "sparkCostMul": 1.0
+        }
+      }
+    },
+    {
+      "id": "mods_ivy",
+      "byMethod": {
+        "challenge": {
+          "powerMul": 1.0,
+          "sparkCostMul": 1.0
+        },
+        "shame": {
+          "powerMul": 1.2,
+          "sparkCostMul": 0.9
+        },
+        "inspire": {
+          "powerMul": 1.15,
+          "sparkCostMul": 1.0,
+          "tags": [
+            "document_proof"
+          ]
+        },
+        "carry_burden": {
+          "powerMul": 0.85,
+          "sparkCostMul": 1.1
+        },
+        "lie": {
+          "powerMul": 1.25,
+          "sparkCostMul": 0.85
+        }
+      }
+    },
+    {
+      "id": "mods_brood",
+      "byMethod": {
+        "challenge": {
+          "powerMul": 1.25,
+          "sparkCostMul": 1.0,
+          "tags": [
+            "gaze_challenge"
+          ]
+        },
+        "shame": {
+          "powerMul": 0.9,
+          "sparkCostMul": 1.0
+        },
+        "inspire": {
+          "powerMul": 1.0,
+          "sparkCostMul": 1.0
+        },
+        "carry_burden": {
+          "powerMul": 0.9,
+          "sparkCostMul": 1.05
+        },
+        "lie": {
+          "powerMul": 0.85,
+          "sparkCostMul": 1.1
+        }
+      }
+    }
+  ],
+  "sparkProfiles": [
+    {
+      "id": "spark_den_ogre",
+      "sparkMax": 100,
+      "sparkStart": 70,
+      "burnoutAt": 0,
+      "emberZoneBelow": 20,
+      "emberKindCostMul": 1.25,
+      "homeSiteId": "site_marrow_den",
+      "homeTownId": "marrow_den",
+      "recoveryHookIds": [
+        "recovery_base_dawn",
+        "recovery_den_hearth",
+        "recovery_witness_genuine"
+      ]
+    },
+    {
+      "id": "spark_clerk_ink",
+      "sparkMax": 100,
+      "sparkStart": 75,
+      "burnoutAt": 0,
+      "emberZoneBelow": 20,
+      "emberKindCostMul": 1.15,
+      "homeSiteId": "site_school",
+      "homeTownId": "ashford",
+      "recoveryHookIds": [
+        "recovery_base_dawn",
+        "recovery_ledger_truth",
+        "recovery_witness_genuine"
+      ]
+    },
+    {
+      "id": "spark_brood_shared",
+      "sparkMax": 100,
+      "sparkStart": 65,
+      "burnoutAt": 0,
+      "emberZoneBelow": 25,
+      "emberKindCostMul": 1.2,
+      "homeSiteId": "site_ashford_square",
+      "homeTownId": "ashford",
+      "recoveryHookIds": [
+        "recovery_base_dawn",
+        "recovery_brood_bask",
+        "recovery_witness_genuine"
+      ]
+    }
+  ],
+  "statusTraits": [
+    {
+      "id": "inherited_dependence",
+      "name": "Inherited Dependence",
+      "description": "You were chosen because someone needed you to keep burning for them. Early days pull toward Carry; Inspire is harder until you stand on your own fire.",
+      "tags": [
+        "legacy",
+        "dependence",
+        "colors_early_game"
+      ],
+      "methodModifiers": {
+        "carry_burden": {
+          "sparkCostMul": 0.85,
+          "powerMul": 1.05
+        },
+        "inspire": {
+          "powerMul": 0.9,
+          "sparkCostMul": 1.1
+        },
+        "challenge": {
+          "powerMul": 1.0
+        },
+        "shame": {
+          "powerMul": 1.0
+        },
+        "lie": {
+          "powerMul": 1.0
+        }
+      },
+      "whileActiveHookIds": [
+        "cost_inherited_dependence_cling"
+      ],
+      "decay": {
+        "id": "decay_inherited_dependence",
+        "any": [
+          {
+            "genuineGrowthAppliedByPlayerCount": 2
+          },
+          {
+            "daysElapsedWithoutMethod": {
+              "methodId": "carry_burden",
+              "days": 3
+            }
+          },
+          {
+            "playerSparkAbove": 80
+          }
+        ],
+        "onResolveHookId": "resolve_inherited_dependence",
+        "removeStatusTraitId": "inherited_dependence"
+      }
+    }
+  ]
+}

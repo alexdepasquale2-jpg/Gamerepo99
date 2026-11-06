@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "traveler_trade",
+      "name": "Traveler's Trade",
+      "weight": 10,
+      "durationDays": 0,
+      "seasonBias": ["spring", "summer", "autumn"],
+      "effects": [
+        {
+          "id": "effect_trade_food",
+          "target": "resource.grant",
+          "op": "grant",
+          "value": 3,
+          "resourceId": "food_ration",
+          "durationTicks": null,
+          "tags": ["positive", "trade"]
+        },
+        {
+          "id": "effect_trade_mood",
+          "target": "need.mood",
+          "op": "add",
+          "value": 5,
+          "durationTicks": 48,
+          "tags": ["positive"]
+        }
+      ]
+    },
+    {
+      "id": "wolves_howl",
+      "name": "Wolves Howl",
+      "weight": 8,
+      "durationDays": 1,
+      "seasonBias": ["autumn", "winter"],
+      "effects": [
+        {
+          "id": "effect_wolves_mood",
+          "target": "need.mood",
+          "op": "add",
+          "value": -10,
+          "durationTicks": 48,
+          "tags": ["fear"]
+        }
+      ]
+    },
+    {
+      "id": "good_omen",
+      "name": "Good Omen",
+      "weight": 10,
+      "durationDays": 2,
+      "seasonBias": ["spring", "summer"],
+      "effects": [
+        {
+          "id": "effect_omen_mood",
+          "target": "need.mood",
+          "op": "add",
+          "value": 8,
+          "durationTicks": 96,
+          "tags": ["positive"]
+        },
+        {
+          "id": "effect_omen_gather",
+          "target": "job.gather.speed",
+          "op": "mul",
+          "value": 1.1,
+          "durationTicks": 96,
+          "tags": ["positive"]
+        }
+      ]
+    },
+    {
+      "id": "cold_snap",
+      "name": "Cold Snap",
+      "weight": 12,
+      "durationDays": 1,
+      "seasonBias": ["autumn", "winter"],
+      "effects": [
+        {
+          "id": "effect_cold_force_weather",
+          "target": "weather.force",
+          "op": "set",
+          "value": "snow",
+          "durationTicks": 48,
+          "tags": ["cold"]
+        },
+        {
+          "id": "effect_cold_warmth_decay",
+          "target": "need.warmth.decay",
+          "op": "add",
+          "value": 0.15,
+          "durationTicks": 48,
+          "tags": ["cold"]
+        }
+      ]
+    },
+    {
+      "id": "tool_break",
+      "name": "Tool Breaks",
+      "weight": 6,
+      "durationDays": 0,
+      "seasonBias": ["spring", "summer", "autumn", "winter"],
+      "effects": [
+        {
+          "id": "effect_tool_break",
+          "target": "resource.remove",
+          "op": "grant",
+          "value": -1,
+          "resourceId": "tool_basic",
+          "durationTicks": null,
+          "tags": ["loss"],
+          "requireOwned": true
+        }
+      ]
+    },
+    {
+      "id": "migrant",
+      "name": "Migrant Arrives",
+      "weight": 4,
+      "durationDays": 0,
+      "seasonBias": ["spring", "summer"],
+      "milestone": "m2_stretch",
+      "effects": [
+        {
+          "id": "effect_migrant_add",
+          "target": "colonist.add",
+          "op": "grant",
+          "value": 1,
+          "durationTicks": null,
+          "tags": ["colonist"],
+          "capColonists": 5
+        }
+      ]
+    },
+    {
+      "id": "woodfall",
+      "name": "Windfall Timber",
+      "weight": 9,
+      "durationDays": 0,
+      "seasonBias": ["autumn", "storm"],
+      "effects": [
+        {
+          "id": "effect_woodfall",
+          "target": "resource.grant",
+          "op": "grant",
+          "value": 8,
+          "resourceId": "wood",
+          "durationTicks": null,
+          "tags": ["positive"]
+        }
+      ]
+    }
+  ]
+}

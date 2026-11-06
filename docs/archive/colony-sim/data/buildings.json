@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "buildings": [
+    {
+      "id": "hearth",
+      "name": "Hearth",
+      "size": { "w": 2, "h": 2 },
+      "cost": [],
+      "starting": true,
+      "heatRadius": 4,
+      "fuelCapacity": 20,
+      "fuelDrainPerTick": 0.05,
+      "fuelResourceId": "fuel",
+      "fuelPerUnit": 5,
+      "isStation": false,
+      "walkable": false,
+      "tags": ["heat", "colony_anchor"],
+      "effects": [
+        {
+          "id": "effect_hearth_heat",
+          "target": "need.warmth",
+          "op": "approach",
+          "value": 85,
+          "durationTicks": null,
+          "tags": ["heat"]
+        }
+      ]
+    },
+    {
+      "id": "bedroll",
+      "name": "Bedroll",
+      "size": { "w": 1, "h": 1 },
+      "cost": [
+        { "resourceId": "fiber", "qty": 2 },
+        { "resourceId": "plank", "qty": 1 }
+      ],
+      "sleepQuality": 0,
+      "shelterBonus": 0,
+      "isStation": false,
+      "walkable": true,
+      "tags": ["sleep"]
+    },
+    {
+      "id": "bed",
+      "name": "Bed",
+      "size": { "w": 1, "h": 1 },
+      "cost": [
+        { "resourceId": "plank", "qty": 4 },
+        { "resourceId": "fiber", "qty": 2 }
+      ],
+      "sleepQuality": 1,
+      "shelterBonus": 5,
+      "isStation": false,
+      "walkable": true,
+      "tags": ["sleep"]
+    },
+    {
+      "id": "craft_stump",
+      "name": "Craft Stump",
+      "size": { "w": 1, "h": 1 },
+      "cost": [{ "resourceId": "wood", "qty": 3 }],
+      "isStation": true,
+      "stationRecipes": [
+        "recipe_fuel",
+        "recipe_plank",
+        "recipe_ration",
+        "recipe_bedroll",
+        "recipe_tool_basic"
+      ],
+      "walkable": false,
+      "tags": ["station"]
+    },
+    {
+      "id": "stockpile",
+      "name": "Stockpile Zone",
+      "size": { "w": 1, "h": 1 },
+      "cost": [],
+      "isZone": true,
+      "acceptedCategories": ["raw", "food", "processed", "gear"],
+      "walkable": true,
+      "tags": ["storage"]
+    },
+    {
+      "id": "wall",
+      "name": "Wall",
+      "size": { "w": 1, "h": 1 },
+      "cost": [{ "resourceId": "stone", "qty": 1 }],
+      "altCost": [{ "resourceId": "plank", "qty": 2 }],
+      "blocksWind": true,
+      "blocksPath": true,
+      "walkable": false,
+      "tags": ["structure", "enclosure"]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "weather": [
+    {
+      "id": "clear",
+      "name": "Clear",
+      "warmthMod": 0,
+      "moodMod": 0,
+      "gatherMod": 1.0,
+      "moveMod": 1.0,
+      "hearthDrainMul": 1.0,
+      "spoilMul": 1.0,
+      "durationDaysMin": 1,
+      "durationDaysMax": 3
+    },
+    {
+      "id": "rain",
+      "name": "Rain",
+      "warmthMod": -8,
+      "moodMod": -5,
+      "gatherMod": 0.85,
+      "moveMod": 0.9,
+      "hearthDrainMul": 1.05,
+      "spoilMul": 1.4,
+      "durationDaysMin": 1,
+      "durationDaysMax": 2
+    },
+    {
+      "id": "fog",
+      "name": "Fog",
+      "warmthMod": -3,
+      "moodMod": -2,
+      "gatherMod": 0.9,
+      "moveMod": 0.95,
+      "hearthDrainMul": 1.0,
+      "spoilMul": 1.1,
+      "durationDaysMin": 1,
+      "durationDaysMax": 1
+    },
+    {
+      "id": "storm",
+      "name": "Storm",
+      "warmthMod": -15,
+      "moodMod": -10,
+      "gatherMod": 0.6,
+      "moveMod": 0.75,
+      "hearthDrainMul": 1.1,
+      "spoilMul": 1.5,
+      "durationDaysMin": 1,
+      "durationDaysMax": 1
+    },
+    {
+      "id": "snow",
+      "name": "Snow",
+      "warmthMod": -20,
+      "moodMod": -8,
+      "gatherMod": 0.5,
+      "moveMod": 0.7,
+      "hearthDrainMul": 1.15,
+      "spoilMul": 0.8,
+      "durationDaysMin": 1,
+      "durationDaysMax": 3
+    },
+    {
+      "id": "heatwave",
+      "name": "Heatwave",
+      "warmthMod": 15,
+      "moodMod": -5,
+      "gatherMod": 0.9,
+      "moveMod": 1.0,
+      "hearthDrainMul": 0.9,
+      "spoilMul": 1.6,
+      "durationDaysMin": 1,
+      "durationDaysMax": 2
+    }
+  ]
+}
