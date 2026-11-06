@@ -17,6 +17,8 @@ export {
   interpolateLine,
   assertVoice,
   runFabricAssertions,
+  assertLineCandidate,
+  assertWorldCoherence,
 } from './fabric';
 export type {
   FabricWorld,
@@ -24,4 +26,8 @@ export type {
   PersonDraft,
   FabricLine,
   AssertionResult,
+  LinePerson,
+  LineFragment,
+  CoherenceWorld,
+  WorldCoherenceResult,
 } from './fabric';

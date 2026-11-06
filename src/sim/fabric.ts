@@ -26,12 +26,12 @@ export {
 } from './dyn/voice';
 
 export {
-  buildStateVector,
-  isAuthoredAnchor,
-  type PersonStateVector,
-} from './dyn/person-vector';
-
-export {
-  installFabricReactionSelector,
-  pickFabricReactionLine,
-} from './dyn/line-select';
+  assertLineCandidate,
+  assertWorldCoherence,
+  personMemoryTags,
+  type LinePerson,
+  type LineFragment,
+  type VoiceConstraintsInput,
+  type CoherenceWorld,
+  type WorldCoherenceResult,
+} from './dyn/coherence';
