@@ -31,6 +31,8 @@ export type PersonState = {
   flame: number;
   flameStart?: number;
   marks?: { markId: string; stacks: number }[];
+  /** 0..1 trust toward the player (mirrored from the interaction runtime). */
+  trust?: number;
   townId?: string;
   siteId?: string;
   siteKind?: string;

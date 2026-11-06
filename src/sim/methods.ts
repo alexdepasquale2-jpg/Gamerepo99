@@ -142,6 +142,39 @@ function grantMark(person: PersonState, markId: string) {
   return marks.map((m) => ({ ...m }));
 }
 
+function lookup(state: SimState, personId: string, methodId: string) {
+  const s = requireMethodState(state);
+  const person = s.people[personId];
+  if (!person) throw new Error(`UNKNOWN person: ${personId}`);
+  const method = (s.data.methods as MethodRow[]).find((m) => m.id === methodId);
+  if (!method) throw new Error(`UNKNOWN method: ${methodId}`);
+  const tags = [...(method.tags ?? []), ...methodMod(s.player, methodId).tags];
+  return { s, person, method, ctx: buildCtx(s, person, method, tags) };
+}
+
+/**
+ * Refusal beat for methodId@personId (interaction bridge): applies the hook's authored effects and
+ * returns its line + tells, or undefined when no refusal hook matches. Emits no juice.
+ */
+export function refuseMethod(
+  state: SimState,
+  personId: string,
+  methodId: string,
+): { line: string; tells: Tell[] } | undefined {
+  const { s, method, ctx } = lookup(state, personId, methodId);
+  const refusal = findRefusal(s, method, ctx);
+  if (!refusal) return undefined;
+  for (const effect of refusal.effects ?? []) applyEffect(s, effect, ctx);
+  return { line: pickRefusalLine(refusal, s.player.archetypeId, s.rng), tells: refusal.tells ?? [] };
+}
+
+/** Roll methodId's markWeights against personId (wound-matrix gated, witness weighted). Does not grant. */
+export function rollMethodMark(state: SimState, personId: string, methodId: string): string | undefined {
+  const { s, person, method } = lookup(state, personId, methodId);
+  const woundMul = method.effectiveness?.[person.woundId ?? ''] ?? 1;
+  return rollMark(weightedMarks(method.markWeights ?? [], method, hasWitness(s, person)), woundMul, s.rng);
+}
+
 /** Commit a method against a person: refusal beat or matrix resolve. */
 export function commitMethod(state: SimState, personId: string, methodId: string): CommitResult {
   const s = requireMethodState(state);
