@@ -27,5 +27,7 @@
 ## M3 ship gate — first playable world
 Hybrid-C playthrough bots (`tests/bots/` play session matrix): stuck, boredom, method dominance, burnout, hollow vs reignited + `worth-playing` verdict. Not required to clear M2.
 
+**Interaction-model re-gate:** when Forge lands `interactionCompat` default-ON (+ special-bar/ripple ports), follow **`docs/qa/M3_INTERACTION_REGATE.md`** (HOLD until Forge default-on green ping). Capture interaction event evidence via `scripts/m3-interaction-evidence.mts` in addition to the matrix.
+
 ## Process
 Forge lands fabric/worldgen public API → Probe runs generator suite same turn → writes verdict → reports to Niblet. Overrides of **NO-SHIP** must be written.
