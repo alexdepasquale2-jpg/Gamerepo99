@@ -64,6 +64,21 @@
         "costly": true,
         "notes": "Early Lowmere via fear-road stays available and stays costly (spark + hill_rumor)."
       }
+    },
+    {
+      "id": "ashford_city_reach_rumor",
+      "fromTownId": "ashford",
+      "toTownId": "city_reach",
+      "bidirectional": true,
+      "days": 3,
+      "tags": [
+        "rumor",
+        "cross_gap"
+      ],
+      "packetCapacity": 1,
+      "travelSparkCost": 0,
+      "travelPlayerAllowed": false,
+      "notes": "Letters only \u2014 player does not walk the city pole in M3"
     }
   ],
   "packetTypes": [

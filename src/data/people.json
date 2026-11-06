@@ -19,7 +19,14 @@
       "lifeLoop": "Bakes; opens the shutter; feeds whoever still queues",
       "firstLine": "The dough's gone quiet. So have I.",
       "reigniteLine": "Heat first. Then flour. Then we see who shows up.",
-      "backstory": "Marta ran Ellison Bakery for nineteen years. When the mill cut shifts, fewer boots stopped at her door. She baked anyway — until the morning she measured flour, stared at it, and walked away. The cloth over the dough has been there four days. She tells herself it is practical. It is not."
+      "backstory": "Marta ran Ellison Bakery for nineteen years. When the mill cut shifts, fewer boots stopped at her door. She baked anyway \u2014 until the morning she measured flour, stared at it, and walked away. The cloth over the dough has been there four days. She tells herself it is practical. It is not.",
+      "voice": "Dry flour. Short sentences. Pretends practicality is a personality.",
+      "woundLine": "Nothing's worth the first knead.",
+      "tellGivenUp": "Cloth over the dough four days; she dusts the counter instead of lifting it.",
+      "linesRef": "lines.json#people.marta_ellison",
+      "tags": [],
+      "driftHint": "City folk buy bread like it's a rumor. Used to be they knew the crust.",
+      "cityKinHint": "Cousin Priya's still on the strand. Farther kin went into the glare and stopped writing recipes."
     },
     {
       "id": "jonah_pike",
@@ -34,12 +41,20 @@
       "vitalityContribution": 8,
       "resistanceBonus": -1,
       "proofId": "proof_sketch",
-      "tags": ["child"],
+      "tags": [
+        "child"
+      ],
       "stalledAct": "Finish a drawing he started and abandoned mid-line",
       "lifeLoop": "Draws on the stoop; shows Ruth; runs errands with charcoal on his fingers",
       "firstLine": "If I finish it, people will look. Looking is worse.",
       "reigniteLine": "It's a bird. It's a bad bird. It's mine.",
-      "backstory": "Jonah used to fill margins with ships and foxes. A visiting clerk laughed at one — not cruelly, just carelessly — and Jonah closed the book like a door. The plague of quiet found him early: better a blank page than a wrong line. His mother works night shifts at the mill. She thinks he is 'resting his eyes.'"
+      "backstory": "Jonah used to fill margins with ships and foxes. A visiting clerk laughed at one \u2014 not cruelly, just carelessly \u2014 and Jonah closed the book like a door. The plague of quiet found him early: better a blank page than a wrong line. His mother works night shifts at the mill. She thinks he is 'resting his eyes.'",
+      "voice": "Quiet, precise, afraid of being seen; sharper than adults expect.",
+      "woundLine": "Finished things get looked at.",
+      "tellGivenUp": "Pencil idle on a blank bird; he erases lines that aren't there.",
+      "linesRef": "lines.json#people.jonah_pike",
+      "driftHint": "Grown-ups talk about the city like a monster under the bed. I just hate being looked at.",
+      "cityKinHint": "Mama says auntie went where the lights never sleep. I drew it once. Erased it."
     },
     {
       "id": "harold_finch",
@@ -58,7 +73,14 @@
       "lifeLoop": "Works the late crew; comes home; cooks for his kids when he can stand",
       "firstLine": "Leave the boots. The floor's softer.",
       "reigniteLine": "One foot. Then the other. Don't clap.",
-      "backstory": "Harold is a father of two and a mill hand who has not missed a week in eleven years — until this one. His wife left in spring for river work upcountry; the letters slowed. He kept the house upright on fumes. Then the fumes ran out. The children eat at Clara's counter on credit he hates. He can hear them through the wall. He still does not rise."
+      "backstory": "Harold is a father of two and a mill hand who has not missed a week in eleven years \u2014 until this one. His wife left in spring for river work upcountry; the letters slowed. He kept the house upright on fumes. Then the fumes ran out. The children eat at Clara's counter on credit he hates. He can hear them through the wall. He still does not rise.",
+      "voice": "Exhausted father; humor like a bruise; hates pity.",
+      "woundLine": "The floor asks less than the boots.",
+      "tellGivenUp": "Boots by the door laced for nobody; afternoon light on an unmade bed.",
+      "linesRef": "lines.json#people.harold_finch",
+      "tags": [],
+      "driftHint": "Hardship used to make us stand. Now it just makes the floor look honest.",
+      "cityKinHint": "Wife took river work toward the cities. Letters slowed like cooling bread."
     },
     {
       "id": "ruth_calder",
@@ -77,7 +99,16 @@
       "lifeLoop": "Teaches; keeps a spare coat for kids who come cold",
       "firstLine": "They promised funding. They promised books. They promised.",
       "reigniteLine": "We are not done. Write it. Mean it.",
-      "backstory": "Ruth believed the county would keep the school open. Budgets arrived as apologies. She taught from memory when the primers ran out. The day the inspector called the children 'low priority,' something in her filed itself under closed. The bell rope hangs untouched. Chalk waits in a tin like a loaded gun she refuses to fire."
+      "backstory": "Ruth believed the county would keep the school open. Budgets arrived as apologies. She taught from memory when the primers ran out. The day the inspector called the children 'low priority,' something in her filed itself under closed. The bell rope hangs untouched. Chalk waits in a tin like a loaded gun she refuses to fire.",
+      "voice": "Precise, bitter, still a teacher even when she hates the lesson.",
+      "woundLine": "Promises filed under closed.",
+      "tellGivenUp": "Bell rope untouched; chalk tin closed like a held breath.",
+      "linesRef": "lines.json#people.ruth_calder",
+      "tags": [
+        "civic_voice"
+      ],
+      "driftHint": "They speak for counties that never sat in these desks. Representation without recognition is just noise.",
+      "cityKinHint": "Leon writes from the strand. The city inspectors write from nowhere I can teach."
     },
     {
       "id": "elias_boone",
@@ -96,7 +127,12 @@
       "lifeLoop": "Smiths tools and hinges; fixes what Ashford breaks",
       "firstLine": "He took the heat with him. I'm just keeping the dark company.",
       "reigniteLine": "Bellows. Coal. His rhythm was better. Mine will have to do.",
-      "backstory": "Elias and his younger brother Caleb ran the forge together. Caleb died of fever in late autumn; the town brought casseroles and silence. Elias banked the fire for the funeral and never opened the damper again. Orders sit on a nail by the door. He answers none. He sits where the sparks used to land and practices not wanting."
+      "backstory": "Elias and his younger brother Caleb ran the forge together. Caleb died of fever in late autumn; the town brought casseroles and silence. Elias banked the fire for the funeral and never opened the damper again. Orders sit on a nail by the door. He answers none. He sits where the sparks used to land and practices not wanting.",
+      "voice": "Grief like banked coal; talks to the absent brother without saying the name.",
+      "woundLine": "He took the heat with him.",
+      "tellGivenUp": "Forge dark; orders on a nail; he sits where sparks used to land.",
+      "linesRef": "lines.json#people.elias_boone",
+      "tags": []
     },
     {
       "id": "clara_whitby",
@@ -115,7 +151,14 @@
       "lifeLoop": "Keeps shop; extends quiet credit; knows everyone's shortages",
       "firstLine": "I shorted a sack of flour in '09. They forgot. I didn't.",
       "reigniteLine": "Light on the books. If I'm a thief, at least I'm an open one.",
-      "backstory": "Years ago Clara skimmed inventory during a hard winter to keep her sister fed. No one proved it. She repaid it twice over in secret. The quiet plague found the old bruise and pressed: every customer felt like a witness. She nailed the shutters herself. Harold's children still knock. She pretends not to hear — and hates herself for the talent."
+      "backstory": "Years ago Clara skimmed inventory during a hard winter to keep her sister fed. No one proved it. She repaid it twice over in secret. The quiet plague found the old bruise and pressed: every customer felt like a witness. She nailed the shutters herself. Harold's children still knock. She pretends not to hear \u2014 and hates herself for the talent.",
+      "voice": "Shopkeeper steel; old guilt polished daily; dry as inventory.",
+      "woundLine": "They forgot the theft. I didn't.",
+      "tellGivenUp": "Shutters nailed from inside; ledger slammed; she pretends not to hear knocks.",
+      "linesRef": "lines.json#people.clara_whitby",
+      "tags": [],
+      "driftHint": "When Mira's letters started sounding like another country, I nailed the shutters.",
+      "cityKinHint": "My sister lives where the days don't match ours. I still owe her a true ledger line."
     },
     {
       "id": "nora_voss",
@@ -134,7 +177,12 @@
       "lifeLoop": "Delivers; sits with the scared; boils water before dawn",
       "firstLine": "The last one didn't cry. I still hear the not-crying.",
       "reigniteLine": "Bag's heavy. Good. Means I haven't emptied it of use.",
-      "backstory": "Nora lost a birth in a storm when the ferry would not run. She did everything right and the child still went quiet. Lowmere stopped calling for a week out of 'respect'; she stopped answering out of terror dressed as humility. Her bag sits by the door like a dog that no longer wags."
+      "backstory": "Nora lost a birth in a storm when the ferry would not run. She did everything right and the child still went quiet. Lowmere stopped calling for a week out of 'respect'; she stopped answering out of terror dressed as humility. Her bag sits by the door like a dog that no longer wags.",
+      "voice": "Midwife practical; soft where it counts; haunted by a quiet that wasn't hers.",
+      "woundLine": "The last one didn't cry.",
+      "tellGivenUp": "Bag by the door unopened; kettle cold; she flinches at knocks.",
+      "linesRef": "lines.json#people.nora_voss",
+      "tags": []
     },
     {
       "id": "samir_okafor",
@@ -153,7 +201,12 @@
       "lifeLoop": "Plays evenings; keeps time for drinkers who forgot the beat of living",
       "firstLine": "Music's a trick we play on silence. Silence started winning.",
       "reigniteLine": "Three notes. If the walls don't care, I will.",
-      "backstory": "Samir came inland from a port city with a fiddle and a joke for every stool. When the plague of quiet arrived, laughter got expensive. He stopped mid-song one night, packed the case, and left the tavern to its own dust. He still drinks there. He does not tune."
+      "backstory": "Samir came inland from a port city with a fiddle and a joke for every stool. When the plague of quiet arrived, laughter got expensive. He stopped mid-song one night, packed the case, and left the tavern to its own dust. He still drinks there. He does not tune.",
+      "voice": "Ex-port wit gone flat; music metaphors he half-resents.",
+      "woundLine": "Silence started winning.",
+      "tellGivenUp": "Fiddle cased; he drinks where music used to stand.",
+      "linesRef": "lines.json#people.samir_okafor",
+      "tags": []
     },
     {
       "id": "tom_briggs",
@@ -172,7 +225,12 @@
       "lifeLoop": "Runs the strand crossing; carries news and midwives and grain",
       "firstLine": "River's got a temper. I used to match it. Not today.",
       "reigniteLine": "Rope's wet. Hands still know. Push off.",
-      "backstory": "Tom has ferried Lowmere for forty years. A spring swell nearly took him and a passenger last year; he got them both ashore and then could not make his hands untie the rope again. He invents weather. The river is calm. He is not. Nora's tragedy sits partly on that unlaunched boat — he knows, and the knowing is a stone in his coat."
+      "backstory": "Tom has ferried Lowmere for forty years. A spring swell nearly took him and a passenger last year; he got them both ashore and then could not make his hands untie the rope again. He invents weather. The river is calm. He is not. Nora's tragedy sits partly on that unlaunched boat \u2014 he knows, and the knowing is a stone in his coat.",
+      "voice": "Old ferryman; invents weather; guilt about Nora's storm sits in his coat.",
+      "woundLine": "River's calm. I'm not.",
+      "tellGivenUp": "Ferry unlaunched; rope soft with salt; he watches both shores like debts.",
+      "linesRef": "lines.json#people.tom_briggs",
+      "tags": []
     },
     {
       "id": "priya_sen",
@@ -191,7 +249,12 @@
       "lifeLoop": "Gardens; trades greens at Clara's cousins' stalls upriver",
       "firstLine": "I grew food for people who stopped being hungry for tomorrow.",
       "reigniteLine": "Thistle first. Then seed. Then we argue with dirt again.",
-      "backstory": "Priya kept half the strand in greens. Demand fell as appetites dulled; she worked harder to compensate, then harder, then not at all. The plot is a fist of weeds. Seed packets yellow in a tin. She sleeps in the shed some nights because the house feels like a place where effort goes to die."
+      "backstory": "Priya kept half the strand in greens. Demand fell as appetites dulled; she worked harder to compensate, then harder, then not at all. The plot is a fist of weeds. Seed packets yellow in a tin. She sleeps in the shed some nights because the house feels like a place where effort goes to die.",
+      "voice": "Tired grower; dirt under nails even when she stopped; wry with plants.",
+      "woundLine": "People stopped being hungry for tomorrow.",
+      "tellGivenUp": "Plot a fist of thistle; seed packets yellow in a tin; sleeps in the shed.",
+      "linesRef": "lines.json#people.priya_sen",
+      "tags": []
     },
     {
       "id": "leon_march",
@@ -210,7 +273,49 @@
       "lifeLoop": "Organizes odd jobs; matches hands to needs; keeps the board honest",
       "firstLine": "I posted hope for a living. The county called it 'unofficial.'",
       "reigniteLine": "Ink. Paper. A job that exists because I say it does.",
-      "backstory": "Leon was the unofficial labor exchange — the man who knew who could caulk a hull or mind a child for an afternoon. A magistrate branded his board 'disorderly assembly' after a wage dispute he only mediated. He took the notices down and discovered how fast a town forgets how to ask for help. The board is bare wood now. So is he."
+      "backstory": "Leon was the unofficial labor exchange \u2014 the man who knew who could caulk a hull or mind a child for an afternoon. A magistrate branded his board 'disorderly assembly' after a wage dispute he only mediated. He took the notices down and discovered how fast a town forgets how to ask for help. The board is bare wood now. So is he.",
+      "voice": "Organizer bitterness; ink-stained; believes paper can be an oath.",
+      "woundLine": "They called hope disorderly.",
+      "tellGivenUp": "Notice board bare wood; he stands beside it like a fired guard.",
+      "linesRef": "lines.json#people.leon_march",
+      "tags": [
+        "civic_voice"
+      ],
+      "driftHint": "I posted work for hands the city stopped counting as real.",
+      "cityKinHint": "Ruth still rings a bell I can hear on paper. The Reach does not."
+    },
+    {
+      "id": "mira_whitby",
+      "name": "Mira Whitby",
+      "age": 49,
+      "townId": "city_reach",
+      "siteId": "site_city_desk",
+      "woundId": "disillusionment",
+      "flameStart": 5,
+      "critical": false,
+      "relapseBase": 0.3,
+      "vitalityContribution": 0,
+      "resistanceBonus": 0,
+      "proofId": null,
+      "abstract": true,
+      "authored": true,
+      "stalledAct": "Answer one letter from home",
+      "lifeLoop": "City clerking Clara no longer understands",
+      "firstLine": "You would not recognize my days.",
+      "reigniteLine": "I wrote. Do not expect me on the road.",
+      "backstory": "Clara's elder sister. Took city board work a decade ago. The slow drift made her life illegible to Ashford \u2014 and Ashford illegible to her. She is a packet endpoint, not a street you walk in M3.",
+      "voice": "Cool, tired, precise; misses home without knowing how to say dirt.",
+      "woundLine": "Home and here stopped meaning the same hardship.",
+      "tellGivenUp": "Unanswered letters from Clara stacked under a glass paperweight.",
+      "tags": [
+        "city",
+        "abstract"
+      ],
+      "linesRef": "lines.json#people.mira_whitby",
+      "driftHint": "We used to rise together. Then our days stopped rhyming.",
+      "cityKinHint": "Clara thinks I abandoned Ashford. I think Ashford abandoned time."
     }
-  ]
+  ],
+  "writingPassSpec": "docs/superpowers/specs/2026-11-05-m2-writing-pass-design.md",
+  "loreRef": "docs/superpowers/specs/2026-11-05-founding-lore-gap-design.md"
 }

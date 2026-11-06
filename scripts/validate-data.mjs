@@ -322,6 +322,19 @@ req(letterTpls.length >= 5, 'letters.json needs >=5 templates');
 const packetTypes = new Set(letterTpls.map((x) => x.packetType));
 req(packetTypes.has('proof_packet') && packetTypes.has('relapse_pressure'), 'letters need proof_packet and relapse_pressure templates');
 
+
+// founding lore gap axis (optional-safe defaults enforced on playable towns)
+for (const town of data['towns.json']?.towns || []) {
+  if (town.playable === false || town.abstract) continue;
+  req(typeof town.gapAxis === 'number', `town ${town.id}: gapAxis required`);
+  req(typeof town.connection === 'number', `town ${town.id}: connection required`);
+  req(typeof town.standing === 'number', `town ${town.id}: standing required`);
+}
+const civic = (data['people.json']?.people || []).filter((p) => (p.tags || []).includes('civic_voice'));
+req(civic.length >= 2, 'need >=2 civic_voice people for representation');
+const cross = (data['kinship.json']?.edges || []).filter((e) => e.crossGap);
+req(cross.length >= 1, 'need >=1 crossGap kinship edge for lore systems');
+
 console.log('Files:', Object.keys(data).sort().join(', '));
 console.log(
   'Counts:',
