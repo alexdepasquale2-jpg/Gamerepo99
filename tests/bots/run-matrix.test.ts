@@ -81,14 +81,15 @@ describe('run-matrix', () => {
     expect(STYLES).toEqual(['savage', 'kind', 'mixed']);
   });
 
-  it('marks cells API_PENDING when connectBotSession is null', async () => {
+  it('live createPlaySession boots matrix cells (no longer API_PENDING)', async () => {
     const live = await connectBotSession();
-    expect(live).toBeNull();
+    expect(live).not.toBeNull();
     const result = await runMatrix({ seeds: [1], maxTicks: 5 });
-    expect(result.status).toBe('API_PENDING');
+    expect(result.status).toBe('OK');
     expect(result.cells.length).toBe(ARCHETYPES.length * STYLES.length * 1);
     for (const cell of result.cells) {
-      expect(cell.status).toBe('API_PENDING');
+      expect(cell.status).toBe('OK');
+      expect(cell.traces.length).toBeGreaterThan(0);
     }
   });
 

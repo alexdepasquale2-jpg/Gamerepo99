@@ -41,10 +41,16 @@ export {
 
 export {
   dumpWorld,
-  createPlaySession,
   type WorldDump,
   type InspectSnapshot,
   type InspectSession,
-  type CreatePlaySessionOpts,
 } from './fabric/world-dump';
 
+export {
+  createPlaySession,
+  type CreatePlaySessionOpts,
+  type PlaySession,
+  type PlaySnapshot,
+  type PlayAction,
+  type PlayEvent,
+} from './play-session';

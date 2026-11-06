@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { connectBotSession, type BotSession } from './bot-session';
 
 describe('connectBotSession', () => {
-  it('returns null when Forge play-session API is not exported yet', async () => {
+  it('feature-detects createPlaySession play shell from src/sim', async () => {
     const session = await connectBotSession();
-    expect(session).toBeNull();
+    expect(session).not.toBeNull();
+    session!.start({ seed: 42, archetypeId: 'marrow' });
+    expect(session!.snapshot().spark).toBeGreaterThan(0);
+    expect(session!.listActions().length).toBeGreaterThan(0);
   });
 
   it('BotSession contract is structurally usable via a fake', () => {

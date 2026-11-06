@@ -36,4 +36,8 @@ export type {
   InspectSnapshot,
   InspectSession,
   CreatePlaySessionOpts,
+  PlaySession,
+  PlaySnapshot,
+  PlayAction,
+  PlayEvent,
 } from './fabric';
