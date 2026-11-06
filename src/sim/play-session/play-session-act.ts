@@ -12,6 +12,8 @@ import {
 import type { PlayLastResolve } from './play-session-types';
 import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
 import type { SimState } from '../types/runtime';
+import { expandMethodAct } from '../interaction-compat';
+import { resolveInteraction, type InteractionRuntime } from '../interactions';
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };
@@ -68,6 +70,7 @@ export function actMethod(
   actionId: string,
   eventLog: PlayEvent[],
   extras?: ActExtras,
+  opts?: { interactionCompat?: InteractionRuntime },
 ): void {
   if (actionId.startsWith('approach@')) {
     if (extras && extras.metrics.firstChoiceAtTick == null) {
@@ -101,6 +104,13 @@ export function actMethod(
   const parsed = parseMethodAction(actionId);
   if (!parsed) {
     eventLog.push({ type: 'act', methodId: actionId });
+    return;
+  }
+  const compat = opts?.interactionCompat;
+  const interactionId = compat ? expandMethodAct(parsed.methodId) : undefined;
+  if (compat && interactionId && compat.people.has(parsed.personId)) {
+    resolveInteraction(compat, interactionId, parsed.personId);
+    eventLog.push({ type: 'interaction', methodId: interactionId });
     return;
   }
   const beforeLen = state.bus?.lastIds?.length ?? 0;
