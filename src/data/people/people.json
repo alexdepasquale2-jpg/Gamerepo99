@@ -26,7 +26,9 @@
       "linesRef": "lines.json#people.marta_ellison",
       "tags": [],
       "driftHint": "City folk buy bread like it's a rumor. Used to be they knew the crust.",
-      "cityKinHint": "Cousin Priya's still on the strand. Farther kin went into the glare and stopped writing recipes."
+      "cityKinHint": "Cousin Priya's still on the strand. Farther kin went into the glare and stopped writing recipes.",
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "jonah_pike",
@@ -54,7 +56,9 @@
       "tellGivenUp": "Pencil idle on a blank bird; he erases lines that aren't there.",
       "linesRef": "lines.json#people.jonah_pike",
       "driftHint": "Grown-ups talk about the city like a monster under the bed. I just hate being looked at.",
-      "cityKinHint": "Mama says auntie went where the lights never sleep. I drew it once. Erased it."
+      "cityKinHint": "Mama says auntie went where the lights never sleep. I drew it once. Erased it.",
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "harold_finch",
@@ -80,7 +84,9 @@
       "linesRef": "lines.json#people.harold_finch",
       "tags": [],
       "driftHint": "Hardship used to make us stand. Now it just makes the floor look honest.",
-      "cityKinHint": "Wife took river work toward the cities. Letters slowed like cooling bread."
+      "cityKinHint": "Wife took river work toward the cities. Letters slowed like cooling bread.",
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "ruth_calder",
@@ -110,7 +116,9 @@
         "leader"
       ],
       "driftHint": "They speak for counties that never sat in these desks. Representation without recognition is just noise.",
-      "cityKinHint": "Leon writes from the strand. The city inspectors write from nowhere I can teach."
+      "cityKinHint": "Leon writes from the strand. The city inspectors write from nowhere I can teach.",
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "elias_boone",
@@ -134,7 +142,9 @@
       "woundLine": "He took the heat with him.",
       "tellGivenUp": "Forge dark; orders on a nail; he sits where sparks used to land.",
       "linesRef": "lines.json#people.elias_boone",
-      "tags": []
+      "tags": [],
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "clara_whitby",
@@ -160,7 +170,9 @@
       "linesRef": "lines.json#people.clara_whitby",
       "tags": [],
       "driftHint": "When Mira's letters started sounding like another country, I nailed the shutters.",
-      "cityKinHint": "My sister lives where the days don't match ours. I still owe her a true ledger line."
+      "cityKinHint": "My sister lives where the days don't match ours. I still owe her a true ledger line.",
+      "authored": true,
+      "anchor": true
     },
     {
       "id": "nora_voss",
@@ -302,7 +314,6 @@
       "resistanceBonus": 0,
       "proofId": null,
       "abstract": true,
-      "authored": true,
       "stalledAct": "Answer one letter from home",
       "lifeLoop": "City clerking Clara no longer understands",
       "firstLine": "You would not recognize my days.",

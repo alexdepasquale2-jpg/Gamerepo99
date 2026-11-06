@@ -82,6 +82,8 @@ export type DataTables = {
   rngFuzz: number;
   reigniteThreshold: number;
   people: unknown[];
+  /** Indexed people rows (id → row). */
+  peopleById: Record<string, { id: string; authored?: boolean; anchor?: boolean; woundId?: string; flameStart?: number; tags?: string[]; [k: string]: unknown }>;
   towns: unknown[];
   links: unknown[];
   player: unknown;
@@ -158,6 +160,9 @@ export function loadData(): DataTables {
     reigniteThreshold:
       typeof methodsJson.reigniteThreshold === 'number' ? methodsJson.reigniteThreshold : 35,
     people: (peopleJson.people ?? []) as unknown[],
+    peopleById: Object.fromEntries(
+      ((peopleJson.people ?? []) as Array<{ id: string }>).map((p) => [p.id, p]),
+    ) as DataTables['peopleById'],
     towns: (townsJson.towns ?? []) as unknown[],
     links: (linksJson.links ?? []) as unknown[],
     player: playerJson,
