@@ -1,0 +1,28 @@
+{
+  "woundWeights": [
+    {
+      "woundId": "apathy",
+      "weight": 1
+    },
+    {
+      "woundId": "fear",
+      "weight": 1
+    },
+    {
+      "woundId": "grief",
+      "weight": 1
+    },
+    {
+      "woundId": "exhaustion",
+      "weight": 1
+    },
+    {
+      "woundId": "disillusionment",
+      "weight": 1
+    },
+    {
+      "woundId": "shame_wound",
+      "weight": 1
+    }
+  ]
+}

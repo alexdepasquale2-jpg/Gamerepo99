@@ -1,0 +1,392 @@
+{
+  "fragments": [
+    {
+      "id": "frag_ruth_calder_lie_alone",
+      "text": "I'll say the school is fine. The walls already know better.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_opener",
+      "text": "Official version or hallway version?",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:opener",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_middle",
+      "text": "Official, then. Hallways gossip without me.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:middle",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_closer",
+      "text": "Stamp it. Seal it. Burn the draft.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:closer",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_doctrine_follower",
+      "text": "I'll recite the mill line. My eyes will not.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "axis:doctrine_follower"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "doctrine:follower"
+      ]
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_notoriety_high",
+      "text": "I never graded you. Class list is wet ink.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "axis:notoriety_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "notoriety:high"
+      ]
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_verbatim_mirror",
+      "text": "Funding's coming? Ink that lie elsewhere.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_mark_shame_boost",
+      "text": "I'll say the school is fine. The walls already know better. That word already lives in my mouth.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_mark_hollowness_boost",
+      "text": "I'll say the school is fine. The walls already know better. There's a hole where the answer was.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_mark_resentment_boost",
+      "text": "I'll say the school is fine. The walls already know better. Keep talking. I'm filing this.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_mark_grief_boost",
+      "text": "I'll say the school is fine. The walls already know better. Grief isn't done with me yet.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_doctrine_follower_boost",
+      "text": "I'll say the school is fine. The walls already know better. The notice says so. I keep the notice.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_doctrine_skeptic_boost",
+      "text": "I'll say the school is fine. The walls already know better. I'll need better ink than their oath.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_trust_low_boost",
+      "text": "I'll say the school is fine. The walls already know better. You get the door. Not the soft room.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_spark_high_boost2",
+      "text": "I'll say the school is fine. The walls already know better. I've got heat left—use it carefully.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_notoriety_high_boost2",
+      "text": "I'll say the school is fine. The walls already know better. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_mark_dependence_boost2",
+      "text": "I'll say the school is fine. The walls already know better. Lean once. Then find your own feet.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_spark_low_boost2",
+      "text": "I'll say the school is fine. The walls already know better. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_kin_strain_boost2",
+      "text": "I'll say the school is fine. The walls already know better. Family makes every word heavier.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone_trust_high_boost2",
+      "text": "I'll say the school is fine. The walls already know better. Stay. I'll say the true version.",
+      "tags": [
+        "person:ruth_calder",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

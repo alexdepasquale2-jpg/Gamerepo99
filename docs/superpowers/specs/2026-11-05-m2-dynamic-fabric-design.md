@@ -49,7 +49,7 @@ From seed + town profile: personality **state vector**, wound, voice anchor, kin
 `voice-constraints` + memory checks; reject contradicting fragments → fallback authored alone-slot fragment. Worldgen asserts: every settlement has ≥1 civic_voice if town size≥hamlet; kin graph connected components bounded; no orphan facilities; gapAxis in range.
 
 ### (4) Line / reaction selection
-**Canonical source: `line-fragments.json`** (lives under `data/dialogue/` after Tidy move).  
+**Canonical source: `fragments/` (personId + generic_blend; ≤400 lines)** (lives under `data/dialogue/` after Tidy move).  
 **`lines.json` retires** after consumers migrate — content already mirrored as `authored_anchor` alone-slot fragments. Until migration complete, `lines.json` may remain as deprecated mirror; validator requires fragment coverage ≡ old lines coverage.
 
 ### (5) Generated town / world history
@@ -63,9 +63,9 @@ Seed → settlements along **gap axis** (village↔city), doctrines, biomes, rou
 |----------|----------|
 | `dialogue/` | `line-fragments.json`, `voice-anchors.json`, `reaction-curves.json`, `voice-constraints.json`, `letters.json` (templates) |
 | `people/` | `people.json`, `archetypes.json`, `traits.json`, `kinship.json`, `proofs.json` |
-| `world/` | `towns.json`, `links.json`, `map.json`, `biomes.json`, `routes.json`, `road-encounters.json`, `history-tables.json` (new) |
+| `world/` | `towns.json`, `links.json`, `map.json`, `biomes.json`, `routes.json`, `road-encounters.json`, `history/` (tables + historyBeats parts) (new) |
 | `economy/` | `economy-resources.json`, `facilities.json`, `travel-trades.json`, `stash-sites.json`, `notoriety.json`, `patrons.json` |
-| `systems/` | `methods.json`, `wounds.json`, `marks.json`, `events.json`, `time.json`, `ripples.json`, `doctrines.json`, `player.json`, `scenarios/` (one file per scenario + `index.json`) |
+| `systems/` | `methods.json`, `wounds.json`, `marks.json`, `events.json`, `time.json`, `ripples.json`, `doctrines.json`, `player.json`, `scenarios/` (one file per scenario + `index.json`), `assertions/` |
 | `hooks/` | existing split (unchanged category files) |
 
 ### Old → new mapping
@@ -95,7 +95,7 @@ Seed → settlements along **gap axis** (village↔city), doctrines, biomes, rou
 | `stash-sites.json` | `economy/stash-sites.json` |
 | `notoriety.json` | `economy/notoriety.json` |
 | `patrons.json` | `economy/patrons.json` |
-| `methods.json` … `player.json`, `scenarios/` (one file per scenario + `index.json`), `doctrines.json` | `systems/` |
+| `methods.json` … `player.json`, `scenarios/` (one file per scenario + `index.json`), `assertions/`, `doctrines.json` | `systems/` |
 | `hooks/` | `hooks/` (stay) |
 
 **Validator:** today still flat paths. After Forge git-mv, `scripts/validate/load.mjs` must recurse subfolders (or explicit new REQUIRED paths). Plan Task 0 documents the switch.

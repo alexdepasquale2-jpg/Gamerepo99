@@ -1,0 +1,16 @@
+{
+  "settlementSizes": [
+    {
+      "id": "village",
+      "gapAxisMax": 0.35
+    },
+    {
+      "id": "town",
+      "gapAxisMax": 0.7
+    },
+    {
+      "id": "city",
+      "gapAxisMax": 1.0
+    }
+  ]
+}

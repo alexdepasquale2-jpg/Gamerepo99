@@ -1,0 +1,373 @@
+{
+  "fragments": [
+    {
+      "id": "frag_nora_voss_carry_burden_alone",
+      "text": "Give me the weight. I've held heavier beginnings.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_opener",
+      "text": "Here. Against my shoulder.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:opener",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_middle",
+      "text": "Carrying is midwifery for grief.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_closer",
+      "text": "Rest. I've got this hour.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:closer",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_dependence",
+      "text": "Lean. Then stand when you can.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "axis:mark_dependence"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:dependence"
+      ]
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_verbatim_mirror",
+      "text": "Carry the bag. I'll carry the part that shakes.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_shame_boost",
+      "text": "Give me the weight. I've held heavier beginnings. That word already lives in my mouth.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_hollowness_boost",
+      "text": "Give me the weight. I've held heavier beginnings. There's a hole where the answer was.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_resentment_boost",
+      "text": "Give me the weight. I've held heavier beginnings. Keep talking. I'm filing this.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_grief_boost",
+      "text": "Give me the weight. I've held heavier beginnings. Grief isn't done with me yet.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_doctrine_follower_boost",
+      "text": "Give me the weight. I've held heavier beginnings. The notice says so. I keep the notice.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_doctrine_skeptic_boost",
+      "text": "Give me the weight. I've held heavier beginnings. I'll need better ink than their oath.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_trust_low_boost",
+      "text": "Give me the weight. I've held heavier beginnings. You get the door. Not the soft room.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_spark_high_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. I've got heat left—use it carefully.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_notoriety_high_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_mark_dependence_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. Lean once. Then find your own feet.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_spark_low_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_kin_strain_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. Family makes every word heavier.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_carry_burden_alone_trust_high_boost2",
+      "text": "Give me the weight. I've held heavier beginnings. Stay. I'll say the true version.",
+      "tags": [
+        "person:nora_voss",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

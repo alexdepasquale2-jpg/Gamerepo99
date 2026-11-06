@@ -1,0 +1,387 @@
+{
+  "fragments": [
+    {
+      "id": "frag_marta_ellison_inspire_alone",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_opener",
+      "text": "Listen. The yeast is still alive. So are you.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:opener",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_middle",
+      "text": "Warmth doesn't ask permission.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:middle",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_closer",
+      "text": "Eat. Then decide if tomorrow gets a crust.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:closer",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_spark_high",
+      "text": "I'll fire both ovens. Watch the village smell like morning.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:spark_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "spark:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_spark_low",
+      "text": "I can offer crumbs of courage. Not a banquet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:spark_low"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_trust_high",
+      "text": "Stay at the counter. I'll talk while it proofs.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:trust_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_grief",
+      "text": "Grief burns fast. Bread takes time. Pick a pace.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:mark_grief"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:grief",
+        "wound:grief"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_kin_strain",
+      "text": "Tell your cousin I still set a plate. That's all the sermon I have.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:kin_strain"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_verbatim_mirror",
+      "text": "…Someone ate. Alright. Flour. Water. Don't watch.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_shame_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. That word already lives in my mouth.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_hollowness_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. There's a hole where the answer was.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_resentment_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. Keep talking. I'm filing this.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_grief_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. Grief isn't done with me yet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_doctrine_follower_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. The notice says so. I keep the notice.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_doctrine_skeptic_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. I'll need better ink than their oath.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_trust_low_boost",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. You get the door. Not the soft room.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_spark_high_boost2",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. I've got heat left—use it carefully.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_notoriety_high_boost2",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone_mark_dependence_boost2",
+      "text": "One more loaf. Not for hope—for habit. Habit's a kind of spine. Lean once. Then find your own feet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

@@ -1,0 +1,373 @@
+{
+  "fragments": [
+    {
+      "id": "frag_priya_sen_carry_burden_alone",
+      "text": "Give me the sack of almost-given-up. I'll bury it right.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_opener",
+      "text": "Weight here. Knees know this work.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:opener",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_middle",
+      "text": "I've carried water farther for less hope.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_closer",
+      "text": "Go wash. I'll finish the row.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:closer",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_dependence",
+      "text": "I'll take this harvest of worry. Next one's yours.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "axis:mark_dependence"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:dependence"
+      ]
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_verbatim_mirror",
+      "text": "You clear. I'll plant what still believes in water.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_shame_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. That word already lives in my mouth.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_hollowness_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. There's a hole where the answer was.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_resentment_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Keep talking. I'm filing this.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_grief_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Grief isn't done with me yet.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_doctrine_follower_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. The notice says so. I keep the notice.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_doctrine_skeptic_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. I'll need better ink than their oath.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_trust_low_boost",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. You get the door. Not the soft room.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_spark_high_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. I've got heat left—use it carefully.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_notoriety_high_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_mark_dependence_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Lean once. Then find your own feet.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_spark_low_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_kin_strain_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Family makes every word heavier.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_carry_burden_alone_trust_high_boost2",
+      "text": "Give me the sack of almost-given-up. I'll bury it right. Stay. I'll say the true version.",
+      "tags": [
+        "person:priya_sen",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}
