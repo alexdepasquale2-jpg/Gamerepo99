@@ -1,0 +1,559 @@
+diff --git a/artifacts/25d/overworld-boot.png b/artifacts/25d/overworld-boot.png
+index 089aa1e..286076d 100644
+Binary files a/artifacts/25d/overworld-boot.png and b/artifacts/25d/overworld-boot.png differ
+diff --git a/artifacts/25d/overworld-canvas.png b/artifacts/25d/overworld-canvas.png
+index 9f850c7..70c06b2 100644
+Binary files a/artifacts/25d/overworld-canvas.png and b/artifacts/25d/overworld-canvas.png differ
+diff --git a/artifacts/25d/overworld-walk-east.png b/artifacts/25d/overworld-walk-east.png
+index 453d1c1..ab870fe 100644
+Binary files a/artifacts/25d/overworld-walk-east.png and b/artifacts/25d/overworld-walk-east.png differ
+diff --git a/artifacts/25d/prism-overworld-boot.png b/artifacts/25d/prism-overworld-boot.png
+index 089aa1e..286076d 100644
+Binary files a/artifacts/25d/prism-overworld-boot.png and b/artifacts/25d/prism-overworld-boot.png differ
+diff --git a/artifacts/25d/prism-overworld-canvas.png b/artifacts/25d/prism-overworld-canvas.png
+index 9f850c7..70c06b2 100644
+Binary files a/artifacts/25d/prism-overworld-canvas.png and b/artifacts/25d/prism-overworld-canvas.png differ
+diff --git a/artifacts/25d/prism-overworld-walk-behind.png b/artifacts/25d/prism-overworld-walk-behind.png
+new file mode 100644
+index 0000000..09d9df3
+Binary files /dev/null and b/artifacts/25d/prism-overworld-walk-behind.png differ
+diff --git a/artifacts/25d/prism-overworld-walk-east.png b/artifacts/25d/prism-overworld-walk-east.png
+index 453d1c1..ab870fe 100644
+Binary files a/artifacts/25d/prism-overworld-walk-east.png and b/artifacts/25d/prism-overworld-walk-east.png differ
+diff --git a/artifacts/25d/prism-settlement-despair.png b/artifacts/25d/prism-settlement-despair.png
+new file mode 100644
+index 0000000..997959e
+Binary files /dev/null and b/artifacts/25d/prism-settlement-despair.png differ
+diff --git a/artifacts/25d/prism-settlement-reignited.png b/artifacts/25d/prism-settlement-reignited.png
+new file mode 100644
+index 0000000..286076d
+Binary files /dev/null and b/artifacts/25d/prism-settlement-reignited.png differ
+diff --git a/artifacts/25d/prism-settlement-walk-behind.png b/artifacts/25d/prism-settlement-walk-behind.png
+new file mode 100644
+index 0000000..09d9df3
+Binary files /dev/null and b/artifacts/25d/prism-settlement-walk-behind.png differ
+diff --git a/assets/sprites/stamp-inn.png b/assets/sprites/stamp-inn.png
+new file mode 100644
+index 0000000..30e0a7e
+Binary files /dev/null and b/assets/sprites/stamp-inn.png differ
+diff --git a/assets/sprites/stamp-walkway.png b/assets/sprites/stamp-walkway.png
+new file mode 100644
+index 0000000..ddd320b
+Binary files /dev/null and b/assets/sprites/stamp-walkway.png differ
+diff --git a/docs/SCHEDULE.xlsx b/docs/SCHEDULE.xlsx
+index 76ba3df..8a1af32 100644
+Binary files a/docs/SCHEDULE.xlsx and b/docs/SCHEDULE.xlsx differ
+diff --git a/src/render/feel.ts b/src/render/feel.ts
+index 3eaa7f6..96a22b4 100644
+--- a/src/render/feel.ts
++++ b/src/render/feel.ts
+@@ -74,6 +74,30 @@ export const FEEL = {
+     camLerp: 0.18,
+     camDeadzoneX: 24,
+     camDeadzoneY: 16,
++    /** Default world warmth when no URL/debug override (1 = reignited) */
++    defaultWarmth: 1,
++  },
++
++  /**
++   * Despair (0) vs reignited (1) palette — applied via ColorMatrix postFX,
++   * never an overlay rect. Lerped by warmth ∈ [0,1].
++   */
++  palette: {
++    despair: {
++      /** Phaser ColorMatrix.saturate amount (negative = desaturate) */
++      saturation: -0.82,
++      /** ColorMatrix.brightness is a 0..1 scale (1 = identity) */
++      brightness: 0.88,
++      contrast: 0.06,
++      /** Hue rotate degrees toward cool/cyan */
++      hueShift: -28,
++    },
++    reignited: {
++      saturation: 0.08,
++      brightness: 1.0,
++      contrast: 0,
++      hueShift: 4,
++    },
+   },
+ 
+   /** HUD spark bar (presentation only) */
+diff --git a/src/render/overworld-scene.ts b/src/render/overworld-scene.ts
+index dddc882..856ecc4 100644
+--- a/src/render/overworld-scene.ts
++++ b/src/render/overworld-scene.ts
+@@ -17,6 +17,11 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
+ import { walkDelta } from './walk-delta';
+ import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
+ import { heroWalkAnim } from './painters/overworld-paint';
++import {
++  applyWarmthToCamera,
++  clampWarmth,
++  warmthFromUrl,
++} from './warmth-palette';
+ 
+ const CHUNK_MARGIN = 1;
+ const NEAR_TOWN_PX = TILE_PX * 2.5;
+@@ -38,7 +43,11 @@ export class OverworldScene extends Phaser.Scene {
+   private sparkFill = 1;
+   private sparkBar!: Phaser.GameObjects.Rectangle;
+   private hint!: Phaser.GameObjects.Text;
++  private warmthLabel!: Phaser.GameObjects.Text;
+   private lastChunkKey = '';
++  /** 0 despair → 1 reignited; URL ?warmth= / keys 9·0 override */
++  private warmth: number = FEEL.overworld.defaultWarmth;
++  private warmthFx: Phaser.FX.ColorMatrix | null = null;
+ 
+   constructor() {
+     super('overworld');
+@@ -59,7 +68,7 @@ export class OverworldScene extends Phaser.Scene {
+     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
+ 
+     this.add
+-      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
++      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town · 9 despair / 0 reignite', {
+         fontFamily: 'monospace',
+         fontSize: '12px',
+         color: '#f2e9e4',
+@@ -76,7 +85,19 @@ export class OverworldScene extends Phaser.Scene {
+       .setScrollFactor(0)
+       .setDepth(1_000_000);
+ 
++    this.warmthLabel = this.add
++      .text(8, 84, '', {
++        fontFamily: 'monospace',
++        fontSize: '11px',
++        color: '#8a7a68',
++      })
++      .setScrollFactor(0)
++      .setDepth(1_000_000);
++
+     this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
++    this.input.keyboard?.on('keydown-NINE', () => this.setWarmth(0));
++    this.input.keyboard?.on('keydown-ZERO', () => this.setWarmth(1));
++    this.bootWarmth();
+     this.syncChunks(true);
+     this.syncSparkFromSession(false);
+     const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
+@@ -219,6 +240,25 @@ export class OverworldScene extends Phaser.Scene {
+     }
+   }
+ 
++  private bootWarmth(): void {
++    const fromUrl = warmthFromUrl(
++      typeof window !== 'undefined' ? window.location.search : '',
++    );
++    this.warmth = fromUrl ?? clampWarmth(FEEL.overworld.defaultWarmth);
++    this.refreshWarmthFx();
++  }
++
++  private setWarmth(w: number): void {
++    this.warmth = clampWarmth(w);
++    this.refreshWarmthFx();
++  }
++
++  private refreshWarmthFx(): void {
++    this.warmthFx = applyWarmthToCamera(this.cameras.main, this.warmth, this.warmthFx);
++    const label = this.warmth <= 0.05 ? 'despair' : this.warmth >= 0.95 ? 'reignited' : `warmth ${this.warmth.toFixed(2)}`;
++    this.warmthLabel?.setText(`palette: ${label} (9/0 or ?warmth=)`);
++  }
++
+   private nearestTown(): { id: string; q: number; r: number } | null {
+     let best: { id: string; q: number; r: number } | null = null;
+     let bestD = Infinity;
+diff --git a/src/render/painters/overworld-paint.ts b/src/render/painters/overworld-paint.ts
+index f6328ee..ae6fcf3 100644
+--- a/src/render/painters/overworld-paint.ts
++++ b/src/render/painters/overworld-paint.ts
+@@ -8,8 +8,11 @@ import { applySpriteSort, tileFootWorld, tileToWorld } from '../depth-sort';
+ import {
+   GRASS_CALM_TEX,
+   HERO_TEX,
++  HOUSE2_TEX,
++  INN_TEX,
+   SETTLEMENT_TEX,
+   SHADOW_TEX,
++  WALKWAY_TEX,
+   sheetTextureKey,
+ } from '../sheet-frames';
+ import {
+@@ -460,30 +463,84 @@ function paintCrate(
+   container?.add(box);
+ }
+ 
+-export function paintTownMarker(
++
++/** Inn + covered walkway + house — each sorted by its own foot Y for walk-behind. */
++function paintSettlementParts(
+   host: PaintHost,
+   container: Phaser.GameObjects.Container | null,
+-  town: { id: string; q: number; r: number },
++  town: { q: number; r: number },
+ ): void {
+-  const foot = tileFootWorld(town.q, town.r);
+-
+-  // Single seamless settlement stamp (inn + walkway + house) — no join seam
+-  addSoftShadow(host, container, foot.x + TILE_PX, foot.y, 2.4);
+-  if (host.textures.exists(SETTLEMENT_TEX)) {
+-    const img = host.add.image(foot.x + TILE_PX * 0.8, foot.y, SETTLEMENT_TEX);
+-    applySpriteSort(img);
+-    img.setDisplaySize(TILE_PX * 6.4, TILE_PX * 3.8);
+-    container?.add(img);
+-  } else if (
++  // Inn (west). Prefer sheet-buildings named frame (full feet); stamp-inn fallback.
++  const innFoot = tileFootWorld(town.q + 0.15, town.r);
++  addSoftShadow(host, container, innFoot.x, innFoot.y, 1.8);
++  if (
+     host.textures.exists('sheet-buildings') &&
+     host.textures.get('sheet-buildings').has('inn')
+   ) {
+-    const img = host.add.image(foot.x, foot.y, 'sheet-buildings', 'inn');
+-    applySpriteSort(img);
+-    img.setDisplaySize(TILE_PX * 4.2, TILE_PX * 4.0);
+-    container?.add(img);
++    const inn = host.add.image(innFoot.x, innFoot.y, 'sheet-buildings', 'inn');
++    applySpriteSort(inn);
++    inn.setDisplaySize(TILE_PX * 3.8, TILE_PX * 4.2);
++    container?.add(inn);
++  } else if (host.textures.exists(INN_TEX)) {
++    const inn = host.add.image(innFoot.x, innFoot.y, INN_TEX);
++    applySpriteSort(inn);
++    inn.setDisplaySize(TILE_PX * 3.6, TILE_PX * 4.1);
++    container?.add(inn);
+   }
+ 
++  // Covered walkway between inn and house — foot north of road path (walk under = in front)
++  const walkFoot = tileFootWorld(town.q + 2.7, town.r - 0.45);
++  paintCoveredWalkway(host, container, walkFoot.x, walkFoot.y);
++
++  // House (east) — foot slightly south so it layers in front of walkway east end
++  const houseFoot = tileFootWorld(town.q + 4.5, town.r + 0.2);
++  addSoftShadow(host, container, houseFoot.x, houseFoot.y, 1.4);
++  if (host.textures.exists(HOUSE2_TEX)) {
++    const house = host.add.image(houseFoot.x, houseFoot.y, HOUSE2_TEX);
++    applySpriteSort(house);
++    house.setDisplaySize(TILE_PX * 2.5, TILE_PX * 3.9);
++    container?.add(house);
++  }
++}
++
++/** Simple covered walkway as its own depth-sorted sprite (roof + posts). */
++function paintCoveredWalkway(
++  host: PaintHost,
++  container: Phaser.GameObjects.Container | null,
++  x: number,
++  y: number,
++): void {
++  if (host.textures.exists(WALKWAY_TEX)) {
++    const walk = host.add.image(x, y, WALKWAY_TEX);
++    applySpriteSort(walk);
++    walk.setDisplaySize(TILE_PX * 1.6, TILE_PX * 2.2);
++    container?.add(walk);
++    return;
++  }
++  const roof = host.add.rectangle(x, y - 22, 44, 14, 0xa84532);
++  applySpriteSort(roof);
++  const beam = host.add.rectangle(x, y - 14, 40, 6, 0xc4b08a);
++  beam.setDepth(y + 0.05);
++  const postL = host.add.rectangle(x - 16, y - 6, 4, 14, 0x6b4423);
++  postL.setDepth(y + 0.02);
++  const postR = host.add.rectangle(x + 16, y - 6, 4, 14, 0x6b4423);
++  postR.setDepth(y + 0.02);
++  container?.add(roof);
++  container?.add(beam);
++  container?.add(postL);
++  container?.add(postR);
++}
++
++export function paintTownMarker(
++  host: PaintHost,
++  container: Phaser.GameObjects.Container | null,
++  town: { id: string; q: number; r: number },
++): void {
++  const foot = tileFootWorld(town.q, town.r);
++
++  // Depth-split settlement: inn / walkway / house as separate foot-Y sorted sprites
++  paintSettlementParts(host, container, town);
++
+   for (const [dq, dr, v] of [
+     [-2.6, 0.2, 0],
+     [-3.0, -0.5, 1],
+diff --git a/src/render/sheet-frames.ts b/src/render/sheet-frames.ts
+index 901fa7c..cfaa7de 100644
+--- a/src/render/sheet-frames.ts
++++ b/src/render/sheet-frames.ts
+@@ -23,6 +23,8 @@ export const GRASS_WORLD_TEX = 'grass-world';
+ export const DIRT_CALM_TEX = 'dirt-calm';
+ export const DIRT_EDGE_TEX = 'dirt-edge';
+ export const HOUSE2_TEX = 'stamp-house2';
++export const INN_TEX = 'stamp-inn';
++export const WALKWAY_TEX = 'stamp-walkway';
+ export const SETTLEMENT_TEX = 'stamp-settlement';
+ 
+ export type SheetFrameConfig = {
+@@ -48,6 +50,8 @@ export const NAMED_STAMP_RECTS = {
+   tree: { sheet: 'sheet-buildings', x: 8, y: 21, w: 30, h: 129 },
+   'tree-b': { sheet: 'sheet-buildings', x: 39, y: 18, w: 31, h: 132 },
+   house2: { sheet: HOUSE2_TEX, x: 0, y: 0, w: 88, h: 132 },
++  innStamp: { sheet: INN_TEX, x: 0, y: 0, w: 104, h: 120 },
++  walkway: { sheet: WALKWAY_TEX, x: 0, y: 0, w: 38, h: 72 },
+   settlement: { sheet: SETTLEMENT_TEX, x: 0, y: 0, w: 207, h: 120 },
+   'cliff-lip': { sheet: 'sheet-cliff', frame: '0' },
+   'cliff-face': { sheet: 'sheet-cliff', frame: '4' },
+@@ -87,6 +91,8 @@ export function preloadOverworldSheets(load: Phaser.Loader.LoaderPlugin): void {
+   load.image('sheet-buildings-side', toPublicUrl(BAKED_SHEETS.buildingsSide));
+   load.image(HERO_TEX, toPublicUrl('assets/vendor/ansimuz-hero.png'));
+   load.image(HOUSE2_TEX, toPublicUrl('assets/sprites/stamp-house2.png'));
++  load.image(INN_TEX, toPublicUrl('assets/sprites/stamp-inn.png'));
++  load.image(WALKWAY_TEX, toPublicUrl('assets/sprites/stamp-walkway.png'));
+   load.image(SETTLEMENT_TEX, toPublicUrl('assets/sprites/stamp-settlement.png'));
+   load.image(GRASS_WORLD_TEX, toPublicUrl('assets/sprites/grass-world.png'));
+ }
+diff --git a/src/render/warmth-palette.ts b/src/render/warmth-palette.ts
+new file mode 100644
+index 0000000..a343d35
+--- /dev/null
++++ b/src/render/warmth-palette.ts
+@@ -0,0 +1,92 @@
++/**
++ * Warmth (0 despair → 1 reignited) → ColorMatrix params.
++ * Presentation only; driven by FEEL.palette. Never an overlay rect.
++ */
++import type Phaser from 'phaser';
++import { FEEL } from './feel';
++
++export type WarmthMatrixParams = {
++  saturation: number;
++  brightness: number;
++  contrast: number;
++  hueShift: number;
++};
++
++function lerp(a: number, b: number, t: number): number {
++  return a + (b - a) * t;
++}
++
++/** Clamp warmth to [0,1]. */
++export function clampWarmth(w: number): number {
++  if (Number.isNaN(w)) return FEEL.overworld.defaultWarmth;
++  return Math.max(0, Math.min(1, w));
++}
++
++/** Lerp FEEL.palette despair→reignited by warmth. */
++export function warmthToMatrixParams(warmth: number): WarmthMatrixParams {
++  const t = clampWarmth(warmth);
++  const d = FEEL.palette.despair;
++  const r = FEEL.palette.reignited;
++  return {
++    saturation: lerp(d.saturation, r.saturation, t),
++    brightness: lerp(d.brightness, r.brightness, t),
++    contrast: lerp(d.contrast, r.contrast, t),
++    hueShift: lerp(d.hueShift, r.hueShift, t),
++  };
++}
++
++/**
++ * Approximate cool luminance bias for tests (despair pulls toward cooler gray).
++ * Not the shader itself — documents the intended despair/reignited mapping.
++ */
++export function warmthToSatBrightness(warmth: number): { sat: number; bright: number; hue: number } {
++  const p = warmthToMatrixParams(warmth);
++  return { sat: p.saturation, bright: p.brightness, hue: p.hueShift };
++}
++
++/** Read ?warmth=0|1 (or 0..1 float) from location search. */
++export function warmthFromUrl(search = typeof location !== 'undefined' ? location.search : ''): number | null {
++  const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
++  if (!q.has('warmth')) return null;
++  const v = Number(q.get('warmth'));
++  if (Number.isNaN(v)) return null;
++  return clampWarmth(v);
++}
++
++export type ColorMatrixHandle = {
++  reset: () => unknown;
++  saturate: (v: number, multiply?: boolean) => unknown;
++  brightness: (v: number, multiply?: boolean) => unknown;
++  contrast: (v: number, multiply?: boolean) => unknown;
++  hue: (rotation: number, multiply?: boolean) => unknown;
++};
++
++/** Apply warmth params onto a Phaser ColorMatrix FX controller. */
++export function applyWarmthToColorMatrix(cm: ColorMatrixHandle, warmth: number): void {
++  const p = warmthToMatrixParams(warmth);
++  cm.reset();
++  // Order: saturate → brightness → contrast → hue (cool shift for despair)
++  cm.saturate(p.saturation, false);
++  cm.brightness(p.brightness, true);
++  cm.contrast(p.contrast, true);
++  cm.hue(p.hueShift, true);
++}
++
++/** Attach / refresh camera ColorMatrix postFX for the given warmth. */
++export function applyWarmthToCamera(
++  camera: Phaser.Cameras.Scene2D.Camera,
++  warmth: number,
++  existing?: Phaser.FX.ColorMatrix | null,
++): Phaser.FX.ColorMatrix | null {
++  try {
++    const cm =
++      existing ??
++      (camera.postFX?.addColorMatrix?.() as Phaser.FX.ColorMatrix | undefined) ??
++      null;
++    if (!cm) return null;
++    applyWarmthToColorMatrix(cm as unknown as ColorMatrixHandle, warmth);
++    return cm;
++  } catch {
++    return existing ?? null;
++  }
++}
+diff --git a/src/sim/interaction-compat.ts b/src/sim/interaction/interaction-compat.ts
+similarity index 100%
+rename from src/sim/interaction-compat.ts
+rename to src/sim/interaction/interaction-compat.ts
+diff --git a/src/sim/interaction-state.ts b/src/sim/interaction/interaction-state.ts
+similarity index 100%
+rename from src/sim/interaction-state.ts
+rename to src/sim/interaction/interaction-state.ts
+diff --git a/src/sim/interactions.ts b/src/sim/interaction/interactions.ts
+similarity index 100%
+rename from src/sim/interactions.ts
+rename to src/sim/interaction/interactions.ts
+diff --git a/tests/e2e/m3-25d-screenshot.spec.ts b/tests/e2e/m3-25d-screenshot.spec.ts
+index b4d938f..d75fe00 100644
+--- a/tests/e2e/m3-25d-screenshot.spec.ts
++++ b/tests/e2e/m3-25d-screenshot.spec.ts
+@@ -12,7 +12,6 @@ test('capture continuous overworld screenshots', async ({ page }) => {
+   await page.waitForTimeout(1000);
+   await page.screenshot({ path: path.join(OUT, 'overworld-boot.png'), fullPage: false });
+   await page.screenshot({ path: path.join(OUT, 'prism-overworld-boot.png'), fullPage: false });
+-  // Walk a bit east to show road corridor streaming
+   for (let i = 0; i < 40; i++) {
+     await page.keyboard.down('D');
+     await page.waitForTimeout(50);
+@@ -24,3 +23,33 @@ test('capture continuous overworld screenshots', async ({ page }) => {
+   await canvas.screenshot({ path: path.join(OUT, 'overworld-canvas.png') });
+   await canvas.screenshot({ path: path.join(OUT, 'prism-overworld-canvas.png') });
+ });
++
++test('capture despair vs reignited settlement + walk-behind', async ({ page }) => {
++  fs.mkdirSync(OUT, { recursive: true });
++
++  await page.goto('/?warmth=0');
++  const canvas = page.locator('#game canvas');
++  await expect(canvas).toBeVisible({ timeout: 20_000 });
++  await page.waitForTimeout(1200);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-despair.png'), fullPage: false });
++
++  await page.goto('/?warmth=1');
++  await expect(canvas).toBeVisible({ timeout: 20_000 });
++  await page.waitForTimeout(1200);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-reignited.png'), fullPage: false });
++
++  // Walk into the gap between inn and house, then north behind the walkway
++  for (let i = 0; i < 28; i++) {
++    await page.keyboard.down('D');
++    await page.waitForTimeout(35);
++  }
++  await page.keyboard.up('D');
++  for (let i = 0; i < 48; i++) {
++    await page.keyboard.down('W');
++    await page.waitForTimeout(35);
++  }
++  await page.keyboard.up('W');
++  await page.waitForTimeout(500);
++  await page.screenshot({ path: path.join(OUT, 'prism-settlement-walk-behind.png'), fullPage: false });
++  await page.screenshot({ path: path.join(OUT, 'prism-overworld-walk-behind.png'), fullPage: false });
++});
+diff --git a/tests/render/warmth-palette.test.ts b/tests/render/warmth-palette.test.ts
+new file mode 100644
+index 0000000..fdb3cb6
+--- /dev/null
++++ b/tests/render/warmth-palette.test.ts
+@@ -0,0 +1,66 @@
++import { describe, expect, it } from 'vitest';
++import { FEEL } from '../../src/render/feel';
++import {
++  clampWarmth,
++  warmthFromUrl,
++  warmthToMatrixParams,
++  warmthToSatBrightness,
++  applyWarmthToColorMatrix,
++} from '../../src/render/warmth-palette';
++
++describe('warmth → palette ColorMatrix mapping', () => {
++  it('exposes FEEL.palette despair vs reignited tunables', () => {
++    expect(FEEL.palette.despair.saturation).toBeLessThan(0);
++    expect(FEEL.palette.despair.hueShift).toBeLessThan(0);
++    expect(FEEL.palette.reignited.saturation).toBeGreaterThan(FEEL.palette.despair.saturation);
++    expect(FEEL.palette.reignited.hueShift).toBeGreaterThan(FEEL.palette.despair.hueShift);
++  });
++
++  it('maps warmth 0 to despair params and 1 to reignited', () => {
++    const d = warmthToMatrixParams(0);
++    const r = warmthToMatrixParams(1);
++    expect(d.saturation).toBeCloseTo(FEEL.palette.despair.saturation);
++    expect(d.hueShift).toBeCloseTo(FEEL.palette.despair.hueShift);
++    expect(r.saturation).toBeCloseTo(FEEL.palette.reignited.saturation);
++    expect(r.brightness).toBeCloseTo(FEEL.palette.reignited.brightness);
++  });
++
++  it('lerps mid warmth between despair and reignited', () => {
++    const mid = warmthToMatrixParams(0.5);
++    const d = FEEL.palette.despair;
++    const r = FEEL.palette.reignited;
++    expect(mid.saturation).toBeCloseTo((d.saturation + r.saturation) / 2);
++    expect(mid.hueShift).toBeCloseTo((d.hueShift + r.hueShift) / 2);
++  });
++
++  it('despair is cooler/desaturated vs reignited (satBrightness helper)', () => {
++    const despair = warmthToSatBrightness(0);
++    const alive = warmthToSatBrightness(1);
++    expect(despair.sat).toBeLessThan(alive.sat);
++    expect(despair.hue).toBeLessThan(alive.hue);
++  });
++
++  it('clamps warmth and parses ?warmth= URL', () => {
++    expect(clampWarmth(-1)).toBe(0);
++    expect(clampWarmth(2)).toBe(1);
++    expect(warmthFromUrl('?warmth=0')).toBe(0);
++    expect(warmthFromUrl('?warmth=1')).toBe(1);
++    expect(warmthFromUrl('?warmth=0.5')).toBeCloseTo(0.5);
++    expect(warmthFromUrl('')).toBeNull();
++  });
++
++  it('applies params onto a ColorMatrix-like handle', () => {
++    const calls: string[] = [];
++    const fake = {
++      reset: () => calls.push('reset'),
++      saturate: (v: number) => calls.push(`sat:${v.toFixed(2)}`),
++      brightness: (v: number) => calls.push(`bri:${v.toFixed(2)}`),
++      contrast: (v: number) => calls.push(`con:${v.toFixed(2)}`),
++      hue: (v: number) => calls.push(`hue:${v.toFixed(1)}`),
++    };
++    applyWarmthToColorMatrix(fake, 0);
++    expect(calls[0]).toBe('reset');
++    expect(calls.some((c) => c.startsWith('sat:'))).toBe(true);
++    expect(calls.some((c) => c.startsWith('hue:'))).toBe(true);
++  });
++});
+diff --git a/tests/sim/interaction-compat.test.ts b/tests/sim/interaction/interaction-compat.test.ts
+similarity index 100%
+rename from tests/sim/interaction-compat.test.ts
+rename to tests/sim/interaction/interaction-compat.test.ts
+diff --git a/tests/sim/interaction-examples.test.ts b/tests/sim/interaction/interaction-examples.test.ts
+similarity index 100%
+rename from tests/sim/interaction-examples.test.ts
+rename to tests/sim/interaction/interaction-examples.test.ts
+diff --git a/tests/sim/interaction-exports.test.ts b/tests/sim/interaction/interaction-exports.test.ts
+similarity index 100%
+rename from tests/sim/interaction-exports.test.ts
+rename to tests/sim/interaction/interaction-exports.test.ts
+diff --git a/tests/sim/interaction-play-session.test.ts b/tests/sim/interaction/interaction-play-session.test.ts
+similarity index 100%
+rename from tests/sim/interaction-play-session.test.ts
+rename to tests/sim/interaction/interaction-play-session.test.ts
+diff --git a/tests/sim/interaction-touch.test.ts b/tests/sim/interaction/interaction-touch.test.ts
+similarity index 100%
+rename from tests/sim/interaction-touch.test.ts
+rename to tests/sim/interaction/interaction-touch.test.ts
