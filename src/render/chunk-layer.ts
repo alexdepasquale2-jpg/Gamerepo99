@@ -40,10 +40,10 @@ export function createChunkLayer(
   }
   if (townMarkers[0]) {
     const t = townMarkers[0];
-    const cq = t.q - 4;
+    const cq = t.q - 5;
     const cr = t.r + 4;
-    paintCliffStrip(host, null, cq, cr, 14);
-    paintLowerTerraceShade(host, null, cq, cr, 14, 6);
+    paintCliffStrip(host, null, cq, cr, 18);
+    paintLowerTerraceShade(host, null, cq, cr, 18, 7);
   }
 
   return {

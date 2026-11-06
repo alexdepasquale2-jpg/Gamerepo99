@@ -9,8 +9,11 @@ import {
   DIRT_CALM_TEX,
   DIRT_EDGE_TEX,
   GRASS_CALM_TEX,
+  GRASS_WORLD_TEX,
   HERO_TEX,
+  HOUSE2_TEX,
   SHADOW_TEX,
+  grassWorldFrame,
   sheetTextureKey,
 } from '../sheet-frames';
 
@@ -39,15 +42,38 @@ export function isRoadBiome(biomeId: string): boolean {
   return biomeId === 'road' || biomeId.startsWith('road');
 }
 
+/**
+ * Meander offset in tiles (perpendicular / along r) for visual road curve.
+ * Pure — used by groundPaintFor tests indirectly via road set expansion.
+ */
+export function roadMeanderOffset(q: number): number {
+  return Math.round(
+    1.1 * Math.sin(q * 0.13) + 0.55 * Math.sin(q * 0.37 + 1.1),
+  );
+}
+
+/** Expand sim road cells into a meandering visual ribbon (presentation only). */
+export function expandMeanderRoadKeys(roadKeys: Set<string>): Set<string> {
+  const out = new Set<string>();
+  for (const key of roadKeys) {
+    const [qs, rs] = key.split(',');
+    const q = Number(qs);
+    const r = Number(rs);
+    const off = roadMeanderOffset(q);
+    out.add(`${q},${r + off}`);
+    // occasional half-step width for organic edge (not a fat bar)
+    if (Math.abs(Math.sin(q * 0.29)) > 0.65) out.add(`${q},${r + off - 1}`);
+  }
+  return out;
+}
+
 export function groundPaintFor(tile: TileRenderView): GroundPaint {
   if (isRoadBiome(tile.biomeId)) {
     const entry = lookupAsset('road.road') ?? lookupAsset('road.track');
     return { kind: 'road', key: 'sheet-ground', frame: String(entry?.frame ?? 5) };
   }
-  // Rare warm/cool patch (~1/7) — same base otherwise so no checkerboard
-  const h = hash2(tile.q, tile.r);
-  const variant = h % 7 === 0 ? 1 : h % 11 === 0 ? 2 : 0;
-  return { kind: 'grass', key: `${GRASS_CALM_TEX}-${variant}`, frame: '__FULL__' };
+  // World-space grass frame (seamless across tiles)
+  return { kind: 'grass', key: GRASS_WORLD_TEX, frame: grassWorldFrame(tile.q, tile.r) };
 }
 
 export function biomeAccentFor(
@@ -88,6 +114,38 @@ export function addSoftShadow(
   return sh;
 }
 
+function placeSheetTile(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container,
+  tile: TileRenderView,
+  key: string,
+  frame: string,
+  depth: number,
+  flipY = false,
+  flipX = false,
+): void {
+  const { x, y } = tileToWorld(tile.q, tile.r);
+  const cx = x + TILE_PX / 2;
+  const cy = y + TILE_PX / 2;
+  if (host.textures.exists(key) && host.textures.get(key).has(frame)) {
+    const img = host.add.image(cx, cy, key, frame);
+    img.setDisplaySize(TILE_PX + 3, TILE_PX + 3); // overlap kills seams
+    img.setFlipY(flipY);
+    img.setFlipX(flipX);
+    img.setDepth(depth);
+    container.add(img);
+    return;
+  }
+  if (host.textures.exists(key)) {
+    const img = host.add.image(cx, cy, key);
+    img.setDisplaySize(TILE_PX + 3, TILE_PX + 3);
+    img.setDepth(depth);
+    container.add(img);
+    return;
+  }
+  container.add(host.add.rectangle(cx, cy, TILE_PX, TILE_PX, 0x80ba44));
+}
+
 function placeFullTile(
   host: PaintHost,
   container: Phaser.GameObjects.Container,
@@ -100,72 +158,65 @@ function placeFullTile(
   const cy = y + TILE_PX / 2;
   if (host.textures.exists(key)) {
     const img = host.add.image(cx, cy, key);
-    img.setDisplaySize(TILE_PX + 1, TILE_PX + 1);
+    img.setDisplaySize(TILE_PX + 3, TILE_PX + 3);
     img.setDepth(depth);
     container.add(img);
     return;
   }
-  container.add(host.add.rectangle(cx, cy, TILE_PX, TILE_PX, 0x82b84a));
+  container.add(host.add.rectangle(cx, cy, TILE_PX, TILE_PX, 0x80ba44));
 }
 
-function placeSheetTile(
+/** 8-neighbor road autotile → dirt / edge / corner treatment. */
+function paintRoadAutotile(
   host: PaintHost,
   container: Phaser.GameObjects.Container,
   tile: TileRenderView,
-  key: string,
-  frame: string,
-  depth: number,
-  flipY = false,
+  roads: Set<string>,
 ): void {
-  const { x, y } = tileToWorld(tile.q, tile.r);
-  const cx = x + TILE_PX / 2;
-  const cy = y + TILE_PX / 2;
-  if (host.textures.exists(key) && host.textures.get(key).has(frame)) {
-    const img = host.add.image(cx, cy, key, frame);
-    img.setDisplaySize(TILE_PX + 1, TILE_PX + 1);
-    img.setFlipY(flipY);
-    img.setDepth(depth);
-    container.add(img);
-    return;
+  // Grass underlay first (world-space)
+  const gFrame = grassWorldFrame(tile.q, tile.r);
+  if (host.textures.exists(GRASS_WORLD_TEX) && host.textures.get(GRASS_WORLD_TEX).has(gFrame)) {
+    placeSheetTile(host, container, tile, GRASS_WORLD_TEX, gFrame, 0);
+  } else {
+    placeFullTile(host, container, tile, `${GRASS_CALM_TEX}-0`, 0);
   }
-  placeFullTile(host, container, tile, DIRT_CALM_TEX, depth);
-}
 
-/**
- * Road autotile from sheet-ground dirt row + edge row.
- * 1-tile corridors use DIRT_EDGE_TEX (soft N/S alpha) over grass.
- */
-function paintRoadTile(
-  host: PaintHost,
-  container: Phaser.GameObjects.Container,
-  tile: TileRenderView,
-  roadKeys: Set<string>,
-): void {
-  placeFullTile(host, container, tile, `${GRASS_CALM_TEX}-0`, 0);
-
-  const n = roadKeys.has(`${tile.q},${tile.r - 1}`);
-  const s = roadKeys.has(`${tile.q},${tile.r + 1}`);
-  const e = roadKeys.has(`${tile.q + 1},${tile.r}`);
-  const w = roadKeys.has(`${tile.q - 1},${tile.r}`);
+  const n = roads.has(`${tile.q},${tile.r - 1}`);
+  const s = roads.has(`${tile.q},${tile.r + 1}`);
+  const e = roads.has(`${tile.q + 1},${tile.r}`);
+  const w = roads.has(`${tile.q - 1},${tile.r}`);
+  const ne = roads.has(`${tile.q + 1},${tile.r - 1}`);
+  const nw = roads.has(`${tile.q - 1},${tile.r - 1}`);
+  const se = roads.has(`${tile.q + 1},${tile.r + 1}`);
+  const sw = roads.has(`${tile.q - 1},${tile.r + 1}`);
   const dirtVar = String(12 + (hash2(tile.q, tile.r) % 3));
+  const cardinal = (n ? 1 : 0) + (e ? 1 : 0) + (s ? 1 : 0) + (w ? 1 : 0);
 
-  // Thick corridor (has N or S neighbor road) → dirt fill + edge frames
-  if (n && s) {
+  // Interior / thick
+  if (cardinal >= 3 || (n && s) || (e && w && (n || s))) {
     placeSheetTile(host, container, tile, 'sheet-ground', dirtVar, 0.5);
     return;
   }
-  if (!n && s) {
-    // Northern lip of ribbon: grass-top / dirt-bottom
+  // North edge only
+  if (!n && s && !e && !w) {
     placeSheetTile(host, container, tile, 'sheet-ground', '6', 0.5);
     return;
   }
-  if (n && !s) {
-    // Southern lip: flip edge frame
+  if (n && !s && !e && !w) {
     placeSheetTile(host, container, tile, 'sheet-ground', '6', 0.5, true);
     return;
   }
-  // Single-tile (E/W corridor) or isolated — soft-edge dirt over grass
-  if (e || w) {
+  // East/west corridor (meander horizontal)
+  if ((e || w) && !n && !s) {
+    if (host.textures.exists(DIRT_EDGE_TEX)) {
+      placeFullTile(host, container, tile, DIRT_EDGE_TEX, 0.5);
+    } else {
+      placeSheetTile(host, container, tile, 'sheet-ground', dirtVar, 0.5);
+    }
+    return;
+  }
+  // Corners / diagonals — dirt with soft edge
+  if (ne || nw || se || sw || cardinal >= 1) {
     if (host.textures.exists(DIRT_EDGE_TEX)) {
       placeFullTile(host, container, tile, DIRT_EDGE_TEX, 0.5);
     } else {
@@ -181,26 +232,42 @@ export function paintGroundTile(
   container: Phaser.GameObjects.Container,
   tile: TileRenderView,
   roadKeys?: Set<string>,
+  meanderKeys?: Set<string>,
 ): void {
-  const choice = groundPaintFor(tile);
-  if (choice.kind === 'road') {
-    paintRoadTile(host, container, tile, roadKeys ?? new Set());
+  const roads = meanderKeys ?? roadKeys ?? new Set<string>();
+  const onRoad =
+    isRoadBiome(tile.biomeId) || roads.has(`${tile.q},${tile.r}`);
+
+  if (onRoad && roads.size > 0) {
+    paintRoadAutotile(host, container, tile, roads);
+    return;
+  }
+  if (isRoadBiome(tile.biomeId)) {
+    // Sim road but outside meander expand — still paint
+    paintRoadAutotile(host, container, tile, roadKeys ?? new Set([`${tile.q},${tile.r}`]));
     return;
   }
 
-  const key = host.textures.exists(choice.key) ? choice.key : GRASS_CALM_TEX;
-  placeFullTile(host, container, tile, key, 0);
+  const choice = groundPaintFor(tile);
+  if (choice.kind === 'grass') {
+    if (host.textures.exists(GRASS_WORLD_TEX) && host.textures.get(GRASS_WORLD_TEX).has(choice.frame)) {
+      placeSheetTile(host, container, tile, GRASS_WORLD_TEX, choice.frame, 0);
+    } else {
+      placeFullTile(host, container, tile, `${GRASS_CALM_TEX}-0`, 0);
+    }
+  }
 
-  // Sparse organic tufts / flowers
-  if (hash2(tile.q * 3, tile.r * 7) % 11 === 0) {
+  // Sparse organic tufts (world-hashed, not grid-locked density)
+  if (hash2(tile.q * 3, tile.r * 7) % 13 === 0) {
     const foot = tileFootWorld(tile.q, tile.r);
-    const ox = (hash2(tile.r, tile.q) % 7) - 3;
-    const g = host.add.rectangle(foot.x + ox, foot.y - 5, 2, 5, 0x3d6b28);
-    g.setAlpha(0.75);
+    const ox = (hash2(tile.r, tile.q) % 9) - 4;
+    const oy = (hash2(tile.q, tile.r + 5) % 5) - 2;
+    const g = host.add.rectangle(foot.x + ox, foot.y - 5 + oy, 2, 5, 0x3d6b28);
+    g.setAlpha(0.7);
     g.setDepth(0.15);
     container.add(g);
   }
-  if (hash2(tile.q + 9, tile.r + 2) % 29 === 0) {
+  if (hash2(tile.q + 9, tile.r + 2) % 31 === 0) {
     const foot = tileFootWorld(tile.q, tile.r);
     const fl = host.add.rectangle(foot.x - 3, foot.y - 7, 2, 2, 0xf0d878);
     fl.setDepth(0.16);
@@ -216,9 +283,6 @@ export function paintProp(
   const foot = tileFootWorld(prop.position.x, prop.position.y);
   const assetKey = PROP_ASSET[prop.type] ?? `facility.${prop.type}.${prop.state || 'idle'}`;
   const entry = lookupAsset(assetKey);
-  const addTo = (obj: Phaser.GameObjects.GameObject) => {
-    container?.add(obj);
-  };
 
   addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.0);
 
@@ -229,16 +293,15 @@ export function paintProp(
       const img = host.add.image(foot.x, foot.y, texKey, fr);
       applySpriteSort(img);
       img.setDisplaySize(TILE_PX * 0.95, TILE_PX * 0.95);
-      addTo(img);
+      container?.add(img);
       return;
     }
     const sheaf = host.add.rectangle(foot.x, foot.y - 6, 10, 14, 0xd4b84a);
     applySpriteSort(sheaf);
-    addTo(sheaf);
+    container?.add(sheaf);
     return;
   }
 
-  // Compact facility markers (avoid huge sliced sheet cells)
   paintFacilityStub(host, container, foot.x, foot.y, prop.type);
 }
 
@@ -263,68 +326,113 @@ function paintFacilityStub(
 }
 
 /**
- * Terrace cliff edge: lip along the drop line, face hanging down, base at bottom.
- * Call paintLowerTerraceShade south of this so upper/lower heights read apart.
+ * Irregular terrace cliff: contour meanders in r, ends taper into slopes,
+ * upper plateau (above lip) stays normal grass; lower band shaded.
  */
 export function paintCliffStrip(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   q: number,
   r: number,
-  widthTiles = 14,
+  widthTiles = 16,
 ): void {
   const texKey = 'sheet-cliff';
   if (!host.textures.exists(texKey)) return;
   const tex = host.textures.get(texKey);
 
   for (let i = 0; i < widthTiles; i++) {
-    const foot = tileFootWorld(q + i, r);
+    const t = i / Math.max(1, widthTiles - 1);
+    // Irregular contour (not a straight wall)
+    // Gentle irregular contour (±1 tile) so faces abut into one ridge
+    const wobble = Math.round(0.85 * Math.sin(i * 0.4 + 0.2) + 0.4 * Math.sin(i * 0.95));
+    const localR = r + wobble;
+    const endDist = Math.min(i, widthTiles - 1 - i);
+    const taper = endDist < 2 ? 0.45 + endDist * 0.28 : 1;
+    if (endDist === 0 && taper < 0.5) {
+      /* terminus slope only */
+    }
+
+    const foot = tileFootWorld(q + i, localR);
     const col = i % 4;
-    // Lip sits ON the upper terrace edge
+
     const lipFr = tex.has('lip') ? 'lip' : String(col);
     if (tex.has(lipFr)) {
       const lip = host.add.image(foot.x, foot.y - 2, texKey, lipFr);
       lip.setOrigin(0.5, 1);
-      lip.setDisplaySize(TILE_PX + 2, TILE_PX * 0.55);
+      lip.setDisplaySize(TILE_PX + 2, TILE_PX * 0.5 * Math.min(1, taper + 0.2));
       lip.setDepth(foot.y - 0.4);
+      lip.setAlpha(0.95);
       container?.add(lip);
     }
-    // Face hangs south (down-screen) — the vertical drop
-    const faceFr = tex.has('face') ? 'face' : String(4 + col);
-    if (tex.has(faceFr)) {
-      const face = host.add.image(foot.x, foot.y + TILE_PX * 0.95, texKey, faceFr);
-      face.setOrigin(0.5, 1);
-      face.setDisplaySize(TILE_PX + 2, TILE_PX * 1.15);
-      face.setDepth(foot.y + 0.5);
-      container?.add(face);
+
+    if (taper > 0.45) {
+      const faceFr = tex.has('face') ? 'face' : String(4 + col);
+      if (tex.has(faceFr)) {
+        const face = host.add.image(
+          foot.x,
+          foot.y + TILE_PX * (0.55 + 0.5 * taper),
+          texKey,
+          faceFr,
+        );
+        face.setOrigin(0.5, 1);
+        face.setDisplaySize(TILE_PX + 2, TILE_PX * (0.55 + 0.65 * taper));
+        face.setDepth(foot.y + 0.5);
+        container?.add(face);
+      }
     }
-    // Base tuck under face
-    const baseFr = tex.has('base') ? 'base' : String(8 + col);
-    if (tex.has(baseFr)) {
-      const base = host.add.image(foot.x, foot.y + TILE_PX * 1.55, texKey, baseFr);
-      base.setOrigin(0.5, 1);
-      base.setDisplaySize(TILE_PX + 2, TILE_PX * 0.5);
-      base.setDepth(foot.y + 1.0);
-      container?.add(base);
+
+    if (taper > 0.7) {
+      const baseFr = tex.has('base') ? 'base' : String(8 + col);
+      if (tex.has(baseFr)) {
+        const base = host.add.image(
+          foot.x,
+          foot.y + TILE_PX * (1.1 + 0.55 * taper),
+          texKey,
+          baseFr,
+        );
+        base.setOrigin(0.5, 1);
+        base.setDisplaySize(TILE_PX + 2, TILE_PX * 0.45);
+        base.setDepth(foot.y + 1.0);
+        container?.add(base);
+      }
+    }
+
+    // End slope: short dirt wedge instead of full face
+    if (endDist < 2 && taper <= 0.45) {
+      const wedge = host.add.rectangle(
+        foot.x,
+        foot.y + 8,
+        TILE_PX * 0.9,
+        10 + endDist * 6,
+        0x7a6238,
+      );
+      wedge.setDepth(foot.y + 0.3);
+      container?.add(wedge);
     }
   }
 }
 
-/** Darker grass band south of cliff so the drop reads as two ground heights. */
+/** Darker lower terrace following the same irregular contour. */
 export function paintLowerTerraceShade(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   q: number,
   r: number,
-  widthTiles = 14,
-  depthTiles = 5,
+  widthTiles = 16,
+  depthTiles = 6,
 ): void {
-  for (let dr = 1; dr <= depthTiles; dr++) {
-    for (let i = 0; i < widthTiles; i++) {
-      const { x, y } = tileToWorld(q + i, r + dr);
+  for (let i = 0; i < widthTiles; i++) {
+    const wobble = Math.round(0.85 * Math.sin(i * 0.4 + 0.2) + 0.4 * Math.sin(i * 0.95));
+    const localR = r + wobble;
+    const endDist = Math.min(i, widthTiles - 1 - i);
+    if (endDist === 0) continue;
+    for (let dr = 1; dr <= depthTiles; dr++) {
+      const { x, y } = tileToWorld(q + i, localR + dr);
       const cx = x + TILE_PX / 2;
       const cy = y + TILE_PX / 2;
-      const shade = host.add.rectangle(cx, cy, TILE_PX + 1, TILE_PX + 1, 0x5a8a38, 1);
+      // Blend darker toward cliff, lighter farther
+      const a = Math.max(0.25, 0.72 - dr * 0.08);
+      const shade = host.add.rectangle(cx, cy, TILE_PX + 3, TILE_PX + 3, 0x356028, a);
       shade.setDepth(0.08);
       container?.add(shade);
     }
@@ -355,38 +463,7 @@ export function paintTree(
   }
   const trunk = host.add.rectangle(foot.x, foot.y - 8, 5, 14, 0x5a3a22);
   applySpriteSort(trunk);
-  const c1 = host.add.circle(foot.x, foot.y - 28, 12, 0x2f5a28);
-  c1.setDepth(foot.y + 0.2);
   container?.add(trunk);
-  container?.add(c1);
-}
-
-/** Timber house painted when sheet fragment would slice. */
-function paintTimberHouse(
-  host: PaintHost,
-  container: Phaser.GameObjects.Container | null,
-  footX: number,
-  footY: number,
-  scale = 1,
-): void {
-  addSoftShadow(host, container, footX, footY, 1.5 * scale);
-  const w = 40 * scale;
-  const wallH = 56 * scale;
-  const wall = host.add.rectangle(footX, footY - wallH / 2, w, wallH, 0xb8a07a);
-  wall.setStrokeStyle(2, 0x5a4030, 1);
-  applySpriteSort(wall);
-  // Beam
-  const beam = host.add.rectangle(footX, footY - wallH * 0.55, w - 2, 4 * scale, 0x6b4423);
-  beam.setDepth(footY + 0.15);
-  const door = host.add.rectangle(footX, footY - 14 * scale, 11 * scale, 20 * scale, 0x4a3020);
-  door.setDepth(footY + 0.2);
-  const win = host.add.rectangle(footX, footY - 40 * scale, 10 * scale, 8 * scale, 0x2a3540);
-  win.setDepth(footY + 0.2);
-  const roof = host.add.rectangle(footX, footY - wallH - 6 * scale, w * 1.2, 14 * scale, 0xa84532);
-  roof.setDepth(footY + 0.3);
-  const chim = host.add.rectangle(footX + w * 0.28, footY - wallH - 16 * scale, 7 * scale, 14 * scale, 0x8a8a90);
-  chim.setDepth(footY + 0.35);
-  for (const o of [wall, beam, door, win, roof, chim]) container?.add(o);
 }
 
 function paintFence(
@@ -453,56 +530,67 @@ export function paintTownMarker(
 ): void {
   const foot = tileFootWorld(town.q, town.r);
 
-  // Inn (exact stamp — no white bg after sheet scrub)
+  // Inn stamp
+  let innTop = foot.y - TILE_PX * 4.0;
   if (host.textures.exists('sheet-buildings') && host.textures.get('sheet-buildings').has('inn')) {
     addSoftShadow(host, container, foot.x, foot.y, 2.0);
     const img = host.add.image(foot.x, foot.y, 'sheet-buildings', 'inn');
     applySpriteSort(img);
-    // Native ~149×141 → ~4.5×4.2 tiles
     img.setDisplaySize(TILE_PX * 4.2, TILE_PX * 4.0);
     container?.add(img);
-  } else {
-    paintTimberHouse(host, container, foot.x, foot.y, 1.2);
+    innTop = foot.y - TILE_PX * 4.0;
   }
 
-  // Second house to the east (geometric — sheet "house" is sliced fragments)
-  paintTimberHouse(host, container, foot.x + TILE_PX * 3.2, foot.y + 6, 0.85);
+  // Real sheet house2 (ansimuz extract)
+  const houseFoot = { x: foot.x + TILE_PX * 3.4, y: foot.y + 8 };
+  addSoftShadow(host, container, houseFoot.x, houseFoot.y, 1.5);
+  if (host.textures.exists(HOUSE2_TEX)) {
+    const h2 = host.add.image(houseFoot.x, houseFoot.y, HOUSE2_TEX);
+    applySpriteSort(h2);
+    h2.setDisplaySize(TILE_PX * 2.6, TILE_PX * 3.8);
+    container?.add(h2);
+  } else {
+    const wall = host.add.rectangle(houseFoot.x, houseFoot.y - 36, 40, 56, 0xb8a07a);
+    wall.setStrokeStyle(2, 0x5a4030, 1);
+    applySpriteSort(wall);
+    const roof = host.add.rectangle(houseFoot.x, houseFoot.y - 68, 48, 14, 0xa84532);
+    roof.setDepth(houseFoot.y + 0.3);
+    container?.add(wall);
+    container?.add(roof);
+  }
 
-  // Trees cluster
   for (const [dq, dr, v] of [
     [-2.4, 0.2, 0],
     [-1.8, -0.6, 1],
-    [4.6, 0.4, 2],
-    [5.2, -0.3, 0],
+    [5.0, 0.4, 2],
+    [5.6, -0.3, 0],
   ] as const) {
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
-  // Fence south of plaza
   paintFence(host, container, town.q - 1.5, town.r + 1.4, 8);
-
-  // Crates / props
   paintCrate(host, container, town.q + 1.2, town.r + 0.8);
   paintCrate(host, container, town.q + 1.6, town.r + 0.9);
   paintCrate(host, container, town.q - 0.8, town.r + 0.6);
 
-  // Villagers — one ansimuz frame per spot (4-dir idle)
-  paintVillager(host, container, town.q + 0.6, town.r + 1.1, '7');
-  paintVillager(host, container, town.q + 2.0, town.r + 0.9, '4');
-  paintVillager(host, container, town.q - 0.4, town.r + 1.3, '1', true);
-  paintVillager(host, container, town.q + 3.4, town.r + 1.0, '7');
+  // Villagers south of fence — clear of label
+  paintVillager(host, container, town.q + 0.6, town.r + 1.15, '7');
+  paintVillager(host, container, town.q + 2.0, town.r + 0.95, '4');
+  paintVillager(host, container, town.q - 0.4, town.r + 1.35, '1', true);
+  paintVillager(host, container, town.q + 3.5, town.r + 1.05, '7');
 
-  // Label BELOW settlement so it doesn't collide with HUD at top of screen
+  // Label ABOVE roofs with clearance — never overlaps villagers
+  const labelY = Math.min(innTop, houseFoot.y - TILE_PX * 3.8) - 16;
   const label = host.add
-    .text(foot.x + TILE_PX * 1.2, foot.y + 18, town.id.replace(/_/g, ' '), {
+    .text(foot.x + TILE_PX * 1.5, labelY, town.id.replace(/_/g, ' '), {
       fontFamily: 'monospace',
       fontSize: '11px',
       color: '#f2e9e4',
-      backgroundColor: '#00000088',
+      backgroundColor: '#00000099',
       padding: { x: 4, y: 2 },
     })
-    .setOrigin(0.5, 0)
-    .setDepth(foot.y + 20);
+    .setOrigin(0.5, 1)
+    .setDepth(foot.y + 30);
   container?.add(label);
 }
 
@@ -514,8 +602,23 @@ export function paintChunkContents(
   const roadKeys = new Set(
     chunk.tiles.filter((t) => isRoadBiome(t.biomeId)).map((t) => `${t.q},${t.r}`),
   );
-  for (const tile of chunk.tiles) {
-    paintGroundTile(host, container, tile, roadKeys);
+  const meander = expandMeanderRoadKeys(roadKeys);
+  // Ensure meander cells that aren't in chunk.tiles still get painted if in bbox
+  const byKey = new Map(chunk.tiles.map((t) => [`${t.q},${t.r}`, t]));
+  for (const key of meander) {
+    if (byKey.has(key)) continue;
+    const [qs, rs] = key.split(',');
+    const q = Number(qs);
+    const r = Number(rs);
+    // Only fill if inside chunk tile extent
+    const inChunk = chunk.tiles.some(
+      (t) => Math.abs(t.q - q) <= 1 && Math.abs(t.r - r) <= 2,
+    );
+    if (!inChunk) continue;
+    byKey.set(key, { q, r, biomeId: 'road', warmth: 0.55 });
+  }
+  for (const tile of byKey.values()) {
+    paintGroundTile(host, container, tile, roadKeys, meander);
   }
   return container;
 }

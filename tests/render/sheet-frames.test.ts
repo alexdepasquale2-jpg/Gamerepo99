@@ -32,3 +32,8 @@ describe('sheet urls + frames', () => {
     expect(lookupAsset('facility.waystation.idle')?.status).toBe('ready');
   });
 });
+
+  it('exposes house2 + grass-world public urls', () => {
+    expect(toPublicUrl('assets/sprites/stamp-house2.png')).toBe('/sprites/stamp-house2.png');
+    expect(toPublicUrl('assets/sprites/grass-world.png')).toBe('/sprites/grass-world.png');
+  });
