@@ -77,6 +77,38 @@ export const FEEL = {
     fillColor: 0xf2b84b,
     emptyColor: 0x2a2620,
   },
+
+  /**
+   * When true (settings), skip shake/hit-stop; keep soft wash/alpha only.
+   * Wired by UI later — render checks FEEL.reducedMotion.enabled.
+   */
+  reducedMotion: {
+    enabled: false,
+    /** Multiply shake intensity when reduced motion off; ignored when enabled */
+    shakeScale: 1,
+    suppressHitStop: false,
+    /** If enabled: force these */
+    whenEnabled: {
+      shakeIntensity: 0,
+      hitStopMs: 0,
+      washDurationMul: 1.4,
+      particleCountMul: 0.35,
+    },
+  },
 } as const;
 
 export type Feel = typeof FEEL;
+
+/** Effective shake intensity honoring reduced-motion flag. */
+export function feelShakeIntensity(base: number): number {
+  if (FEEL.reducedMotion.enabled) return FEEL.reducedMotion.whenEnabled.shakeIntensity;
+  return base * FEEL.reducedMotion.shakeScale;
+}
+
+/** Effective hit-stop ms honoring reduced-motion flag. */
+export function feelHitStopMs(base: number): number {
+  if (FEEL.reducedMotion.enabled || FEEL.reducedMotion.suppressHitStop) {
+    return FEEL.reducedMotion.enabled ? FEEL.reducedMotion.whenEnabled.hitStopMs : 0;
+  }
+  return base;
+}

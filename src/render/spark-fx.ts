@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { EventBus } from '../sim';
-import { FEEL } from './feel';
+import { FEEL, feelHitStopMs, feelShakeIntensity } from './feel';
 
 export type SparkSpentPayload = {
   x: number;
@@ -62,12 +62,12 @@ export function attachSparkFx(
         playerY: p.playerY ?? player?.y ?? p.y,
       };
       playSparkSpent(scene, enriched, () => {
-        hitStopUntil = scene.time.now + FEEL.spark.hitStopMs;
+        hitStopUntil = scene.time.now + feelHitStopMs(FEEL.spark.hitStopMs);
       });
       opts.onSparkSpentHud?.(p.amount01 ?? 0.15);
     }),
     bus.on<ReignitePayload>('vfx.reignite', (p) => {
-      hitStopUntil = Math.max(hitStopUntil, scene.time.now + FEEL.reignite.hitStopMs);
+      hitStopUntil = Math.max(hitStopUntil, scene.time.now + feelHitStopMs(FEEL.reignite.hitStopMs));
       playReignite(scene, p);
     }),
     bus.on<RefusalPayload>('vfx.refusal', (p) => playRefusal(scene, p)),
@@ -176,7 +176,7 @@ function playSparkSpent(
 ): void {
   const { x, y } = p;
   onHitStop();
-  scene.cameras.main.shake(FEEL.spark.shakeDurationMs, FEEL.spark.shakeIntensity);
+  scene.cameras.main.shake(FEEL.spark.shakeDurationMs, feelShakeIntensity(FEEL.spark.shakeIntensity));
   playCostToSelf(scene, p.playerX ?? x, p.playerY ?? y);
   emitBurst(scene, x, y, 'fx-spark-gold', {
     count: FEEL.spark.particleCount,
@@ -243,7 +243,7 @@ function playColorWash(scene: Phaser.Scene, x: number, y: number, warmthBefore =
 
 function playReignite(scene: Phaser.Scene, p: ReignitePayload): void {
   const { x, y } = p;
-  scene.cameras.main.shake(FEEL.reignite.shakeDurationMs, FEEL.reignite.shakeIntensity);
+  scene.cameras.main.shake(FEEL.reignite.shakeDurationMs, feelShakeIntensity(FEEL.reignite.shakeIntensity));
   // Glow bloom
   const bloom = scene.add.circle(x, y, 8, FEEL.reignite.colorGold, FEEL.reignite.bloomAlpha);
   bloom.setDepth(18);

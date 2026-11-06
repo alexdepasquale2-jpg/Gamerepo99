@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "grid": {
+    "kind": "square_ortho",
+    "q": "x",
+    "r": "y",
+    "pendingLoomLock": true
+  },
+  "heading": {
+    "unit": "deg_cw_from_north",
+    "eightWayOrder": [
+      "N",
+      "NE",
+      "E",
+      "SE",
+      "S",
+      "SW",
+      "W",
+      "NW"
+    ],
+    "fourWayOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "index8": "((round(deg/45)%8)+8)%8",
+    "index4": "((round(deg/90)%4)+4)%4"
+  },
+  "assets": {
+    "biome.river_margin": {
+      "key": "biome.river_margin",
+      "sheet": "kit-biomes",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "Tiny Town water/grass"
+    },
+    "biome.ash_wood": {
+      "key": "biome.ash_wood",
+      "sheet": "kit-biomes",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "trees"
+    },
+    "biome.mill_heath": {
+      "key": "biome.mill_heath",
+      "sheet": "kit-biomes",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "heath"
+    },
+    "biome.glare_approach": {
+      "key": "biome.glare_approach",
+      "sheet": "kit-biomes",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "verge"
+    },
+    "road.track": {
+      "key": "road.track",
+      "sheet": "kit-roads",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "road.road": {
+      "key": "road.road",
+      "sheet": "kit-roads",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "road.highway": {
+      "key": "road.highway",
+      "sheet": "kit-roads",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mill.idle": {
+      "key": "facility.mill.idle",
+      "sheet": "kit-facilities",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mill.working": {
+      "key": "facility.mill.working",
+      "sheet": "kit-facilities",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mill.abandoned": {
+      "key": "facility.mill.abandoned",
+      "sheet": "kit-facilities",
+      "frame": 2,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.lumber_camp.idle": {
+      "key": "facility.lumber_camp.idle",
+      "sheet": "kit-facilities",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.lumber_camp.working": {
+      "key": "facility.lumber_camp.working",
+      "sheet": "kit-facilities",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.lumber_camp.abandoned": {
+      "key": "facility.lumber_camp.abandoned",
+      "sheet": "kit-facilities",
+      "frame": 5,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.waystation.idle": {
+      "key": "facility.waystation.idle",
+      "sheet": "kit-facilities",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.waystation.working": {
+      "key": "facility.waystation.working",
+      "sheet": "kit-facilities",
+      "frame": 7,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.waystation.abandoned": {
+      "key": "facility.waystation.abandoned",
+      "sheet": "kit-facilities",
+      "frame": 8,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mine.idle": {
+      "key": "facility.mine.idle",
+      "sheet": "kit-facilities",
+      "frame": 9,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mine.working": {
+      "key": "facility.mine.working",
+      "sheet": "kit-facilities",
+      "frame": 10,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.mine.abandoned": {
+      "key": "facility.mine.abandoned",
+      "sheet": "kit-facilities",
+      "frame": 11,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready"
+    },
+    "facility.farm.idle": {
+      "key": "facility.farm.idle",
+      "sheet": "kit-facilities",
+      "frame": 12,
+      "variant": "palette",
+      "heading": "none",
+      "status": "missing"
+    },
+    "facility.farm.working": {
+      "key": "facility.farm.working",
+      "sheet": "kit-facilities",
+      "frame": 13,
+      "variant": "palette",
+      "heading": "none",
+      "status": "missing"
+    },
+    "facility.farm.abandoned": {
+      "key": "facility.farm.abandoned",
+      "sheet": "kit-facilities",
+      "frame": 14,
+      "variant": "palette",
+      "heading": "none",
+      "status": "missing"
+    },
+    "ore.ore_iron": {
+      "key": "ore.ore_iron",
+      "sheet": "vendor-caves-ore",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.food_grain": {
+      "key": "cargo.food_grain",
+      "sheet": "vendor-crops",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.timber": {
+      "key": "cargo.timber",
+      "sheet": "kenney-tiny-town",
+      "frame": 93,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready"
+    },
+    "cargo.wool": {
+      "key": "cargo.wool",
+      "sheet": "vendor-jetrel-items",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.fuel_cord": {
+      "key": "cargo.fuel_cord",
+      "sheet": "vendor-jetrel-items",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.coin": {
+      "key": "cargo.coin",
+      "sheet": "vendor-jetrel-items",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "caravan.carter": {
+      "key": "caravan.carter",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "8",
+      "status": "ready"
+    },
+    "caravan.caravaner": {
+      "key": "caravan.caravaner",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "8",
+      "status": "stub"
+    },
+    "caravan.ferryman": {
+      "key": "caravan.ferryman",
+      "sheet": "vendor-roguelike-boat",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "caravan.mount": {
+      "key": "caravan.mount",
+      "sheet": "vendor-animals",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "8",
+      "status": "missing"
+    },
+    "caravan.guide": {
+      "key": "caravan.guide",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 100,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.courier": {
+      "key": "caravan.courier",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.smuggler": {
+      "key": "caravan.smuggler",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 87,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.gouger": {
+      "key": "caravan.gouger",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 96,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.scammer": {
+      "key": "caravan.scammer",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.highwayman": {
+      "key": "caravan.highwayman",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 96,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.worker": {
+      "key": "caravan.worker",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 100,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.traveler": {
+      "key": "caravan.traveler",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.guild": {
+      "key": "caravan.guild",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.caravaner"
+    },
+    "caravan.ferry": {
+      "key": "caravan.ferry",
+      "sheet": "vendor-roguelike-boat",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.ferryman"
+    },
+    "fauna.rabbit": {
+      "key": "fauna.rabbit",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "fauna.deer": {
+      "key": "fauna.deer",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "fauna.bird": {
+      "key": "fauna.bird",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "fauna.pig": {
+      "key": "fauna.pig",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "fauna.fox": {
+      "key": "fauna.fox",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    },
+    "fauna.fish": {
+      "key": "fauna.fish",
+      "sheet": "vendor-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "missing"
+    }
+  }
+}

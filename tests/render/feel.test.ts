@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FEEL } from '../../src/render/feel';
+import { FEEL, feelHitStopMs, feelShakeIntensity } from '../../src/render/feel';
 
 describe('FEEL render config', () => {
   it('keeps dual-cue spark colors', () => {
@@ -25,5 +25,11 @@ describe('FEEL render config', () => {
     expect(FEEL.hud.sparkBarWidth).toBeGreaterThan(0);
     expect(FEEL.hud.fillColor).toBe(FEEL.spark.colorGold);
     expect(FEEL.hud.outlineColor).toBe(FEEL.spark.colorCyan);
+  });
+
+  it('exposes reduced-motion tunables and helpers', () => {
+    expect(FEEL.reducedMotion.enabled).toBe(false);
+    expect(feelShakeIntensity(0.004)).toBeCloseTo(0.004);
+    expect(feelHitStopMs(50)).toBe(50);
   });
 });
