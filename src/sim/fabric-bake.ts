@@ -35,6 +35,55 @@ function pickPool(): Frag[] {
   return frags.filter((f) => f.text?.trim() && (f.tags ?? []).includes('generic_blend'));
 }
 
+function circDist(a: number, b: number, n: number): number {
+  if (n <= 0) return 0;
+  const d = Math.abs(a - b) % n;
+  return Math.min(d, n - d);
+}
+
+function hashId(id: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Higher is better. Deterministic from seed + personIndex + used set + fragId.
+ * Rotation pulls toward a per-person band; novelty penalizes sitting near recent picks.
+ */
+export function scoreBakeCandidate(args: {
+  poolIndex: number;
+  poolLength: number;
+  personIndex: number;
+  seed: number;
+  usedPoolIndices: readonly number[];
+  fragId: string;
+}): number {
+  const { poolIndex, poolLength, personIndex, seed, usedPoolIndices, fragId } = args;
+  if (poolLength <= 0) return 0;
+
+  const stride = Math.max(1, Math.floor(poolLength / 16));
+  const base = (Math.imul(seed, 0x9e3779b9) >>> 0) % poolLength;
+  const ideal = (base + personIndex * stride) % poolLength;
+  const rotationBonus = -circDist(poolIndex, ideal, poolLength);
+
+  let noveltyPenalty = 0;
+  for (const up of usedPoolIndices) {
+    const d = circDist(poolIndex, up, poolLength);
+    if (d < stride * 2) noveltyPenalty += stride * 2 - d;
+  }
+
+  // Jitter breaks equal-score ties so low pool indices are not perpetual favorites.
+  const jitter =
+    createRng((seed ^ Math.imul(personIndex + 1, 0x85ebca6b) ^ hashId(fragId)) >>> 0).next() *
+    (stride * 0.5);
+
+  return rotationBonus * 4 - noveltyPenalty * 8 + jitter;
+}
+
 function pickBakedLine(
   seed: number,
   index: number,
@@ -46,20 +95,43 @@ function pickBakedLine(
     return { id: `empty-${seed}-${index}`, text: '…', source: 'fallback' };
   }
 
-  const rng = createRng((seed ^ Math.imul(index + 1, 0x85ebca6b) ^ 0xb10b10b1) >>> 0);
-
   const fresh = pool.filter((f) => !usedTexts.has(f.text) && !usedIds.has(f.id));
   const candidates = fresh.length > 0 ? fresh : pool;
 
-  // Weighted shuffle pick: walk a few tries from rng to reduce collisions when fresh empties.
-  let frag = candidates[rng.int(0, candidates.length)]!;
-  for (let attempt = 0; attempt < 8 && usedTexts.has(frag.text) && fresh.length === 0; attempt++) {
-    frag = candidates[rng.int(0, candidates.length)]!;
+  const usedPoolIndices: number[] = [];
+  for (let i = 0; i < pool.length; i++) {
+    const f = pool[i]!;
+    if (usedTexts.has(f.text) || usedIds.has(f.id)) usedPoolIndices.push(i);
   }
 
-  usedTexts.add(frag.text);
-  usedIds.add(frag.id);
-  return { id: frag.id, text: frag.text, source: 'blend' };
+  const poolIndexById = new Map<string, number>();
+  for (let i = 0; i < pool.length; i++) {
+    poolIndexById.set(pool[i]!.id, i);
+  }
+
+  let best = candidates[0]!;
+  let bestScore = -Infinity;
+  for (const frag of candidates) {
+    const poolIndex = poolIndexById.get(frag.id) ?? 0;
+    let score = scoreBakeCandidate({
+      poolIndex,
+      poolLength: pool.length,
+      personIndex: index,
+      seed,
+      usedPoolIndices,
+      fragId: frag.id,
+    });
+    // When fresh is empty, keep used texts as last resort.
+    if (usedTexts.has(frag.text) || usedIds.has(frag.id)) score -= 1e9;
+    if (score > bestScore) {
+      bestScore = score;
+      best = frag;
+    }
+  }
+
+  usedTexts.add(best.text);
+  usedIds.add(best.id);
+  return { id: best.id, text: best.text, source: 'blend' };
 }
 
 function withBakedLines(
