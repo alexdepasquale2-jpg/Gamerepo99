@@ -1,0 +1,382 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-interaction-model.md",
+  "kinds": [
+    "conversation",
+    "favor",
+    "errand",
+    "trade",
+    "gift",
+    "work_alongside",
+    "promise",
+    "show_up",
+    "introduce",
+    "stand_up"
+  ],
+  "interactions": [
+    {
+      "id": "talk_gentle",
+      "kind": "conversation",
+      "tags": [
+        "talk",
+        "gentle",
+        "interaction:talk_gentle"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {
+        "flame01": 0.03,
+        "trust": 0.05
+      },
+      "bondDelta": 0,
+      "ripple": "none",
+      "choiceSetId": "talk_choices",
+      "touchModifiers": [
+        {
+          "requireMarksAny": [
+            "genuine_growth"
+          ],
+          "touch": {
+            "flame01": 0.03
+          },
+          "touchScoreFlat": 1.2
+        }
+      ]
+    },
+    {
+      "id": "talk_hard",
+      "kind": "conversation",
+      "tags": [
+        "talk",
+        "hard",
+        "interaction:talk_hard"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 0,
+      "touch": {
+        "flame01": 0.02,
+        "trust": -0.02
+      },
+      "ripple": "none",
+      "choiceSetId": "talk_choices"
+    },
+    {
+      "id": "talk_hard_shame",
+      "kind": "conversation",
+      "tags": [
+        "talk",
+        "hard",
+        "shame_lean",
+        "interaction:talk_hard"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 0,
+      "touch": {
+        "trust": -0.08,
+        "marksAdd": [
+          {
+            "markId": "resentment",
+            "stacks": 1
+          }
+        ]
+      },
+      "ripple": "harm",
+      "choiceSetId": "talk_choices"
+    },
+    {
+      "id": "talk_empty_cheer",
+      "kind": "conversation",
+      "tags": [
+        "talk",
+        "cheer",
+        "assert_gate",
+        "interaction:talk_empty_cheer"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "assertFailIfMarksAny": [
+        "hollowness"
+      ],
+      "assertFailReason": "no_cheerful_grief",
+      "ripple": "none"
+    },
+    {
+      "id": "favor_ask",
+      "kind": "favor",
+      "tags": [
+        "favor",
+        "ask",
+        "interaction:favor_ask"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 0,
+      "touch": {
+        "trust": 0.02
+      },
+      "bondDelta": 0.5,
+      "ripple": "none"
+    },
+    {
+      "id": "favor_do",
+      "kind": "errand",
+      "tags": [
+        "favor",
+        "errand",
+        "do",
+        "interaction:favor_do"
+      ],
+      "baseStrain": 3,
+      "sparkGain": 2,
+      "touch": {
+        "flame01": 0.05
+      },
+      "bondDelta": 1,
+      "ripple": "help"
+    },
+    {
+      "id": "trade_fair",
+      "kind": "trade",
+      "tags": [
+        "trade",
+        "fair",
+        "interaction:trade_fair"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {
+        "trust": 0.04
+      },
+      "town": {
+        "despair": -0.01
+      },
+      "ripple": "help"
+    },
+    {
+      "id": "gift_give",
+      "kind": "gift",
+      "tags": [
+        "gift",
+        "interaction:gift_give"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 1,
+      "requires": {
+        "itemTag": "giftable"
+      },
+      "touch": {
+        "flame01": 0.06,
+        "marksAdd": [
+          {
+            "markId": "fragile_hope",
+            "stacks": 1
+          }
+        ]
+      },
+      "giftAccepted": true,
+      "ripple": "help"
+    },
+    {
+      "id": "work_alongside",
+      "kind": "work_alongside",
+      "tags": [
+        "work",
+        "meaning",
+        "interaction:work_alongside"
+      ],
+      "baseStrain": 3,
+      "sparkGain": 3,
+      "touch": {
+        "flame01": 0.04
+      },
+      "meaning": true,
+      "town": {
+        "despair": -0.01
+      },
+      "ripple": "help"
+    },
+    {
+      "id": "promise_make",
+      "kind": "promise",
+      "tags": [
+        "promise",
+        "make",
+        "interaction:promise_make"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "promise": {
+        "op": "make",
+        "idFrom": "generated"
+      },
+      "ripple": "none"
+    },
+    {
+      "id": "promise_keep",
+      "kind": "promise",
+      "tags": [
+        "promise",
+        "keep",
+        "interaction:promise_keep"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 4,
+      "requires": {
+        "promisePending": true
+      },
+      "touch": {
+        "flame01": 0.08,
+        "trust": 0.08,
+        "marksRemove": [
+          "hollowness"
+        ],
+        "marksAdd": [
+          {
+            "markId": "genuine_growth",
+            "stacks": 1
+          }
+        ]
+      },
+      "promise": {
+        "op": "keep"
+      },
+      "touchScoreFlat": 0.2,
+      "ripple": "help"
+    },
+    {
+      "id": "promise_break",
+      "kind": "promise",
+      "tags": [
+        "promise",
+        "break",
+        "interaction:promise_break"
+      ],
+      "baseStrain": 1,
+      "sparkGain": -2,
+      "requires": {
+        "promisePending": true
+      },
+      "touch": {
+        "trust": -0.12,
+        "marksAdd": [
+          {
+            "markId": "hollowness",
+            "stacks": 1
+          },
+          {
+            "markId": "resentment",
+            "stacks": 1
+          }
+        ]
+      },
+      "promise": {
+        "op": "break"
+      },
+      "scoreBrokenPromiseOnly": true,
+      "town": {
+        "doctrineExposure": 0.02
+      },
+      "ripple": "harm"
+    },
+    {
+      "id": "show_up",
+      "kind": "show_up",
+      "tags": [
+        "presence",
+        "interaction:show_up"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 1,
+      "touch": {},
+      "presenceDelta": 1,
+      "presenceThresholdBonus": {
+        "minPresence": 3,
+        "requireNoHarm": true,
+        "touch": {
+          "flame01": 0.05
+        }
+      },
+      "ripple": "none"
+    },
+    {
+      "id": "introduce",
+      "kind": "introduce",
+      "tags": [
+        "introduce",
+        "kin",
+        "interaction:introduce"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 0,
+      "requires": {
+        "otherPersonId": true
+      },
+      "touch": {},
+      "bondDelta": 0.5,
+      "introduce": {
+        "thirdPerson": true,
+        "otherBondDelta": 0.5,
+        "kinStrain": -1
+      },
+      "ripple": "help"
+    },
+    {
+      "id": "stand_up",
+      "kind": "stand_up",
+      "tags": [
+        "stand_up",
+        "defend",
+        "interaction:stand_up"
+      ],
+      "baseStrain": 4,
+      "sparkGain": 2,
+      "touch": {
+        "flame01": 0.08,
+        "trust": 0.1,
+        "woundPressure": [
+          {
+            "woundId": "shame_wound",
+            "delta": -1
+          }
+        ]
+      },
+      "stoodUp": true,
+      "touchScoreFlat": 3.2,
+      "ripple": "help"
+    }
+  ],
+  "choiceSets": [
+    {
+      "id": "talk_choices",
+      "options": [
+        {
+          "id": "opt_gentle",
+          "label": "Speak softly",
+          "interactionId": "talk_gentle"
+        },
+        {
+          "id": "opt_hard",
+          "label": "Press them",
+          "interactionId": "talk_hard"
+        },
+        {
+          "id": "opt_shame",
+          "label": "Name the failure",
+          "interactionId": "talk_hard_shame"
+        },
+        {
+          "id": "opt_cheer",
+          "label": "Cheer them up",
+          "interactionId": "talk_empty_cheer"
+        }
+      ]
+    }
+  ],
+  "rippleEnums": [
+    "help",
+    "harm",
+    "cling",
+    "none"
+  ]
+}

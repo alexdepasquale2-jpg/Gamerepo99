@@ -163,6 +163,25 @@ function loadJsonFilesInDir(dir, files, errors) {
   }
 }
 
+
+/** Assemble systems/interactions/ into virtual interactions.json. */
+const loadInteractionsDir = (dataDir, errors) => {
+  const dir = join(dataDir, 'systems', 'interactions');
+  const index = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8'));
+  const out = { version: index.version, description: index.description, spec: index.spec };
+  for (const name of index.files || []) {
+    const part = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+    for (const [k, v] of Object.entries(part)) {
+      if (k === 'version' || k === 'spec') continue;
+      if (out[k] !== undefined) {
+        errors.push(`DUP interactions key ${k} in ${name}`);
+      }
+      out[k] = v;
+    }
+  }
+  return out;
+};
+
 export const loadAll = (errors) => {
   const files = {};
   // Root-level JSON (lines.json, etc.)
@@ -201,6 +220,11 @@ export const loadAll = (errors) => {
     errors.push(`PARSE systems/assertions/: ${e.message}`);
   }
   try {
+    files['interactions.json'] = loadInteractionsDir(dataDir, errors);
+  } catch (e) {
+    errors.push(`PARSE systems/interactions/: ${e.message}`);
+  }
+  try {
     files['history-tables.json'] = loadHistoryDir(dataDir, errors);
   } catch (e) {
     errors.push(`PARSE world/history/: ${e.message}`);
@@ -221,6 +245,9 @@ export const loadAll = (errors) => {
     }
     if (readdirSync(systemsDir).includes('assertions.json')) {
       errors.push('systems/assertions.json must be removed — use systems/assertions/');
+    }
+    if (readdirSync(systemsDir).includes('interactions.json')) {
+      errors.push('systems/interactions.json must be removed — use systems/interactions/');
     }
   } catch { /* missing */ }
   try {
@@ -270,4 +297,5 @@ export const REQUIRED_FILES = [
   'voice-constraints.json',
   'assertions.json',
   'history-tables.json',
+  'interactions.json',
 ];

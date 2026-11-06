@@ -21,6 +21,7 @@ import { validateHoarder } from './validate/hoarder.mjs';
 import { validateScenarios } from './validate/scenarios.mjs';
 import { validateDynamism } from './validate/dynamism.mjs';
 import { validateFabricContent } from './validate/fabric-content.mjs';
+import { validateInteractions } from './validate/interactions.mjs';
 
 const { errors, warnings, req, ids } = createBag();
 const data = loadAll(errors);
@@ -50,6 +51,7 @@ validateRoadContent(data, { req, ids, people, towns });
 validateHoarder(data, { req, ids, towns, hooks });
 validateDynamism(data, { req, ids, people, methods });
 validateFabricContent(data, { req, ids, people, methods });
+validateInteractions(data, { req, ids, people, methods, marks });
 validateScenarios(data, { req, ids, people, methods, marks, hooks, archetypes });
 
 console.log('Files:', Object.keys(data).sort().join(', '));

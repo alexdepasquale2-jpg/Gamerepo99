@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-interaction-model.md",
+  "map": [
+    {
+      "methodId": "inspire",
+      "interactionIds": ["talk_gentle", "gift_give", "promise_keep"],
+      "recipeDefault": ["talk_gentle"],
+      "retire": ["sparkCost_as_verb", "empty_inspire_surcharge"],
+      "notes": "empty-inspire surcharge becomes low-trust talk fail"
+    },
+    {
+      "methodId": "carry_burden",
+      "interactionIds": ["favor_do", "work_alongside"],
+      "recipeDefault": ["favor_do"],
+      "retire": ["method_id_as_sole_kindle_button"]
+    },
+    {
+      "methodId": "challenge",
+      "interactionIds": ["talk_hard", "stand_up"],
+      "recipeDefault": ["stand_up"],
+      "retire": ["direct_flame_blast"]
+    },
+    {
+      "methodId": "shame",
+      "interactionIds": ["talk_hard_shame", "talk_hard"],
+      "recipeDefault": ["talk_hard_shame"],
+      "retire": ["shame_as_spend"]
+    },
+    {
+      "methodId": "lie",
+      "interactionIds": ["talk_hard", "promise_break"],
+      "recipeDefault": ["talk_hard"],
+      "tagsOnTalk": ["dishonest"],
+      "retire": ["lie_spark_surcharge"],
+      "notes": "lie spark surcharge → trust hit only"
+    }
+  ],
+  "forgeTestFirst": [
+    "tests/sim/interaction-touch.test.ts — resolveInteraction changes flame01 and spark by table",
+    "reignite only after touchScore≥24 across ≥3 distinct kinds",
+    "src/sim/interactions.ts + loader for interactions.json",
+    "adapter act('inspire@p') expands to recipe then Probe switches to interaction ids",
+    "retire UI copy Spend spark to…; retarget fragments method:* → interaction:*",
+    "spark-pacing costs → baseStrain; dawn/rest remain courage regen"
+  ],
+  "compatAdapter": {
+    "enabledUntil": "Probe bots on interaction ids",
+    "expandMethodAct": true
+  }
+}
