@@ -14,6 +14,7 @@ import type { WorldLayout } from '../sim/map/world-layout';
 import { FEEL } from './feel';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
 import { applySpriteSort, tileFootWorld } from './depth-sort';
+import { walkDelta } from './walk-delta';
 
 const PLAYER = 0xf2b84b;
 const CHUNK_MARGIN = 1;
@@ -80,7 +81,7 @@ export class OverworldScene extends Phaser.Scene {
     hud?.setStatus?.('continuous overworld');
   }
 
-  update(): void {
+  update(_time: number, delta: number): void {
     let dx = 0;
     let dy = 0;
     if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
@@ -88,8 +89,15 @@ export class OverworldScene extends Phaser.Scene {
     if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
     if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
     if (dx !== 0 || dy !== 0) {
-      this.player.x += dx * 3;
-      this.player.y += dy * 3;
+      const step = walkDelta(
+        dx,
+        dy,
+        delta,
+        FEEL.overworld.walkTilesPerSec,
+        TILE_PX,
+      );
+      this.player.x += step.dx;
+      this.player.y += step.dy;
       applySpriteSort(this.player);
     }
     this.syncChunks(false);
@@ -117,8 +125,16 @@ export class OverworldScene extends Phaser.Scene {
       .rectangle(foot.x, foot.y, TILE_PX * 0.55, TILE_PX * 0.8, PLAYER)
       .setStrokeStyle(2, 0x5ec8c8, 1);
     applySpriteSort(this.player);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
-    this.cameras.main.setZoom(1);
+    const cam = this.cameras.main;
+    cam.setRoundPixels(true);
+    cam.startFollow(
+      this.player,
+      true,
+      FEEL.overworld.camLerp,
+      FEEL.overworld.camLerp,
+    );
+    cam.setDeadzone(FEEL.overworld.camDeadzoneX, FEEL.overworld.camDeadzoneY);
+    cam.setZoom(1);
   }
 
   private syncChunks(force: boolean): void {

@@ -32,4 +32,11 @@ describe('FEEL render config', () => {
     expect(feelShakeIntensity(0.004)).toBeCloseTo(0.004);
     expect(feelHitStopMs(50)).toBe(50);
   });
+
+  it('exposes overworld walk and camera feel', () => {
+    expect(FEEL.overworld.walkTilesPerSec).toBe(2);
+    expect(FEEL.overworld.camLerp).toBeGreaterThan(0);
+    expect(FEEL.overworld.camDeadzoneX).toBeGreaterThan(0);
+    expect(FEEL.overworld.camDeadzoneY).toBeGreaterThan(0);
+  });
 });

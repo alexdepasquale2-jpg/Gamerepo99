@@ -67,6 +67,15 @@ export const FEEL = {
     desatMs: 320,
     snuffMs: 200,
   },
+  /** Continuous overworld walk + follow cam (presentation only) */
+  overworld: {
+    /** Matches TILES_PER_MINUTE / 60 ≈ 2 tiles/sec */
+    walkTilesPerSec: 2,
+    camLerp: 0.18,
+    camDeadzoneX: 24,
+    camDeadzoneY: 16,
+  },
+
   /** HUD spark bar (presentation only) */
   hud: {
     sparkBarWidth: 120,
