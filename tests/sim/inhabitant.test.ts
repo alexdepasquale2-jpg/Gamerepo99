@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadData } from '../../src/sim/load-data';
 import { assembleInhabitant, canEnterTile } from '../../src/sim/inhabitant';
-import { loadTownGrid } from '../../src/sim/world';
 
 describe('inhabitant assembly', () => {
   it('marrow blocked on door_front, ivy not', () => {
@@ -30,19 +29,5 @@ describe('inhabitant assembly', () => {
 
     const src = readFileSync('src/sim/inhabitant.ts', 'utf8');
     expect(src).not.toMatch(/archetypeId\s*===\s*['"]/);
-  });
-});
-
-describe('world town grid + sites (partial)', () => {
-  it('loads ashford dimensions and site tags from data', () => {
-    const d = loadData();
-    const grid = loadTownGrid(d, 'ashford');
-    expect(grid.width).toBe(28);
-    expect(grid.height).toBe(20);
-    expect(grid.sites.length).toBeGreaterThan(0);
-    const bakery = grid.sites.find((s) => s.id === 'site_bakery');
-    expect(bakery?.tags).toContain('breach');
-    expect(bakery?.x).toBe(6);
-    expect(bakery?.y).toBe(8);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { createWorld } from '../../src/sim/world';
+import { loadData } from '../../src/sim/load-data';
+import { createWorld, loadTownGrid } from '../../src/sim/world';
 
 describe('createWorld', () => {
   it('builds a deterministic tile grid and npc set for a seed', () => {
@@ -33,5 +34,19 @@ describe('createWorld', () => {
     const src = readFileSync('src/sim/world.ts', 'utf8');
     expect(src).not.toMatch(/NPC_COLORS/);
     expect(src).not.toMatch(/0x[0-9a-fA-F]{6}/);
+  });
+});
+
+describe('world town grid + sites (partial)', () => {
+  it('loads ashford dimensions and site tags from data', () => {
+    const d = loadData();
+    const grid = loadTownGrid(d, 'ashford');
+    expect(grid.width).toBe(28);
+    expect(grid.height).toBe(20);
+    expect(grid.sites.length).toBeGreaterThan(0);
+    const bakery = grid.sites.find((s) => s.id === 'site_bakery');
+    expect(bakery?.tags).toContain('breach');
+    expect(bakery?.x).toBe(6);
+    expect(bakery?.y).toBe(8);
   });
 });
