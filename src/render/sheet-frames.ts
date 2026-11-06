@@ -23,6 +23,7 @@ export const GRASS_WORLD_TEX = 'grass-world';
 export const DIRT_CALM_TEX = 'dirt-calm';
 export const DIRT_EDGE_TEX = 'dirt-edge';
 export const HOUSE2_TEX = 'stamp-house2';
+export const SETTLEMENT_TEX = 'stamp-settlement';
 
 export type SheetFrameConfig = {
   key: string;
@@ -47,6 +48,7 @@ export const NAMED_STAMP_RECTS = {
   tree: { sheet: 'sheet-buildings', x: 8, y: 21, w: 30, h: 129 },
   'tree-b': { sheet: 'sheet-buildings', x: 39, y: 18, w: 31, h: 132 },
   house2: { sheet: HOUSE2_TEX, x: 0, y: 0, w: 88, h: 132 },
+  settlement: { sheet: SETTLEMENT_TEX, x: 0, y: 0, w: 207, h: 120 },
   'cliff-lip': { sheet: 'sheet-cliff', frame: '0' },
   'cliff-face': { sheet: 'sheet-cliff', frame: '4' },
   'cliff-base': { sheet: 'sheet-cliff', frame: '8' },
@@ -85,6 +87,7 @@ export function preloadOverworldSheets(load: Phaser.Loader.LoaderPlugin): void {
   load.image('sheet-buildings-side', toPublicUrl(BAKED_SHEETS.buildingsSide));
   load.image(HERO_TEX, toPublicUrl('assets/vendor/ansimuz-hero.png'));
   load.image(HOUSE2_TEX, toPublicUrl('assets/sprites/stamp-house2.png'));
+  load.image(SETTLEMENT_TEX, toPublicUrl('assets/sprites/stamp-settlement.png'));
   load.image(GRASS_WORLD_TEX, toPublicUrl('assets/sprites/grass-world.png'));
 }
 

@@ -5,9 +5,8 @@ import type { ChunkCoord, TileSource } from '../sim';
 import { CHUNK_SIZE } from '../sim/map/constants';
 import {
   paintChunkContents,
-  paintCliffStrip,
-  paintLowerTerraceShade,
   paintProp,
+  paintTownCliff,
   paintTownMarker,
   type PaintHost,
 } from './painters/overworld-paint';
@@ -39,11 +38,7 @@ export function createChunkLayer(
     paintTownMarker(host, null, town);
   }
   if (townMarkers[0]) {
-    const t = townMarkers[0];
-    const cq = t.q - 5;
-    const cr = t.r + 4;
-    paintCliffStrip(host, null, cq, cr, 18);
-    paintLowerTerraceShade(host, null, cq, cr, 18, 7);
+    paintTownCliff(host, townMarkers[0]);
   }
 
   return {
