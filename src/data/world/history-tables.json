@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
+  "roles": [
+    {
+      "id": "miller",
+      "weight": 1
+    },
+    {
+      "id": "ferry",
+      "weight": 1
+    },
+    {
+      "id": "clerk",
+      "weight": 1
+    },
+    {
+      "id": "farmer",
+      "weight": 2
+    }
+  ],
+  "woundWeights": [
+    {
+      "woundId": "apathy",
+      "weight": 1
+    },
+    {
+      "woundId": "fear",
+      "weight": 1
+    },
+    {
+      "woundId": "grief",
+      "weight": 1
+    },
+    {
+      "woundId": "exhaustion",
+      "weight": 1
+    },
+    {
+      "woundId": "disillusionment",
+      "weight": 1
+    },
+    {
+      "woundId": "shame_wound",
+      "weight": 1
+    }
+  ],
+  "historyBeats": [
+    {
+      "id": "mill_fire",
+      "summary": "The mill smoked for a week."
+    },
+    {
+      "id": "ferry_lost",
+      "summary": "A rope gave out mid-crossing."
+    },
+    {
+      "id": "tax_year",
+      "summary": "Collectors came early."
+    }
+  ],
+  "settlementSizes": [
+    {
+      "id": "village",
+      "gapAxisMax": 0.35
+    },
+    {
+      "id": "town",
+      "gapAxisMax": 0.7
+    },
+    {
+      "id": "city",
+      "gapAxisMax": 1.0
+    }
+  ]
+}
