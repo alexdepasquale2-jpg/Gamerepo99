@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "docs/superpowers/specs/2026-11-05-baked-dynamism-design.md",
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
   "curves": [
     {
       "id": "curve_default_reaction",
@@ -10,8 +10,9 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "warmth": 0.3,
-            "weariness": -0.2
+            "axis:spark_high": 0.4,
+            "axis:spark_low": -0.4,
+            "warmth": 0.2
           }
         },
         {
@@ -19,8 +20,8 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "warmth": 0.25,
-            "bite": -0.15
+            "axis:trust_high": 0.4,
+            "axis:trust_low": -0.4
           }
         },
         {
@@ -28,8 +29,40 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "bite": 0.2,
-            "secrecy": 0.15
+            "axis:mark_hollowness": 0.5,
+            "bite": 0.15
+          }
+        },
+        {
+          "statePath": "person.mark.dependence",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "axis:mark_dependence": 0.5
+          }
+        },
+        {
+          "statePath": "person.mark.resentment",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "axis:mark_resentment": 0.5
+          }
+        },
+        {
+          "statePath": "person.wound.grief",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "axis:mark_grief": 0.5
+          }
+        },
+        {
+          "statePath": "person.wound.shame_wound",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "axis:mark_shame": 0.5
           }
         },
         {
@@ -37,7 +70,7 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "piety": 0.2
+            "axis:doctrine_follower": 0.35
           }
         },
         {
@@ -45,8 +78,8 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "secrecy": 0.2,
-            "bite": 0.1
+            "axis:notoriety_high": 0.45,
+            "secrecy": 0.2
           }
         },
         {
@@ -54,8 +87,8 @@
           "from": 0,
           "to": 1,
           "influence": {
-            "bite": 0.25,
-            "warmth": -0.2
+            "axis:kin_strain": 0.5,
+            "bite": 0.2
           }
         }
       ]

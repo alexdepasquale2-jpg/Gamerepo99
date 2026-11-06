@@ -110,4 +110,6 @@ export const REQUIRED_FILES = [
   'line-fragments.json',
   'reaction-curves.json',
   'voice-constraints.json',
+  'assertions.json',
+  'history-tables.json',
 ];

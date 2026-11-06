@@ -1,83 +1,380 @@
 {
-  "version": 1,
-  "spec": "docs/superpowers/specs/2026-11-05-baked-dynamism-design.md",
+  "version": 2,
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
   "anchors": [
     {
       "id": "va_marta_ellison",
       "personId": "marta_ellison",
-      "tags": [],
+      "tags": [
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor"
+      ],
       "vector": {
-        "warmth": 0.55,
-        "bite": 0.35,
-        "piety": 0.2,
-        "secrecy": 0.3,
-        "weariness": 0.35
-      }
+        "warmth": 0.45,
+        "bite": 0.55,
+        "piety": 0.15,
+        "secrecy": 0.35,
+        "weariness": 0.5
+      },
+      "diction": [
+        "flour",
+        "oven",
+        "dough",
+        "crust",
+        "heat"
+      ],
+      "sentenceShape": "blunt_short"
     },
     {
       "id": "va_jonah_pike",
       "personId": "jonah_pike",
       "tags": [
-        "child"
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor"
       ],
       "vector": {
-        "warmth": 0.4,
-        "bite": 0.15,
+        "warmth": 0.35,
+        "bite": 0.4,
         "piety": 0.2,
-        "secrecy": 0.3,
-        "weariness": 0.35
-      }
+        "secrecy": 0.75,
+        "weariness": 0.3
+      },
+      "diction": [
+        "chalk",
+        "stoop",
+        "hide",
+        "look",
+        "finished"
+      ],
+      "sentenceShape": "quiet_precise"
     },
     {
       "id": "va_harold_finch",
       "personId": "harold_finch",
-      "tags": [],
+      "tags": [
+        "dict:home",
+        "shape:humor_bruise",
+        "shape:tired",
+        "authored_anchor"
+      ],
       "vector": {
         "warmth": 0.4,
-        "bite": 0.35,
-        "piety": 0.2,
+        "bite": 0.45,
+        "piety": 0.25,
         "secrecy": 0.3,
-        "weariness": 0.5
-      }
+        "weariness": 0.85
+      },
+      "diction": [
+        "boots",
+        "floor",
+        "sleep",
+        "joke",
+        "door"
+      ],
+      "sentenceShape": "bruised_humor"
     },
     {
       "id": "va_ruth_calder",
       "personId": "ruth_calder",
       "tags": [
-        "civic_voice",
-        "doctrine_voice",
-        "leader"
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor"
       ],
       "vector": {
-        "warmth": 0.4,
-        "bite": 0.35,
-        "piety": 0.2,
-        "secrecy": 0.3,
-        "weariness": 0.35
-      }
+        "warmth": 0.25,
+        "bite": 0.7,
+        "piety": 0.35,
+        "secrecy": 0.4,
+        "weariness": 0.55
+      },
+      "diction": [
+        "lesson",
+        "board",
+        "promise",
+        "file",
+        "chalk"
+      ],
+      "sentenceShape": "teacher_bitter"
     },
     {
       "id": "va_elias_boone",
       "personId": "elias_boone",
-      "tags": [],
+      "tags": [
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor"
+      ],
       "vector": {
-        "warmth": 0.4,
+        "warmth": 0.5,
         "bite": 0.35,
-        "piety": 0.2,
-        "secrecy": 0.3,
-        "weariness": 0.35
-      }
+        "piety": 0.3,
+        "secrecy": 0.45,
+        "weariness": 0.7
+      },
+      "diction": [
+        "forge",
+        "coal",
+        "hammer",
+        "heat",
+        "brother"
+      ],
+      "sentenceShape": "banked_grief"
     },
     {
       "id": "va_clara_whitby",
       "personId": "clara_whitby",
-      "tags": [],
+      "tags": [
+        "dict:shop",
+        "shape:dry",
+        "shape:inventory",
+        "authored_anchor"
+      ],
       "vector": {
-        "warmth": 0.4,
-        "bite": 0.35,
+        "warmth": 0.2,
+        "bite": 0.6,
         "piety": 0.2,
+        "secrecy": 0.7,
+        "weariness": 0.5
+      },
+      "diction": [
+        "ledger",
+        "shelf",
+        "theft",
+        "coin",
+        "inventory"
+      ],
+      "sentenceShape": "steel_dry"
+    },
+    {
+      "id": "va_nora_voss",
+      "personId": "nora_voss",
+      "tags": [
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.7,
+        "bite": 0.25,
+        "piety": 0.4,
+        "secrecy": 0.4,
+        "weariness": 0.65
+      },
+      "diction": [
+        "breath",
+        "cloth",
+        "quiet",
+        "hand",
+        "cry"
+      ],
+      "sentenceShape": "midwife_soft"
+    },
+    {
+      "id": "va_samir_okafor",
+      "personId": "samir_okafor",
+      "tags": [
+        "dict:tavern",
+        "shape:wit_flat",
+        "shape:music",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.35,
+        "bite": 0.5,
+        "piety": 0.15,
+        "secrecy": 0.35,
+        "weariness": 0.6
+      },
+      "diction": [
+        "song",
+        "port",
+        "glass",
+        "silence",
+        "beat"
+      ],
+      "sentenceShape": "flat_wit"
+    },
+    {
+      "id": "va_tom_briggs",
+      "personId": "tom_briggs",
+      "tags": [
+        "dict:ferry",
+        "shape:yarn",
+        "shape:old",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.55,
+        "bite": 0.3,
+        "piety": 0.35,
+        "secrecy": 0.5,
+        "weariness": 0.7
+      },
+      "diction": [
+        "rope",
+        "river",
+        "weather",
+        "crossing",
+        "storm"
+      ],
+      "sentenceShape": "ferryman_yarn"
+    },
+    {
+      "id": "va_priya_sen",
+      "personId": "priya_sen",
+      "tags": [
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.5,
+        "bite": 0.35,
+        "piety": 0.3,
+        "secrecy": 0.25,
+        "weariness": 0.8
+      },
+      "diction": [
+        "soil",
+        "seed",
+        "root",
+        "row",
+        "tomorrow"
+      ],
+      "sentenceShape": "grower_wry"
+    },
+    {
+      "id": "va_leon_march",
+      "personId": "leon_march",
+      "tags": [
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.3,
+        "bite": 0.65,
+        "piety": 0.25,
+        "secrecy": 0.45,
+        "weariness": 0.55
+      },
+      "diction": [
+        "notice",
+        "ink",
+        "oath",
+        "paper",
+        "order"
+      ],
+      "sentenceShape": "organizer_ink"
+    },
+    {
+      "id": "va_mira_whitby",
+      "personId": "mira_whitby",
+      "tags": [
+        "dict:city",
+        "shape:cool",
+        "shape:precise",
+        "authored_anchor"
+      ],
+      "vector": {
+        "warmth": 0.25,
+        "bite": 0.45,
+        "piety": 0.2,
+        "secrecy": 0.55,
+        "weariness": 0.75
+      },
+      "diction": [
+        "desk",
+        "city",
+        "home",
+        "form",
+        "distance"
+      ],
+      "sentenceShape": "clerk_cool"
+    },
+    {
+      "id": "va_gen_miller",
+      "tags": [
+        "dict:mill",
+        "shape:plain",
+        "generic_blend"
+      ],
+      "vector": {
+        "warmth": 0.5,
+        "bite": 0.4,
+        "piety": 0.3,
         "secrecy": 0.3,
-        "weariness": 0.35
+        "weariness": 0.5
+      }
+    },
+    {
+      "id": "va_gen_ferry",
+      "tags": [
+        "dict:water",
+        "shape:yarn",
+        "generic_blend"
+      ],
+      "vector": {
+        "warmth": 0.55,
+        "bite": 0.3,
+        "piety": 0.35,
+        "secrecy": 0.4,
+        "weariness": 0.55
+      }
+    },
+    {
+      "id": "va_gen_clerk",
+      "tags": [
+        "dict:ink",
+        "shape:precise",
+        "generic_blend"
+      ],
+      "vector": {
+        "warmth": 0.3,
+        "bite": 0.45,
+        "piety": 0.25,
+        "secrecy": 0.5,
+        "weariness": 0.6
+      }
+    },
+    {
+      "id": "va_gen_grower",
+      "tags": [
+        "dict:soil",
+        "shape:wry",
+        "generic_blend"
+      ],
+      "vector": {
+        "warmth": 0.55,
+        "bite": 0.3,
+        "piety": 0.3,
+        "secrecy": 0.25,
+        "weariness": 0.65
+      }
+    },
+    {
+      "id": "va_gen_widow",
+      "tags": [
+        "dict:hearth",
+        "shape:soft",
+        "generic_blend"
+      ],
+      "vector": {
+        "warmth": 0.6,
+        "bite": 0.25,
+        "piety": 0.45,
+        "secrecy": 0.45,
+        "weariness": 0.7
       }
     }
   ]

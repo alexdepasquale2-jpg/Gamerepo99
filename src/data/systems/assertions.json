@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
+  "axes": [
+    "spark_low",
+    "spark_high",
+    "trust_low",
+    "trust_high",
+    "mark_grief",
+    "mark_shame",
+    "mark_dependence",
+    "mark_hollowness",
+    "mark_resentment",
+    "doctrine_follower",
+    "doctrine_skeptic",
+    "notoriety_high",
+    "kin_strain"
+  ],
+  "rules": [
+    {
+      "id": "rule_no_cheerful_grief",
+      "forbid": {
+        "wound": "grief",
+        "moodTagsAny": [
+          "mood:cheerful",
+          "mood:chipper"
+        ]
+      }
+    },
+    {
+      "id": "rule_no_doctrine_rise_after_expose",
+      "forbid": {
+        "afterEvent": "doctrine.exposed",
+        "statRise": "doctrine.followerCount"
+      }
+    },
+    {
+      "id": "rule_no_dead_speak",
+      "forbid": {
+        "personFlagsAny": [
+          "dead"
+        ],
+        "action": "speak_or_meet"
+      }
+    },
+    {
+      "id": "rule_no_contradict_memory",
+      "forbid": {
+        "lineTagsAny": [
+          "mood:naive_hope"
+        ],
+        "memoryIncludes": "mark:hollowness"
+      }
+    },
+    {
+      "id": "rule_voice_vector_bounds",
+      "forbid": {
+        "vectorOutOfBounds": true
+      }
+    },
+    {
+      "id": "rule_no_shamed_child_calls_kind",
+      "forbid": {
+        "personTagsAny": [
+          "child"
+        ],
+        "afterEvent": "shame_resolved",
+        "lineTagsAny": [
+          "mood:calls_protagonist_kind"
+        ]
+      }
+    },
+    {
+      "id": "rule_no_trust_after_betrayal",
+      "forbid": {
+        "afterEvent": "betrayal",
+        "withinDays": 1,
+        "trustAbove": 0.7
+      }
+    },
+    {
+      "id": "rule_history_order",
+      "forbid": {
+        "historyOutOfOrder": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "assert_grief_cheerful_fail",
+      "title": "Grieving NPC speaking cheerfully",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_cheerful_grief",
+      "fixture": {
+        "person": {
+          "woundId": "grief",
+          "alive": true
+        },
+        "lineTags": [
+          "mood:cheerful"
+        ],
+        "action": "speak"
+      }
+    },
+    {
+      "id": "assert_grief_somber_pass",
+      "title": "Grieving NPC speaking somberly",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "woundId": "grief",
+          "alive": true
+        },
+        "lineTags": [
+          "mood:somber",
+          "shape:grief"
+        ],
+        "action": "speak"
+      }
+    },
+    {
+      "id": "assert_doctrine_rise_after_expose_fail",
+      "title": "Follower count rises after expose",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_doctrine_rise_after_expose",
+      "fixture": {
+        "events": [
+          "doctrine.exposed"
+        ],
+        "stats": {
+          "doctrine.followerCount": {
+            "before": 10,
+            "after": 14
+          }
+        }
+      }
+    },
+    {
+      "id": "assert_doctrine_fall_after_expose_pass",
+      "title": "Follower count falls after expose",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "events": [
+          "doctrine.exposed"
+        ],
+        "stats": {
+          "doctrine.followerCount": {
+            "before": 10,
+            "after": 7
+          }
+        }
+      }
+    },
+    {
+      "id": "assert_dead_speak_fail",
+      "title": "Dead person speaking",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_dead_speak",
+      "fixture": {
+        "person": {
+          "flags": [
+            "dead"
+          ],
+          "alive": false
+        },
+        "action": "speak_or_meet"
+      }
+    },
+    {
+      "id": "assert_alive_speak_pass",
+      "title": "Living person speaking",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "flags": [],
+          "alive": true
+        },
+        "action": "speak_or_meet"
+      }
+    },
+    {
+      "id": "assert_memory_contradict_fail",
+      "title": "Line contradicts hollowness memory",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_contradict_memory",
+      "fixture": {
+        "memory": [
+          "mark:hollowness"
+        ],
+        "lineTags": [
+          "mood:naive_hope"
+        ]
+      }
+    },
+    {
+      "id": "assert_memory_aligned_pass",
+      "title": "Line aligns with hollowness memory",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "memory": [
+          "mark:hollowness"
+        ],
+        "lineTags": [
+          "mood:hollow",
+          "axis:mark_hollowness"
+        ]
+      }
+    },
+    {
+      "id": "assert_vector_oob_fail",
+      "title": "Voice vector outside bounds",
+      "expectPass": false,
+      "violatesRuleId": "rule_voice_vector_bounds",
+      "fixture": {
+        "vector": {
+          "warmth": 1.4,
+          "bite": 0.2,
+          "piety": 0.2,
+          "secrecy": 0.2,
+          "weariness": 0.2
+        }
+      }
+    },
+    {
+      "id": "assert_vector_ok_pass",
+      "title": "Voice vector in bounds",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "vector": {
+          "warmth": 0.4,
+          "bite": 0.5,
+          "piety": 0.2,
+          "secrecy": 0.3,
+          "weariness": 0.6
+        }
+      }
+    },
+    {
+      "id": "assert_shamed_child_kind_fail",
+      "title": "Shamed child calls protagonist kind",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_shamed_child_calls_kind",
+      "fixture": {
+        "person": {
+          "tags": [
+            "child"
+          ]
+        },
+        "events": [
+          "shame_resolved"
+        ],
+        "lineTags": [
+          "mood:calls_protagonist_kind"
+        ]
+      }
+    },
+    {
+      "id": "assert_shamed_child_wary_pass",
+      "title": "Shamed child stays wary",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "tags": [
+            "child"
+          ]
+        },
+        "events": [
+          "shame_resolved"
+        ],
+        "lineTags": [
+          "mood:wary",
+          "shape:soft"
+        ]
+      }
+    },
+    {
+      "id": "assert_trust_after_betrayal_fail",
+      "title": "Trust high right after betrayal",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_trust_after_betrayal",
+      "fixture": {
+        "events": [
+          {
+            "id": "betrayal",
+            "day": 3
+          }
+        ],
+        "day": 3,
+        "trust": 0.85
+      }
+    },
+    {
+      "id": "assert_trust_recovers_later_pass",
+      "title": "Trust rebuilds days later",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "events": [
+          {
+            "id": "betrayal",
+            "day": 1
+          }
+        ],
+        "day": 8,
+        "trust": 0.5
+      }
+    },
+    {
+      "id": "assert_history_ooo_fail",
+      "title": "History beat out of order",
+      "expectPass": false,
+      "violatesRuleId": "rule_history_order",
+      "fixture": {
+        "historyApplied": [
+          "hb_miracle_yeast"
+        ],
+        "historyTags": []
+      }
+    },
+    {
+      "id": "assert_history_order_pass",
+      "title": "History beat in order",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "historyApplied": [
+          "hb_founding_mill",
+          "hb_loss_mill_fire",
+          "hb_miracle_yeast"
+        ],
+        "historyTags": [
+          "mill_founded",
+          "mill_fire",
+          "yeast_miracle"
+        ]
+      }
+    },
+    {
+      "id": "assert_dead_meet_fail",
+      "title": "Meeting a dead person",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_dead_speak",
+      "fixture": {
+        "person": {
+          "flags": [
+            "dead"
+          ]
+        },
+        "action": "speak_or_meet"
+      }
+    },
+    {
+      "id": "assert_dependence_cheerful_fail",
+      "title": "Dependent mark with chipper line",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_contradict_memory",
+      "fixture": {
+        "memory": [
+          "mark:dependence"
+        ],
+        "lineTags": [
+          "mood:chipper"
+        ]
+      }
+    },
+    {
+      "id": "assert_dependence_boundaried_pass",
+      "title": "Dependent mark with boundary line",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "memory": [
+          "mark:dependence"
+        ],
+        "lineTags": [
+          "axis:mark_dependence",
+          "mood:boundaried"
+        ]
+      }
+    },
+    {
+      "id": "assert_vector_negative_fail",
+      "title": "Negative vector component",
+      "expectPass": false,
+      "violatesRuleId": "rule_voice_vector_bounds",
+      "fixture": {
+        "vector": {
+          "warmth": -0.1,
+          "bite": 0.2,
+          "piety": 0.2,
+          "secrecy": 0.2,
+          "weariness": 0.2
+        }
+      }
+    },
+    {
+      "id": "assert_expose_then_recruit_fail",
+      "title": "Recruit surge after expose same day",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_doctrine_rise_after_expose",
+      "fixture": {
+        "events": [
+          "doctrine.exposed"
+        ],
+        "stats": {
+          "doctrine.followerCount": {
+            "before": 5,
+            "after": 20
+          }
+        }
+      }
+    }
+  ]
+}

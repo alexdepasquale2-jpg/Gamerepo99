@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
   "roles": [
     {
@@ -45,20 +45,6 @@
       "weight": 1
     }
   ],
-  "historyBeats": [
-    {
-      "id": "mill_fire",
-      "summary": "The mill smoked for a week."
-    },
-    {
-      "id": "ferry_lost",
-      "summary": "A rope gave out mid-crossing."
-    },
-    {
-      "id": "tax_year",
-      "summary": "Collectors came early."
-    }
-  ],
   "settlementSizes": [
     {
       "id": "village",
@@ -72,5 +58,499 @@
       "id": "city",
       "gapAxisMax": 1.0
     }
-  ]
+  ],
+  "historyBeats": [
+    {
+      "id": "hb_founding_mill",
+      "kind": "founding",
+      "summary": "They raised the mill before the school, and called that wisdom.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.facility",
+          "value": "mill"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "mill_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_founding_ferry",
+      "kind": "founding",
+      "summary": "A rope across the strand made Lowmere a place you could leave.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ferry_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_founding_desk",
+      "kind": "founding",
+      "summary": "The Reach desk arrived with stamps and a promise of elsewhere.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "desk_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_drift_gap",
+      "kind": "drift",
+      "summary": "City words stopped meaning village weather.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.gapAxis",
+          "value": 0.05
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "gap_drift"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill",
+        "hb_founding_desk"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_drift_hunger",
+      "kind": "drift",
+      "summary": "People stopped being hungry for tomorrow.",
+      "preconditions": [
+        {
+          "tag": "gap_drift"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.despair",
+          "value": 0.05
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "tomorrow_thin"
+        }
+      ],
+      "chainsFrom": [
+        "hb_drift_gap"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_loss_mill_fire",
+      "kind": "loss",
+      "summary": "The mill smoked for a week; bread learned a new taste.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.despair",
+          "value": 0.08
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "mill_fire"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_loss_ferry_rope",
+      "kind": "loss",
+      "summary": "A rope gave out mid-crossing; the river kept the rest.",
+      "preconditions": [
+        {
+          "tag": "ferry_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ferry_loss"
+        },
+        {
+          "op": "add",
+          "target": "person.tag",
+          "value": "storm_guilt"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_ferry"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_loss_quiet_birth",
+      "kind": "loss",
+      "summary": "The last one did not cry; the cloths stayed folded wrong.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "quiet_birth"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_feud_notice",
+      "kind": "feud",
+      "summary": "They called hope disorderly and locked the notice board.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "notice_feud"
+        },
+        {
+          "op": "add",
+          "target": "doctrine.exposure",
+          "value": 0.05
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_feud_shelf",
+      "kind": "feud",
+      "summary": "A theft the town forgot; a shelf that never did.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "shelf_feud"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_miracle_yeast",
+      "kind": "miracle",
+      "summary": "Yeast lived through a cold week; Ashford smelled like stubbornness.",
+      "preconditions": [
+        {
+          "tag": "mill_fire"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.vitality",
+          "value": 0.05
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "yeast_miracle"
+        }
+      ],
+      "chainsFrom": [
+        "hb_loss_mill_fire"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_miracle_green",
+      "kind": "miracle",
+      "summary": "Green returned to a fallow strip nobody admitted planting.",
+      "preconditions": [
+        {
+          "tag": "tomorrow_thin"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "green_miracle"
+        }
+      ],
+      "chainsFrom": [
+        "hb_drift_hunger"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_departure_brother",
+      "kind": "departure",
+      "summary": "He took the heat with him; the stool stayed.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "brother_gone"
+        },
+        {
+          "op": "set",
+          "target": "person.wound",
+          "value": "grief"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_departure_port",
+      "kind": "departure",
+      "summary": "The port songs left; silence started winning.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "songs_gone"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_doctrine_mill_bread",
+      "kind": "doctrine_arrival",
+      "summary": "Mill-bread doctrine pinned itself to the Ashford notice like a recipe.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_mill_bread"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_mill"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "hb_doctrine_strand",
+      "kind": "doctrine_arrival",
+      "summary": "Strand crossings doctrine arrived with rope-taxes and calm talk.",
+      "preconditions": [
+        {
+          "tag": "ferry_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_strand_crossings"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_strand"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_ferry"
+      ],
+      "authoredSeed": true,
+      "townId": "lowmere"
+    },
+    {
+      "id": "hb_doctrine_reach",
+      "kind": "doctrine_arrival",
+      "summary": "Reach progress doctrine taught distance as a virtue.",
+      "preconditions": [
+        {
+          "tag": "desk_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_reach_progress"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_reach"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_desk"
+      ],
+      "authoredSeed": true,
+      "townId": "city_reach"
+    },
+    {
+      "id": "ashford_seed_bakery_cold",
+      "kind": "loss",
+      "summary": "Marta banked the oven and called it practicality.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "bakery_cold"
+        },
+        {
+          "op": "add",
+          "target": "anchor.marta",
+          "value": "apathy"
+        }
+      ],
+      "chainsFrom": [
+        "hb_loss_mill_fire"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "ashford_seed_school_closed",
+      "kind": "feud",
+      "summary": "Ruth filed promises under closed and kept the chalk anyway.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "school_closed"
+        }
+      ],
+      "chainsFrom": [
+        "hb_doctrine_mill_bread"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "ashford_seed_forge_quiet",
+      "kind": "departure",
+      "summary": "Elias kept an empty stool warm through winter.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "forge_quiet"
+        }
+      ],
+      "chainsFrom": [
+        "hb_departure_brother"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "ashford_seed_stoop_chalk",
+      "kind": "miracle",
+      "summary": "Jonah finished a chalk map and hid it from looking.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "stoop_map"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "ashford_seed_shop_ledger",
+      "kind": "feud",
+      "summary": "Clara polished the guilt the town forgot to name.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "shop_ledger"
+        }
+      ],
+      "chainsFrom": [
+        "hb_feud_shelf"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "ashford_seed_finch_boots",
+      "kind": "drift",
+      "summary": "Harold joked the floor asked less than the boots.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "finch_boots"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": true,
+      "townId": "ashford"
+    }
+  ],
+  "chainRule": "A beat with chainsFrom may only fire after at least one listed prior beat is in town.historyTags/effects; ordering assertions fail if violated."
 }
