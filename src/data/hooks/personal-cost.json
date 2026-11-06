@@ -107,7 +107,7 @@
           "id": "fx_despair_spark",
           "target": "player.spark",
           "op": "add",
-          "value": -3,
+          "value": -1,
           "tags": [
             "despair",
             "doctrine"

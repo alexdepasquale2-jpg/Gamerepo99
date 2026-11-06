@@ -14,7 +14,7 @@
     "tileSizePx": 32,
     "actsSoftCapPerDay": 3,
     "sparkMax": 100,
-    "sparkStart": 70,
+    "sparkStart": 88,
     "burnoutAt": 0,
     "emberZoneBelow": 20,
     "coin": 0,

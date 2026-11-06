@@ -84,6 +84,21 @@ export function burnoutAtFor(
   return typeof defaults?.burnoutAt === 'number' ? defaults.burnoutAt : 0;
 }
 
+/** Ember-zone floor from spark profile / player defaults (succession offer threshold). */
+export function emberZoneBelowFor(
+  player: Inhabitant,
+  data: DataTables | undefined,
+): number {
+  const defaults = (data?.player as { defaults?: { emberZoneBelow?: number } } | undefined)?.defaults;
+  const profiles = data?.traits?.sparkProfiles as Array<{ id: string; emberZoneBelow?: number }> | undefined;
+  const arch = data?.archetypes?.find((a) => a.id === player.archetypeId);
+  if (arch && profiles) {
+    const sp = profiles.find((p) => p.id === arch.sparkProfileId);
+    if (typeof sp?.emberZoneBelow === 'number') return sp.emberZoneBelow;
+  }
+  return typeof defaults?.emberZoneBelow === 'number' ? defaults.emberZoneBelow : 20;
+}
+
 export function isBurnedOut(
   player: Inhabitant,
   data: DataTables | undefined,
@@ -92,7 +107,8 @@ export function isBurnedOut(
 }
 
 /**
- * If spark ≤ burnoutAt, mark ended/succession and emit succession.open once.
+ * Offer succession when spark ≤ emberZoneBelow (earlier than hard burnoutAt).
+ * burnoutAt remains the hard floor after succession is declined/ignored.
  * Returns true when succession is open after this call.
  */
 export function maybeOpenSuccession(
@@ -102,7 +118,7 @@ export function maybeOpenSuccession(
 ): boolean {
   if (alreadyOpen.value) return true;
   const data = state.data as DataTables | undefined;
-  if (!isBurnedOut(state.player, data)) return false;
+  if (state.player.spark > emberZoneBelowFor(state.player, data)) return false;
   alreadyOpen.value = true;
   state.ended = 'succession';
   state.flags = { ...state.flags, successionOpen: true };

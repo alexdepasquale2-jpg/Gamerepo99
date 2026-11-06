@@ -24,7 +24,7 @@ describe('inhabitant assembly', () => {
     expect(m.hookIds).toContain('cost_loneliness_tax');
     expect(m.hookIds).toContain('refusal_shame_child');
     expect(m.hookIds).toContain('recovery_den_hearth');
-    expect(m.spark).toBe(70);
+    expect(m.spark).toBe(88); // spark_den_ogre sparkStart (Loom pacing)
     expect(m.townId).toBe('ashford');
 
     const src = readFileSync('src/sim/inhabitant.ts', 'utf8');

@@ -13,7 +13,7 @@
           "id": "fx_den_recovery",
           "target": "player.spark",
           "op": "add",
-          "value": 8,
+          "value": 10,
           "tags": [
             "recovery",
             "den"
@@ -31,7 +31,7 @@
           "id": "fx_base_dawn",
           "target": "player.spark",
           "op": "add",
-          "value": 8,
+          "value": 12,
           "tags": [
             "recovery"
           ]

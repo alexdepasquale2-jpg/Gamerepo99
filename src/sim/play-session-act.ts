@@ -10,6 +10,7 @@ import {
   parseAdvanceAction,
 } from './scenario-advance';
 import type { PlayLastResolve } from './play-session-types';
+import { listRoutesFrom, startTravel, type TravelSimState } from './travel';
 import type { SimState } from './types/runtime';
 
 type PlayAction = { id: string; family?: string };
@@ -35,6 +36,16 @@ export function listMethodActions(state: SimState): PlayAction[] {
       out.push({ id: `${m.id}@${personId}`, family: m.family });
     }
   }
+  out.push({ id: 'advance:dawn', family: 'rest' });
+  out.push({ id: 'advance:day', family: 'rest' });
+  const travelState = state as TravelSimState;
+  const townId = travelState.player.townId;
+  const routes = travelState.routes ?? [];
+  if (townId) {
+    for (const routeId of listRoutesFrom(routes, townId)) {
+      out.push({ id: `travel:${routeId}`, family: 'travel' });
+    }
+  }
   return out;
 }
 
@@ -51,7 +62,7 @@ function appendJuice(state: SimState, eventLog: PlayEvent[], beforeLen: number, 
   }
 }
 
-/** Commit methodId@personId / advance:* / approach@personId; append juice to eventLog. */
+/** Commit methodId@personId / advance:* / travel:* / approach@personId; append juice to eventLog. */
 export function actMethod(
   state: SimState,
   actionId: string,
@@ -63,6 +74,15 @@ export function actMethod(
       extras.metrics.firstChoiceAtTick = extras.tickN;
     }
     eventLog.push({ type: 'approach', methodId: actionId.slice('approach@'.length) });
+    return;
+  }
+
+  if (actionId.startsWith('travel:')) {
+    const routeId = actionId.slice('travel:'.length);
+    const beforeLen = state.bus?.lastIds?.length ?? 0;
+    startTravel(state as TravelSimState, routeId);
+    appendJuice(state, eventLog, beforeLen);
+    eventLog.push({ type: 'travel', methodId: routeId });
     return;
   }
 

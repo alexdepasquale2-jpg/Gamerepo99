@@ -1,6 +1,7 @@
 /** Travel days + roadside encounters. Pure sim; no Phaser/DOM/Math.random; no gen/ imports. */
 
 import type { Rng } from './rng';
+import { advanceToDawn } from './scenario-advance';
 import {
   loadBiomeTerrainMuls,
   loadEncounterTables,
@@ -105,7 +106,8 @@ export function startTravel(state: TravelSimState, routeId: string): { daysEff: 
   const rng = state.rng as Rng | undefined;
 
   for (let i = 0; i < daysEff; i++) {
-    state.day += 1;
+    // Same dawn recovery path as advance:dawn so road days regenerate spark.
+    advanceToDawn(state);
     pushJuice(state, 'route.travel_step', { routeId, step: i + 1, daysEff, day: state.day });
     const entry = pickEncounter(table, rng);
     if (entry) {

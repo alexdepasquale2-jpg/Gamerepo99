@@ -196,7 +196,7 @@
     {
       "id": "spark_den_ogre",
       "sparkMax": 100,
-      "sparkStart": 70,
+      "sparkStart": 88,
       "burnoutAt": 0,
       "emberZoneBelow": 20,
       "emberKindCostMul": 1.25,
@@ -211,7 +211,7 @@
     {
       "id": "spark_clerk_ink",
       "sparkMax": 100,
-      "sparkStart": 75,
+      "sparkStart": 90,
       "burnoutAt": 0,
       "emberZoneBelow": 20,
       "emberKindCostMul": 1.15,
@@ -226,7 +226,7 @@
     {
       "id": "spark_brood_shared",
       "sparkMax": 100,
-      "sparkStart": 65,
+      "sparkStart": 85,
       "burnoutAt": 0,
       "emberZoneBelow": 25,
       "emberKindCostMul": 1.2,

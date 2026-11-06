@@ -34,11 +34,12 @@ function bootAshford(archetypeId: string, seed = 42): SimState {
 describe('commitMethod', () => {
   it('shame on jonah refuses with visible menu semantics', () => {
     const state = bootAshford('marrow');
+    const sparkBefore = state.player.spark;
     const r = commitMethod(state, 'jonah_pike', 'shame');
     expect(r.kind).toBe('refused');
     if (r.kind !== 'refused') throw new Error('expected refused');
     expect(r.line.length).toBeGreaterThan(0);
-    expect(state.player.spark).toBeLessThan(70); // coal flicker -1
+    expect(state.player.spark).toBeLessThan(sparkBefore); // coal flicker / spend
     expect(state.people.jonah_pike.flame).toBe(state.people.jonah_pike.flameStart ?? 18);
   });
 

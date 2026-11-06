@@ -38,6 +38,19 @@ function anyBurningAdjacent(state: SimState): boolean {
   return false;
 }
 
+function sparkMaxFor(state: SimState, data: DataTables | undefined): number {
+  if (typeof state.player.sparkMax === 'number') return state.player.sparkMax;
+  const defaults = (data?.player as { defaults?: { sparkMax?: number } } | undefined)?.defaults;
+  return typeof defaults?.sparkMax === 'number' ? defaults.sparkMax : 100;
+}
+
+/** Clamp player spark into [0-or-current-floor, sparkMax]. Recovery may overshoot. */
+export function clampPlayerSpark(state: SimState): void {
+  const data = state.data as DataTables | undefined;
+  const max = sparkMaxFor(state, data);
+  if (state.player.spark > max) state.player.spark = max;
+}
+
 /** Advance one dusk beat: personal-cost hooks + optional spark.spend juice. */
 export function advanceToDusk(state: SimState): void {
   state.flags.noBurningAdjacent = !anyBurningAdjacent(state);
@@ -56,9 +69,16 @@ export function advanceToDusk(state: SimState): void {
   state.flags.kindSuccessToday = false;
 }
 
+/** Advance one dawn: recovery hooks + clamp spark to sparkMax. */
 export function advanceToDawn(state: SimState): void {
   state.day += 1;
   state.flags.kindSuccessToday = false;
+  const data = state.data as DataTables | undefined;
+  const rng = state.rng as Rng | undefined;
+  if (data && rng) {
+    runHooks(state, 'dawn', { data, rng });
+  }
+  clampPlayerSpark(state);
 }
 
 export function advanceDays(state: SimState, days: number): void {
