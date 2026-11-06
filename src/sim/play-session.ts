@@ -28,34 +28,27 @@ import {
   type TravelSimState,
 } from './travel';
 import { tickPackets } from './packets';
+import {
+  attachSuccessionHandle,
+  isBurnedOut,
+  lockedSuccessionUi,
+  maybeOpenSuccession,
+  type SuccessionUi,
+} from './succession';
 
-export type PlayAction = { id: string; family?: string };
-export type PlayEvent = { type: string; methodId?: string };
-export type PlaySnapshot = {
-  tick: number;
-  day: number;
-  spark: number;
-  burnedOut: boolean;
-  townId: string;
-  townCount: number;
-  fingerprint: string;
-  reignitedCount: number;
-  hollowCount: number;
-};
-export type PlaySession = {
-  start(opts?: { seed?: number; archetypeId?: string }): void;
-  listActions(): PlayAction[];
-  act(actionId: string): void;
-  tick(): void;
-  snapshot(): PlaySnapshot;
-  events(): PlayEvent[];
-  listRoutes(): string[];
-  travel(routeId: string): void;
-  dump(): string;
-};
-export type CreatePlaySessionOpts =
-  | { mode: 'inspect'; seed: number; peopleCount?: number }
-  | { mode: 'play'; seed: number; archetypeId?: string; peopleCount?: number };
+export type {
+  PlayAction,
+  PlayEvent,
+  PlaySnapshot,
+  PlaySession,
+  CreatePlaySessionOpts,
+} from './play-session-types';
+import type {
+  PlayEvent,
+  PlaySession,
+  PlaySnapshot,
+  CreatePlaySessionOpts,
+} from './play-session-types';
 
 function createPlayModeSession(defaults: { seed: number; archetypeId: string }): PlaySession {
   let seed = defaults.seed;
@@ -65,12 +58,16 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
   let tickN = 0;
   let routes: TravelRoute[] = [];
   const eventLog: PlayEvent[] = [];
+  const successionOpen = { value: false };
+  let successionUi: SuccessionUi = lockedSuccessionUi();
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
     archetypeId = nextArchetype;
     tickN = 0;
     eventLog.length = 0;
+    successionOpen.value = false;
+    successionUi = lockedSuccessionUi();
     const data = loadData();
     world = generateWorld({ seed, includeAnchors: true });
     routes = toTravelRoutes(world.routes ?? []);
@@ -103,7 +100,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
     }
   }
 
-  return {
+  const session: PlaySession = {
     start(opts) {
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
@@ -117,6 +114,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
         return;
       }
       actMethod(state, actionId, eventLog);
+      maybeOpenSuccession(state, eventLog, successionOpen);
     },
     tick() {
       if (!state) return;
@@ -125,6 +123,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       const beforeLen = state.bus?.lastIds?.length ?? 0;
       tickPackets(state);
       appendJuiceSince(beforeLen);
+      maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'tick' });
     },
     snapshot(): PlaySnapshot {
@@ -141,7 +140,9 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
         tick: tickN,
         day: state?.day ?? 0,
         spark,
-        burnedOut: spark <= 0,
+        burnedOut:
+          successionOpen.value ||
+          (player ? isBurnedOut(player, state?.data as DataTables | undefined) : spark <= 0),
         townId: player?.townId ?? 'unknown',
         townCount: world?.gapSites?.length ?? world?.settlements?.length ?? 0,
         fingerprint: `${world?.fingerprint ?? 'unbooted'}-t${tickN}`,
@@ -160,10 +161,19 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       const { daysEff } = startTravel(state, routeId);
       tickN += daysEff;
       appendJuiceSince(beforeLen);
+      maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'travel' });
     },
     dump: () => (world ? dumpWorld(world).text : ''),
   };
+  attachSuccessionHandle(session, {
+    setSpark: (spark) => {
+      if (state) state.player.spark = spark;
+    },
+    getUi: () => successionUi,
+    getBurnedOut: () => successionOpen.value,
+  });
+  return session;
 }
 
 /** Unified play/inspect; no-arg → unstarted play shell for Probe feature-detect. */
