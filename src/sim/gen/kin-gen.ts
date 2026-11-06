@@ -2,7 +2,7 @@
 
 import type { Rng } from '../rng';
 import type { PersonDraft } from './people';
-import type { KinEdge } from './world';
+import type { KinEdge } from './world-types';
 
 const KIND_BAG = ['kin', 'kin', 'kin', 'friend', 'friend', 'pen_pal'] as const;
 

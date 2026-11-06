@@ -2,7 +2,7 @@
 
 import type { Rng } from '../rng';
 import type { HistoryBeat, HistoryTables } from './load-history';
-import type { HistoryEvent } from './world';
+import type { HistoryEvent } from './world-types';
 import type { PersonDraft } from './people';
 
 function tagsFromBeat(beat: HistoryBeat): string[] {

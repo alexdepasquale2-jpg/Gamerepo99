@@ -2,7 +2,7 @@
 
 import type { Rng } from '../rng';
 import type { SettlementSize } from './load-history';
-import type { GapSite } from './world';
+import type { GapSite } from './world-types';
 
 function sizeForGap(gap01: number, sizes: SettlementSize[]): SettlementSize {
   const ordered = [...sizes].sort((a, b) => a.gapAxisMax - b.gapAxisMax);
