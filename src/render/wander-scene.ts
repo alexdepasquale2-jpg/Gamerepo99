@@ -139,10 +139,9 @@ export class WanderScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(41);
     this.sparkBarOutline = this.add
-      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight)
+      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight, h.emptyColor, 0)
       .setOrigin(0, 0.5)
       .setStrokeStyle(2, h.outlineColor, 1)
-      .setFillStyle()
       .setScrollFactor(0)
       .setDepth(42);
     this.add

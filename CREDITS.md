@@ -51,6 +51,7 @@ Unless marked **imported**, assets are **shortlisted, not yet imported** into th
 | Material ramp swatches | Prism | project | `docs/art/swatches/` |
 | Ashford half/half mockup | Prism (composited from CC0 vendor tiles + overlays) | project mockup; underlying tiles CC0 as credited | `docs/art/mockups/ashford-half-and-half.png` |
 | 2.5D world target v2 | Prism (composited Tiny Town/Dungeon CC0 + hand lip/overhang/strata) | project mockup; tiles CC0 as credited | `docs/art/mockups/2.5d-world-target-v2.png` |
+| Spark/reignite VFX frame sheet (procedural) | Prism | project mockup | `docs/art/mockups/spark-reignite-vfx-sheet.png`, `spark-vfx-frames/` |
 | World kit sheets (biomes/roads/tiers/facilities/overview) | Prism | project kit; tiles CC0 | `docs/art/kit/` |
 | world-map-generated + settlement-closeup | Prism | project mockups | `docs/art/mockups/world-map-generated.png`, `settlement-closeup-despair-alive.png` |
 
