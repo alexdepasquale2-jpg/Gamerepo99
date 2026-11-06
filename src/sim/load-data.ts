@@ -19,6 +19,10 @@ import linesJson from '../data/lines.json';
 import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
+import lineFragmentsJson from '../data/dialogue/line-fragments.json';
+import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
+import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
+import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
 
 import hooksSparkRecovery from '../data/hooks/spark-recovery.json';
 import hooksPersonalCost from '../data/hooks/personal-cost.json';
@@ -31,6 +35,42 @@ export type TraitsTables = {
   methodModifiers: unknown[];
   sparkProfiles: unknown[];
   statusTraits?: unknown[];
+};
+
+export type LineFragmentsTable = {
+  fragments: Array<{
+    id: string;
+    text: string;
+    tags?: string[];
+    weight?: number;
+    slot?: string;
+  }>;
+  canonical?: boolean;
+  replaces?: string;
+};
+
+export type VoiceAnchorsTable = {
+  anchors: Array<{
+    id: string;
+    personId: string;
+    tags?: string[];
+    vector?: Record<string, number>;
+  }>;
+};
+
+export type ReactionCurvesTable = {
+  curves: Array<{
+    id: string;
+    drives?: unknown[];
+  }>;
+};
+
+export type VoiceConstraintsTable = {
+  constraints: Array<{
+    id: string;
+    forbidTagsTogether?: string[][];
+    neverContradict?: unknown[];
+  }>;
 };
 
 export type DataTables = {
@@ -55,6 +95,10 @@ export type DataTables = {
   kinship: unknown;
   letters: unknown;
   doctrines: unknown;
+  lineFragments: LineFragmentsTable;
+  voiceAnchors: VoiceAnchorsTable;
+  reactionCurves: ReactionCurvesTable;
+  voiceConstraints: VoiceConstraintsTable;
   hooksById: Map<string, HookDef>;
 };
 
@@ -127,6 +171,10 @@ export function loadData(): DataTables {
     kinship: kinshipJson,
     letters: lettersJson,
     doctrines: doctrinesJson,
+    lineFragments: lineFragmentsJson as LineFragmentsTable,
+    voiceAnchors: voiceAnchorsJson as VoiceAnchorsTable,
+    reactionCurves: reactionCurvesJson as ReactionCurvesTable,
+    voiceConstraints: voiceConstraintsJson as VoiceConstraintsTable,
     hooksById,
   };
 }

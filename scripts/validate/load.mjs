@@ -5,6 +5,28 @@ import { fileURLToPath } from 'node:url';
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const dataDir = join(root, 'src', 'data');
 
+/** Prefer grouped subfolder path; fall back to flat root (legacy). */
+export function resolveDataFile(...parts) {
+  if (parts.length === 1) {
+    const flat = join(dataDir, parts[0]);
+    try {
+      statSync(flat);
+      return flat;
+    } catch {
+      return flat;
+    }
+  }
+  const grouped = join(dataDir, ...parts);
+  try {
+    statSync(grouped);
+    return grouped;
+  } catch {
+    const flat = join(dataDir, parts[parts.length - 1]);
+    return flat;
+  }
+}
+
+
 /** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json (+ legacy flats if any). */
 const DATA_SUBDIRS = ['dialogue', 'people', 'world', 'economy', 'systems'];
 
