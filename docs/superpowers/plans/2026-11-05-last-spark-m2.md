@@ -1,3 +1,7 @@
+> **SUPERSEDED 2026-11-05:** Town-loop M2 cancelled. New order: **M2 Fabric** → **M3 First playable world**.  
+> Active plan: `docs/superpowers/plans/2026-11-05-m2-fabric.md`. Archive copy also under `docs/archive/plans/`.  
+> Keep for historical task detail (Forge Tasks 1–6 reuse). Brood `activeBodiesMax: 1` (595d722) still binds.
+
 # Last Spark M2 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -21,6 +25,9 @@
 - **Save format (forward-compat only):** any M2 save JSON must include `version: 1` and may include reserved optional `imprint: null` (or omit). Do not implement imprint→NPC or world import/export in M2 — see `specs/2026-11-05-async-legacy-npc-design.md` (M5+).
 - **Optional coin:** `player.defaults.coin` (number, default 0) may exist on save/state. Do **not** implement stash/notoriety/patrons in M2 — see `specs/2026-11-05-hoarder-notoriety-design.md` (M4+).
 - **Quality bar:** depth beats breadth; schedule is secondary. M2 acceptance includes **What makes this special** (testable).
+- **Brood M2 lock:** `bodySlots: 3`, `activeBodiesMax: 1` (Forge 595d722). Do not raise max in M2.
+- **Scenarios:** `src/data/scenarios.json` + `tests/scenarios/README.md` — Task 10 should prefer these seeded paths (≥3/5 moments).
+- **Optional dynamism:** `player.features.bakedDynamismLines` default **false**. See Optional Task 11.
 
 ---
 
