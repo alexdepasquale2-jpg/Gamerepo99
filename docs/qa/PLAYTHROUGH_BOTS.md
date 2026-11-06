@@ -13,7 +13,7 @@ Design (playthrough): `docs/superpowers/specs/2026-11-05-playthrough-bots-design
 
 # Playthrough bots (hybrid C) — **M3 gate**
 
-**Status:** Harness ready. Live matrix is `API_PENDING` until Forge exports a play-session factory from `src/sim` (e.g. `createPlaySession`). **Not required to clear M2.**
+**Status:** Live. `connectBotSession()` → `createPlaySession` boots the Hybrid-C matrix (no longer `API_PENDING`). M3 gate report: `docs/qa/reports/m3-worth-playing.md`. Probe commits own QA docs when Alex/Niblet ask.
 
 ## Goal
 Headless bots exercise the **public sim API** (no Phaser) across playable archetypes × play styles, measuring feel/balance. Playwright stays UI-smoke only (`npm run test:e2e:m1`).
@@ -68,7 +68,7 @@ docs/qa/reports/m2-playable-town-bots.md   # legacy name; M3 gate
 ```
 
 ## Report
-`docs/qa/reports/m2-playable-town-bots.md` — update after each real matrix run; send summary to Niblet.
+`docs/qa/reports/m3-worth-playing.md` — M3 gate after each real matrix run; legacy `m2-playable-town-bots.md` points here.
 
 ## Forge handoff
-Probe does not commit. Batch for Forge includes `tests/bots/**` (fabric-* + playthrough), `docs/qa/PLAYTHROUGH_BOTS.md`, `docs/qa/reports/m2-fabric-alive.md`, `docs/qa/reports/m2-playable-town-bots.md`, `package.json` (`test:bots`).
+Probe commits QA docs/reports (and Probe SCHEDULE tab) when Alex/Niblet request a gate run. Harness/`tests/bots/**` still lands via Forge when API-shaped. Reports: `m2-fabric-alive.md`, `m2-playable-town-bots.md` (legacy), `m3-worth-playing.md`.
