@@ -46,4 +46,14 @@ export type PlaySession = {
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
-  | { mode: 'play'; seed: number; archetypeId?: string; peopleCount?: number };
+  | {
+      mode: 'play';
+      seed: number;
+      archetypeId?: string;
+      peopleCount?: number;
+      /**
+       * Opt-in: route method acts through the interaction compat adapter (resolveInteraction).
+       * Default off until legacy commitMethod side effects are ported.
+       */
+      interactionCompat?: boolean;
+    };
