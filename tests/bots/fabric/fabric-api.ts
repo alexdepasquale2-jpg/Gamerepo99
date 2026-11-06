@@ -22,7 +22,7 @@ export type {
 
 import type { FabricApi } from './fabric-api-types';
 
-/** Prefer Forge facade first; index fallback last. No dead fabric/ folder. */
+/** Prefer Forge facade first (src/sim/fabric.ts shim); index fallback last. Bake/score/dump live under src/sim/fabric/. */
 const MODULE_CANDIDATES = [
   '../../../src/sim/fabric.ts',
   '../../../src/sim/index.ts',

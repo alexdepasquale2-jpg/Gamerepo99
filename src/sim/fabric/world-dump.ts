@@ -1,7 +1,7 @@
 /** Headless Fabric world dump + inspect session for Probe. Pure; no Phaser/DOM. */
 
-import { generateWorld } from './gen/world';
-import type { FabricWorld } from './gen/world';
+import { generateWorld } from '../gen/world';
+import type { FabricWorld } from '../gen/world';
 
 export type WorldDump = {
   text: string;

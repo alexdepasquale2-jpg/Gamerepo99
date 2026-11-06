@@ -4,7 +4,7 @@ export {
   generateWorld,
   generatePeople,
   generatePersonDraft,
-} from './fabric-bake';
+} from './fabric/fabric-bake';
 
 export type {
   FabricWorld,
@@ -46,5 +46,5 @@ export {
   type InspectSnapshot,
   type InspectSession,
   type CreatePlaySessionOpts,
-} from './world-dump';
+} from './fabric/world-dump';
 

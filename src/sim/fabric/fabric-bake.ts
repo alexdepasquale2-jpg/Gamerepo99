@@ -1,14 +1,14 @@
 /** Facade-only: attach baked fragment lines onto gen drafts. gen/ never imports this. */
 
-import { assertVoice, type FabricLine } from './dyn/voice';
-import type { PersonDraft } from './gen/people';
-import type { FabricWorld, GenerateWorldOpts } from './gen/world';
-import { generateWorld as generateWorldGen } from './gen/world';
+import { assertVoice, type FabricLine } from '../dyn/voice';
+import type { PersonDraft } from '../gen/people';
+import type { FabricWorld, GenerateWorldOpts } from '../gen/world';
+import { generateWorld as generateWorldGen } from '../gen/world';
 import {
   generatePersonDraft as generatePersonDraftGen,
   type GeneratePeopleOpts,
   type GeneratePersonDraftOpts,
-} from './gen/people';
+} from '../gen/people';
 import {
   leadingWordPrefix,
   pickPool,

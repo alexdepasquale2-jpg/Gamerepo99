@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateWorld } from '../../../src/sim/gen/world';
-import { dumpWorld } from '../../../src/sim/world-dump';
+import { dumpWorld } from '../../../src/sim/fabric/world-dump';
 
 describe('worldgen facilities / biomes', () => {
   it('same seed yields identical facilities and biomes', () => {

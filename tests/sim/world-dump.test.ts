@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createPlaySession,
   dumpWorld,
-} from '../../src/sim/world-dump';
+} from '../../src/sim/fabric/world-dump';
 import { generateWorld } from '../../src/sim/gen/world';
 import {
   createPlaySession as createPlaySessionFromIndex,

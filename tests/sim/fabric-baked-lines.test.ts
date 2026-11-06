@@ -9,7 +9,7 @@ import {
   scoreBakeCandidate,
   trailingWordClause,
   leadingWordPrefix,
-} from '../../src/sim/fabric-bake-score';
+} from '../../src/sim/fabric/fabric-bake-score';
 import { loadData } from '../../src/sim/load-data';
 import { generateWorld as generateWorldGen } from '../../src/sim/gen/world';
 

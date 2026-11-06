@@ -1,7 +1,7 @@
 /** Scoring + alone/generic_blend pool helpers for fabric bake (soft-cap extract). */
 
-import { loadData, type DataTables } from './load-data';
-import { createRng } from './rng';
+import { loadData, type DataTables } from '../load-data';
+import { createRng } from '../rng';
 
 type Frag = DataTables['lineFragments']['fragments'][number];
 
