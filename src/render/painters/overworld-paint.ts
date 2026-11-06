@@ -8,6 +8,7 @@ import { applySpriteSort, tileFootWorld, tileToWorld } from '../depth-sort';
 import {
   GRASS_CALM_TEX,
   HERO_TEX,
+  TREES_TEX,
   SETTLEMENT_TEX,
   SHADOW_TEX,
   sheetTextureKey,
@@ -170,11 +171,13 @@ function paintPoissonGrassDetail(
   const oy = originR * TILE_PX;
   const size = chunkTiles * TILE_PX;
 
-  const cellA = Math.max(20, FEEL.worldScale.tuftH * 3);
-  // Layer A: mid tufts + flowers (larger, readable)
-  paintPoissonLayer(host, container, ox, oy, size, originQ, originR, cellA, 20, 0x3d6b28, true);
-  // Layer B: darker, sparser tufts
-  paintPoissonLayer(host, container, ox, oy, size, originQ + 17, originR + 9, cellA + 12, 14, 0x2a4f1c, false);
+  const ws = FEEL.worldScale;
+  // Layer A: mid tufts + flowers (readable Stardew density)
+  paintPoissonLayer(host, container, ox, oy, size, originQ, originR, ws.poissonCellA, ws.poissonKeepA, 0x3d6b28, true);
+  // Layer B: darker tufts
+  paintPoissonLayer(host, container, ox, oy, size, originQ + 17, originR + 9, ws.poissonCellB, ws.poissonKeepB, 0x2a4f1c, false);
+  // Layer C: extra flower/tuft sprinkle so open grass isn't empty
+  paintPoissonLayer(host, container, ox, oy, size, originQ + 31, originR + 19, ws.poissonCellC, ws.poissonKeepC, 0x4a7a32, true);
 }
 
 function paintPoissonLayer(
@@ -333,7 +336,22 @@ export function paintTree(
   variant = 0,
 ): void {
   const foot = tileFootWorld(q, r);
-  addSoftShadow(host, container, foot.x, foot.y, 0.7);
+  addSoftShadow(host, container, foot.x, foot.y, 1.1);
+  // Integer uniform scale only (same x/y) — never setDisplaySize stretch.
+  // Trees & Bushes CC0 frames are already ~building-height; use scale 1 (authored large).
+  // Skinny buildings-sheet fallback stays at artScale so 16px-density crops match the pack.
+  if (host.textures.exists(TREES_TEX)) {
+    const tex = host.textures.get(TREES_TEX);
+    const pick = variant % 3 === 0 ? 'tree-oak' : variant % 3 === 1 ? 'tree-pine' : 'tree-fir';
+    const fr = tex.has(pick) ? pick : tex.has('tree-oak') ? 'tree-oak' : tex.has('tree-pine') ? 'tree-pine' : null;
+    if (fr) {
+      const img = host.add.image(foot.x, foot.y, TREES_TEX, fr);
+      applySpriteSort(img);
+      img.setScale(1); // native pixels; fuller via clusters, not upscale
+      container?.add(img);
+      return;
+    }
+  }
   if (host.textures.exists('sheet-buildings')) {
     const tex = host.textures.get('sheet-buildings');
     const fr =
@@ -341,11 +359,8 @@ export function paintTree(
     if (tex.has(fr)) {
       const img = host.add.image(foot.x, foot.y, 'sheet-buildings', fr);
       applySpriteSort(img);
-      const s = 1 + (variant % 3) * 0.1;
-      const ws = FEEL.worldScale;
-      img.setDisplaySize(TILE_PX * ws.treeWTiles * s, TILE_PX * ws.treeHTiles * s);
+      img.setScale(FEEL.worldScale.artScale);
       container?.add(img);
-      return;
     }
   }
 }
@@ -404,29 +419,34 @@ function paintFenceAlongRoad(
 }
 
 
-/** Place villagers with screen-space AABB gaps (sprite ~32×48 at scale 2). */
+/** Place villagers with screen-space AABB gaps (16×artScale → 32px at artScale 2). */
 function paintSpacedVillagers(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   town: { q: number; r: number },
   candidates: [number, number, string, boolean][],
 ): void {
-  // Screen-space: clear if dx OR dy clears scaled sprite (16*scale + gap)
-  const minAxis = FEEL.worldScale.villagerScale * 16 + 16;
+  // Screen-space: clear if dx OR dy clears scaled sprite (16*artScale + gap)
+  const minAxis = FEEL.worldScale.artScale * 16 + 12;
   const placed: { x: number; y: number }[] = [];
+  // Cliff strip is painted at town.r+4 — keep feet south of face+clearance
+  const cliffR = town.r + 4;
+  const minR = cliffR + FEEL.worldScale.cliffClearTiles;
   for (const [dq, dr, frame, flip] of candidates) {
     let q = town.q + dq;
-    let r = town.r + dr;
+    let r = Math.max(town.r + dr, minR);
     let foot = tileFootWorld(q, r);
-    for (let attempt = 0; attempt < 12; attempt++) {
+    for (let attempt = 0; attempt < 14; attempt++) {
       const overlaps = placed.some((p) => {
         const dx = Math.abs(foot.x - p.x);
         const dy = Math.abs(foot.y - p.y);
         return dx < minAxis && dy < minAxis;
       });
-      if (!overlaps) break;
-      r += 0.85;
-      q += attempt % 2 === 0 ? 1.1 : -0.6;
+      const onCliff = r < minR;
+      if (!overlaps && !onCliff) break;
+      r += 0.9;
+      q += attempt % 2 === 0 ? 1.2 : -0.7;
+      if (r < minR) r = minR + attempt * 0.15;
       foot = tileFootWorld(q, r);
     }
     placed.push(foot);
@@ -446,7 +466,7 @@ function paintVillager(
   addSoftShadow(host, container, foot.x, foot.y, 0.8);
   if (host.textures.exists(HERO_TEX) && host.textures.get(HERO_TEX).has(frame)) {
     const sp = host.add.image(foot.x, foot.y, HERO_TEX, frame);
-    sp.setScale(FEEL.worldScale.villagerScale);
+    sp.setScale(FEEL.worldScale.artScale);
     sp.setFlipX(flipX);
     applySpriteSort(sp);
     container?.add(sp);
@@ -478,25 +498,45 @@ function paintScatterProps(
   const ws = FEEL.worldScale;
   const min = ws.scatterMinPx;
   type Kind = 'bush' | 'rock' | 'log' | 'stump' | 'sign' | 'hay' | 'flowers';
+  // Upper terrace + meadow south of cliff; cliff band filtered below
   const candidates: { dq: number; dr: number; kind: Kind }[] = [
+    // porch / upper terrace
     { dq: -4.5, dr: 1.2, kind: 'bush' },
     { dq: -1.0, dr: 2.4, kind: 'rock' },
     { dq: 3.0, dr: 2.0, kind: 'log' },
     { dq: 6.8, dr: 1.0, kind: 'stump' },
     { dq: -0.5, dr: -1.2, kind: 'sign' },
     { dq: 1.5, dr: 3.2, kind: 'hay' },
-    { dq: -2.5, dr: 6.5, kind: 'bush' },
+    { dq: -5.5, dr: 0.4, kind: 'flowers' },
+    { dq: 8.5, dr: 2.2, kind: 'bush' },
+    { dq: 4.2, dr: -0.8, kind: 'rock' },
+    // meadow south of cliff (dr past cliffClear)
+    { dq: -2.5, dr: 7.2, kind: 'bush' },
     { dq: 1.0, dr: 8.5, kind: 'flowers' },
-    { dq: 5.5, dr: 7.2, kind: 'rock' },
-    { dq: 8.0, dr: 5.0, kind: 'bush' },
-    { dq: -4.0, dr: 8.0, kind: 'log' },
-    { dq: 2.5, dr: 5.8, kind: 'stump' },
-    { dq: 7.5, dr: 8.8, kind: 'flowers' },
-    { dq: -1.5, dr: 9.5, kind: 'hay' },
+    { dq: 5.5, dr: 7.5, kind: 'rock' },
+    { dq: 8.0, dr: 9.2, kind: 'bush' },
+    { dq: -4.0, dr: 8.5, kind: 'log' },
+    { dq: 2.5, dr: 9.8, kind: 'stump' },
+    { dq: 7.5, dr: 10.5, kind: 'flowers' },
+    { dq: -1.5, dr: 10.2, kind: 'hay' },
+    { dq: -6.0, dr: 9.0, kind: 'flowers' },
+    { dq: 3.5, dr: 11.2, kind: 'bush' },
+    { dq: -3.2, dr: 11.0, kind: 'rock' },
+    { dq: 6.2, dr: 8.2, kind: 'hay' },
+    { dq: 0.2, dr: 12.0, kind: 'flowers' },
+    { dq: 9.0, dr: 11.5, kind: 'log' },
+    { dq: -5.0, dr: 12.0, kind: 'stump' },
+    { dq: 4.8, dr: 12.5, kind: 'bush' },
+    { dq: -0.8, dr: 7.0, kind: 'flowers' },
   ];
   const placed: { x: number; y: number }[] = [];
+  const cliffR = town.r + 4;
+  const clear = FEEL.worldScale.cliffClearTiles;
   for (const c of candidates) {
-    const foot = tileFootWorld(town.q + c.dq, town.r + c.dr);
+    const absR = town.r + c.dr;
+    // Keep scatter off the cliff face band
+    if (absR >= cliffR - 0.3 && absR < cliffR + clear) continue;
+    const foot = tileFootWorld(town.q + c.dq, absR);
     if (placed.some((p) => Math.hypot(p.x - foot.x, p.y - foot.y) < min)) continue;
     placed.push(foot);
     paintScatterOne(host, container, foot.x, foot.y, c.kind);
@@ -578,16 +618,18 @@ export function paintTownMarker(
     container?.add(img);
   }
 
-  // Fuller tree clusters (layered canopy) west + east of settlement
+  // Fuller groves: clusters of native-aspect trees (CC0 pack) — never non-uniform scale
   for (const [dq, dr, v] of [
-    [-2.8, 0.15, 0],
-    [-3.4, -0.55, 1],
-    [-2.2, -0.7, 2],
-    [-3.6, 0.35, 0],
-    [5.0, 0.25, 2],
-    [5.7, -0.45, 0],
-    [5.4, -0.9, 1],
-    [6.2, 0.1, 2],
+    [-2.6, 0.2, 0],
+    [-3.3, -0.4, 1],
+    [-2.0, -0.55, 0],
+    [-3.8, 0.45, 2],
+    [-3.0, -1.0, 1],
+    [5.0, 0.25, 1],
+    [5.8, -0.35, 0],
+    [5.3, -0.85, 2],
+    [6.4, 0.15, 0],
+    [6.0, -1.1, 1],
   ] as const) {
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
@@ -602,11 +644,12 @@ export function paintTownMarker(
   // Scatter props so open grass isn't empty (min spacing from worldScale)
   paintScatterProps(host, container, town);
 
+  // Meadow south of cliff (r+4); paintSpacedVillagers also enforces cliffClearTiles
   paintSpacedVillagers(host, container, town, [
-    [-3.2, 5.6, '1', true],
-    [0.2, 7.4, '7', false],
-    [3.8, 5.5, '4', false],
-    [7.4, 6.9, '7', true],
+    [-3.5, 9.0, '1', true],
+    [0.5, 10.5, '7', false],
+    [4.0, 9.5, '4', false],
+    [7.5, 11.0, '7', true],
   ]);
 
   const labelY = foot.y - TILE_PX * 4.2 - 12;

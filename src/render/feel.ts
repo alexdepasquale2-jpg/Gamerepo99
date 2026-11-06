@@ -72,48 +72,50 @@ export const FEEL = {
     /** Matches TILES_PER_MINUTE / 60 ≈ 2 tiles/sec */
     walkTilesPerSec: 2,
     camLerp: 0.18,
-    camDeadzoneX: 40,
-    camDeadzoneY: 28,
+    camDeadzoneX: 28,
+    camDeadzoneY: 20,
   },
 
   /**
-   * Single world scale (Pass scale) — Stardew-ish proportions vs v4 mockup.
-   * All sprite scales are integers so Phaser nearest-neighbor stays crisp
-   * (camZoom stays 1; “closer” read comes from hero/prop scale, not fractional zoom).
+   * Uniform world scale — one integer for the whole ansimuz pack.
+   * Giants pass root cause: scaling characters alone (heroScale 4) while
+   * buildings stayed tile-stamped. Fix: every pack sprite uses artScale.
    *
-   *   tilePx        32   — must match sim TILE_PX
-   *   camZoom        1   — integer only (pixel-perfect)
-   *   heroScale      4   — ansimuz 16px → 64px = 2 tiles (door-height / Stardew)
-   *   villagerScale  4   — same as hero
-   *   treeHTiles   4.0   — taller layered canopy (~was 2.6)
-   *   treeWTiles   1.4
-   *   cratePx       18   — legible vs buildings
-   *   fencePostH    18
-   *   tuftH          8   — readable grass detail
-   *   flowerPx       3
-   *   scatterMinPx  48   — min gap between scatter props
+   *   tilePx     32  — sim TILE_PX; 16px source × artScale 2 → 1 tile on screen
+   *   artScale    2  — hero/villager/trees/props share this integer scale
+   *   camZoom     1  — “more zoom” from artScale↔tilePx, not fractional zoom
+   *   Hero 16×2 = 32px ≈ 1 tile ≈ 1.1–1.3× inn door; shorter than a house
+   *   Buildings keep near-native stamp pixels (same density as 16×2 chars)
+   *   Trees: setScale(artScale) — native aspect, fuller via clusters
    */
   worldScale: {
     tilePx: 32,
+    artScale: 2,
     camZoom: 1,
-    heroScale: 4,
-    villagerScale: 4,
-    treeHTiles: 4,
-    treeWTiles: 1.4,
-    cratePx: 18,
-    fencePostH: 18,
-    fenceRailH: 3,
-    tuftH: 8,
+    /** Min tiles south of cliff row (town.r+4) for NPC feet */
+    cliffClearTiles: 4.0,
+    cratePx: 14,
+    fencePostH: 14,
+    fenceRailH: 2,
+    tuftH: 6,
     flowerPx: 3,
-    scatterMinPx: 48,
-    bushR: 10,
-    rockR: 7,
-    logW: 28,
-    logH: 8,
-    stumpR: 9,
-    signH: 28,
-    hayW: 22,
-    hayH: 14,
+    /** Meadow scatter min gap — dense but non-overlapping */
+    scatterMinPx: 36,
+    /** Poisson grass detail — Stardew meadow density */
+    poissonCellA: 14,
+    poissonKeepA: 45,
+    poissonCellB: 18,
+    poissonKeepB: 30,
+    poissonCellC: 24,
+    poissonKeepC: 22,
+    bushR: 8,
+    rockR: 6,
+    logW: 22,
+    logH: 7,
+    stumpR: 8,
+    signH: 22,
+    hayW: 18,
+    hayH: 12,
   },
 
   /** HUD spark bar (presentation only) */

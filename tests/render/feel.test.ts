@@ -43,11 +43,13 @@ describe('FEEL render config', () => {
   it('exposes integer worldScale for Stardew proportions', () => {
     expect(FEEL.worldScale.tilePx).toBe(32);
     expect(FEEL.worldScale.camZoom).toBe(1);
-    expect(FEEL.worldScale.heroScale).toBe(4);
-    expect(FEEL.worldScale.villagerScale).toBe(FEEL.worldScale.heroScale);
-    expect(Number.isInteger(FEEL.worldScale.heroScale)).toBe(true);
-    expect(FEEL.worldScale.heroScale * 16).toBe(64); // 2 tiles
-    expect(FEEL.worldScale.treeHTiles).toBeGreaterThanOrEqual(3.5);
-    expect(FEEL.worldScale.scatterMinPx).toBeGreaterThanOrEqual(40);
+    expect(FEEL.worldScale.artScale).toBe(2);
+    expect(Number.isInteger(FEEL.worldScale.artScale)).toBe(true);
+    // 16px ansimuz × artScale 2 → 32px = 1 tile ≈ door height
+    expect(FEEL.worldScale.artScale * 16).toBe(FEEL.worldScale.tilePx);
+    expect(FEEL.worldScale.cliffClearTiles).toBeGreaterThanOrEqual(2);
+    expect(FEEL.worldScale.scatterMinPx).toBeGreaterThanOrEqual(32);
+    expect(FEEL.worldScale.poissonKeepA).toBeGreaterThanOrEqual(30);
+    expect(FEEL.worldScale.poissonCellA).toBeLessThanOrEqual(20);
   });
 });

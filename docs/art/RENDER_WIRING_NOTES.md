@@ -62,21 +62,34 @@ Despair / alive: **palette shift / desaturation of RGB only** from `warmth`. Nev
 
 `docs/art/mockups/2.5d-world-target-v4.png` — despair | reignited split; compositing reference for alpha, single-frame stamps, one character per spot, variant grass. Reproducible via `scripts/art/assemble-world-target-v4.py`.
 
-## World scale (Pass scale — Stardew proportions)
+## World scale (Pass scale — uniform pack scale)
 
 Single source of truth: `FEEL.worldScale` in `src/render/feel.ts`.
 
+**Root cause of giants pass:** scaling characters alone (`heroScale` 4 → 64px) while buildings stayed tile-stamped. Fix: one integer `artScale` for the whole ansimuz pack.
+
 | Knob | Value | Meaning |
 |------|-------|---------|
-| `tilePx` | 32 | Must match sim `TILE_PX` |
-| `camZoom` | 1 | Integer only — nearest-neighbor stays crisp (no fractional zoom blur) |
-| `heroScale` / `villagerScale` | 4 | ansimuz 16×16 → 64px = **2 tiles** (door-height / Stardew) |
+| `tilePx` | 32 | Must match sim `TILE_PX`; 16px source × `artScale` 2 → 1 tile on screen |
+| `artScale` | 2 | **Uniform** integer scale for hero, villagers, trees, props |
+| `camZoom` | 1 | Integer only — “more zoom” comes from artScale↔tilePx, not fractional zoom |
 | `pixelArt` (main.ts) | true | Nearest-neighbor under Scale.FIT — no blur |
-| `treeHTiles` / `treeWTiles` | 4.0 / 1.4 | Taller fuller canopy clusters |
-| `cratePx` / `fencePostH` | 18 / 18 | Props legible against buildings |
-| `tuftH` / `flowerPx` | 8 / 3 | Readable grass detail |
-| `scatterMinPx` | 48 | Min gap between bushes/rocks/logs/stumps/sign/hay/flower patches |
+| `cliffClearTiles` | 4.0 | Min tiles south of cliff row (`town.r+4`) for NPC feet / scatter |
+| `cratePx` / `fencePostH` | 14 / 14 | Props at same visual density as artScale 2 |
+| `tuftH` / `flowerPx` | 6 / 3 | Readable grass detail |
+| `scatterMinPx` | 36 | Min gap between bushes/rocks/logs/stumps/sign/hay/flower patches |
 
-Hero + villagers use integer `setScale(N)`. Buildings keep tile-based `setDisplaySize`. Camera `setRoundPixels(true)` + `camZoom: 1`.
+- Hero / villagers: `setScale(artScale)` → 16×2 = **32px ≈ 1 tile ≈ 1.1–1.3× inn door**, clearly shorter than a house.
+- Trees: never stretch (`setScale(s)` with identical x/y; no non-uniform `setDisplaySize`). Prefer ansimuz **Trees & Bushes** CC0 (`tree-oak`/`tree-pine`/`tree-fir`) at **scale 1** (already authored ~building height); fuller via **clusters**. Skinny buildings-sheet crops only as fallback at `artScale`.
+- Hero vs door: ~**1.2–1.3×** inn door, clearly under house height (artScale 2 → 32px).
+- Buildings / settlement stamps: keep tile-based `setDisplaySize` so stamp density matches 16×2 characters (v4 char:building height ≈ 1:4.5).
+- Camera `setRoundPixels(true)` + `camZoom: 1`. Integer scales only.
+
+**Meadow density:** poisson layers A/B/C (`poissonCell*` / `poissonKeep*`) plus expanded scatter candidates with `scatterMinPx` gap and cliff-band skip — open grass reads Stardew-dense, not empty.
 
 Target mockup: `docs/art/mockups/2.5d-world-target-v4.png`. Before/after: `artifacts/25d/prism-scale-{before,after}.png`.
+
+## Credits (this pass)
+
+- ansimuz — Trees & Bushes (CC0) https://opengameart.org/content/trees-bushes
+- ansimuz — RPG town / hero (CC0) already in vendor

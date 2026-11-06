@@ -4,8 +4,8 @@
  *
  * Named stamp rects (Pass 2):
  *   inn     sheet-buildings (39,9,149,141)
- *   tree    sheet-buildings (8,21,30,129)
- *   tree-b  sheet-buildings (39,18,31,132)
+ *   tree-oak/pine  ansimuz Trees & Bushes CC0 (87×113 / 98×128) — uniform artScale, never stretch
+ *   tree/tree-b     sheet-buildings fallbacks (legacy skinny crops)
  *   house2  stamp-house2.png (full texture; ansimuz town pack extract)
  *   cliff   lip/face/base grid 0/4/8
  *   grass   grass-world 256² → 32×32 world-aligned frames 0..63
@@ -24,6 +24,7 @@ export const DIRT_CALM_TEX = 'dirt-calm';
 export const DIRT_EDGE_TEX = 'dirt-edge';
 export const HOUSE2_TEX = 'stamp-house2';
 export const SETTLEMENT_TEX = 'stamp-settlement';
+export const TREES_TEX = 'ansimuz-trees-bushes';
 
 export type SheetFrameConfig = {
   key: string;
@@ -89,6 +90,7 @@ export function preloadOverworldSheets(load: Phaser.Loader.LoaderPlugin): void {
   load.image(HOUSE2_TEX, toPublicUrl('assets/sprites/stamp-house2.png'));
   load.image(SETTLEMENT_TEX, toPublicUrl('assets/sprites/stamp-settlement.png'));
   load.image(GRASS_WORLD_TEX, toPublicUrl('assets/sprites/grass-world.png'));
+  load.image(TREES_TEX, toPublicUrl('assets/vendor/ansimuz-trees-and-bushes.png'));
 }
 
 function addGridFrames(
@@ -137,6 +139,11 @@ export function registerNamedStamps(textures: Phaser.Textures.TextureManager): v
   addNamedFrame(textures, 'sheet-buildings', 'inn', 39, 9, 149, 141);
   addNamedFrame(textures, 'sheet-buildings', 'tree', 8, 21, 30, 129);
   addNamedFrame(textures, 'sheet-buildings', 'tree-b', 39, 18, 31, 132);
+  // ansimuz Trees & Bushes (CC0) — proper larger sprites, native aspect
+  addNamedFrame(textures, TREES_TEX, 'tree-oak', 23, 13, 87, 113);
+  addNamedFrame(textures, TREES_TEX, 'tree-pine', 122, 19, 98, 128);
+  addNamedFrame(textures, TREES_TEX, 'tree-fir', 229, 1, 53, 44);
+  addNamedFrame(textures, TREES_TEX, 'bush-round', 229, 51, 39, 23);
   addNamedFrame(textures, 'sheet-cliff', 'lip', 0, 0, 64, 32);
   addNamedFrame(textures, 'sheet-cliff', 'face', 0, 32, 64, 32);
   addNamedFrame(textures, 'sheet-cliff', 'base', 0, 64, 64, 32);

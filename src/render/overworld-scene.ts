@@ -133,12 +133,12 @@ export class OverworldScene extends Phaser.Scene {
     // Exact single ansimuz hero frame (16×16 sheet), scaled ×2; soft shadow sibling.
     if (this.textures.exists(SHADOW_TEX)) {
       this.playerShadow = this.add.image(foot.x, foot.y - 2, SHADOW_TEX);
-      this.playerShadow.setScale(FEEL.worldScale.heroScale * 0.55, FEEL.worldScale.heroScale * 0.4);
+      this.playerShadow.setScale(FEEL.worldScale.artScale * 0.7, FEEL.worldScale.artScale * 0.5);
       this.playerShadow.setDepth(foot.y - 0.5);
     }
     const frame = this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7') ? '7' : undefined;
     this.player = this.add.sprite(foot.x, foot.y, HERO_TEX, frame);
-    this.player.setScale(FEEL.worldScale.heroScale);
+    this.player.setScale(FEEL.worldScale.artScale);
     applySpriteSort(this.player);
     if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down');
     const cam = this.cameras.main;
