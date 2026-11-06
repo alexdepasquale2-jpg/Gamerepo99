@@ -109,8 +109,9 @@ export function dumpWorld(world: FabricWorld): WorldDump {
 }
 
 /**
- * Headless play/inspect session. M2 only supports mode: 'inspect'.
- * Probe calls dump()/snapshot() without Phaser.
+ * Inspect-only for M2/Probe: `dump()` + `snapshot()` over generateWorld.
+ * Live BotSession / play matrix (`mode:'play'`, act/tick/travel) is M3 —
+ * do not pretend a play API exists here. No-arg / non-inspect → null.
  */
 export function createPlaySession(
   opts?: CreatePlaySessionOpts,
