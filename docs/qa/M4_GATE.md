@@ -84,7 +84,7 @@ npm run build
 | Caravans | **task-b:** `src/sim/caravans.ts`, `tests/sim/caravans.test.ts` | — | **No** (await Forge) |
 | Doctrine | **task-c:** `src/sim/doctrine-tick.ts`, `tests/sim/doctrine-tick.test.ts` | — | **No** (await Forge) |
 | Letters | **task-d:** `src/sim/letters-scale.ts`, `tests/sim/letters-scale.test.ts` | — | **No** (await Forge) |
-| Evidence | `scripts/m4-living-world-evidence.mts` → `docs/qa/reports/_m4-living-world-evidence.json` | (plans unnamed; locked here to mirror M3) | **No** (Probe writes at go-time / prep) |
+| Evidence | `scripts/m4-living-world-evidence.mts` → `docs/qa/reports/_m4-living-world-evidence.json` | (plans unnamed; locked here to mirror M3) | **Yes (prep stub)** |
 
 task-b's "modify `src/sim/economy-lod.ts`" should be read as the nested packet-01 module under `src/sim/economy/`. Gate does **not** require the older flat LOD paths.
 
