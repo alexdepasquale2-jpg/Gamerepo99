@@ -58,7 +58,7 @@ export class OverworldScene extends Phaser.Scene {
     this.cursors = this.input.keyboard!.createCursorKeys();
 
     this.add
-      .text(8, 8, 'Overworld — arrows move · Enter/click town to enter', {
+      .text(8, 8, 'Overworld — arrows/WASD move · Enter/click town for methods', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#f2e9e4',
@@ -193,7 +193,16 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private enterTown(townId: string): void {
-    this.hint.setText(`entering ${townId}`);
-    this.scene.start('town', { townId });
+    // Continuous overworld: open method menu in-place (no TownScene boot).
+    this.hint.setText(`near ${townId} — methods`);
+    const menu = this.registry.get('methodMenu') as
+      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
+      | undefined;
+    if (menu && typeof this.session.listActions === 'function') {
+      menu.show(this.session.listActions(), (actionId) => {
+        this.session.act(actionId);
+        this.syncSparkFromSession(true);
+      });
+    }
   }
 }

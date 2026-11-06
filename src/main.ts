@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
-import { TownScene } from './render/town-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 
@@ -19,7 +18,7 @@ const game = new Phaser.Game({
   width,
   height,
   backgroundColor: '#0b0d12',
-  scene: [BootScene, OverworldScene, TownScene],
+  scene: [BootScene, OverworldScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
