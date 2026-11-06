@@ -1,4 +1,5 @@
 import { createEventBus, type EventBus } from './event-bus';
+import type { DataTables } from './load-data';
 import { createRng, type Rng } from './rng';
 import type { Npc, Tile, WorldConfig } from './types';
 
@@ -11,6 +12,31 @@ export type World = {
   npcs: Npc[];
   rng: Rng;
   bus: EventBus;
+};
+
+/** Town map footprint + placed sites (M2 partial; pathfinding later). */
+export type TownSite = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  tags: string[];
+  approachTags: string[];
+  personId: string | null;
+};
+
+export type TownGrid = {
+  townId: string;
+  width: number;
+  height: number;
+  sites: TownSite[];
+};
+
+type TownRow = {
+  id: string;
+  mapWidth?: number;
+  mapHeight?: number;
+  sites?: Array<Record<string, unknown>>;
 };
 
 function buildTiles(width: number, height: number, rng: Rng): Tile[][] {
@@ -71,5 +97,35 @@ export function createWorld(config: WorldConfig): World {
     npcs,
     rng,
     bus: createEventBus(),
+  };
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+}
+
+function parseSite(raw: Record<string, unknown>): TownSite {
+  return {
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? ''),
+    x: Number(raw.x ?? 0),
+    y: Number(raw.y ?? 0),
+    tags: asStringArray(raw.tags),
+    approachTags: asStringArray(raw.approachTags),
+    personId: raw.personId == null ? null : String(raw.personId),
+  };
+}
+
+/** Load town width/height + sites from data tables (no procedural fill yet). */
+export function loadTownGrid(data: DataTables, townId: string): TownGrid {
+  const town = (data.towns as TownRow[]).find((t) => t.id === townId);
+  if (!town) {
+    throw new Error(`UNKNOWN town: ${townId}`);
+  }
+  return {
+    townId: town.id,
+    width: Number(town.mapWidth ?? 0),
+    height: Number(town.mapHeight ?? 0),
+    sites: (town.sites ?? []).map(parseSite),
   };
 }

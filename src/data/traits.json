@@ -75,12 +75,12 @@
       ],
       "mode": "multi",
       "bodySlots": 3,
-      "activeBodiesMax": 2,
+      "activeBodiesMax": 1,
       "sharedSpark": true,
       "idleBodyProvides": [
         "eavesdrop_in_town"
       ],
-      "notes": "M3: dual active; M2 plan had 1 \u2014 schedule moved Brood dual into M3."
+      "notes": "M2: activeBodiesMax=1 (swap control; idle eavesdrop). M3 raises to 2+ via data only."
     }
   ],
   "perception": [
