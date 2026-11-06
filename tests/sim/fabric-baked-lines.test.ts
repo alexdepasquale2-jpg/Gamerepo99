@@ -53,6 +53,26 @@ describe('fabric facade baked lines (Probe seam)', () => {
     expect(corpus.has(draft.lines![0]!.text)).toBe(true);
   });
 
+  it('zero stub-voice across Probe default seeds (peopleCount 8)', () => {
+    // Mirror fabric-thresholds defaultSeeds — do not import tests/bots from sim/.
+    const seeds = [1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29];
+    const corpus = new Set(
+      loadData().lineFragments.fragments.map((f) => f.text).filter(Boolean),
+    );
+    for (const seed of seeds) {
+      const w = generateWorld({ seed, peopleCount: 8 });
+      const lines = w.lines ?? w.people.flatMap((p) => p.lines ?? []);
+      expect(lines.length).toBe(8);
+      for (const line of lines) {
+        expect(line.text).not.toMatch(/^stub-voice-/);
+        expect(corpus.has(line.text)).toBe(true);
+        expect(assertVoice(line).ok).toBe(true);
+      }
+      // Determinism per seed
+      expect(generateWorld({ seed, peopleCount: 8 })).toEqual(w);
+    }
+  });
+
   it('gen/world stub path may still emit stub-voice (facade is the public seam)', () => {
     const w = generateWorldGen({ seed: 42 });
     const text = w.people[0]?.lines?.[0]?.text ?? '';
