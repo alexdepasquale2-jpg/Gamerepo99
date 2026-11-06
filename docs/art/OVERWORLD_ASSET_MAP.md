@@ -3,7 +3,7 @@
 **Owner:** Prism · **Art lock:** `STYLE_SPEC_2.5D.md` v2 · **Shortlist:** `OVERWORLD_SHORTLIST.md`  
 **Contract:** Loom `WorldRenderSnapshot` (`wilderness-economy-design.md` §6)  
 **Manifest (code):** `src/render/asset-manifest.ts` · **Mirror:** `assets/manifest/overworld-assets.json`  
-**Grid assumption:** **square ortho** — treat snapshot `q` as `x`, `r` as `y`. **Pending Loom hex/ortho lock** (if hex ships, remap; do not bake hex into atlases yet).
+**Grid:** Loom **LOCKED** square ortho — `q = x` (column), `r = y` (row).
 
 ---
 
@@ -64,9 +64,15 @@ States: `idle` | `working` | `abandoned`.
 | `facility.lumber_camp.*` | `lumber_camp` | Tiny Town + tree/stump props | idle stacks; working chips VFX; abandoned overgrown | **ready** |
 | `facility.waystation.*` | `waystation` | Tiny Town inn/house + cart `57` | working: lit lamp + cart | **ready** |
 | `facility.mine.*` | `mine` | Tiny Town stone + Tiny Dungeon walls; ore prop | working: lantern; abandoned: collapse prop | **ready** |
-| `facility.farm.*` | *(not in facilities.json)* | josehzz Farming crops 16×16 (CC0) | fallow / crops / scrub | **missing in data** — stub keys reserved |
 
 Instance ids (`fac_ashford_mill`, …) are **not** asset keys — stamp by `kind` + `state` only.
+
+## 4b. Proposed (not in data)
+
+| Proposal | Notes |
+|----------|-------|
+| `facility.farm.{idle,working,abandoned}` | **Not** a `facilities.json` kind. Crop art maps to resource/cargo **`food_grain`**. CC0 candidate: josehzz Farming crops 16×16. Kept in `PROPOSED_FACILITY_KINDS` only — not a missing data gap. |
+
 
 ---
 
@@ -106,16 +112,18 @@ Do **not** invent `ore.food_grain`; use `cargo.*` for non-minerals.
 
 ---
 
-## 7. Fauna (proposed — no JSON yet)
+## 7. Fauna (placeholders — no JSON yet)
 
-| Asset key | Suggested biomes | CC0 fill | Status |
-|-----------|------------------|----------|--------|
-| `fauna.rabbit` | mill_heath, ash_wood | Grey Roguelike Tileset (Sardonic); 50 monochrome critters (gaymoo) | **missing** (proposed) |
-| `fauna.deer` | ash_wood | AndHeGames 32×32 creatures; davidcrybao animals | **missing** |
-| `fauna.bird` | all | davidcrybao / monochrome critters | **missing** |
-| `fauna.pig` | mill_heath / future farm | Pig_Look 32×32 (Natural_Privateer) | **missing** |
-| `fauna.fox` | ash_wood edge | AndHeGames / monochrome recolor | **missing** |
-| `fauna.fish` | river_margin | davidcrybao / critters | **missing** |
+No fauna ids in `src/data`. Keys below are **placeholders only** (manifest `status: placeholder`).
+
+| Asset key | Suggested biomes | CC0 fill when Loom adds fauna |
+|-----------|------------------|-------------------------------|
+| `fauna.rabbit` | mill_heath, ash_wood | Grey Roguelike (Sardonic); gaymoo monochrome critters |
+| `fauna.deer` | ash_wood | AndHeGames 32×32; davidcrybao |
+| `fauna.bird` | all | davidcrybao / monochrome critters |
+| `fauna.pig` | mill_heath | Pig_Look 32×32 (Natural_Privateer) |
+| `fauna.fox` | ash_wood edge | AndHeGames / monochrome recolor |
+| `fauna.fish` | river_margin | davidcrybao / critters |
 
 Excluded: LPC farm animals (CC-BY/GPL).
 
@@ -133,13 +141,13 @@ Excluded: LPC farm animals (CC-BY/GPL).
 
 ## 9. Gap summary (action list)
 
-| Gap | Why | CC0 fill | Next step |
-|-----|-----|----------|-----------|
-| `facility.farm.*` | kind not in `facilities.json` | josehzz Farming crops 16×16 | Loom adds kind → import pack |
-| `fauna.*` | no fauna table in data | see §7 | Loom proposes spawn table → import 32×32 packs |
-| `ore.ore_iron` runtime atlas | shortlisted only | Kenney Caves & Dungeons; Jetrel RPG items; DCSS supplemental | Import vendor zip → atlas bake |
-| `caravan.ferryman` / `mount` | need boat/horse sheets | Roguelike water; animal CC0 packs | Import |
-| Hex vs square | Loom undecided | — | Keep `q=x,r=y`; reflag when locked |
+| Item | Status | CC0 fill / next |
+|------|--------|-----------------|
+| Square ortho `q=x,r=y` | **LOCKED by Loom** | — |
+| `fauna.*` | placeholder (no data ids) | see §7 when Loom adds fauna |
+| `facility.farm` | **proposed, not in data** (§4b) | crops → `food_grain` |
+| `ore.ore_iron` atlas | stub | Kenney Caves / Jetrel / DCSS import |
+| `caravan.ferryman` / `mount` | missing art import | Roguelike boat; animal CC0 packs |
 
 ---
 
@@ -160,4 +168,4 @@ Vendor runtime sources (when imported): `assets/vendor/kenney-tiny-town.zip`, `k
 ## 11. Do / Don't
 
 **Do:** resolve by parametric keys; use heading helpers; palette-lerp warmth; credit CC0.  
-**Don't:** key art to place names (`ashford`); put feel in sim; treat LPC as CC0; assume hex.
+**Don't:** key art to place names (`ashford`); put feel in sim; treat LPC as CC0; treat `facility.farm` as a data gap.

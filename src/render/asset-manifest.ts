@@ -2,11 +2,11 @@
  * Overworld asset manifest — maps Loom WorldRenderSnapshot keys → sheet/frame/variant.
  * Presentation only. Sim emits keys + heading degrees + warmth; never feel numbers.
  *
- * Grid: square ortho assumed (q → x, r → y). Pending Loom hex/ortho lock.
+ * Grid: Loom LOCKED square ortho — q = x (column), r = y (row).
  * Doc: docs/art/OVERWORLD_ASSET_MAP.md
  */
 
-export type AssetStatus = 'ready' | 'stub' | 'missing' | 'alias';
+export type AssetStatus = 'ready' | 'stub' | 'missing' | 'alias' | 'placeholder' | 'proposed';
 export type AssetVariant = 'palette' | 'swap' | 'none';
 export type HeadingMode = '8' | '4' | 'none';
 
@@ -31,10 +31,10 @@ export type AssetEntry = {
 /** Square ortho bridge until Loom locks hex. */
 export const GRID = {
   kind: 'square_ortho' as const,
-  /** Snapshot q,r → pixel cell */
+  /** Loom LOCKED: q = x (column), r = y (row). */
   qrToCell: (q: number, r: number): { x: number; y: number } => ({ x: q, y: r }),
-  pendingLoomLock: true,
-  note: 'Assume q=x, r=y (square). Remap if Loom ships hex.',
+  pendingLoomLock: false,
+  note: 'Loom locked square ortho: q=x (column), r=y (row).',
 };
 
 /**
@@ -118,8 +118,6 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   ...facilityBlock('lumber_camp', 'kit-facilities', 1),
   ...facilityBlock('waystation', 'kit-facilities', 2),
   ...facilityBlock('mine', 'kit-facilities', 3),
-  // Reserved — kind not in facilities.json yet
-  ...facilityBlock('farm', 'kit-facilities', 4, 'missing'),
 
   // —— Ore / cargo ——
   'ore.ore_iron': entry('ore.ore_iron', 'vendor-caves-ore', 0, {
@@ -128,7 +126,7 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   }),
   'cargo.food_grain': entry('cargo.food_grain', 'vendor-crops', 0, {
     status: 'stub',
-    notes: 'josehzz Farming crops 16x16',
+    notes: 'Crop visuals map here (no separate crop ids). CC0: josehzz Farming crops 16x16.',
   }),
   'cargo.timber': entry('cargo.timber', 'kenney-tiny-town', 93, {
     status: 'ready',
@@ -203,33 +201,44 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
     status: 'ready',
   }),
 
-  // —— Fauna (proposed; not in src/data) ——
+  // —— Fauna placeholders (no fauna ids in src/data) ——
   'fauna.rabbit': entry('fauna.rabbit', 'vendor-grey-roguelike', 0, {
     heading: '4',
-    status: 'missing',
-    notes: 'Sardonic Grey Roguelike / gaymoo critters',
+    status: 'placeholder',
+    notes: 'Placeholder until Loom adds fauna table',
   }),
   'fauna.deer': entry('fauna.deer', 'vendor-andhegames', 0, {
     heading: '4',
-    status: 'missing',
+    status: 'placeholder',
   }),
   'fauna.bird': entry('fauna.bird', 'vendor-davidcrybao', 0, {
     heading: '4',
-    status: 'missing',
+    status: 'placeholder',
   }),
   'fauna.pig': entry('fauna.pig', 'vendor-pig-look', 0, {
     heading: '4',
-    status: 'missing',
+    status: 'placeholder',
   }),
   'fauna.fox': entry('fauna.fox', 'vendor-andhegames', 1, {
     heading: '4',
-    status: 'missing',
+    status: 'placeholder',
   }),
   'fauna.fish': entry('fauna.fish', 'vendor-davidcrybao', 1, {
     heading: '4',
-    status: 'missing',
+    status: 'placeholder',
   }),
 };
+
+/** Proposed facility kinds — NOT in facilities.json (do not list as data gaps). */
+export const PROPOSED_FACILITY_KINDS = {
+  farm: {
+    states: ['idle', 'working', 'abandoned'] as const,
+    sheet: 'vendor-josehzz-crops',
+    notes:
+      'Not a data type. Crop art maps to resource/cargo food_grain. CC0: josehzz Farming crops 16x16.',
+    cropResourceId: 'food_grain' as const,
+  },
+} as const;
 
 function facilityBlock(
   kind: string,
@@ -272,6 +281,13 @@ export function listMissingKeys(): string[] {
     .sort();
 }
 
+export function listPlaceholderKeys(): string[] {
+  return Object.values(OVERWORLD_ASSETS)
+    .filter((e) => e.status === 'placeholder')
+    .map((e) => e.key)
+    .sort();
+}
+
 export function listStubKeys(): string[] {
   return Object.values(OVERWORLD_ASSETS)
     .filter((e) => e.status === 'stub')
@@ -279,7 +295,7 @@ export function listStubKeys(): string[] {
     .sort();
 }
 
-/** Data-driven biome ids expected from biomes.json */
+/** Loom-final biome ids (biomes.json canonical set for M3 handoff). */
 export const DATA_BIOME_IDS = ['river_margin', 'ash_wood', 'mill_heath', 'glare_approach'] as const;
 
 /** Facility kinds present in facilities.json */
@@ -301,3 +317,6 @@ export const DATA_CARAVAN_ROLES = [
 
 /** Mineral resource ids for ore.* */
 export const DATA_ORE_IDS = ['ore_iron'] as const;
+
+/** All economy-resources.json ids Loom locked for cargo/ore mapping. */
+export const DATA_RESOURCE_IDS = ['food_grain', 'timber', 'ore_iron', 'wool', 'fuel_cord', 'coin'] as const;

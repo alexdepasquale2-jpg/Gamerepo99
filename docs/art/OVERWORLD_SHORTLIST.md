@@ -232,7 +232,7 @@ Reuse M2 material ramps (`docs/art/PALETTE.md`):
 
 | Gap | Mitigation |
 |-----|------------|
-| Hex vs square unclear | Flagged §0 — Loom decide |
+| Grid shape | **Locked square orthogonal** (`q=x`, `r=y`); not hex — wilderness-economy §6 |
 | No dedicated CC0 medieval wagon | Grey tileset vehicles + Roguelike props; may need Prism redraw |
 | LPC animals not usable (not CC0) | Use listed CC0 critters/pig |
 | Tiny Town zip donate-gate | URL shortlisted; Roguelike buildings cover M3 |
