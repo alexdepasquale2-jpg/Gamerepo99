@@ -23,7 +23,7 @@
         "interaction:talk_gentle"
       ],
       "baseStrain": 1,
-      "sparkGain": 0,
+      "sparkGain": 1,
       "touch": {
         "flame01": 0.03,
         "trust": 0.05
@@ -69,7 +69,7 @@
         "shame_lean",
         "interaction:talk_hard"
       ],
-      "baseStrain": 2,
+      "baseStrain": 1,
       "sparkGain": 0,
       "touch": {
         "trust": -0.08,
@@ -109,7 +109,7 @@
         "ask",
         "interaction:favor_ask"
       ],
-      "baseStrain": 2,
+      "baseStrain": 1,
       "sparkGain": 0,
       "touch": {
         "trust": 0.02
@@ -126,7 +126,7 @@
         "do",
         "interaction:favor_do"
       ],
-      "baseStrain": 3,
+      "baseStrain": 2,
       "sparkGain": 2,
       "touch": {
         "flame01": 0.05
@@ -160,7 +160,7 @@
         "interaction:gift_give"
       ],
       "baseStrain": 2,
-      "sparkGain": 1,
+      "sparkGain": 2,
       "requires": {
         "itemTag": "giftable"
       },
@@ -184,8 +184,8 @@
         "meaning",
         "interaction:work_alongside"
       ],
-      "baseStrain": 3,
-      "sparkGain": 3,
+      "baseStrain": 2,
+      "sparkGain": 4,
       "touch": {
         "flame01": 0.04
       },

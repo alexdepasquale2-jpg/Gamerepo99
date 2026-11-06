@@ -34,7 +34,7 @@ describe('actMethod compat flag', () => {
     actMethod(state, `inspire@${personId}`, log, undefined, { interactionCompat: rt });
 
     expect(state.player.spark).toBe(exp.spark);
-    expect(state.player.spark).toBe(sparkBefore - 1);
+    expect(state.player.spark).toBe(sparkBefore); // strain 1, gain 1 → net 0
     expect(state.people[personId]!.flame).toBe(flameBefore + 3);
     expect(state.people[personId]!.trust).toBeCloseTo(exp.trust, 9);
     expect(log).toContainEqual({ type: 'interaction', methodId: 'talk_gentle' });

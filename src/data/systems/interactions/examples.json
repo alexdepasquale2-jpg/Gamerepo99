@@ -34,7 +34,7 @@
             "trust": 0.35,
             "flame01": 0.23,
             "touchScore": 1.3,
-            "spark": 87
+            "spark": 88
           }
         },
         {
@@ -43,7 +43,7 @@
           "expect": {
             "presence": 2,
             "touchScore": 2.3,
-            "spark": 87
+            "spark": 88
           }
         },
         {
@@ -53,7 +53,7 @@
             "flame01": 0.28,
             "bond": 1,
             "touchScore": 7.8,
-            "spark": 86
+            "spark": 88
           }
         },
         {
@@ -62,7 +62,7 @@
           "expect": {
             "flame01": 0.32,
             "touchScore": 12.2,
-            "spark": 86
+            "spark": 90
           }
         },
         {
@@ -74,7 +74,7 @@
           "expect": {
             "promise": "pending",
             "touchScore": 12.2,
-            "spark": 85
+            "spark": 89
           }
         },
         {
@@ -88,7 +88,7 @@
               "genuine_growth": 1
             },
             "touchScore": 22.2,
-            "spark": 87,
+            "spark": 91,
             "promise": "kept",
             "reignited": false
           }
@@ -99,7 +99,7 @@
           "expect": {
             "flame01": 0.46,
             "touchScore": 24.0,
-            "spark": 86,
+            "spark": 91,
             "reignited": true
           }
         }
@@ -119,7 +119,7 @@
             },
             "trust": 0.22,
             "touchScore": -2,
-            "spark": 86
+            "spark": 87
           }
         },
         {
@@ -128,7 +128,7 @@
           "expect": {
             "presence": 1,
             "touchScore": -1,
-            "spark": 86
+            "spark": 87
           }
         },
         {
@@ -137,7 +137,7 @@
           "expect": {
             "presence": 2,
             "touchScore": 0,
-            "spark": 86
+            "spark": 87
           }
         },
         {
@@ -147,7 +147,7 @@
             "trust": 0.32,
             "flame01": 0.28,
             "touchScore": 8,
-            "spark": 84
+            "spark": 85
           }
         },
         {
@@ -157,7 +157,7 @@
             "flame01": 0.33,
             "bond": 1,
             "touchScore": 13.5,
-            "spark": 83
+            "spark": 85
           }
         },
         {
@@ -166,7 +166,7 @@
           "expect": {
             "promise": "pending",
             "touchScore": 13.5,
-            "spark": 82
+            "spark": 84
           }
         },
         {
@@ -181,7 +181,7 @@
               "resentment": 1
             },
             "touchScore": 23.5,
-            "spark": 84,
+            "spark": 86,
             "promise": "kept",
             "reignited": false
           }
@@ -192,7 +192,7 @@
           "expect": {
             "flame01": 0.47,
             "touchScore": 25.3,
-            "spark": 83,
+            "spark": 86,
             "reignited": true
           }
         }
@@ -234,7 +234,7 @@
             "flame01": 0.25,
             "bond": 1,
             "touchScore": -0.5,
-            "spark": 83
+            "spark": 84
           }
         },
         {
@@ -242,7 +242,7 @@
           "interactionId": "promise_make",
           "expect": {
             "promise": "pending",
-            "spark": 82
+            "spark": 83
           }
         },
         {

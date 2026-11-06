@@ -178,10 +178,11 @@ describe('economy lengthen (M3 burnout fix)', () => {
 
   it('succession opens promptly on the act that drops spark into ember zone', () => {
     const play = playSession(3, 'ivy_quill');
-    forceSpark(play, 22);
+    forceSpark(play, 21);
     const shame = play.listActions().find((a) => a.id.startsWith('shame@'));
     expect(shame).toBeDefined();
-    play.act(shame!.id); // cost 4 → spark 18 ≤ 20
+    play.act(shame!.id); // talk_hard_shame net −1 → spark 20 ≤ 20
+    expect(play.snapshot().spark).toBeLessThan(21);
     expect(play.snapshot().spark).toBeLessThanOrEqual(20);
     expect(play.snapshot().burnedOut).toBe(true);
     expect(play.events().some((e) => e.type === 'succession.open')).toBe(true);
