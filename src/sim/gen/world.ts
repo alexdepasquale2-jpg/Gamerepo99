@@ -1,4 +1,4 @@
-/** Seeded Fabric worldgen: history + gap sites + kin from tables. Pure; no dyn/. */
+/** Seeded Fabric worldgen: history + gap + kin + settlements/routes/doctrines. Pure; no dyn/. */
 
 import { createRng } from '../rng';
 import { generatePeople, type PersonDraft } from './people';
@@ -7,6 +7,10 @@ import { generateHistoryEvents, historyChainCoherent } from './history-gen';
 import { generateGapSites } from './gap-sites';
 import { generateKinEdges } from './kin-gen';
 import { loadAuthoredAnchors } from './load-anchors';
+import { loadWorldTables } from './load-world-tables';
+import { generateSettlements, type SettlementGen } from './settlements-gen';
+import { generateRoutes, type RouteGen } from './routes-gen';
+import { generateDoctrines, type DoctrineGen } from './doctrines-gen';
 
 export type KinEdge = { from: string; to: string; kind?: string };
 export type GapSite = { id: string; gap01: number };
@@ -22,6 +26,8 @@ export type AssertionResult = {
   message?: string;
 };
 
+export type { SettlementGen, RouteGen, DoctrineGen };
+
 export type FabricWorld = {
   seed: number;
   fingerprint: string;
@@ -31,6 +37,10 @@ export type FabricWorld = {
   historyCoherence?: number;
   kinEdges?: KinEdge[];
   gapSites?: GapSite[];
+  /** Authored towns subset — Probe may ignore. */
+  settlements?: SettlementGen[];
+  routes?: RouteGen[];
+  doctrines?: DoctrineGen[];
   assertions?: AssertionResult[];
 };
 
@@ -53,13 +63,16 @@ function mixStr(acc: number, s: string): number {
   return h;
 }
 
-/** Structural fingerprint: history + gap + kin + people — not seed alone. */
+/** Structural fingerprint: history + gap + kin + people + geo — not seed alone. */
 function worldFingerprint(
   seed: number,
   people: PersonDraft[],
   history: HistoryEvent[],
   gapSites: GapSite[],
   kinEdges: KinEdge[],
+  settlements: SettlementGen[],
+  routes: RouteGen[],
+  doctrines: DoctrineGen[],
 ): string {
   let mix = seed >>> 0;
   for (const p of people) mix = mixStr(mix, p.fingerprint);
@@ -75,12 +88,23 @@ function worldFingerprint(
   for (const e of kinEdges) {
     mix = mixStr(mix, `${e.kind ?? 'kin'}:${e.from}->${e.to}`);
   }
+  for (const s of settlements) {
+    mix = mixStr(mix, `settlement:${s.id}`);
+    mix = (mix ^ Math.imul(Math.round(s.gap01 * 1000) + 1, 0xc2b2ae35)) >>> 0;
+  }
+  for (const r of routes) {
+    mix = mixStr(mix, `route:${r.id}:${r.fromId}->${r.toId}`);
+  }
+  for (const d of doctrines) {
+    mix = mixStr(mix, `doctrine:${d.id}@${d.townId}`);
+  }
   return `wf-${fpHex(mix)}-${people.length}`;
 }
 
 /**
- * Deterministic world: ≥3 people, seed-varying history/gap/kin, Probe shape.
+ * Deterministic world: ≥3 people, seed-varying history/gap/kin/geo, Probe shape.
  * includeAnchors merges authored people.json anchors; peopleCount path unchanged when false/omitted.
+ * Settlements/routes/doctrines use a separate RNG stream so Probe fields stay stable.
  */
 export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const seed = opts.seed >>> 0;
@@ -99,10 +123,29 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const kinEdges = generateKinEdges(rng, people);
   const lines = people.flatMap((p) => p.lines ?? []);
 
+  const worldTables = loadWorldTables();
+  const geoRng = createRng(seed ^ 0x5e771e);
+  const settlements = generateSettlements(
+    geoRng,
+    worldTables.towns,
+    worldTables.doctrines,
+  );
+  const routes = generateRoutes(geoRng, settlements, worldTables.routes);
+  const doctrines = generateDoctrines(geoRng, settlements, worldTables.doctrines);
+
   const chainOk = historyChainCoherent(history, tables);
   const historyCoherence = chainOk ? 1 : 0.5;
 
-  const fingerprint = worldFingerprint(seed, people, history, gapSites, kinEdges);
+  const fingerprint = worldFingerprint(
+    seed,
+    people,
+    history,
+    gapSites,
+    kinEdges,
+    settlements,
+    routes,
+    doctrines,
+  );
 
   return {
     seed,
@@ -113,6 +156,9 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
     historyCoherence,
     kinEdges,
     gapSites,
+    settlements,
+    routes,
+    doctrines,
     assertions: [{ ok: true }, { ok: true }],
   };
 }

@@ -55,6 +55,12 @@ export function dumpWorld(world: FabricWorld): WorldDump {
     lines.push(`site:${site.id} gap01=${site.gap01}`);
   }
 
+  const settlements = world.settlements ?? [];
+  lines.push(`settlementCount:${settlements.length}`);
+  for (const s of settlements) {
+    lines.push(`settlement:${s.id} gap01=${s.gap01}`);
+  }
+
   const history = world.history ?? [];
   lines.push(`historyCount:${history.length}`);
   for (const h of history) {
