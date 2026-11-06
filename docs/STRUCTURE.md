@@ -34,12 +34,13 @@ hearthfall/
     e2e/      Playwright browser tests (*.spec.ts). artifacts/ is gitignored.
     bots/     Automated playthrough bots (Probe).
   .superpowers/sdd/  Task briefs, reports, review ledger. Scratch (tmp/, *.diff, *.patch) is gitignored.
-  assets/     Images, audio, fonts. vendor/*.zip archives are gitignored.
+  assets/     Images, audio, fonts. vendor/ holds third-party packs, named <author>-<pack>.png; *.zip archives are gitignored; every file needs a CREDITS.md row.
   scripts/    Dev tooling (validate-data.mjs). Not shipped.
   docs/       STRUCTURE.md, DESIGN.md, SCHEDULE.xlsx
     superpowers/plans|specs/  Dated plans and specs (YYYY-MM-DD-name.md).
     art/      Reference art (palettes, swatches, mockups, MOODBOARD/PALETTE notes). Game assets go in assets/.
     qa/       QA notes and playtest reports (reports/). QA write-ups live here, not at docs/ root.
+    design/   Design notes and specs by topic (e.g. interaction-pacing.md).
     archive/  Retired designs. Read-only; never imported.
   README.md   What it is, how to run, how to test.
 ```
