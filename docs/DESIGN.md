@@ -56,6 +56,9 @@ Route-graph economy between settlements; travel takes days while the world ticks
 ### Asynchronous legacy NPCs (pointer)
 No co-op. Import/export versioned world files (seed + delta log + protagonist imprint); former PCs live on as legends/NPCs/graves. Zero-cost files first; free host only as M8 option with Niblet+Alex clearance. — `specs/2026-11-05-async-legacy-npc-design.md`. M2: save `version` + reserved optional `imprint` slot only.
 
+### Hoarder path & notoriety (pointer)
+Valid playstyle that never reignites: stash/coin, dual-edge notoriety, kingdom patrons (polities×doctrine). Neglect raises despair but is not a lose state — legitimate ending/legacy via succession + async imprint. — `specs/2026-11-05-hoarder-notoriety-design.md`. M2: optional `coin` field only.
+
 ---
 
 ## 2. Protagonist System (core)
@@ -195,11 +198,13 @@ Emit sim events (bus) — Prism binds VFX/SFX, no cutscenes:
 
 ### Memorable moments (systems-produced — no cutscenes)
 
-These are ** emergent scripts**: if conditions hold, lines + juice fire from data.
+These are **emergent scripts**: if conditions hold, lines + juice fire from data. Binding acceptance lives under **What makes this special** (M2 plan + below).
 
-1. **Warm loaf, cold hill** — Reignite Marta with Carry or Inspire → `site.kindle` bakery → same day kind success + dusk with no adjacent burning → `cost_loneliness_tax` → coal flicker while bread steam VFX still up. *You fed the town; nobody stayed with you.*  
-2. **Chalk after the cut** — Shame Ruth (disillusionment, low matrix / backfire risk) or Challenge her with proof → if `hollowness` lands, next dawn her flame drops via relapse mul → witness Jonah (if burning) triggers `ripple.harm` or fear murmur line. *You got her standing; the quiet took interest.*  
-3. **Nail across the water** — Elias crosses reignite with Challenge/Carry → `genuine_growth` → packet emit along ferry/rumor link → next dawn Tom’s site receives proof nail toast before you arrive. *Your forge lit a stranger’s rope.*
+1. **Warm loaf, cold hill** — Reignite Marta with Carry or Inspire → `site.kindle` bakery → same day kind success + dusk with no adjacent burning → `cost_loneliness_tax` → coal flicker while bread steam VFX still up. *You fed the town; nobody stayed with you.* **Check:** seeded bus has `site.kindle` + dusk spark drop while bakery kindled.  
+2. **Chalk after the cut** — Shame Ruth or Challenge with proof → `hollowness` → next dawn relapse mul drops flame; Jonah burning → `ripple.harm`. *You got her standing; the quiet took interest.* **Check:** Ruth marked; dawn2 flame lower; optional `ripple.harm`.  
+3. **Nail across the water** — Elias reignite Challenge/Carry → `genuine_growth` → `packet.emit` → Tom proof toast next dawn. *Your forge lit a stranger’s rope.* **Check:** `packet.emit` + Tom inbox/proof by dawn+1.  
+4. **Refusal coal** — Shame a child-tagged person → `refusal_shame_child`; method stays listed. **Check:** refusal line/`refusal.coal_flicker`; Shame still in menu.  
+5. **Mark comes back** — Land `resentment`/`dependence`; later resolve vs same person changes flameDelta or spark cost. **Check:** second resolve ≠ unmarked baseline.
 
 ---
 
@@ -285,7 +290,17 @@ Validator fails if any archetype references an unknown hook/trait id.
 | **M5** | **Fri → polish Sat → showcase Sun** | `specs/2026-11-05-last-spark-m5-outline.md` | Polish, balance, showcase build |
 
 ### M2 (locked detail)
-All 5 methods + matrix/marks; 3 data archetypes; refusal/cost/recovery hooks; Brood swap-only (`activeBodiesMax:1`); Ashford+Lowmere+den; ripples + packets; costly fear-road; succession stub + `inherited_dependence`; debug overlay; validator unknown-hook check.
+All 5 methods + matrix/marks; 3 data archetypes; refusal/cost/recovery hooks; Brood swap-only (`activeBodiesMax:1`); Ashford+Lowmere+den; ripples + packets; costly fear-road; succession stub + `inherited_dependence`; debug overlay; validator unknown-hook check. Save `version:1` + optional `imprint`/`coin` reserved only.
+
+**Team priority:** quality and depth outrank the schedule. Breadth that does not deepen M2 feel is deferred.
+
+### What makes this special (M2 acceptance bar — testable)
+
+Full tables/checks: `plans/2026-11-05-last-spark-m2.md` § What makes this special.
+
+1. **Memorable moments (systems-produced):** ≥3 of the 5 emergent scripts above pass seeded tests (Task 10).  
+2. **Choices that matter:** every method resolve changes a later state or line vs control; witnesses change marks/ripples; refusal is readable, not a disabled menu item.  
+3. **First 10 minutes that hook:** time-to-first-meaningful-choice ≤ 2 min; time-to-first-consequence ≤ 4 min; by 10 min player can name one relationship change. Beat sheet in M2 plan.
 
 ### Deepening hooks → later milestones
 - Simultaneous multi-body → **M3** (`activeBodiesMax: 2` now in `traits.json`; wire in M3 plan Task 1)  
@@ -316,6 +331,7 @@ All 5 methods + matrix/marks; 3 data archetypes; refusal/cost/recovery hooks; Br
 - M2 archetypes: Marrow, Ivy, Brood (`activeBodiesMax: 1`).  
 - Succession UI copy + default Continue / Quit never shamed (Alex).  
 - Dependence bonds keep ×0.5; dependence-chosen successors get `inherited_dependence` with cling cost + decay (Alex).  
+- Quality / depth outranks schedule; M2 ships the **What makes this special** bar (Alex / team).  
 
 **Open questions:** none for M2 lock.
 

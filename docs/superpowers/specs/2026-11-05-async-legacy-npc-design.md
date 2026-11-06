@@ -153,6 +153,10 @@ Use existing `lines.json` templates with `{legacyName}` placeholders.
 
 ---
 
+## 8b. Hoarder / neglect imprint
+
+If `reigniteCount===0` and peak coin meets threshold (`notoriety.hoardLegacy`), imprint gains `flags: ['hoard_legacy']` and ending id `ash_hoard` — see `2026-11-05-hoarder-notoriety-design.md`. Same export format; no co-op.
+
 ## 9. Self-review
 
 Zero cost path clear. No co-op netcode. Deterministic. No archetype switches. M2 untouched except version+imprint slot.
