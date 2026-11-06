@@ -31,6 +31,24 @@ You are **someone who still lives here** — whoever the run gives you: an ogre 
 
 ---
 
+## 1.5 Lore & Theme (founding — Alex)
+
+**Brainstorm:** option C — `docs/superpowers/specs/2026-11-05-founding-lore-gap-design.md`.
+
+### History of the drift
+The people were once one fabric: city, town, and village shared the same stories of hardship met by passion, spirit, and courage. The change was **slow** — not a war, not a plague with a date. City livelihoods, speech, and days lengthened away from dirt-road time. Villagers and townsfolk could no longer *recognize* the lives of those near the cities as kin to their own. That unrecognizability did three kinds of damage:
+
+1. **Representation broke** — who could speak for whom when the speakers no longer shared a life? Civic voices hollowed or turned inward.  
+2. **Families broke** — kin split between city poles and village poles; letters thinned; holidays became rumors.  
+3. **The rising stopped** — where courage once rose to meet hardship, a **spiritual void** settled instead. Ambition guttered. Towns went still. That quiet is the game.
+
+### City–village divide as cause of the void
+The void is not random entropy. It is the felt gap between lives that used to answer each other. Systems model this as a **gap axis** (M3): settlements and links sit along village↔city; cross-gap kinship carries strain; reigniting people — especially civic voices — and **bridge acts** along cross-gap links can narrow the gap locally. M2 Ashford/Lowmere sit on the village/town side of the axis so the closed loop barely changes.
+
+**Tone reminder:** savage but human — blame the drift, not the villagers for being “behind,” and not the city kin for existing.
+
+---
+
 ## 2. Protagonist System (core)
 
 See also the dedicated spec. This section is binding for Forge.
@@ -76,7 +94,7 @@ Dawn: run spark_recovery hooks whose when{} matches
 |----|----------------|
 | `marrow` | Large body / fear access; Carry strong; `cost_loneliness_tax`; den recovery |
 | `ivy_quill` | Civic trust/status; Shame/Lie strong; `cost_ink_integrity`; truth-dawn recovery |
-| `basilisk_brood` | `embodiment.mode=multi`, `bodySlots=3`, **`activeBodiesMax=1`** (swap); shared spark; `cost_brood_strain`; idle eavesdrop; gaze refusal on children |
+| `basilisk_brood` | `embodiment.mode=multi`, `bodySlots=3`, **`activeBodiesMax=2`** (M3 data; M2 plan may still ship swap-1 until Task M3.1); shared spark; `cost_brood_strain`; idle eavesdrop; gaze refusal on children |
 
 Brood kept: multi-body is generic embodiment fields. Simultaneous multi-control = raise `activeBodiesMax` in data (M3).
 
@@ -112,6 +130,67 @@ Dawn recovery + relapse + inbound packets
 ```
 
 Not a dialogue tree. Skill = who, which method, spark budget, mark consequences, who you are.
+
+---
+
+## 3.5 Moment-to-moment (feel pass — binding for M2)
+
+**Brainstorm decision:** option B — `docs/superpowers/specs/2026-11-05-m2-feel-pass-design.md`.
+
+Worth playing means: every reignite has a beat, tension you can see, juice Prism can hang FX on, and systems that spit memorable moments without cutscenes.
+
+### Encounter beat (one reignite)
+
+| Second | Player sees | Chooses / does | Feels |
+|--------|-------------|----------------|-------|
+| 0–1 | Approach: stalled pose + **give-up tell** (data `tellGivenUp`); spark meter; day-phase tint | Commit to this person or walk past | Weight of picking *them* |
+| 1–2 | Inspect: wound name, flame bar, marks as icons, stalled act verb | Open method menu (all methods visible; refusals not greyed) | Reading the wound |
+| 2–4 | Method commit: ritual telegraph (contest pulse / labor progress / cut flash) | Hold or cancel only if interruptible | Investment |
+| Resolve | Target **reaction line** for that method; spark number **ticks down** visibly; mark icon lands | — | Cost + consequence |
+| +1s | If burning: site **lights** (shutter/oven/forge); optional witness murmur | — | Town answering |
+| Aftermath | Ripple toast if neighbor helped/harmed; packet icon if cross-town emit | Next walk | World moved |
+
+Ritual lengths from `methods.json` (`ritualTicks`) are the clock inside the beat. Carry should feel long; Shame should feel too fast.
+
+### Tension sources (always on)
+
+1. **Spark drain** — HUD spark lerps on spend; ember zone (<20) pulses crimson; kind methods cost more there.  
+2. **Relapse risk** — flame below threshold shows ash crack; dawn relapse rolls telegraph as overnight “cooling” VFX on at-risk people.  
+3. **Day clock** — dusk encroaches (palette + tick counter); soft act cap means every reignite spends the day.  
+4. **Witnesses** — any burning person in Manhattan range ≤3 is a witness: their presence boosts genuine_growth chance slightly **or** deepens hollowness if the method was savage (data mul on resolve). Loneliness tax fires when kind success has **no** witness/adjacent burning by dusk.
+
+### Juice hooks for Prism (event ids)
+
+Emit sim events (bus) — Prism binds VFX/SFX, no cutscenes:
+
+| Event | When | Suggested juice |
+|-------|------|-----------------|
+| `spark.spend` | method/refusal cost | Chest-coal dim/flicker |
+| `spark.recover` | dawn hooks | Coal brighten |
+| `refusal.coal_flicker` | shame-child refuse | Hard flicker + line |
+| `person.reaction` | resolve | Speech pip + pose change |
+| `mark.applied` | mark land | Icon brand |
+| `site.kindle` | cross reignite threshold | Oven/forge/shutter light |
+| `town.vitality_delta` | vitality change | Ambient window lights density |
+| `ripple.help` / `ripple.harm` | after resolve | Neighbor walk / flinch |
+| `packet.emit` | cross-town | Bird/ferry chip on overworld |
+| `relapse.dawn` | dawn fail | Ash settle on sprite |
+| `succession.open` | burnout | Locked copy screen |
+
+### Day pacing
+
+- Dawn: recovery + relapse cool-down (10–20s player time).  
+- Day: 1–3 reignites typical; travel eats ticks.  
+- Dusk: loneliness/ink/brood costs resolve; event roll; no new commits after tick 30.  
+- Design target: a savage clear of one critical feels cheap and dirty; a kind clear of two feels earned and dangerous to your spark.
+
+### Memorable moments (systems-produced — no cutscenes)
+
+These are ** emergent scripts**: if conditions hold, lines + juice fire from data.
+
+1. **Warm loaf, cold hill** — Reignite Marta with Carry or Inspire → `site.kindle` bakery → same day kind success + dusk with no adjacent burning → `cost_loneliness_tax` → coal flicker while bread steam VFX still up. *You fed the town; nobody stayed with you.*  
+2. **Chalk after the cut** — Shame Ruth (disillusionment, low matrix / backfire risk) or Challenge her with proof → if `hollowness` lands, next dawn her flame drops via relapse mul → witness Jonah (if burning) triggers `ripple.harm` or fear murmur line. *You got her standing; the quiet took interest.*  
+3. **Nail across the water** — Elias crosses reignite with Challenge/Carry → `genuine_growth` → packet emit along ferry/rumor link → next dawn Tom’s site receives proof nail toast before you arrive. *Your forge lit a stranger’s rope.*
 
 ---
 
@@ -180,26 +259,27 @@ Hooks wrap triggers + `when` + effects[].
 | `methods.json` / `wounds.json` / `marks.json` | chemistry |
 | `people.json` / `towns.json` / `links.json` | world |
 | `proofs.json` / `events.json` / `time.json` / `ripples.json` | content/sim |
+| `lines.json` | voice, give-up tell, per-method & per-mark reaction lines |
 
 Validator fails if any archetype references an unknown hook/trait id.
 
 ---
 
-## 10. Milestones (compressed schedule → Sun Nov 8)
+## 10. Milestones (uncapped · M2 Fri 8 AM · M3–M5 Fri · polish Sat · showcase Sun)
 
 | Milestone | When | Spec / plan | Ruthless focus |
 |-----------|------|-------------|----------------|
 | **M1** | pre-Fri | skeleton inside M2 Task 1–2 | Boot, data gate, rng |
-| **M2** | **Fri PM** | `plans/2026-11-05-last-spark-m2.md` **LOCKED** | Closed loop: 3 archetypes, methods/marks/hooks, packets, succession stub, Phaser+debug |
-| **M3** | **Sat AM** | `specs/2026-11-05-last-spark-m3-design.md` | Brood `activeBodiesMax:2`, LOD distant towns, letters/rumor UI, +1 settlement |
-| **M4** | **Sat midday** | `specs/2026-11-05-last-spark-m4-design.md` | Full succession/generational, history tables, +2 data archetypes, relapse arcs |
-| **M5** | **Sat PM** | `specs/2026-11-05-last-spark-m5-outline.md` | Polish, balance, showcase build |
+| **M2** | **Fri 8 AM** | `plans/2026-11-05-last-spark-m2.md` **LOCKED** | Closed loop: 3 archetypes, methods/marks/hooks, packets, succession stub, Phaser+debug |
+| **M3** | **Fri (after M2)** | `specs/2026-11-05-last-spark-m3-design.md` | Brood `activeBodiesMax:2`, LOD distant towns, letters/rumor UI, +1 settlement |
+| **M4** | **Fri** | `specs/2026-11-05-last-spark-m4-design.md` | Full succession/generational, history tables, +2 data archetypes, relapse arcs |
+| **M5** | **Fri → polish Sat → showcase Sun** | `specs/2026-11-05-last-spark-m5-outline.md` | Polish, balance, showcase build |
 
 ### M2 (locked detail)
 All 5 methods + matrix/marks; 3 data archetypes; refusal/cost/recovery hooks; Brood swap-only (`activeBodiesMax:1`); Ashford+Lowmere+den; ripples + packets; costly fear-road; succession stub + `inherited_dependence`; debug overlay; validator unknown-hook check.
 
 ### Deepening hooks → later milestones
-- Simultaneous multi-body → **M3** (`activeBodiesMax` data bump)  
+- Simultaneous multi-body → **M3** (`activeBodiesMax: 2` now in `traits.json`; wire in M3 plan Task 1)  
 - Full LOD far towns → **M3**  
 - Letters/rumor discovery UI → **M3**  
 - Extra settlements → **M3** (one hamlet)  
