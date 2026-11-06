@@ -10,8 +10,19 @@ import {
 } from '../fabric/world-dump';
 import { assembleInhabitant } from '../inhabitant';
 import { loadData } from '../load-data';
-import { buildPlaySnapshot, peopleFromWorld, pickTownId } from './play-session-boot';
-import { actMethod, installPlayReactions, listMethodActions } from './play-session-act';
+import {
+  buildPlaySnapshot,
+  interactionRuntimeFromPeople,
+  peopleFromWorld,
+  pickTownId,
+} from './play-session-boot';
+import {
+  actMethod,
+  installPlayReactions,
+  listMethodActions,
+  parseMethodAction,
+} from './play-session-act';
+import type { InteractionRuntime } from '../interactions';
 import { createRng } from '../rng';
 import {
   listRoutesFrom,
@@ -60,7 +71,13 @@ function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
   };
 }
 
-function createPlayModeSession(defaults: { seed: number; archetypeId: string }): PlaySession {
+function createPlayModeSession(defaults: {
+  seed: number;
+  archetypeId: string;
+  /** Opt-in interaction compat (default off). */
+  interactionCompat?: boolean;
+}): PlaySession {
+  const useInteractionCompat = defaults.interactionCompat === true;
   let seed = defaults.seed;
   let archetypeId = defaults.archetypeId;
   let world: FabricWorld | null = null;
@@ -72,6 +89,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
   let successionUi: SuccessionUi = lockedSuccessionUi();
   const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
   let lastResolveVal: PlayLastResolve | undefined;
+  let interactionRt: InteractionRuntime | undefined;
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
@@ -106,6 +124,9 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       sizeTravelMuls: loadSizeTravelMuls(),
     };
     installPlayReactions(state);
+    interactionRt = useInteractionCompat
+      ? interactionRuntimeFromPeople(state.people, player.spark)
+      : undefined;
   }
 
   function appendJuiceSince(beforeLen: number): void {
@@ -122,13 +143,27 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
-      actMethod(state, actionId, eventLog, {
-        tickN,
-        metrics,
-        setLastResolve: (r) => {
-          lastResolveVal = r;
+      // Player spark is the single source of truth: seed the target's runtime spark, write back on resolve.
+      const parsed = parseMethodAction(actionId);
+      const ip = parsed ? interactionRt?.people.get(parsed.personId) : undefined;
+      if (ip) ip.spark = state.player.spark;
+      const logLen = eventLog.length;
+      actMethod(
+        state,
+        actionId,
+        eventLog,
+        {
+          tickN,
+          metrics,
+          setLastResolve: (r) => {
+            lastResolveVal = r;
+          },
         },
-      });
+        interactionRt ? { interactionCompat: interactionRt } : undefined,
+      );
+      if (ip && eventLog.slice(logLen).some((e) => e.type === 'interaction')) {
+        state.player.spark = ip.spark;
+      }
       maybeOpenSuccession(state, eventLog, successionOpen);
     },
     tick() {
@@ -182,6 +217,7 @@ export function createPlaySession(
     return createPlayModeSession({
       seed: opts.seed,
       archetypeId: opts.archetypeId ?? 'marrow',
+      interactionCompat: opts.interactionCompat,
     });
   }
   return null;

@@ -59,6 +59,24 @@ export type {
 } from './scenario/scenario-resolve';
 export type { PlayMetrics, PlayLastResolve } from './play-session/play-session-types';
 
+/** Interaction model (spec: interaction migration) + method→interaction compat. */
+export {
+  createInteractionRuntime,
+  resolveInteraction,
+  REIGNITE_MIN_KINDS,
+} from './interactions';
+export type {
+  InteractionDef,
+  InteractionResult,
+  InteractionRuntime,
+  InteractionRuntimeInit,
+  InteractionScoring,
+  InteractionTouch,
+  MarkAdd,
+} from './interactions';
+export type { InteractionPerson, PromiseStatus } from './interaction-state';
+export { createCompatRuntime, expandMethodAct, loadMigrationMap } from './interaction-compat';
+
 /** Map TileSource seam (stamp now; native later). */
 export { fingerprintHex } from './map/fingerprint';
 export { createStampRasterSource } from './map/stamp-raster';
