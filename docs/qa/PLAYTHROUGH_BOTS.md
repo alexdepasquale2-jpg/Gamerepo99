@@ -13,7 +13,7 @@ Design (playthrough): `docs/superpowers/specs/2026-11-05-playthrough-bots-design
 
 # Playthrough bots (hybrid C) — **M3 gate**
 
-**Status:** Live. M3 gate re-run @ `1db4736` → **SHIP-WITH-FIXES** (burnoutRate still 1.0; rest/travel listed, never picked). Report: `docs/qa/reports/m3-worth-playing.md`.
+**Status:** Live. M3 gate re-run @ `ca882cd` (+`e74452d`) → **SHIP-WITH-FIXES** (burnoutRate still 1.0; rest/travel now **25/526** picks, was 0/441). Report: `docs/qa/reports/m3-worth-playing.md`.
 
 ## Goal
 Headless bots exercise the **public sim API** (no Phaser) across playable archetypes × play styles, measuring feel/balance. Playwright stays UI-smoke only (`npm run test:e2e:m1`).
