@@ -5,7 +5,7 @@ import {
   generatePersonDraft,
   generateWorld,
 } from '../../src/sim/fabric';
-import { scoreBakeCandidate } from '../../src/sim/fabric-bake';
+import { scoreBakeCandidate } from '../../src/sim/fabric-bake-score';
 import { loadData } from '../../src/sim/load-data';
 import { generateWorld as generateWorldGen } from '../../src/sim/gen/world';
 
