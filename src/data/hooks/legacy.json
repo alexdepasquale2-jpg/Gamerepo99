@@ -115,6 +115,28 @@
           ]
         }
       ]
+    },
+    {
+      "id": "legacy_hoard_imprint",
+      "kind": "legacy",
+      "trigger": "on_succession_or_export",
+      "when": {
+        "reigniteCount": 0,
+        "peakCoinAtLeast": 40
+      },
+      "effects": [
+        {
+          "id": "fx_hoard_flag",
+          "target": "imprint.flags",
+          "op": "add",
+          "value": "hoard_legacy",
+          "tags": [
+            "hoard",
+            "ending",
+            "async"
+          ]
+        }
+      ]
     }
   ]
 }

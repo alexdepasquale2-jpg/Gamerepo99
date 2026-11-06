@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-hoarder-notoriety-design.md",
+  "patrons": [
+    {
+      "id": "patron_mill_trust",
+      "name": "Ashford Mill Trust",
+      "polityTags": [
+        "guild",
+        "mill_trust"
+      ],
+      "doctrineId": "doctrine_mill_bread",
+      "homeTownId": "ashford",
+      "openNotorietyMin": 0.35,
+      "deals": [
+        {
+          "id": "deal_mill_tithe_coin",
+          "offer": {
+            "coin": 25,
+            "standing": 0.05
+          },
+          "obligation": {
+            "kind": "tithe",
+            "dueDays": 7,
+            "magnitude": 10
+          },
+          "leverageOnBreak": {
+            "notorietyAdd": 0.15,
+            "doctrineExposureAdd": 0.1
+          },
+          "betrayalRisk": 0.2
+        },
+        {
+          "id": "deal_mill_deny_reignite",
+          "offer": {
+            "coin": 40,
+            "travelSafeDays": 3
+          },
+          "obligation": {
+            "kind": "deny_reignite",
+            "dueDays": 5,
+            "magnitude": 1
+          },
+          "leverageOnBreak": {
+            "notorietyAdd": 0.2,
+            "betrayalSpawn": "att_spy"
+          },
+          "betrayalRisk": 0.35,
+          "note": "Soft obligation \u2014 methods never hard-locked"
+        }
+      ]
+    },
+    {
+      "id": "patron_strand_wardens",
+      "name": "Strand Road Wardens",
+      "polityTags": [
+        "roadwarden",
+        "crown"
+      ],
+      "doctrineId": "doctrine_strand_crossings",
+      "homeTownId": "lowmere",
+      "openNotorietyMin": 0.4,
+      "deals": [
+        {
+          "id": "deal_warden_guard_caravan",
+          "offer": {
+            "coin": 15,
+            "goods": {
+              "timber": 2
+            }
+          },
+          "obligation": {
+            "kind": "guard_caravan",
+            "dueDays": 4,
+            "magnitude": 1
+          },
+          "leverageOnBreak": {
+            "notorietyAdd": 0.1
+          },
+          "betrayalRisk": 0.25
+        }
+      ]
+    }
+  ]
+}

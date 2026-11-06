@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-hoarder-notoriety-design.md",
+  "formulas": {
+    "dawnFade": "notoriety = lerp(notoriety, 0, 0.01)",
+    "heat": "heat = notoriety * (0.5 + 0.5 * visibleWealth)",
+    "theftP": "clamp(theftRiskBase + 0.35*notoriety - 0.4*hideDifficulty - 0.15*(guardsHired/max(1,guardSlots)), 0.02, 0.85)"
+  },
+  "gains": [
+    {
+      "id": "gain_large_deposit",
+      "when": {
+        "stashDepositAbove": 20
+      },
+      "add": 0.08
+    },
+    {
+      "id": "gain_flash_spend",
+      "when": {
+        "coinSpendAbove": 15
+      },
+      "add": 0.05
+    },
+    {
+      "id": "gain_patron_deal",
+      "when": {
+        "patronDealAccepted": true
+      },
+      "add": 0.1
+    },
+    {
+      "id": "gain_refuse_tax",
+      "when": {
+        "refusedTax": true
+      },
+      "add": 0.12
+    },
+    {
+      "id": "gain_public_theft_defense",
+      "when": {
+        "defendedStashPublicly": true
+      },
+      "add": 0.07
+    }
+  ],
+  "losses": [
+    {
+      "id": "loss_quiet_charity",
+      "when": {
+        "charityWithoutReignite": true
+      },
+      "add": -0.04
+    },
+    {
+      "id": "loss_lie_low",
+      "when": {
+        "daysWithoutStashActAbove": 5
+      },
+      "add": -0.03
+    }
+  ],
+  "spread": {
+    "rippleTag": "notoriety",
+    "preferLinkTags": [
+      "rumor",
+      "ferry",
+      "mill_road"
+    ],
+    "kinDilution": 0.5,
+    "emitPacketType": "notoriety_rumor"
+  },
+  "attractors": [
+    {
+      "id": "att_thief",
+      "minNotoriety": 0.25,
+      "weight": 1.2,
+      "spawn": "stash_theft_attempt",
+      "channels": [
+        "ripple",
+        "encounter"
+      ]
+    },
+    {
+      "id": "att_rival_hoarder",
+      "minNotoriety": 0.4,
+      "weight": 0.7,
+      "spawn": "npc_stash_raid_goal",
+      "channels": [
+        "rumor"
+      ]
+    },
+    {
+      "id": "att_tax_collector",
+      "minNotoriety": 0.35,
+      "weight": 0.8,
+      "spawn": "tax_demand",
+      "channels": [
+        "rumor",
+        "letter"
+      ]
+    },
+    {
+      "id": "att_spy",
+      "minNotoriety": 0.45,
+      "weight": 0.5,
+      "spawn": "spy_on_deals",
+      "channels": [
+        "kin",
+        "rumor"
+      ]
+    },
+    {
+      "id": "att_patron_demand",
+      "minNotoriety": 0.5,
+      "weight": 0.9,
+      "spawn": "patron_obligation_tick",
+      "channels": [
+        "letter"
+      ]
+    },
+    {
+      "id": "att_betrayal",
+      "minNotoriety": 0.6,
+      "weight": 0.4,
+      "spawn": "guard_or_kin_betrayal",
+      "channels": [
+        "kin",
+        "ripple"
+      ]
+    },
+    {
+      "id": "att_copycat",
+      "minNotoriety": 0.3,
+      "weight": 0.85,
+      "spawn": "local_hoard_loop",
+      "channels": [
+        "ripple",
+        "rumor"
+      ]
+    }
+  ],
+  "hoardLegacy": {
+    "reigniteCountMax": 0,
+    "peakCoinMin": 40,
+    "imprintFlags": [
+      "hoard_legacy"
+    ],
+    "endingId": "ash_hoard"
+  }
+}

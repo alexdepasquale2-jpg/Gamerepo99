@@ -151,6 +151,47 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cost_notoriety_heat",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "notorietyAbove": 0.4
+      },
+      "effects": [
+        {
+          "id": "fx_heat_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "notoriety",
+            "heat"
+          ],
+          "scaleBy": "player.notoriety"
+        }
+      ]
+    },
+    {
+      "id": "cost_stash_unguarded_decay",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "hasUnguardedStash": true
+      },
+      "effects": [
+        {
+          "id": "fx_stash_decay",
+          "target": "player.stash.goods",
+          "op": "mul",
+          "value": 0.97,
+          "tags": [
+            "hoard",
+            "decay"
+          ]
+        }
+      ]
     }
   ]
 }

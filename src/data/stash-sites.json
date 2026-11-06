@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-hoarder-notoriety-design.md",
+  "m4Required": true,
+  "sites": [
+    {
+      "id": "stash_ashford_cellar",
+      "townId": "ashford",
+      "siteId": "site_bakery",
+      "name": "Bakery cellar hollow",
+      "hideDifficulty": 0.55,
+      "capacity": 60,
+      "guardSlots": 1,
+      "decayPerDawn": 0.03,
+      "theftRiskBase": 0.18,
+      "tags": [
+        "cellar",
+        "ashford",
+        "m4"
+      ],
+      "m2Visible": false
+    },
+    {
+      "id": "stash_lowmere_barrow",
+      "townId": "lowmere",
+      "siteId": null,
+      "name": "Strand barrow cache",
+      "hideDifficulty": 0.7,
+      "capacity": 40,
+      "guardSlots": 0,
+      "decayPerDawn": 0.05,
+      "theftRiskBase": 0.22,
+      "tags": [
+        "barrow",
+        "lowmere",
+        "m4"
+      ],
+      "m2Visible": false
+    }
+  ],
+  "acts": [
+    {
+      "id": "stash_hide",
+      "methodIds": [
+        "lie",
+        "carry_burden"
+      ],
+      "tags": [
+        "hoard"
+      ]
+    },
+    {
+      "id": "stash_guard_hire",
+      "methodIds": [
+        "inspire",
+        "challenge"
+      ],
+      "tags": [
+        "hoard",
+        "guard"
+      ]
+    },
+    {
+      "id": "stash_withdraw",
+      "methodIds": [
+        "carry_burden"
+      ],
+      "tags": [
+        "hoard"
+      ]
+    }
+  ]
+}

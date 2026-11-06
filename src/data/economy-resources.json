@@ -49,6 +49,17 @@
         "fuel",
         "hearth"
       ]
+    },
+    {
+      "id": "coin",
+      "name": "Coin",
+      "category": "currency",
+      "spoilPerDawn": 0,
+      "tags": [
+        "currency",
+        "hoard",
+        "optional_m2"
+      ]
     }
   ]
 }
