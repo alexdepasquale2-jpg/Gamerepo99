@@ -78,6 +78,8 @@ describe('fabric-run', () => {
   it('live runFabricSuite is OK once Forge fabric facade exports generateWorld', async () => {
     const live = await connectFabricApi();
     expect(live).not.toBeNull();
+    expect(typeof live!.assertVoice).toBe('function');
+    expect(typeof live!.runFabricAssertions).toBe('function');
     const result = await runFabricSuite({ seeds: [1, 2, 3] });
     expect(result.status).toBe('OK');
     expect(result.cells.length).toBe(3);
@@ -86,6 +88,11 @@ describe('fabric-run', () => {
       expect(cell.world?.fingerprint).toBeTruthy();
     }
     expect(result.aggregates.determinism).toBe(true);
+    // Stub scaffold lines must fail assertVoice — floor stays at cap 0 (honest fail).
+    expect(result.aggregates.assertionViolationRate).toBeGreaterThan(0);
+    expect(result.aggregates.assertionViolationRate).toBeGreaterThan(
+      thresholds.assertionViolationRateCap,
+    );
   });
 
   it('documents API_PENDING cell shape when no api is supplied to pending helper path', async () => {
@@ -159,6 +166,64 @@ describe('fabric-run', () => {
     expect(result.aggregates.repeatLineRate).toBeGreaterThan(
       thresholds.repeatLineRateCap,
     );
+  });
+
+
+  it('live assertVoice / runFabricAssertions overrides baked ok assertions', async () => {
+    const api: FabricApi = {
+      generateWorld({ seed }) {
+        return {
+          seed,
+          fingerprint: `world-${seed}`,
+          people: [
+            {
+              id: `p-${seed}`,
+              fingerprint: `fp-${seed}`,
+              lines: [
+                { id: `l-${seed}`, text: `stub-voice-${seed}-0` },
+                { id: `l2-${seed}`, text: 'stub interpolated line' },
+              ],
+            },
+          ],
+          lines: [
+            { id: `l-${seed}`, text: `stub-voice-${seed}-0` },
+            { id: `l2-${seed}`, text: 'stub interpolated line' },
+          ],
+          // Baked always-ok would make vacuous 0 without live helpers:
+          assertions: [{ ok: true }, { ok: true }],
+          history: [],
+          kinEdges: [],
+          gapSites: [{ id: 'g', gap01: 0 }, { id: 'c', gap01: 1 }],
+        };
+      },
+      assertVoice(opts: unknown) {
+        const o = (opts ?? {}) as { text?: string };
+        const text = typeof o.text === 'string' ? o.text.trim() : '';
+        if (
+          !text ||
+          text.startsWith('stub-voice-') ||
+          text === 'stub interpolated line'
+        ) {
+          return { ok: false, violationId: 'scaffold_line' };
+        }
+        return { ok: true };
+      },
+      runFabricAssertions(opts: unknown) {
+        const list = Array.isArray(opts) ? opts : [];
+        return list.map((item) => api.assertVoice!(item));
+      },
+    };
+    const result = await runFabricWithApi(api, { seeds: [1, 2], thresholds });
+    expect(result.aggregates.assertionViolationRate).toBe(1);
+    expect(result.cells.every((c) => c.assertionViolationRate === 1)).toBe(true);
+  });
+
+  it('fake path without assert helpers still uses baked ok assertions → rate 0', async () => {
+    const api = createFakeFabricApi();
+    expect(api.assertVoice).toBeUndefined();
+    expect(api.runFabricAssertions).toBeUndefined();
+    const result = await runFabricWithApi(api, { seeds: [1], thresholds });
+    expect(result.aggregates.assertionViolationRate).toBe(0);
   });
 
   it('determinism helper: two same-seed fake worlds deep-equal', async () => {

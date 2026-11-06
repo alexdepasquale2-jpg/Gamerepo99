@@ -12,6 +12,7 @@ import {
   assertionViolationRate,
   determinismEqual,
   repeatLineRate,
+  type AssertionSample,
   type FabricWorldSample,
 } from './fabric-metrics';
 import defaultThresholds from './fabric-thresholds.json';
@@ -86,12 +87,42 @@ function pendingCell(seed: number): FabricCell {
   };
 }
 
+export function collectWorldLines(world: FabricWorldSample) {
+  return world.lines ?? world.people.flatMap((p) => p.lines ?? []);
+}
+
+/**
+ * Prefer live assertVoice / runFabricAssertions over baked world.assertions.
+ * Fake unit paths (no helpers) keep using baked assertions.
+ */
+export async function resolveAssertions(
+  api: FabricApi | undefined,
+  world: FabricWorldSample,
+): Promise<AssertionSample[]> {
+  const lines = collectWorldLines(world);
+  if (api?.runFabricAssertions) {
+    return (await api.runFabricAssertions(lines)) as AssertionSample[];
+  }
+  if (api?.assertVoice) {
+    const out: AssertionSample[] = [];
+    for (const line of lines) {
+      out.push((await api.assertVoice(line)) as AssertionSample);
+    }
+    return out;
+  }
+  return world.assertions ?? [];
+}
+
 export function evaluateWorld(
   world: FabricWorldSample,
   _thresholds: FabricThresholds,
+  opts?: {
+    /** Prefer live results from resolveAssertions when present. */
+    assertions?: AssertionSample[];
+  },
 ): FabricCell {
-  const lines =
-    world.lines ?? world.people.flatMap((p) => p.lines ?? []);
+  const lines = collectWorldLines(world);
+  const assertions = opts?.assertions ?? world.assertions ?? [];
   return {
     seed: world.seed,
     status: 'OK',
@@ -103,7 +134,7 @@ export function evaluateWorld(
       world.kinEdges ?? [],
     ),
     gapSpread: gapSpread(world.gapSites ?? []),
-    assertionViolationRate: assertionViolationRate(world.assertions ?? []),
+    assertionViolationRate: assertionViolationRate(assertions),
     repeatLineRate: repeatLineRate(lines),
   };
 }
@@ -186,7 +217,8 @@ export async function runFabricWithApi(
   for (const seed of seeds) {
     try {
       const world = await materializeWorld(api, seed, peopleCount);
-      cells.push(evaluateWorld(world, thresholds));
+      const assertions = await resolveAssertions(api, world);
+      cells.push(evaluateWorld(world, thresholds, { assertions }));
     } catch (err) {
       cells.push({
         ...pendingCell(seed),

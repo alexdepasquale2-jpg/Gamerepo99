@@ -2,6 +2,10 @@
  * Fabric / worldgen public API adapter (Probe).
  * Feature-detects Forge exports from src/sim/fabric.ts (file facade) and src/sim.
  * Returns null until enough surface exists to run generator quality bots.
+ *
+ * Types live in fabric-api-types.ts (soft-cap split). Forge PersonDraft /
+ * FabricWorld already match Probe contracts (id, fingerprint, vector, lines,
+ * history, kinEdges, gapSites, assertions) — no adapter normalize needed yet.
  */
 
 export type {
@@ -16,7 +20,7 @@ export type {
   FabricApi,
 } from './fabric-api-types';
 
-import type { FabricApi, FabricPerson, FabricWorld } from './fabric-api-types';
+import type { FabricApi } from './fabric-api-types';
 
 /** Prefer Forge facade first; index fallback last. No dead fabric/ folder. */
 const MODULE_CANDIDATES = [
@@ -45,57 +49,6 @@ function isFunction(v: unknown): v is (...args: never[]) => unknown {
   return typeof v === 'function';
 }
 
-/**
- * Normalize a Forge world/person shape into Probe's FabricWorld.
- * PersonDraft already matches FabricPerson; this is a thin pass-through
- * that fills missing optional arrays so metrics never see undefined as FAIL.
- */
-export function normalizeWorld(raw: unknown, seedFallback = 0): FabricWorld {
-  const w = (raw ?? {}) as Partial<FabricWorld> & { people?: unknown[] };
-  const people: FabricPerson[] = Array.isArray(w.people)
-    ? w.people.map((p, i) => {
-        const person = (p ?? {}) as Partial<FabricPerson>;
-        return {
-          id: typeof person.id === 'string' ? person.id : `unknown-${i}`,
-          fingerprint:
-            typeof person.fingerprint === 'string'
-              ? person.fingerprint
-              : `fp-missing-${i}`,
-          vector: person.vector,
-          lines: person.lines,
-        };
-      })
-    : [];
-  return {
-    seed: typeof w.seed === 'number' ? w.seed : seedFallback,
-    fingerprint:
-      typeof w.fingerprint === 'string' && w.fingerprint.length > 0
-        ? w.fingerprint
-        : `wf-missing-${seedFallback}`,
-    people,
-    lines: w.lines,
-    history: w.history,
-    historyCoherence: w.historyCoherence,
-    kinEdges: w.kinEdges,
-    gapSites: w.gapSites,
-    assertions: w.assertions,
-  };
-}
-
-function wrapGenerateWorld(
-  fn: NonNullable<FabricApi['generateWorld']>,
-): NonNullable<FabricApi['generateWorld']> {
-  return (opts) => {
-    const out = fn(opts);
-    if (out && typeof (out as Promise<FabricWorld>).then === 'function') {
-      return (out as Promise<FabricWorld>).then((w) =>
-        normalizeWorld(w, opts.seed),
-      );
-    }
-    return normalizeWorld(out, opts.seed);
-  };
-}
-
 function pickApi(mod: Record<string, unknown>): FabricApi | null {
   const api: FabricApi = {};
 
@@ -106,9 +59,7 @@ function pickApi(mod: Record<string, unknown>): FabricApi | null {
     api.createWorldFabric = mod.createWorldFabric as FabricApi['createWorldFabric'];
   }
   if (isFunction(mod.generateWorld)) {
-    api.generateWorld = wrapGenerateWorld(
-      mod.generateWorld as NonNullable<FabricApi['generateWorld']>,
-    );
+    api.generateWorld = mod.generateWorld as FabricApi['generateWorld'];
   }
   if (isFunction(mod.generatePeople)) {
     api.generatePeople = mod.generatePeople as FabricApi['generatePeople'];
@@ -132,7 +83,6 @@ function pickApi(mod: Record<string, unknown>): FabricApi | null {
   if (api.generateWorld || api.generatePeople || api.generatePersonDraft) {
     return api;
   }
-  // Or a fabric factory we can call later once shape is known
   if (api.createFabric || api.createWorldFabric) {
     return api;
   }

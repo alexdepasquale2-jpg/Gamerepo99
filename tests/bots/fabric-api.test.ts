@@ -12,6 +12,9 @@ describe('connectFabricApi', () => {
     expect(api).not.toBeNull();
     expect(typeof api!.generateWorld).toBe('function');
     expect(typeof api!.generatePeople).toBe('function');
+    expect(typeof api!.assertVoice).toBe('function');
+    expect(typeof api!.runFabricAssertions).toBe('function');
+    expect(typeof api!.interpolateLine).toBe('function');
     const w = await api!.generateWorld!({ seed: 11 });
     expect(w.seed).toBe(11);
     expect(w.fingerprint.length).toBeGreaterThan(0);
@@ -25,6 +28,7 @@ describe('connectFabricApi', () => {
       'generatePersonDraft',
       'interpolateLine',
       'assertVoice',
+      'runFabricAssertions',
       'generateWorld',
       'createWorldFabric',
       'worldFingerprint',
