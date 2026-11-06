@@ -18,6 +18,9 @@ const game = new Phaser.Game({
   width,
   height,
   backgroundColor: '#0b0d12',
+  pixelArt: true, // nearest-neighbor — integer scales stay crisp under Scale.FIT
+  antialias: false,
+  roundPixels: true,
   scene: [BootScene, OverworldScene],
   scale: {
     mode: Phaser.Scale.FIT,

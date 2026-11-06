@@ -39,4 +39,15 @@ describe('FEEL render config', () => {
     expect(FEEL.overworld.camDeadzoneX).toBeGreaterThan(0);
     expect(FEEL.overworld.camDeadzoneY).toBeGreaterThan(0);
   });
+
+  it('exposes integer worldScale for Stardew proportions', () => {
+    expect(FEEL.worldScale.tilePx).toBe(32);
+    expect(FEEL.worldScale.camZoom).toBe(1);
+    expect(FEEL.worldScale.heroScale).toBe(4);
+    expect(FEEL.worldScale.villagerScale).toBe(FEEL.worldScale.heroScale);
+    expect(Number.isInteger(FEEL.worldScale.heroScale)).toBe(true);
+    expect(FEEL.worldScale.heroScale * 16).toBe(64); // 2 tiles
+    expect(FEEL.worldScale.treeHTiles).toBeGreaterThanOrEqual(3.5);
+    expect(FEEL.worldScale.scatterMinPx).toBeGreaterThanOrEqual(40);
+  });
 });

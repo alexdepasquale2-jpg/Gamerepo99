@@ -12,6 +12,7 @@ test('capture continuous overworld screenshots', async ({ page }) => {
   await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(OUT, 'overworld-boot.png'), fullPage: false });
   await page.screenshot({ path: path.join(OUT, 'prism-overworld-boot.png'), fullPage: false });
+  await page.screenshot({ path: path.join(OUT, 'prism-scale-after.png'), fullPage: false });
   // Walk a bit east to show road corridor streaming
   for (let i = 0; i < 40; i++) {
     await page.keyboard.down('D');

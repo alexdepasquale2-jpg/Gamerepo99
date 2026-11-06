@@ -61,3 +61,22 @@ Despair / alive: **palette shift / desaturation of RGB only** from `warmth`. Nev
 ## Target mockup
 
 `docs/art/mockups/2.5d-world-target-v4.png` — despair | reignited split; compositing reference for alpha, single-frame stamps, one character per spot, variant grass. Reproducible via `scripts/art/assemble-world-target-v4.py`.
+
+## World scale (Pass scale — Stardew proportions)
+
+Single source of truth: `FEEL.worldScale` in `src/render/feel.ts`.
+
+| Knob | Value | Meaning |
+|------|-------|---------|
+| `tilePx` | 32 | Must match sim `TILE_PX` |
+| `camZoom` | 1 | Integer only — nearest-neighbor stays crisp (no fractional zoom blur) |
+| `heroScale` / `villagerScale` | 4 | ansimuz 16×16 → 64px = **2 tiles** (door-height / Stardew) |
+| `pixelArt` (main.ts) | true | Nearest-neighbor under Scale.FIT — no blur |
+| `treeHTiles` / `treeWTiles` | 4.0 / 1.4 | Taller fuller canopy clusters |
+| `cratePx` / `fencePostH` | 18 / 18 | Props legible against buildings |
+| `tuftH` / `flowerPx` | 8 / 3 | Readable grass detail |
+| `scatterMinPx` | 48 | Min gap between bushes/rocks/logs/stumps/sign/hay/flower patches |
+
+Hero + villagers use integer `setScale(N)`. Buildings keep tile-based `setDisplaySize`. Camera `setRoundPixels(true)` + `camZoom: 1`.
+
+Target mockup: `docs/art/mockups/2.5d-world-target-v4.png`. Before/after: `artifacts/25d/prism-scale-{before,after}.png`.

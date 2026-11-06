@@ -19,6 +19,7 @@ import {
   expandMeanderRoadKeys,
   roadMeanderOffset,
 } from './chunk-strips';
+import { FEEL } from '../feel';
 
 export { expandMeanderRoadKeys, roadMeanderOffset };
 
@@ -169,10 +170,11 @@ function paintPoissonGrassDetail(
   const oy = originR * TILE_PX;
   const size = chunkTiles * TILE_PX;
 
-  // Layer A: mid tufts + flowers
-  paintPoissonLayer(host, container, ox, oy, size, originQ, originR, 28, 18, 0x3d6b28, true);
-  // Layer B: darker, sparser tufts (breaks neon flatness)
-  paintPoissonLayer(host, container, ox, oy, size, originQ + 17, originR + 9, 40, 12, 0x2a4f1c, false);
+  const cellA = Math.max(20, FEEL.worldScale.tuftH * 3);
+  // Layer A: mid tufts + flowers (larger, readable)
+  paintPoissonLayer(host, container, ox, oy, size, originQ, originR, cellA, 20, 0x3d6b28, true);
+  // Layer B: darker, sparser tufts
+  paintPoissonLayer(host, container, ox, oy, size, originQ + 17, originR + 9, cellA + 12, 14, 0x2a4f1c, false);
 }
 
 function paintPoissonLayer(
@@ -200,14 +202,16 @@ function paintPoissonLayer(
       const wy = oy + gy * cell + cell / 2 + jy;
       if (wx < ox - 4 || wy < oy - 4 || wx > ox + size + 4 || wy > oy + size + 4) continue;
       const kind = h % 9;
+      const ws = FEEL.worldScale;
       if (!allowFlowers || kind <= 5) {
-        const ht = tuftColor === 0x2a4f1c ? 4 + (h % 3) : 5;
-        const g = host.add.rectangle(wx, wy - 3, 2, ht, tuftColor);
-        g.setAlpha(tuftColor === 0x2a4f1c ? 0.55 : 0.7);
+        const ht = tuftColor === 0x2a4f1c ? ws.tuftH - 2 + (h % 3) : ws.tuftH;
+        const g = host.add.rectangle(wx, wy - ht / 2, 3, ht, tuftColor);
+        g.setAlpha(tuftColor === 0x2a4f1c ? 0.55 : 0.75);
         g.setDepth(0.15);
         container.add(g);
       } else {
-        const fl = host.add.rectangle(wx, wy - 4, 2, 2, kind === 6 ? 0xf0d878 : 0xe8a0c0);
+        const fs = ws.flowerPx;
+        const fl = host.add.rectangle(wx, wy - fs, fs, fs, kind === 6 ? 0xf0d878 : 0xe8a0c0);
         fl.setDepth(0.16);
         container.add(fl);
       }
@@ -337,8 +341,9 @@ export function paintTree(
     if (tex.has(fr)) {
       const img = host.add.image(foot.x, foot.y, 'sheet-buildings', fr);
       applySpriteSort(img);
-      const s = 0.95 + (variant % 3) * 0.12;
-      img.setDisplaySize(TILE_PX * 0.95 * s, TILE_PX * 2.6 * s);
+      const s = 1 + (variant % 3) * 0.1;
+      const ws = FEEL.worldScale;
+      img.setDisplaySize(TILE_PX * ws.treeWTiles * s, TILE_PX * ws.treeHTiles * s);
       container?.add(img);
       return;
     }
@@ -352,13 +357,14 @@ function paintFence(
   r: number,
   tiles: number,
 ): void {
+  const ws = FEEL.worldScale;
   for (let i = 0; i < tiles; i++) {
-    const foot = tileFootWorld(q0 + i * 0.55, r);
-    const post = host.add.rectangle(foot.x, foot.y - 6, 3, 12, 0x6b4423);
+    const foot = tileFootWorld(q0 + i * 0.6, r);
+    const post = host.add.rectangle(foot.x, foot.y - ws.fencePostH / 2, 4, ws.fencePostH, 0x6b4423);
     applySpriteSort(post);
     container?.add(post);
     if (i < tiles - 1) {
-      const rail = host.add.rectangle(foot.x + 8, foot.y - 10, 14, 2, 0x8b5a2b);
+      const rail = host.add.rectangle(foot.x + 10, foot.y - ws.fencePostH * 0.65, 18, ws.fenceRailH, 0x8b5a2b);
       rail.setDepth(foot.y + 0.1);
       container?.add(rail);
     }
@@ -379,7 +385,8 @@ function paintFenceAlongRoad(
     const roadR = townR + 0.35 + roadMeanderOffset(Math.floor(q));
     const r = roadR - 0.5; // north edge of road ribbon (~halfW)
     const foot = tileFootWorld(q, r);
-    const post = host.add.rectangle(foot.x, foot.y - 6, 3, 12, 0x6b4423);
+    const ws = FEEL.worldScale;
+    const post = host.add.rectangle(foot.x, foot.y - ws.fencePostH / 2, 4, ws.fencePostH, 0x6b4423);
     applySpriteSort(post);
     container?.add(post);
     if (i < posts - 1) {
@@ -387,9 +394,9 @@ function paintFenceAlongRoad(
       const nextR = townR + 0.35 + roadMeanderOffset(Math.floor(nextQ)) - 0.5;
       const nextFoot = tileFootWorld(nextQ, nextR);
       const mx = (foot.x + nextFoot.x) / 2;
-      const my = (foot.y + nextFoot.y) / 2 - 10;
+      const my = (foot.y + nextFoot.y) / 2 - ws.fencePostH * 0.65;
       const len = Math.hypot(nextFoot.x - foot.x, nextFoot.y - foot.y) * 0.85;
-      const rail = host.add.rectangle(mx, my, Math.max(8, len), 2, 0x8b5a2b);
+      const rail = host.add.rectangle(mx, my, Math.max(10, len), ws.fenceRailH, 0x8b5a2b);
       rail.setDepth(Math.max(foot.y, nextFoot.y) + 0.1);
       container?.add(rail);
     }
@@ -404,8 +411,8 @@ function paintSpacedVillagers(
   town: { q: number; r: number },
   candidates: [number, number, string, boolean][],
 ): void {
-  // Screen-space: clear if dx>=56 OR dy>=56 (covers sprite width/height at scale 2)
-  const minAxis = 56;
+  // Screen-space: clear if dx OR dy clears scaled sprite (16*scale + gap)
+  const minAxis = FEEL.worldScale.villagerScale * 16 + 16;
   const placed: { x: number; y: number }[] = [];
   for (const [dq, dr, frame, flip] of candidates) {
     let q = town.q + dq;
@@ -439,7 +446,7 @@ function paintVillager(
   addSoftShadow(host, container, foot.x, foot.y, 0.8);
   if (host.textures.exists(HERO_TEX) && host.textures.get(HERO_TEX).has(frame)) {
     const sp = host.add.image(foot.x, foot.y, HERO_TEX, frame);
-    sp.setScale(2);
+    sp.setScale(FEEL.worldScale.villagerScale);
     sp.setFlipX(flipX);
     applySpriteSort(sp);
     container?.add(sp);
@@ -454,10 +461,97 @@ function paintCrate(
 ): void {
   const foot = tileFootWorld(q, r);
   addSoftShadow(host, container, foot.x, foot.y, 0.5);
-  const box = host.add.rectangle(foot.x, foot.y - 6, 12, 10, 0x8b6914);
+  const cs = FEEL.worldScale.cratePx;
+  const box = host.add.rectangle(foot.x, foot.y - cs * 0.45, cs, cs * 0.85, 0x8b6914);
   box.setStrokeStyle(1, 0x5a4010, 1);
   applySpriteSort(box);
   container?.add(box);
+}
+
+
+/** Scatter bushes/rocks/logs/stumps/sign/hay/flower patches with min spacing. */
+function paintScatterProps(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container | null,
+  town: { q: number; r: number },
+): void {
+  const ws = FEEL.worldScale;
+  const min = ws.scatterMinPx;
+  type Kind = 'bush' | 'rock' | 'log' | 'stump' | 'sign' | 'hay' | 'flowers';
+  const candidates: { dq: number; dr: number; kind: Kind }[] = [
+    { dq: -4.5, dr: 1.2, kind: 'bush' },
+    { dq: -1.0, dr: 2.4, kind: 'rock' },
+    { dq: 3.0, dr: 2.0, kind: 'log' },
+    { dq: 6.8, dr: 1.0, kind: 'stump' },
+    { dq: -0.5, dr: -1.2, kind: 'sign' },
+    { dq: 1.5, dr: 3.2, kind: 'hay' },
+    { dq: -2.5, dr: 6.5, kind: 'bush' },
+    { dq: 1.0, dr: 8.5, kind: 'flowers' },
+    { dq: 5.5, dr: 7.2, kind: 'rock' },
+    { dq: 8.0, dr: 5.0, kind: 'bush' },
+    { dq: -4.0, dr: 8.0, kind: 'log' },
+    { dq: 2.5, dr: 5.8, kind: 'stump' },
+    { dq: 7.5, dr: 8.8, kind: 'flowers' },
+    { dq: -1.5, dr: 9.5, kind: 'hay' },
+  ];
+  const placed: { x: number; y: number }[] = [];
+  for (const c of candidates) {
+    const foot = tileFootWorld(town.q + c.dq, town.r + c.dr);
+    if (placed.some((p) => Math.hypot(p.x - foot.x, p.y - foot.y) < min)) continue;
+    placed.push(foot);
+    paintScatterOne(host, container, foot.x, foot.y, c.kind);
+  }
+}
+
+function paintScatterOne(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container | null,
+  x: number,
+  y: number,
+  kind: 'bush' | 'rock' | 'log' | 'stump' | 'sign' | 'hay' | 'flowers',
+): void {
+  const ws = FEEL.worldScale;
+  addSoftShadow(host, container, x, y, kind === 'log' ? 1.1 : 0.6);
+  if (kind === 'bush') {
+    const b = host.add.ellipse(x, y - ws.bushR * 0.6, ws.bushR * 2, ws.bushR * 1.5, 0x3a6e28);
+    applySpriteSort(b);
+    container?.add(b);
+  } else if (kind === 'rock') {
+    const r = host.add.ellipse(x, y - ws.rockR * 0.4, ws.rockR * 2, ws.rockR * 1.3, 0x7a756c);
+    applySpriteSort(r);
+    container?.add(r);
+  } else if (kind === 'log') {
+    const log = host.add.rectangle(x, y - ws.logH / 2, ws.logW, ws.logH, 0x6b4423);
+    applySpriteSort(log);
+    container?.add(log);
+  } else if (kind === 'stump') {
+    const st = host.add.ellipse(x, y - ws.stumpR * 0.3, ws.stumpR * 2, ws.stumpR, 0x5a3a1a);
+    applySpriteSort(st);
+    container?.add(st);
+  } else if (kind === 'sign') {
+    const post = host.add.rectangle(x, y - ws.signH / 2, 4, ws.signH, 0x6b4423);
+    applySpriteSort(post);
+    const board = host.add.rectangle(x, y - ws.signH + 4, 16, 10, 0xc4a574);
+    board.setDepth(y + 0.1);
+    container?.add(post);
+    container?.add(board);
+  } else if (kind === 'hay') {
+    const hay = host.add.ellipse(x, y - ws.hayH * 0.4, ws.hayW, ws.hayH, 0xd4b84a);
+    applySpriteSort(hay);
+    container?.add(hay);
+  } else {
+    // flower patch cluster
+    for (const [ox, oy, col] of [
+      [0, 0, 0xf0d878],
+      [6, -3, 0xe8a0c0],
+      [-5, -2, 0xf0d878],
+      [3, 4, 0xe8a0c0],
+    ] as const) {
+      const fl = host.add.rectangle(x + ox, y + oy - 4, ws.flowerPx, ws.flowerPx, col);
+      fl.setDepth(y + 0.16);
+      container?.add(fl);
+    }
+  }
 }
 
 export function paintTownMarker(
@@ -484,25 +578,30 @@ export function paintTownMarker(
     container?.add(img);
   }
 
+  // Fuller tree clusters (layered canopy) west + east of settlement
   for (const [dq, dr, v] of [
-    [-2.6, 0.2, 0],
-    [-3.0, -0.5, 1],
-    [5.2, 0.3, 2],
-    [5.8, -0.4, 0],
+    [-2.8, 0.15, 0],
+    [-3.4, -0.55, 1],
+    [-2.2, -0.7, 2],
+    [-3.6, 0.35, 0],
+    [5.0, 0.25, 2],
+    [5.7, -0.45, 0],
+    [5.4, -0.9, 1],
+    [6.2, 0.1, 2],
   ] as const) {
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
-  // Crates at porch (upper terrace)
+  // Crates at porch (upper terrace) — larger via worldScale
   paintCrate(host, container, town.q + 0.15, town.r + 0.45);
   paintCrate(host, container, town.q + 1.2, town.r + 0.4);
   paintCrate(host, container, town.q + 2.25, town.r + 0.45);
 
-  // Fence along road edge on upper terrace
   paintFenceAlongRoad(host, container, town.q + 0.5, town.r, 8);
 
-  // Villagers on lower meadow / around road approach (south of cliff at r+4), screen-AABB spaced
-  // Lower meadow just south of cliff (cliff at town.r+4); wide screen spacing
+  // Scatter props so open grass isn't empty (min spacing from worldScale)
+  paintScatterProps(host, container, town);
+
   paintSpacedVillagers(host, container, town, [
     [-3.2, 5.6, '1', true],
     [0.2, 7.4, '7', false],
