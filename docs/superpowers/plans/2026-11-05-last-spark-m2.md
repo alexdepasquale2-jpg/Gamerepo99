@@ -19,6 +19,8 @@
 - Free toolchain only; 32px tiles; `npm run build` && `npm test` must pass for M2 done.
 - Schedule: M2 due **Fri 8 AM**; M3–M5 Friday; polish Sat; showcase Sun. Feel > features. Defer LOD, multi-active Brood, full history gen to M3+.
 - **Save format (forward-compat only):** any M2 save JSON must include `version: 1` and may include reserved optional `imprint: null` (or omit). Do not implement imprint→NPC or world import/export in M2 — see `specs/2026-11-05-async-legacy-npc-design.md` (M5+).
+- **Optional coin:** `player.defaults.coin` (number, default 0) may exist on save/state. Do **not** implement stash/notoriety/patrons in M2 — see `specs/2026-11-05-hoarder-notoriety-design.md` (M4+).
+- **Quality bar:** depth beats breadth; schedule is secondary. M2 acceptance includes **What makes this special** (testable).
 
 ---
 
@@ -546,12 +548,54 @@ git commit -m "feat: moment-to-moment feel events and memorable-moment tests"
 
 ## M2 acceptance (Fri 8 AM)
 
+**Priority:** quality / depth over schedule. Ship fewer systems that pass the special bar rather than a thin closed loop.
+
 1. `npm run validate && npm test && npm run build` green.  
 2. Play: pick Marrow/Ivy/Brood → Ashford method loop → Lowmere via clear or costly fear-road → burnout shows exact succession copy.  
 3. Repo grep: no `archetypeId ===` in `src/sim/`.  
 4. Brood: body swap only (`activeBodiesMax` 1).  
 5. Feel: spark lerps on spend; reaction lines show; at least one memorable-moment path (bakery loneliness OR forge packet) reproducible in a seeded test.  
 6. Event bus emits §3.5 juice ids for Prism.  
+
+### What makes this special (required — concrete checks)
+
+#### A. Memorable moments the systems produce on their own (no cutscenes)
+
+| # | Moment | How M2 systems create it | Testable check |
+|---|--------|--------------------------|----------------|
+| 1 | **Warm loaf, cold hill** | Carry/Inspire Marta → `site.kindle` bakery → same-day kind success + dusk with no adjacent burning → `cost_loneliness_tax` | Seeded test: after path, bus contains `site.kindle` and `spark.spend` (or dusk cost); spark decreased at dusk while bakery kindled |
+| 2 | **Chalk after the cut** | Shame/Challenge Ruth → `hollowness` mark → next dawn relapse mul drops her flame; if Jonah burning, `ripple.harm` | Seeded test: Ruth has `hollowness`; dawn2 flame < flame after resolve; optional `ripple.harm` when witness burning |
+| 3 | **Nail across the water** | Elias reignite with Challenge/Carry → `genuine_growth` → `packet.emit` on ferry/rumor link → Tom site gets proof toast next dawn | Seeded test: bus has `packet.emit`; Lowmere Tom `proof` or packet inbox non-empty by dawn+1 |
+| 4 | **Refusal coal** | Choose Shame targeting a child-tagged person → `refusal_shame_child` fires; method stays in menu | Seeded test: resolve blocked/refused; `refusal.coal_flicker` (or refusal line shown); Shame still listed in method menu |
+| 5 | **Mark comes back** | Land `resentment` or `dependence` on someone; later method vs them uses markMul / cling dusk cost | Seeded test: second resolve vs same person yields different `flameDelta` or spark cost than unmarked baseline (same seed family) |
+
+Acceptance: **≥3 of 5** reproducible in seeded tests (Task 10); all five *authorable* from current data (no new cutscene content).
+
+#### B. Choices that matter
+
+Every committed method choice must visibly change a later state **or** line.
+
+- **Check:** For each of the 5 methods, a seeded resolve against a fixed Ashford person changes at least one of: `person.flame`, `person.marks`, `player.spark`, reaction line id, or bus juice id, versus a no-op control.  
+- **Check:** Witness present vs absent changes mark weights or emits `ripple.help`/`ripple.harm` (assert bus or mark stacks differ).  
+- **Check:** Refusing Shame (child) leaves world marks unchanged but still spends the refusal tell (line/coal) — choice is readable, not a soft UI disable.
+
+#### C. First 10 minutes that hook
+
+Beat-by-beat outline (target play, Marrow or Ivy on Ashford):
+
+| t | Beat |
+|---|------|
+| 0:00 | Boot → pick archetype (name + one-line wound tell). |
+| 0:45 | Ashford street; first cold site visible (bakery or stoop). |
+| **1:30** | **First meaningful choice:** approach person → method menu (5 methods). Time-to-first-choice ≤ **2 min**. |
+| 2:00 | Commit → resolve beat (spark lerp + reaction line). |
+| **3:00** | **First consequence:** mark icon / site warmth tint / spark drop readable. Time-to-first-consequence ≤ **4 min**. |
+| 5:00 | Second person or revisit; witness or dusk tax foreshadow. |
+| 7:00 | Optional: packet toast or Lowmere fear-road tease. |
+| 10:00 | Player can state one relationship change (“Marta’s oven lit” / “Ruth went hollow”). |
+
+**Checks:** Probe/manual timer on fresh build; automated smoke may assert tutorial flags: `firstChoiceAtTick` and `firstConsequenceAtTick` recorded on session metrics when bots API lands. Until then: checklist in `docs/qa/reports/m2-playable-town-bots.md` or Probe note.
+
 
 ## Plan self-review
 
