@@ -7,7 +7,7 @@ Unless marked **imported**, assets are **shortlisted, not yet imported** into th
 
 | Asset | Author | License | URL | Status |
 |-------|--------|---------|-----|--------|
-| RPG Town Pixel Art Assets | Luis Zuno (@ansimuz) | CC0 | https://opengameart.org/content/rpg-town-pixel-art-assets | shortlisted; vendor `assets/vendor/ansimuz-rpg-town-pixel-art-assets.zip` |
+| RPG Town Pixel Art Assets | Luis Zuno (@ansimuz) | CC0 | https://opengameart.org/content/rpg-town-pixel-art-assets | **imported · v3 primary** · vendor zip + `ansimuz-*.png` extracts · baked sheets |
 | Roguelike/RPG pack | Kenney Vleugels (Kenney.nl); 16×16 conversion help Lynn Evers | CC0 | https://kenney.nl/assets/roguelike-rpg-pack · https://opengameart.org/content/roguelikerpg-pack-1700-tiles | shortlisted; vendor `assets/vendor/kenney-roguelike-rpg-pack.zip` |
 | Tiny Town | Kenney | CC0 | https://kenney.nl/assets/tiny-town | **imported for art-pass** · vendor `assets/vendor/kenney-tiny-town.zip` · primary 2.5D kit |
 | Tiny Dungeon | Kenney | CC0 | https://kenney.nl/assets/tiny-dungeon | **imported for art-pass** · vendor `assets/vendor/kenney-tiny-dungeon.zip` · characters + stone |
@@ -80,3 +80,20 @@ See `docs/art/OVERWORLD_SHORTLIST.md` for despair/alive notes and Loom asset-key
 | Pixel People | TokyoGeisha | CC0 | https://opengameart.org/content/pixel-people | shortlisted, not yet imported |
 | Base character spritesheet 16×16 | Cough-E | CC0 | https://opengameart.org/content/base-character-spritesheet-16x16 | shortlisted, not yet imported |
 | Toon Characters 1 | Kenney | CC0 | https://kenney.nl/assets/toon-characters-1 | shortlisted, not yet imported |
+
+## Evaluated but NOT used
+
+| Pack | Author | License finding | Why skipped |
+|------|--------|-----------------|-------------|
+| Sprout Lands Asset Pack | Cup Nooble (itch.io) | **Free:** non-commercial only; **Premium ($3.99+):** commercial OK but **no resale/redistribution even if modified** (verbatim from itch page 2026-11-05). Committing sprites into the repo = redistribution → **incompatible**. | Do not import. |
+| Mini Farm (Jofra) | Jofra | Claims CC0 but itch text forbids redistributing individual files — conflicts with CC0. | Avoid. |
+| VectoRaith Farming Sim | VectoRaith | Custom: free commercial use but forbids redistributing asset files as-is. | Risky for open repo. |
+
+## Primary 2.5D pack (v3)
+
+| Pack | Author | License (verified) | Vendor / bake |
+|------|--------|--------------------|---------------|
+| RPG Town Pixel Art Assets | Luis Zuno (@ansimuz) | **CC0** — `town_rpg_pack/license.txt` quotes CC0 1.0 | `assets/vendor/ansimuz-*.png` · baked `assets/sprites/sheet-buildings.png`, `sheet-ground.png` |
+| 3/4 32×32 RPG House Modular Kit | Michael Whitlock (bigbeargames); bases/rooves after Gecky (Judy Schmidt) | **CC-BY-SA 3.0** (OGA) · package `license.txt` | `assets/vendor/bigbeargames-microhouses.zip` (gitignored) · `sheet-buildings-side.png` |
+| LPC Tile Atlas (terrain) | Liberated Pixel Cup contributors (atlas by OGA submitter) | **CC-BY-SA 3.0** | `assets/vendor/lpc-terrain-atlas.png` · cliff terrace bake |
+| Pixelsphere 32×32 | cynicmusic | **CC0** | `assets/vendor/cynicmusic-pixelsphere-32.png` |

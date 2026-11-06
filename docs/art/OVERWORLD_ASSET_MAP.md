@@ -196,3 +196,41 @@ Vendor runtime sources (when imported): `assets/vendor/kenney-tiny-town.zip`, `k
 
 **Do:** resolve by parametric keys; use heading helpers; palette-lerp warmth; credit CC0.  
 **Don't:** key art to place names (`ashford`); put feel in sim; treat LPC as CC0; treat `facility.farm` as a data gap.
+
+
+---
+
+## 11. Forge render handoff (v3 bake)
+
+### Safe committed keys / tiles (use these now)
+
+| Layer | Safe keys | Sheet / tiles | Notes |
+|-------|-----------|---------------|-------|
+| **Ground** | `biome.*` (palette variants), grass fills | `assets/sprites/sheet-ground.png` frames 0–2 (ansimuz grass variants); `sheet-biomes.png` despair\|alive pairs | Opaque tiles only — **no** translucent overlays |
+| **Road** | `road.track`, `road.road`, `road.highway` | `sheet-ground.png` dirt row (frames 4+) | Runs as opaque dirt ribbon |
+| **Building** | `facility.{mill,lumber_camp,waystation,mine}.{idle,working,abandoned}` | `assets/sprites/sheet-buildings.png` (ansimuz inn/tall 3/4); side kit `sheet-buildings-side.png` | Prefer ansimuz whole buildings over Tiny Town smears |
+| **Tree / prop** | stamp from ansimuz trees in buildings sheet / town extract | ansimuz transparent tiles (vendor) until dedicated `prop.tree` keys | Depth-sorted with characters |
+| **Cliff** | terrace stamps (not a Loom key yet) | `assets/sprites/sheet-cliff.png` rows: lip / face / base | Use face variants, never smear-scale one strip |
+| **Fauna / crop / ore** | `fauna.*`, `crop.*`, `ore.*` | `sheet-fauna.png`, `sheet-crops.png`, `sheet-ores.png` | Baked; frame indices stub-quality but **committed** |
+
+### Sprite anchor + sortY (LOCKED proposal)
+
+```
+origin = (0.5, 1.0)   // bottom-center of frame
+sortY  = world Y of the foot / contact point
+// After placing with that origin, sortY === sprite.y
+// Draw ascending sortY (lower on screen = in front)
+```
+
+Code: `SPRITE_SORT` in `src/render/asset-manifest.ts`.
+
+### Should Forge wait for more baking?
+
+**No — proceed now.** Use committed `assets/sprites/sheet-*.png` + manifest keys. Placeholders/rects only for still-**missing** art (`caravan.ferryman`, `caravan.mount`). Frame polish can iterate without blocking the layer pipeline.
+
+### Pack + license (v3)
+
+- **Primary:** ansimuz RPG Town — **CC0** (verified `license.txt` in zip).
+- **Sprout Lands:** **not used** — free = non-commercial; premium forbids redistribution (repo commit incompatible).
+- Modular houses: bigbeargames microhouses — **CC-BY-SA 3.0** (side kit).
+- LPC terrain atlas — **CC-BY-SA 3.0** (cliff/terrain reference).

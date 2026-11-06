@@ -6,6 +6,21 @@
     "pendingLoomLock": false,
     "note": "Loom locked square ortho: q=x (column), r=y (row)."
   },
+  "spriteSort": {
+    "originX": 0.5,
+    "originY": 1,
+    "note": "bottom-center origin; sortY = foot/contact world y"
+  },
+  "bakedSheets": {
+    "ground": "assets/sprites/sheet-ground.png",
+    "cliff": "assets/sprites/sheet-cliff.png",
+    "buildings": "assets/sprites/sheet-buildings.png",
+    "buildingsSide": "assets/sprites/sheet-buildings-side.png",
+    "biomes": "assets/sprites/sheet-biomes.png",
+    "fauna": "assets/sprites/sheet-fauna.png",
+    "crops": "assets/sprites/sheet-crops.png",
+    "ores": "assets/sprites/sheet-ores.png"
+  },
   "dataIds": {
     "biomes": [
       "river_margin",
@@ -82,7 +97,7 @@
   "assets": {
     "biome.river_margin": {
       "key": "biome.river_margin",
-      "sheet": "kit-biomes",
+      "sheet": "sheet-biomes",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
@@ -93,8 +108,8 @@
     },
     "biome.ash_wood": {
       "key": "biome.ash_wood",
-      "sheet": "kit-biomes",
-      "frame": 1,
+      "sheet": "sheet-biomes",
+      "frame": 2,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -104,8 +119,8 @@
     },
     "biome.mill_heath": {
       "key": "biome.mill_heath",
-      "sheet": "kit-biomes",
-      "frame": 2,
+      "sheet": "sheet-biomes",
+      "frame": 4,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -115,8 +130,8 @@
     },
     "biome.glare_approach": {
       "key": "biome.glare_approach",
-      "sheet": "kit-biomes",
-      "frame": 3,
+      "sheet": "sheet-biomes",
+      "frame": 6,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -126,8 +141,8 @@
     },
     "biome.peat_fen": {
       "key": "biome.peat_fen",
-      "sheet": "pebonius-pastoral",
-      "frame": 4,
+      "sheet": "sheet-biomes",
+      "frame": 8,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
@@ -137,8 +152,8 @@
     },
     "biome.chalk_downs": {
       "key": "biome.chalk_downs",
-      "sheet": "pebonius-pastoral",
-      "frame": 5,
+      "sheet": "sheet-biomes",
+      "frame": 10,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
@@ -148,8 +163,8 @@
     },
     "biome.brine_marsh": {
       "key": "biome.brine_marsh",
-      "sheet": "pebonius-pastoral",
-      "frame": 6,
+      "sheet": "sheet-biomes",
+      "frame": 12,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
@@ -159,8 +174,8 @@
     },
     "biome.slag_verge": {
       "key": "biome.slag_verge",
-      "sheet": "kenney-roguelike-caves",
-      "frame": 7,
+      "sheet": "sheet-biomes",
+      "frame": 14,
       "variant": "palette",
       "heading": "none",
       "status": "stub",
@@ -170,8 +185,8 @@
     },
     "road.track": {
       "key": "road.track",
-      "sheet": "kit-roads",
-      "frame": 0,
+      "sheet": "sheet-ground",
+      "frame": 4,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -179,8 +194,8 @@
     },
     "road.road": {
       "key": "road.road",
-      "sheet": "kit-roads",
-      "frame": 1,
+      "sheet": "sheet-ground",
+      "frame": 5,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -188,8 +203,8 @@
     },
     "road.highway": {
       "key": "road.highway",
-      "sheet": "kit-roads",
-      "frame": 2,
+      "sheet": "sheet-ground",
+      "frame": 6,
       "variant": "palette",
       "heading": "none",
       "status": "ready",
@@ -197,7 +212,7 @@
     },
     "facility.mill.idle": {
       "key": "facility.mill.idle",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
@@ -206,7 +221,7 @@
     },
     "facility.mill.working": {
       "key": "facility.mill.working",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 1,
       "variant": "palette",
       "heading": "none",
@@ -215,7 +230,7 @@
     },
     "facility.mill.abandoned": {
       "key": "facility.mill.abandoned",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 2,
       "variant": "swap",
       "heading": "none",
@@ -224,7 +239,7 @@
     },
     "facility.lumber_camp.idle": {
       "key": "facility.lumber_camp.idle",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 3,
       "variant": "palette",
       "heading": "none",
@@ -233,7 +248,7 @@
     },
     "facility.lumber_camp.working": {
       "key": "facility.lumber_camp.working",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 4,
       "variant": "palette",
       "heading": "none",
@@ -242,7 +257,7 @@
     },
     "facility.lumber_camp.abandoned": {
       "key": "facility.lumber_camp.abandoned",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 5,
       "variant": "swap",
       "heading": "none",
@@ -251,7 +266,7 @@
     },
     "facility.waystation.idle": {
       "key": "facility.waystation.idle",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 6,
       "variant": "palette",
       "heading": "none",
@@ -260,7 +275,7 @@
     },
     "facility.waystation.working": {
       "key": "facility.waystation.working",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 7,
       "variant": "palette",
       "heading": "none",
@@ -269,7 +284,7 @@
     },
     "facility.waystation.abandoned": {
       "key": "facility.waystation.abandoned",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 8,
       "variant": "swap",
       "heading": "none",
@@ -278,7 +293,7 @@
     },
     "facility.mine.idle": {
       "key": "facility.mine.idle",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 9,
       "variant": "palette",
       "heading": "none",
@@ -287,7 +302,7 @@
     },
     "facility.mine.working": {
       "key": "facility.mine.working",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 10,
       "variant": "palette",
       "heading": "none",
@@ -296,7 +311,7 @@
     },
     "facility.mine.abandoned": {
       "key": "facility.mine.abandoned",
-      "sheet": "kit-facilities",
+      "sheet": "sheet-buildings",
       "frame": 11,
       "variant": "swap",
       "heading": "none",
@@ -305,7 +320,7 @@
     },
     "ore.ore_iron": {
       "key": "ore.ore_iron",
-      "sheet": "kenney-roguelike-caves",
+      "sheet": "sheet-ores",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
@@ -314,7 +329,7 @@
     },
     "ore.ore_copper": {
       "key": "ore.ore_copper",
-      "sheet": "kenney-roguelike-caves",
+      "sheet": "sheet-ores",
       "frame": 1,
       "variant": "palette",
       "heading": "none",
@@ -323,7 +338,7 @@
     },
     "ore.ore_slag_tin": {
       "key": "ore.ore_slag_tin",
-      "sheet": "kenney-roguelike-caves",
+      "sheet": "sheet-ores",
       "frame": 2,
       "variant": "palette",
       "heading": "none",
@@ -332,7 +347,7 @@
     },
     "crop.crop_wheat": {
       "key": "crop.crop_wheat",
-      "sheet": "josehzz-farming-crops",
+      "sheet": "sheet-crops",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
@@ -343,7 +358,7 @@
     },
     "crop.crop_barley": {
       "key": "crop.crop_barley",
-      "sheet": "josehzz-farming-crops",
+      "sheet": "sheet-crops",
       "frame": 1,
       "variant": "palette",
       "heading": "none",
@@ -354,7 +369,7 @@
     },
     "crop.crop_root": {
       "key": "crop.crop_root",
-      "sheet": "josehzz-farming-crops",
+      "sheet": "sheet-crops",
       "frame": 2,
       "variant": "palette",
       "heading": "none",
@@ -365,7 +380,7 @@
     },
     "crop.crop_reed": {
       "key": "crop.crop_reed",
-      "sheet": "josehzz-farming-crops",
+      "sheet": "sheet-crops",
       "frame": 3,
       "variant": "palette",
       "heading": "none",
@@ -376,7 +391,7 @@
     },
     "crop.crop_flax": {
       "key": "crop.crop_flax",
-      "sheet": "josehzz-farming-crops",
+      "sheet": "sheet-crops",
       "frame": 4,
       "variant": "palette",
       "heading": "none",
@@ -549,7 +564,7 @@
     },
     "fauna.rabbit": {
       "key": "fauna.rabbit",
-      "sheet": "gaymoo-monochrome-critters",
+      "sheet": "sheet-fauna",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
@@ -558,8 +573,8 @@
     },
     "fauna.deer": {
       "key": "fauna.deer",
-      "sheet": "andhegames-creatures",
-      "frame": 0,
+      "sheet": "sheet-fauna",
+      "frame": 1,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -567,8 +582,8 @@
     },
     "fauna.bird": {
       "key": "fauna.bird",
-      "sheet": "davidcrybao-animals",
-      "frame": 0,
+      "sheet": "sheet-fauna",
+      "frame": 2,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -576,8 +591,8 @@
     },
     "fauna.pig": {
       "key": "fauna.pig",
-      "sheet": "natural-privateer-pig-look",
-      "frame": 0,
+      "sheet": "sheet-fauna",
+      "frame": 3,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -585,8 +600,8 @@
     },
     "fauna.fox": {
       "key": "fauna.fox",
-      "sheet": "andhegames-creatures",
-      "frame": 1,
+      "sheet": "sheet-fauna",
+      "frame": 4,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -594,8 +609,8 @@
     },
     "fauna.fish": {
       "key": "fauna.fish",
-      "sheet": "davidcrybao-animals",
-      "frame": 1,
+      "sheet": "sheet-fauna",
+      "frame": 5,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -603,8 +618,8 @@
     },
     "fauna.heron": {
       "key": "fauna.heron",
-      "sheet": "davidcrybao-animals",
-      "frame": 2,
+      "sheet": "sheet-fauna",
+      "frame": 6,
       "variant": "palette",
       "heading": "4",
       "status": "stub",
@@ -612,8 +627,8 @@
     },
     "fauna.rat": {
       "key": "fauna.rat",
-      "sheet": "gaymoo-monochrome-critters",
-      "frame": 1,
+      "sheet": "sheet-fauna",
+      "frame": 7,
       "variant": "palette",
       "heading": "4",
       "status": "stub",

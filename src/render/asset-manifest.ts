@@ -37,6 +37,31 @@ export const GRID = {
   note: 'Loom locked square ortho: q=x (column), r=y (row).',
 };
 
+/** Committed baked atlases under assets/sprites/ (fresh clone — no gitignored zips needed). */
+export const BAKED_SHEETS = {
+  ground: 'assets/sprites/sheet-ground.png',
+  cliff: 'assets/sprites/sheet-cliff.png',
+  buildings: 'assets/sprites/sheet-buildings.png',
+  buildingsSide: 'assets/sprites/sheet-buildings-side.png',
+  biomes: 'assets/sprites/sheet-biomes.png',
+  fauna: 'assets/sprites/sheet-fauna.png',
+  crops: 'assets/sprites/sheet-crops.png',
+  ores: 'assets/sprites/sheet-ores.png',
+} as const;
+
+/**
+ * Sprite anchor + depth-sort convention (Forge / Loom overworld).
+ * Origin: bottom-center (0.5, 1) of the sprite frame.
+ * sortY = world Y of the foot / contact point (same as the origin after placement).
+ * Draw order: ascending sortY (lower on screen = later / in front).
+ */
+export const SPRITE_SORT = {
+  originX: 0.5,
+  originY: 1.0,
+  note: 'bottom-center origin; sortY = foot/contact world y',
+} as const;
+
+
 /**
  * Degrees clockwise from north → 8-way frame index.
  * Order: N, NE, E, SE, S, SW, W, NW
@@ -87,45 +112,45 @@ function entry(
 /** Canonical overworld key → entry. Aliases redirect via aliasOf. */
 export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   // —— Biomes (world/biomes.json) ——
-  'biome.river_margin': entry('biome.river_margin', 'kit-biomes', 0, {
+  'biome.river_margin': entry('biome.river_margin', 'sheet-biomes', 0, {
     notes: 'Tiny Town grass/cobble + reed props; pastoral wet verge',
     despairHint: 'grey mud, still water',
     aliveHint: 'teal water, green reeds',
   }),
-  'biome.ash_wood': entry('biome.ash_wood', 'kit-biomes', 1, {
+  'biome.ash_wood': entry('biome.ash_wood', 'sheet-biomes', 2, {
     notes: 'Tiny Town trees 15-16, 27-28',
     despairHint: 'bare canopy',
     aliveHint: 'full green',
   }),
-  'biome.mill_heath': entry('biome.mill_heath', 'kit-biomes', 2, {
+  'biome.mill_heath': entry('biome.mill_heath', 'sheet-biomes', 4, {
     notes: 'open heath + autumn trees; pastoral grass',
     despairHint: 'dead scrub',
     aliveHint: 'golden heath, flowers',
   }),
-  'biome.glare_approach': entry('biome.glare_approach', 'kit-biomes', 3, {
+  'biome.glare_approach': entry('biome.glare_approach', 'sheet-biomes', 6, {
     notes: 'dirt 39-42 + stone verge',
     despairHint: 'dust bleach',
     aliveHint: 'cobble verge',
   }),
-  'biome.peat_fen': entry('biome.peat_fen', 'pebonius-pastoral', 4, {
+  'biome.peat_fen': entry('biome.peat_fen', 'sheet-biomes', 8, {
     status: 'stub',
     notes: 'Imported pastoral-overworld db32; kit-biomes frame TBD',
     despairHint: 'brown peat, dead reed',
     aliveHint: 'wet moss, alive reed beds',
   }),
-  'biome.chalk_downs': entry('biome.chalk_downs', 'pebonius-pastoral', 5, {
+  'biome.chalk_downs': entry('biome.chalk_downs', 'sheet-biomes', 10, {
     status: 'stub',
     notes: 'Pastoral pale grass / chalk soil',
     despairHint: 'bleached chalk, sparse scrub',
     aliveHint: 'short green turf, wildflowers',
   }),
-  'biome.brine_marsh': entry('biome.brine_marsh', 'pebonius-pastoral', 6, {
+  'biome.brine_marsh': entry('biome.brine_marsh', 'sheet-biomes', 12, {
     status: 'stub',
     notes: 'Pastoral wet + Tiny Town water tiles',
     despairHint: 'salt crust, grey flats',
     aliveHint: 'tidal green, shimmering pools',
   }),
-  'biome.slag_verge': entry('biome.slag_verge', 'kenney-roguelike-caves', 7, {
+  'biome.slag_verge': entry('biome.slag_verge', 'sheet-biomes', 14, {
     status: 'stub',
     notes: 'Imported Kenney caves/dungeons rock + slag props',
     despairHint: 'ash slag, cold cinder',
@@ -133,56 +158,56 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   }),
 
   // —— Roads ——
-  'road.track': entry('road.track', 'kit-roads', 0, { notes: '1 cell dirt' }),
-  'road.road': entry('road.road', 'kit-roads', 1, { notes: '2 cell dirt+cobble' }),
-  'road.highway': entry('road.highway', 'kit-roads', 2, { notes: '3 cell cobble' }),
+  'road.track': entry('road.track', 'sheet-ground', 4, { notes: '1 cell dirt' }),
+  'road.road': entry('road.road', 'sheet-ground', 5, { notes: '2 cell dirt+cobble' }),
+  'road.highway': entry('road.highway', 'sheet-ground', 6, { notes: '3 cell cobble' }),
 
   // —— Facilities (kinds × states) ——
-  ...facilityBlock('mill', 'kit-facilities', 0),
-  ...facilityBlock('lumber_camp', 'kit-facilities', 1),
-  ...facilityBlock('waystation', 'kit-facilities', 2),
-  ...facilityBlock('mine', 'kit-facilities', 3),
+  ...facilityBlock('mill', 'sheet-buildings', 0),
+  ...facilityBlock('lumber_camp', 'sheet-buildings', 1),
+  ...facilityBlock('waystation', 'sheet-buildings', 2),
+  ...facilityBlock('mine', 'sheet-buildings', 3),
 
   // —— Ore (economy-resources mineral ids) ——
-  'ore.ore_iron': entry('ore.ore_iron', 'kenney-roguelike-caves', 0, {
+  'ore.ore_iron': entry('ore.ore_iron', 'sheet-ores', 0, {
     status: 'stub',
     notes: 'Imported Kenney Roguelike Caves & Dungeons — frame bake TBD',
   }),
-  'ore.ore_copper': entry('ore.ore_copper', 'kenney-roguelike-caves', 1, {
+  'ore.ore_copper': entry('ore.ore_copper', 'sheet-ores', 1, {
     status: 'stub',
     notes: 'Caves pack ore tint / DCSS supplemental copper',
   }),
-  'ore.ore_slag_tin': entry('ore.ore_slag_tin', 'kenney-roguelike-caves', 2, {
+  'ore.ore_slag_tin': entry('ore.ore_slag_tin', 'sheet-ores', 2, {
     status: 'stub',
     notes: 'Slag/tin from caves rock + ash tint',
   }),
 
   // —— Crops (economy/crops.json → crop.<id>) ——
-  'crop.crop_wheat': entry('crop.crop_wheat', 'josehzz-farming-crops', 0, {
+  'crop.crop_wheat': entry('crop.crop_wheat', 'sheet-crops', 0, {
     status: 'stub',
     notes: 'Imported josehzz FarmingCrops16x16 — wheat stages',
     despairHint: 'wilted stalks',
     aliveHint: 'golden heads',
   }),
-  'crop.crop_barley': entry('crop.crop_barley', 'josehzz-farming-crops', 1, {
+  'crop.crop_barley': entry('crop.crop_barley', 'sheet-crops', 1, {
     status: 'stub',
     notes: 'josehzz rice/corn stand-in until barley row mapped',
     despairHint: 'grey chaff',
     aliveHint: 'ripe barley',
   }),
-  'crop.crop_root': entry('crop.crop_root', 'josehzz-farming-crops', 2, {
+  'crop.crop_root': entry('crop.crop_root', 'sheet-crops', 2, {
     status: 'stub',
     notes: 'josehzz potato/cassava',
     despairHint: 'shrivelled tops',
     aliveHint: 'leafy root mash',
   }),
-  'crop.crop_reed': entry('crop.crop_reed', 'josehzz-farming-crops', 3, {
+  'crop.crop_reed': entry('crop.crop_reed', 'sheet-crops', 3, {
     status: 'stub',
     notes: 'No reed in josehzz — pastoral wet prop / Tiny Town reed until dedicated',
     despairHint: 'broken stems',
     aliveHint: 'tall green reed',
   }),
-  'crop.crop_flax': entry('crop.crop_flax', 'josehzz-farming-crops', 4, {
+  'crop.crop_flax': entry('crop.crop_flax', 'sheet-crops', 4, {
     status: 'stub',
     notes: 'No flax in josehzz — sunflower/blue flower stand-in',
     despairHint: 'dry fibre',
@@ -268,42 +293,42 @@ export const OVERWORLD_ASSETS: Record<string, AssetEntry> = {
   }),
 
   // —— Fauna (world/fauna.json) — sheets imported; frame indices stub ——
-  'fauna.rabbit': entry('fauna.rabbit', 'gaymoo-monochrome-critters', 0, {
+  'fauna.rabbit': entry('fauna.rabbit', 'sheet-fauna', 0, {
     heading: '4',
     status: 'stub',
     notes: 'Imported gaymoo 50 monochrome 32×32; recolor for warmth',
   }),
-  'fauna.deer': entry('fauna.deer', 'andhegames-creatures', 0, {
+  'fauna.deer': entry('fauna.deer', 'sheet-fauna', 1, {
     heading: '4',
     status: 'stub',
     notes: 'Imported AndHeGames more-creatures-32',
   }),
-  'fauna.bird': entry('fauna.bird', 'davidcrybao-animals', 0, {
+  'fauna.bird': entry('fauna.bird', 'sheet-fauna', 2, {
     heading: '4',
     status: 'stub',
     notes: 'Imported davidcrybao all-sheet',
   }),
-  'fauna.pig': entry('fauna.pig', 'natural-privateer-pig-look', 0, {
+  'fauna.pig': entry('fauna.pig', 'sheet-fauna', 3, {
     heading: '4',
     status: 'stub',
     notes: 'Imported Pig_Look 32×32 anim sheet',
   }),
-  'fauna.fox': entry('fauna.fox', 'andhegames-creatures', 1, {
+  'fauna.fox': entry('fauna.fox', 'sheet-fauna', 4, {
     heading: '4',
     status: 'stub',
     notes: 'AndHeGames / gaymoo recolor',
   }),
-  'fauna.fish': entry('fauna.fish', 'davidcrybao-animals', 1, {
+  'fauna.fish': entry('fauna.fish', 'sheet-fauna', 5, {
     heading: '4',
     status: 'stub',
     notes: 'davidcrybao water critters',
   }),
-  'fauna.heron': entry('fauna.heron', 'davidcrybao-animals', 2, {
+  'fauna.heron': entry('fauna.heron', 'sheet-fauna', 6, {
     heading: '4',
     status: 'stub',
     notes: 'davidcrybao tall wader stand-in; dedicated heron TBD',
   }),
-  'fauna.rat': entry('fauna.rat', 'gaymoo-monochrome-critters', 1, {
+  'fauna.rat': entry('fauna.rat', 'sheet-fauna', 7, {
     heading: '4',
     status: 'stub',
     notes: 'gaymoo / sardonic grey-roguelike rat',

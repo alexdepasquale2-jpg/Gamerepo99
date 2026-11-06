@@ -9,7 +9,9 @@ import {
   DATA_FAUNA_IDS,
   DATA_ORE_IDS,
   DATA_RESOURCE_IDS,
+  BAKED_SHEETS,
   GRID,
+  SPRITE_SORT,
   headingToFrame4,
   headingToFrame8,
   listMissingKeys,
@@ -30,6 +32,19 @@ function readJsonIds(rel: string, listKey: string, idField = 'id'): string[] | n
   if (!Array.isArray(list)) return null;
   return list.map((row) => (row as Record<string, string>)[idField]).filter(Boolean);
 }
+
+describe('baked sheets + sprite sort', () => {
+  it('lists committed sprite sheet paths', () => {
+    expect(BAKED_SHEETS.ground).toContain('assets/sprites/sheet-ground.png');
+    expect(BAKED_SHEETS.buildings).toContain('sheet-buildings.png');
+    expect(BAKED_SHEETS.cliff).toContain('sheet-cliff.png');
+  });
+
+  it('locks bottom-center origin and foot sortY', () => {
+    expect(SPRITE_SORT.originX).toBe(0.5);
+    expect(SPRITE_SORT.originY).toBe(1.0);
+  });
+});
 
 describe('GRID ortho bridge', () => {
   it('maps Loom-locked square ortho q=x, r=y', () => {

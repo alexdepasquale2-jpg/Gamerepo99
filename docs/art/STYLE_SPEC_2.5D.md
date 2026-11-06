@@ -1,9 +1,10 @@
 # Hearthfall — 2.5D Style Spec (ART DIRECTION LOCK)
 
-**Status:** LOCKED · v2 depth bar  
+**Status:** LOCKED · v3 pack bar (ansimuz CC0)  
 **Hero mockups:**  
 - `docs/art/mockups/2.5d-world-target.png` (v1 lock)  
-- `docs/art/mockups/2.5d-world-target-v2.png` (**current depth target**)  
+- `docs/art/mockups/2.5d-world-target-v2.png` (v2 depth bar)
+- `docs/art/mockups/2.5d-world-target-v3.png` (**current — ansimuz 3/4 + clean grass + terrace**)  
 **Scratch / WIP:** `docs/art/mockups/scratch/` only  
 **Cell:** 32px logical (Kenney 16px CC0 ×2 nearest-neighbor)  
 **View:** Stardew-like **¾ top-down** · continuous HUGE world · camera follows player  
