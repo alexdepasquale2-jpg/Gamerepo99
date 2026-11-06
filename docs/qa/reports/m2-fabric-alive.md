@@ -1,45 +1,39 @@
 # M2 Fabric alive — generator quality report
 
-**Generated:** 2026-11-05 10:46 PM (America/New_York)  
+**Generated:** 2026-11-05 11:13 PM (America/New_York)  
 **Harness:** `tests/bots/fabric/` via `connectFabricApi()` → `src/sim/fabric.ts` (+ `fabric-bake.ts`)  
 **Status:** `OK` (live matrix; API present; all metric floors green)  
-**Candidate HEAD:** `faa9ff2` (`fix(sim): widen fabric-bake pool + within-world anti-dup`; alone corpus ~1184 + refuse text/id reuse inside one world)
+**Candidate HEAD:** `dfc2b62` (`test(sim): assert bake prefix/trail keys match score penalties`; stack includes Task E variance, bake novelty, prefix/trail within-world penalties, includeAnchors, settlements/routes/doctrines/facilities/biomes, dumpWorld, inspect-only createPlaySession)  
+**Skills cited:** `using-superpowers`, `verification-before-completion` (fresh `npm test` / `test:bots` / fabric suite / build / feel dump this turn — no claim from Forge self-run alone)
 
 ## Verdict
-**Call: NO-SHIP**
+**Call: SHIP**
 
 **Question:** Does the fabric make people (and worlds) feel unique and alive?  
-**Answer:** **People: mostly yes. Worlds: no.** Line vitality cleared the prior catchphrase fail. History / gap / kin are still Task E scaffolds — every seed is the same town shape with different dialogue pasted on. QUALITY_GATE: samey worlds = **NO-SHIP**. Caps unchanged.
+**Answer:** **Yes — enough to clear M2.** Worlds are no longer clone scaffolds. Within a town, people speak distinct exact lines with no shared 5-word prefixes or shared trailing clauses. Cross-seed blend-tail chorus remains audible (polish, not a scaffold fail). Caps unchanged. Playthrough-town matrix stays **M3** (`createPlaySession` is inspect-only; `connectBotSession` still null).
 
-### Weighing line vitality vs Task E scaffolds
-| Layer | At `faa9ff2` | Alive? |
-|-------|--------------|--------|
-| Baked lines (public path) | 96/96 unique texts across 12×8; stub-voice **0**; within-world exact dup **0**; `repeatLineRate` **0** (was 0.156 @ `079d119`) | **Yes** — real alone-corpus voice, anti-dup works |
-| Assertions | live `assertVoice` → `assertionViolationRate` **0** | Pass |
-| History | always `founding → kin → rift` (id seed digit only) | **Scaffold** |
-| Gap sites | always poles `{0, 0.5, 1}` (id seed suffix only) | **Scaffold** |
-| Kin | always **8** edges / chain-shaped connectedness that maxes the metric | **Scaffold** |
-| Fingerprints | still `wf-008231e5-8`, `wf-00b04796-8`, … — bake changed text, not world identity plumbing | Unchanged structure |
+### Weighing layers at `dfc2b62`
+| Layer | Evidence | Alive? |
+|-------|----------|--------|
+| World shape (Task E) | History beat tables vary (seed1×3 loss/founding/feud vs seed4×6 +departure/mill/drift vs seed7×5 +port/ferry); gaps not fixed poles (counts 3–5, gap01 spread); kin 7–13 with kin/friend/pen_pal mix; settle/route/doc/fac/biome differ (1: 3/1/2/1/1 vs 7: 4/2/3/3/4) | **Yes** — prior scaffold NO-SHIP cleared |
+| Fingerprints | Distinct family: `wf-9827ed64-8`, `wf-d54ae1d8-8`, `wf-a0d078dd-8`, `wf-84e4264e-8`, … (not old `wf-008231e5-8` clones) | **Yes** |
+| Within-world voice | sharedPref **0**, sharedTrail **0** on all 12 seeds after `75eed58`/`9a18e87` | **Yes** |
+| Cross-matrix lines | **94/96** unique exact; 2 cross-seed exact dups (seeds 11↔19, 13↔19) | Mostly yes |
+| Assertions / stubs | AVR **0**; stub-voice **0**; repeatLineRate **0** | Pass |
+| Cross-seed trail chorus | Top trails hit many seeds: "Grief isn't done with me yet." **10/12**; "I keep the notice." **9/12**; "That word already lives in my mouth." **8/12**; ink/hole/soft-room **7/12** | **Polish** — walking town→town you still hear the same endings |
 
-Automated floors are necessary and now all green. They are **not** sufficient: `worldDiversity` / `historyCoherence` / `kinConnectedness` / `gapSpread` score 1 on clone-shaped stubs. Feel pass still fails the written bar (“no two worlds feel the same”).
+Automated floors are necessary and green. Feel pass now agrees worlds are not the same town with different dialogue. Cross-seed clause deck is the remaining voice debt — **non-blocking for M2** (same optional polish called out at `faa9ff2`), still worth Forge shrinking the blend-tail pool before calling voice *done*.
 
 ### Concrete evidence (fresh `generateWorld`, peopleCount 8)
-| Seed | Fingerprint | Sample line texts | Notes |
-|------|-------------|-------------------|-------|
-| 1 | `wf-008231e5-8` | `Shame the organizer… Stay. I'll say the true version.` / `Set it mid-boat. I'll balance the rest.` / `Call me a bad father…` / two lines share prefix `One more seed. Tomorrow is a crop if we bother.` + different tails | 8/8 unique exact; mild prefix echo |
-| 4 | `wf-00518768-8` | `River's calm. I'm not…` / `Light the lamp. One more night. Family makes it heavier.` / `…I don't want that word. Please pick another.` / `It's`-adjacent grit + `Call me a washed-up tune…` | was worst seed @ 0.375 repeat; now **0** |
-| 7 | `wf-0072bf43-8` | `Give me the sack of almost-given-up…` / `You used my absence as a sermon.` / `It's crooked. I'm keeping it.` | short blunt lines sit next to blends — feels peopled |
-| 23 | `wf-006bb70f-8` | `Correct me properly or sit down…` / `Famous hands get watched. Keep them off my jars.` / `One more beat. Not hope—tempo…` | 8/8 unique; no prior quiet-house catchphrase stack |
+| Seed | Fingerprint | History / gap / kin | s/r/d/f/b | Sample lines |
+|------|-------------|---------------------|-----------|--------------|
+| 1 | `wf-9827ed64-8` | hist×3 (`hb_loss_quiet_birth`/`hb_founding_desk`/`hb_feud_shelf`); gap×5; kin×10 (3/6/1) | 3/1/2/1/1 | `Call me a washed-up tune…` / `I've heard that word at funerals.` / `Correct me properly or sit down…` |
+| 4 | `wf-d54ae1d8-8` | hist×6 (+departure/mill/notice/drift); gap×5; kin×12 (6/3/3) | 3/1/3/1/2 | `This isn't a tab you keep forever.` / `Seasons shame everyone. Replant.` / `Sure, I'm fine. Fine's a setting on the stove…` |
+| 7 | `wf-a0d078dd-8` | hist×5 (+port/ferry/notice); gap×4; kin×10 (4 pen_pal) | 4/2/3/3/4 | `I've got ash, not sparks.` / `Argue in triplicate or not at all.` / `Call me a failed season…` |
+| 23 | `wf-84e4264e-8` | hist×5; gap×4; kin×7 (friend/kin only) | 3/1/2/2/1 | `I've polished that guilt daily…` / `Give me the sack of almost-given-up…` / `Pass the weight. My shoulders remember crates…` |
 
-**Cross-matrix (12×8 = 96 lines):** **96 unique** texts (was 24 @ `079d119`). Exact-text reuse rate **0**. Stub hits **0**. Within-world exact-dup seeds: **none**.
-
-**Harsh feel caveats (not metric fails):** blend tails still recur as *phrases* across people (`Lean once. Then find your own feet.`, `Family makes it heavier.`, `Stay. I'll say the true version.`, `I've got heat left—use it carefully.`). Exact-line anti-dup is honest; clause-level chorus is still audible. Prefix twins inside one town (seed 1 “One more seed…”) are noticeable. Neither reopens the repeat-line cap; both keep the voice from feeling fully distinct person-to-person.
-
-**World structure still scaffold** (Task E not landed):
-- History: three events `founding → kin → rift` every seed.
-- Gap: always village/mid/city at `0 / 0.5 / 1`.
-- Kin: edge count 8 everywhere; connectedness metric maxes without varied topology.
-- Fingerprints match pre-bake hex family — identity plumbing unchanged by bake.
+**Within-world exact-dup seeds:** none. **Within-world prefix/trail twins:** none (0 shared groups on 12×8).  
+**Cross-seed exact dups (2):** `One more loaf…` (11,19); `Don't shout near the quiet…` (13,19).
 
 ## Live matrix (12 seeds)
 Seeds: `1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29` (`fabric-thresholds.json` — **unchanged**)
@@ -49,39 +43,45 @@ Seeds: `1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29` (`fabric-thresholds.json` — 
 | world_diversity | ≥ 0.9 | **1** | yes |
 | history_coherence | ≥ 0.95 | **1** | yes |
 | kin_connectedness | ≥ 0.5 | **1** | yes |
-| gap_spread | ≥ 0.55 | **1** | yes |
+| gap_spread | ≥ 0.55 | **0.947** | yes |
 | assertion_violation_rate | ≤ 0 | **0** | yes |
 | people_diversity | ≥ 0.75 | **1** | yes |
 | determinism | true | **true** | yes |
-| repeat_line_rate | ≤ 0.15 | **0** | **yes** (was fail 0.15625) |
+| repeat_line_rate | ≤ 0.15 | **0** | yes |
 
-Per-seed `repeatLineRate`: all **0**. Per-seed `assertionViolationRate`: all **0**. All 12 cells `OK`.
+All 12 cells `OK`. Per-seed AVR 0; per-seed repeatLineRate 0.
 
-## Automated truth (this turn)
+## Automated truth (this turn @ `dfc2b62`)
 | Command | Result |
 |---------|--------|
 | `npm run test:bots` | **54/54** pass |
 | `npx vite-node scripts/run-fabric-suite.mts` | status OK; aggregates above |
-| `npm test` | **139/139** pass |
+| `npm test` | **189/189** pass (includes Loom variety-audit read-only) |
 | `npm run build` | **OK** (`tsc --noEmit` + vite build) |
 
-## What would flip this to SHIP
-1. **Task E worldgen** — history / gap / kin (and settlements/doctrines/biomes/routes as planned) that actually vary by seed so two fingerprints are not the same town with different dialogue. Metric floors staying green on scaffolds does **not** count.
-2. Optional polish (not the kill): reduce blend-tail chorus / within-town prefix twins so people feel distinct beyond exact-text uniqueness.
-3. Probe re-run of this suite + feel pass answering the same alive question after E. Caps stay unless Forge/Niblet explicitly retune.
+## M3 deferral (explicit)
+- `createPlaySession` exported but **inspect-only** (`mode:'inspect'` → dump/snapshot). No-arg → null.
+- `connectBotSession` correctly null until BotSession-shaped play API exists.
+- Hybrid-C playthrough matrix **not** required to clear M2; awaits playable world.
 
 ## Caps
-`tests/bots/fabric/fabric-thresholds.json` **unchanged** this turn. Prior NO-SHIP product gap (tiny generic_blend deck → high repeat) is fixed at `faa9ff2`. Remaining product gap is Task E scaffolds, not harness shape. No harness / cap edit.
+`tests/bots/fabric/fabric-thresholds.json` **unchanged**. No harness retune.
 
-## Delta vs prior report (`079d119` / `3002ef5`)
-| | `079d119` | `faa9ff2` |
+## Delta vs prior report (`faa9ff2` / NO-SHIP)
+| | `faa9ff2` | `dfc2b62` |
 |-|-----------|-----------|
-| stub-voice | 0 | 0 |
-| AVR | 0 | 0 |
-| repeatLineRate | **0.15625 FAIL** | **0 PASS** |
-| unique / 96 | 24 | **96** |
-| history/gap/kin | scaffold | **still scaffold** |
-| Verdict | NO-SHIP (catchphrases) | **NO-SHIP (samey worlds; lines cleared)** |
+| stub-voice / AVR / repeat | 0 / 0 / 0 | 0 / 0 / 0 |
+| unique / 96 | 96 | **94** (2 cross-seed exact) |
+| history/gap/kin | scaffold | **seed-varying** |
+| fingerprints | `wf-008231e5-8` family | new distinct family |
+| within-world prefix/trail | mild echo | **0 shared** |
+| cross-seed trail chorus | noted | still loud (polish) |
+| Verdict | **NO-SHIP** (samey worlds) | **SHIP** |
+
+## Follow-ups (non-blocking)
+1. Forge: shrink cross-seed blend-tail deck (grief/notice/ink/hole/soft-room) so towns don't share endings.  
+2. Tidy sign-off on structure, then Niblet marks M2 Done / kicks M3.  
+3. Probe: M3 playthrough matrix when BotSession play API lands.
 
 ## Commands
 ```bash
