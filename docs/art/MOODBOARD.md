@@ -47,3 +47,6 @@ Sim emits events only. Render: spend = inward gold+cyan motes + light hit-stop/s
 | PenguinEmporium blue lizard | https://opengameart.org/content/blue-lizard-character-sprite-sheet |
 
 **Locked** with palette.
+
+## Quality mockup (2026-11-05)
+Hero reference: `docs/art/mockups/ashford-half-and-half.png` — ansimuz inn/house sprites + Kenney ground, soft warmth grade, window bloom, smoke, garden vs overgrowth, hollow↔grown bond + letter.

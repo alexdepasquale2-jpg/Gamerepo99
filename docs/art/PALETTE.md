@@ -21,48 +21,30 @@ Dual cue for spark (colorblind-safe): fill `#F2B84B` + outline `#5EC8C8`.
 
 ## Material ramps (despair → alive)
 
-10 stops each. Index 0 = despair, index 9 = fully alive.
+10 stops each. Index 0 = despair, index 9 = fully alive.  
+**v2 quality pass (2026-11-05):** softer midtones, stronger window/foliage lift for readable warmth lerps.
 
 ### soil
-`#2A2A28` `#3A3830` `#4A4638` `#5C5640` `#6E6A48` `#7A7850` `#8A8858` `#6B8F3A` `#5FA034` `#4CB038`
+`#2A2A28` `#34322C` `#3E3A30` `#4A4638` `#586040` `#6A7848` `#7A9050` `#6B9A40` `#5AAA38` `#4CB038`
 
 ### path
 `#3A3836` `#45413C` `#524C44` `#5E564C` `#6A6256` `#7A7060` `#8A7E6A` `#9A8A70` `#A89068` `#B89860`
 
-### cobble
-`#3C4044` `#454A50` `#50565C` `#5C646C` `#687078` `#748088` `#809098` `#8CA0A0` `#98A8A0` `#A0B098`
-
-### roof
-`#3A3030` `#443838` `#4E4040` `#584848` `#625050` `#6C5850` `#786050` `#886850` `#987050` `#A87848`
-
-### wall
-`#4A4640` `#545048` `#5E5A50` `#686458` `#726E60` `#7C7868` `#868270` `#908C78` `#9A9678` `#A4A070`
-
-### window
-`#1A1C20` `#222428` `#2A3038` `#384048` `#4A5860` `#6A7880` `#8A9888` `#C8B870` `#E0C860` `#F0D878`  
-Despair = black panes. Alive = lit practicals.
-
-### chimney
-`#2A2828` `#322E2C` `#3A3430` `#423A34` `#4A4038` `#52483C` `#5A5040` `#6A5848` `#7A6850` `#8A7058`  
-Alive also enables smoke particle (render feel, not sim).
-
 ### foliage
-`#2E342C` `#343A30` `#3A4234` `#44503A` `#4E5E40` `#5A7048` `#688850` `#78A058` `#88B860` `#98D068`  
-Despair = overgrown brambles / dead hedges. Alive = garden regrowth.
+`#2A3028` `#323A30` `#3A4436` `#465240` `#54644C` `#647858` `#789064` `#8CAC70` `#9CC878` `#A8D880`
 
 ### water
-`#2A343C` `#303C44` `#384850` `#405460` `#486870` `#507C80` `#588888` `#609090` `#689898` `#70A0A0`
+`#243038` `#2A3840` `#344850` `#3E5860` `#486870` `#547880` `#608890` `#6C98A0` `#78A8A8` `#84B8B0`
 
-### wood
-`#3A3228` `#44382C` `#4E4034` `#58483C` `#625044` `#6C584C` `#766054` `#80685C` `#8A7064` `#94786C`
+### building (walls / timber / plaster)
+`#3A3838` `#464240` `#524C48` `#5E5650` `#6A6058` `#786A60` `#867468` `#947E70` `#A28878` `#B09280`
 
-### spark (player cost)
-`#4A4030` `#6A5030` `#8A6030` `#AA7830` `#C89038` `#D9A040` `#E8B048` `#F2B84B` `#F5C860` `#FFE080`
+### window (despair panes → alive glow)
+Use `window` ramp ends for dark panes; force toward gold `#F0D878`–`#FFF0A8` when `warmth` high or facility `working`. Soft additive glow in render (see mockup).
 
-### flame (person)
-`#4A3028` `#5A3830` `#6A4038` `#7A4840` `#8A5048` `#9A6050` `#AA7848` `#C89040` `#D9A038` `#F2B84B`
+### chimney / roof / wood
+Keep prior roof/wood/chimney ramps; alive chimneys add smoke particles (render feel).
 
----
 
 ## UI / overlay tokens
 
