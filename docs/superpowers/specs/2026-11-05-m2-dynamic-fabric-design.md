@@ -4,6 +4,7 @@
 **Skill:** brainstorming  
 **Folds in:** `2026-11-05-baked-dynamism-design.md` (AI-like lines, no runtime AI)  
 **Milestone:** **M2 Fabric** (new numbering) — engine + worldgen; not yet a playable walk
+**Plan:** `plans/m2/index.md` (stub: `plans/2026-11-05-m2-fabric.md`)
 
 ---
 
@@ -64,7 +65,7 @@ Seed → settlements along **gap axis** (village↔city), doctrines, biomes, rou
 | `people/` | `people.json`, `archetypes.json`, `traits.json`, `kinship.json`, `proofs.json` |
 | `world/` | `towns.json`, `links.json`, `map.json`, `biomes.json`, `routes.json`, `road-encounters.json`, `history-tables.json` (new) |
 | `economy/` | `economy-resources.json`, `facilities.json`, `travel-trades.json`, `stash-sites.json`, `notoriety.json`, `patrons.json` |
-| `systems/` | `methods.json`, `wounds.json`, `marks.json`, `events.json`, `time.json`, `ripples.json`, `doctrines.json`, `player.json`, `scenarios.json` |
+| `systems/` | `methods.json`, `wounds.json`, `marks.json`, `events.json`, `time.json`, `ripples.json`, `doctrines.json`, `player.json`, `scenarios/` (one file per scenario + `index.json`) |
 | `hooks/` | existing split (unchanged category files) |
 
 ### Old → new mapping
@@ -94,7 +95,7 @@ Seed → settlements along **gap axis** (village↔city), doctrines, biomes, rou
 | `stash-sites.json` | `economy/stash-sites.json` |
 | `notoriety.json` | `economy/notoriety.json` |
 | `patrons.json` | `economy/patrons.json` |
-| `methods.json` … `player.json`, `scenarios.json`, `doctrines.json` | `systems/` |
+| `methods.json` … `player.json`, `scenarios/` (one file per scenario + `index.json`), `doctrines.json` | `systems/` |
 | `hooks/` | `hooks/` (stay) |
 
 **Validator:** today still flat paths. After Forge git-mv, `scripts/validate/load.mjs` must recurse subfolders (or explicit new REQUIRED paths). Plan Task 0 documents the switch.

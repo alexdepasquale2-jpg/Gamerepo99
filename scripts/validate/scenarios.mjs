@@ -1,7 +1,8 @@
 export function validateScenarios(data, ctx) {
   const { req, ids, people, methods, marks, hooks, archetypes } = ctx;
+  // Assembled by load.mjs from src/data/systems/scenarios/ (index.json + one file per scenario).
   const scRoot = data['scenarios.json'];
-  req(!!scRoot, 'scenarios.json missing');
+  req(!!scRoot, 'scenarios.json missing (systems/scenarios/)');
   if (!scRoot) return;
 
   const scenarios = scRoot.scenarios || [];

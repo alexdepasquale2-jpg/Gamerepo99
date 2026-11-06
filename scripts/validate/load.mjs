@@ -27,6 +27,19 @@ const loadHooksDir = (dataDir, errors) => {
   return { version: index.version, description: index.description, hooks };
 };
 
+/** Assemble systems/scenarios/*.json into the virtual scenarios.json blob. */
+const loadScenariosDir = (dataDir, errors) => {
+  const scenariosDir = join(dataDir, 'systems', 'scenarios');
+  const index = JSON.parse(readFileSync(join(scenariosDir, 'index.json'), 'utf8'));
+  const scenarios = [];
+  for (const name of index.files || []) {
+    const part = JSON.parse(readFileSync(join(scenariosDir, name), 'utf8'));
+    scenarios.push(part);
+  }
+  const { files: _files, ...meta } = index;
+  return { ...meta, scenarios };
+};
+
 function loadJsonFilesInDir(dir, files, errors) {
   for (const name of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
     const full = join(dir, name);
@@ -59,6 +72,20 @@ export const loadAll = (errors) => {
   }
   if (readdirSync(dataDir).includes('hooks.json')) {
     errors.push('hooks.json must be removed — use src/data/hooks/ split by category');
+  }
+  try {
+    files['scenarios.json'] = loadScenariosDir(dataDir, errors);
+  } catch (e) {
+    errors.push(`PARSE systems/scenarios/: ${e.message}`);
+  }
+  // Monolithic systems/scenarios.json must not coexist with the split dir
+  const systemsDir = join(dataDir, 'systems');
+  try {
+    if (readdirSync(systemsDir).includes('scenarios.json')) {
+      errors.push('systems/scenarios.json must be removed — use systems/scenarios/ one file per scenario');
+    }
+  } catch {
+    /* systems/ missing — other checks will catch */
   }
   return files;
 };

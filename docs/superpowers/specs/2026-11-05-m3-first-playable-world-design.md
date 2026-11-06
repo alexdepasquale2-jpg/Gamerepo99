@@ -3,7 +3,7 @@
 **Date:** 2026-11-05  
 **Skill:** brainstorming  
 **Depends on:** M2 Fabric (`2026-11-05-m2-dynamic-fabric-design.md`) shipped headless  
-**Plan:** `plans/2026-11-05-m3-first-playable-world.md`
+**Plan:** `plans/m3/index.md`
 
 ---
 

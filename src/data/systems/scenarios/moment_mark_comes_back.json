@@ -1,0 +1,79 @@
+{
+  "id": "moment_mark_comes_back",
+  "kind": "memorable_moment",
+  "title": "Mark comes back",
+  "seed": 17,
+  "archetypeId": "marrow",
+  "setup": {
+    "townId": "ashford",
+    "ensure": [
+      {
+        "personId": "harold_finch",
+        "flame": 30,
+        "marks": []
+      }
+    ]
+  },
+  "steps": [
+    {
+      "op": "approach",
+      "personId": "harold_finch"
+    },
+    {
+      "op": "method",
+      "methodId": "challenge",
+      "targetPersonId": "harold_finch"
+    },
+    {
+      "op": "record",
+      "as": "firstFlameDelta",
+      "path": "lastResolve.flameDelta"
+    },
+    {
+      "op": "record",
+      "as": "firstSparkCost",
+      "path": "lastResolve.sparkCost"
+    },
+    {
+      "op": "method",
+      "methodId": "carry_burden",
+      "targetPersonId": "harold_finch"
+    },
+    {
+      "op": "record",
+      "as": "secondFlameDelta",
+      "path": "lastResolve.flameDelta"
+    },
+    {
+      "op": "record",
+      "as": "secondSparkCost",
+      "path": "lastResolve.sparkCost"
+    }
+  ],
+  "expect": {
+    "people": {
+      "harold_finch": {
+        "hasMarkAny": [
+          "resentment",
+          "dependence",
+          "hollowness",
+          "genuine_growth",
+          "fragile_hope"
+        ]
+      }
+    },
+    "compare": {
+      "assert": "secondResolveDiffersFromFirst",
+      "paths": [
+        "firstFlameDelta",
+        "secondFlameDelta",
+        "firstSparkCost",
+        "secondSparkCost"
+      ],
+      "rule": "at_least_one_pair_differs"
+    }
+  },
+  "features": {
+    "bakedDynamismLines": false
+  }
+}

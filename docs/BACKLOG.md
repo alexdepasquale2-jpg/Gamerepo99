@@ -1,7 +1,7 @@
 # Hearthfall Design Backlog
 
 **Replan 2026-11-05:** M1 Foundation (done) → **M2 Fabric** → **M3 First playable world** → **M4 Living world** → **M5 Depth** → **M6 Feel & polish** → **M7 Hardening** → **M8 Showcase**.  
-**Active plans:** `plans/2026-11-05-m2-fabric.md` · `plans/2026-11-05-m3-first-playable-world.md`  
+**Active plans:** `plans/m2/index.md` · `plans/m3/index.md` (stubs at old dated paths)  
 **Active specs:** `specs/2026-11-05-m2-dynamic-fabric-design.md` · `specs/2026-11-05-m3-first-playable-world-design.md`  
 **Archived town-loop:** `docs/archive/plans/` · remapped specs under `docs/archive/specs/` + banners on live copies  
 **Priority:** quality / depth > schedule. Loom does not commit; Forge batches.

@@ -1,0 +1,57 @@
+{
+  "id": "moment_warm_loaf_cold_hill",
+  "kind": "memorable_moment",
+  "title": "Warm loaf, cold hill",
+  "seed": 7,
+  "archetypeId": "marrow",
+  "setup": {
+    "townId": "ashford",
+    "ensure": [
+      {
+        "personId": "marta_ellison",
+        "flame": 20,
+        "marks": []
+      },
+      {
+        "personId": "jonah_pike",
+        "burning": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "op": "approach",
+      "personId": "marta_ellison"
+    },
+    {
+      "op": "method",
+      "methodId": "carry_burden",
+      "targetPersonId": "marta_ellison"
+    },
+    {
+      "op": "advance",
+      "to": "dusk"
+    }
+  ],
+  "expect": {
+    "busContainsAny": [
+      "site.kindle",
+      "spark.spend"
+    ],
+    "people": {
+      "marta_ellison": {
+        "siteKindled": true,
+        "flameMin": 50
+      }
+    },
+    "player": {
+      "sparkDecreasedSinceStart": true
+    },
+    "hooksFiredAny": [
+      "cost_loneliness_tax"
+    ]
+  },
+  "features": {
+    "bakedDynamismLines": false
+  }
+}

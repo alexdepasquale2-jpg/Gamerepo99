@@ -10,7 +10,7 @@
 
 1. Forge exports `createPlaySession` matching Probe `BotSession` (+ scenario runner extras in `tests/scenarios/README.md`).  
 2. `npm run test:bots` live matrix runs (not API_PENDING).  
-3. Seeded scenarios in `src/data/scenarios.json` — ≥3 memorable moments green with `bakedDynamismLines: false`.  
+3. Seeded scenarios in `src/data/systems/scenarios/` — ≥3 memorable moments green with `bakedDynamismLines: false`.  
 4. Probe thresholds file: `tests/bots/thresholds.json`.
 
 ---

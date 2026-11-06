@@ -287,8 +287,8 @@ Validator fails if any archetype references an unknown hook/trait id.
 | Milestone | Focus | Spec / plan |
 |-----------|--------|-------------|
 | **M1 Foundation** | Done — tick, RNG, bus, tests, build | landed |
-| **M2 Fabric** | Prebaked dynamism + seeded worldgen (history, gap-axis settlements, kin/friend/pen-pal, doctrines, biomes, routes, facilities); headless determinism + coherence + dump | `specs/2026-11-05-m2-dynamic-fabric-design.md` · `plans/2026-11-05-m2-fabric.md` |
-| **M3 First playable world** | Walk generated overworld/settlements; methods/marks/spark/succession/travel/encounters/ripples; Probe quality gate; special bar on gen world | `specs/2026-11-05-m3-first-playable-world-design.md` · `plans/2026-11-05-m3-first-playable-world.md` |
+| **M2 Fabric** | Prebaked dynamism + seeded worldgen (history, gap-axis settlements, kin/friend/pen-pal, doctrines, biomes, routes, facilities); headless determinism + coherence + dump | `specs/2026-11-05-m2-dynamic-fabric-design.md` · `plans/m2/index.md` (stub: `plans/2026-11-05-m2-fabric.md`) |
+| **M3 First playable world** | Walk generated overworld/settlements; methods/marks/spark/succession/travel/encounters/ripples; Probe quality gate; special bar on gen world | `specs/2026-11-05-m3-first-playable-world-design.md` · `plans/m3/index.md` (stub: `plans/2026-11-05-m3-first-playable-world.md`) |
 | **M4 Living world** | Off-screen economy, caravans, doctrine competition/collapse, letters/rumors at scale | remap ex-M3/M4 systems |
 | **M5 Depth** | Hoarder/kingdom path, legacy NPCs, async world files, generational play | hoarder + async specs |
 | **M6 Feel & polish** | Art, juice, audio, menus, saves | Prism |

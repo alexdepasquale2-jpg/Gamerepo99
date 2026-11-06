@@ -1,0 +1,55 @@
+{
+  "id": "moment_nail_across_the_water",
+  "kind": "memorable_moment",
+  "title": "Nail across the water",
+  "seed": 21,
+  "archetypeId": "marrow",
+  "setup": {
+    "townId": "ashford",
+    "ensure": [
+      {
+        "personId": "elias_boone",
+        "flame": 25,
+        "marks": []
+      }
+    ]
+  },
+  "steps": [
+    {
+      "op": "approach",
+      "personId": "elias_boone"
+    },
+    {
+      "op": "method",
+      "methodId": "challenge",
+      "targetPersonId": "elias_boone"
+    },
+    {
+      "op": "advance",
+      "to": "dawn"
+    }
+  ],
+  "expect": {
+    "busContainsAny": [
+      "packet.emit",
+      "site.kindle"
+    ],
+    "people": {
+      "elias_boone": {
+        "hasMarkAny": [
+          "genuine_growth",
+          "fragile_hope"
+        ]
+      }
+    },
+    "packets": {
+      "inboxNonEmptyForPersonAny": [
+        "tom_briggs",
+        "priya_sen"
+      ]
+    }
+  },
+  "features": {
+    "bakedDynamismLines": false
+  }
+}
