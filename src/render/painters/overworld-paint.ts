@@ -338,7 +338,7 @@ export function paintTree(
   const foot = tileFootWorld(q, r);
   addSoftShadow(host, container, foot.x, foot.y, 1.1);
   // Integer uniform scale only (same x/y) — never setDisplaySize stretch.
-  // Prefer remapped ansimuz Trees & Bushes (town olive palette) at scale 1 — authored large.
+  // Prefer remapped+flattened ansimuz Trees & Bushes (town olive flat bands) at scale 1 — authored large.
   // Fallback: town-pack pines from sheet-buildings at artScale.
   if (host.textures.exists(TREES_TEX)) {
     const tex = host.textures.get(TREES_TEX);

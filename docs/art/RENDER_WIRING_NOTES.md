@@ -82,7 +82,7 @@ Single source of truth: `FEEL.worldScale` in `src/render/feel.ts`.
 | `poissonKeepA/B/C` | 22 / 14 / 10 | ~half prior density — readable, not carpeted | Min gap between bushes/rocks/logs/stumps/sign/hay/flower patches |
 
 - Hero / villagers: `setScale(artScale)` → 16×2 = **32px ≈ 1 tile ≈ 1.1–1.3× inn door**, clearly shorter than a house.
-- Trees: remapped ansimuz Trees & Bushes → town olive palette (CC0); never stretch (`setScale(s)` with identical x/y; no non-uniform `setDisplaySize`). Prefer ansimuz **Trees & Bushes** CC0 (`tree-oak`/`tree-pine`/`tree-fir`) at **scale 1** (already authored ~building height); fuller via **clusters**. Skinny buildings-sheet crops only as fallback at `artScale`.
+- Trees: remapped ansimuz Trees & Bushes → town olive palette + flattened canopy (4 flat bands: light/mid/shadow/outline via `scripts/art/flatten-trees-canopy.py`) (CC0); never stretch (`setScale(s)` with identical x/y; no non-uniform `setDisplaySize`). Prefer ansimuz **Trees & Bushes** CC0 (`tree-oak`/`tree-pine`/`tree-fir`) at **scale 1** (already authored ~building height); fuller via **clusters**. Skinny buildings-sheet crops only as fallback at `artScale`.
 - Hero vs door: ~**1.2–1.3×** inn door, clearly under house height (artScale 2 → 32px).
 - Buildings / settlement stamps: keep tile-based `setDisplaySize` so stamp density matches 16×2 characters (v4 char:building height ≈ 1:4.5).
 - Camera `setRoundPixels(true)` + `camZoom: 1`. Integer scales only.
