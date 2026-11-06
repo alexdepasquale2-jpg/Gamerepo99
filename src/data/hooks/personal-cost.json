@@ -94,6 +94,63 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cost_town_despair",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "townDespairAbove": 0.2
+      },
+      "effects": [
+        {
+          "id": "fx_despair_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "despair",
+            "doctrine"
+          ],
+          "scaleBy": "town.despair"
+        }
+      ]
+    },
+    {
+      "id": "on_expose_doctrine_gap",
+      "kind": "personal_cost",
+      "trigger": "on_doctrine_collapse",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_collapse_despair",
+          "target": "town.despair",
+          "op": "add",
+          "value": 0.2,
+          "tags": [
+            "collapse",
+            "doctrine"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_road_labor",
+      "kind": "personal_cost",
+      "trigger": "on_road_work",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_road_labor",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "exhaust",
+            "road"
+          ]
+        }
+      ]
     }
   ]
 }

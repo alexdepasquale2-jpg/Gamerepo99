@@ -105,7 +105,9 @@
       "tellGivenUp": "Bell rope untouched; chalk tin closed like a held breath.",
       "linesRef": "lines.json#people.ruth_calder",
       "tags": [
-        "civic_voice"
+        "civic_voice",
+        "doctrine_voice",
+        "leader"
       ],
       "driftHint": "They speak for counties that never sat in these desks. Representation without recognition is just noise.",
       "cityKinHint": "Leon writes from the strand. The city inspectors write from nowhere I can teach."
@@ -279,7 +281,9 @@
       "tellGivenUp": "Notice board bare wood; he stands beside it like a fired guard.",
       "linesRef": "lines.json#people.leon_march",
       "tags": [
-        "civic_voice"
+        "civic_voice",
+        "doctrine_voice",
+        "leader"
       ],
       "driftHint": "I posted work for hands the city stopped counting as real.",
       "cityKinHint": "Ruth still rings a bell I can hear on paper. The Reach does not."
@@ -309,7 +313,9 @@
       "tellGivenUp": "Unanswered letters from Clara stacked under a glass paperweight.",
       "tags": [
         "city",
-        "abstract"
+        "abstract",
+        "doctrine_voice",
+        "leader"
       ],
       "linesRef": "lines.json#people.mira_whitby",
       "driftHint": "We used to rise together. Then our days stopped rhyming.",

@@ -39,7 +39,8 @@
       },
       "gapAxis": 0.1,
       "connection": 0.3,
-      "standing": 0.2
+      "standing": 0.2,
+      "despair": 0.05
     },
     {
       "id": "ashford",
@@ -189,7 +190,17 @@
       },
       "gapAxis": 0.15,
       "connection": 0.4,
-      "standing": 0.45
+      "standing": 0.45,
+      "doctrineId": "doctrine_mill_bread",
+      "despair": 0.15,
+      "stock": {
+        "food_grain": 12,
+        "timber": 6,
+        "fuel_cord": 4,
+        "ore_iron": 0,
+        "wool": 2
+      },
+      "economyOptIn": false
     },
     {
       "id": "lowmere",
@@ -307,7 +318,17 @@
       },
       "gapAxis": 0.25,
       "connection": 0.35,
-      "standing": 0.35
+      "standing": 0.35,
+      "doctrineId": "doctrine_strand_crossings",
+      "despair": 0.15,
+      "stock": {
+        "food_grain": 8,
+        "timber": 4,
+        "fuel_cord": 3,
+        "ore_iron": 0,
+        "wool": 3
+      },
+      "economyOptIn": false
     },
     {
       "id": "city_reach",
@@ -343,7 +364,17 @@
           ],
           "approachTags": []
         }
-      ]
+      ],
+      "doctrineId": "doctrine_reach_progress",
+      "despair": 0.15,
+      "stock": {
+        "food_grain": 20,
+        "timber": 10,
+        "fuel_cord": 5,
+        "ore_iron": 15,
+        "wool": 8
+      },
+      "economyOptIn": false
     }
   ]
 }
