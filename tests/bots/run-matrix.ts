@@ -71,7 +71,7 @@ export function runOne(opts: {
       break;
     }
     const actions = session.listActions();
-    const pick = policy.pick(actions, rng);
+    const pick = policy.pick(actions, rng, { spark: snap.spark });
     if (pick) session.act(pick);
     session.tick();
     const after = session.snapshot();
