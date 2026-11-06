@@ -73,6 +73,24 @@ describe('fabric facade baked lines (Probe seam)', () => {
     }
   });
 
+  it('within one world, baked lines are unique (anti-dup clears Probe repeatLineRate)', () => {
+    const seeds = [1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29];
+    let dupes = 0;
+    let total = 0;
+    for (const seed of seeds) {
+      const w = generateWorld({ seed, peopleCount: 8 });
+      const lines = w.lines ?? w.people.flatMap((p) => p.lines ?? []);
+      total += lines.length;
+      const seen = new Set<string>();
+      for (const line of lines) {
+        if (seen.has(line.text)) dupes++;
+        else seen.add(line.text);
+      }
+      expect(new Set(lines.map((l) => l.text)).size).toBe(lines.length);
+    }
+    expect(dupes / total).toBeLessThanOrEqual(0.15);
+  });
+
   it('gen/world stub path may still emit stub-voice (facade is the public seam)', () => {
     const w = generateWorldGen({ seed: 42 });
     const text = w.people[0]?.lines?.[0]?.text ?? '';
