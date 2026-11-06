@@ -61,6 +61,10 @@ export type { PlayMetrics, PlayLastResolve } from './play-session-types';
 
 /** Map TileSource seam (stamp now; native later). */
 export { fingerprintHex } from './map/fingerprint';
+export { createStampRasterSource } from './map/stamp-raster';
+export { layoutWorld } from './map/world-layout';
+export type { WorldLayout, LayoutSettlement, LayoutRoute } from './map/world-layout';
+export { CHUNK_SIZE, TILE_PX, TILES_PER_MINUTE, WALK_MINUTES_SPINE } from './map/constants';
 export type { TileSource } from './map/tile-source';
 export type {
   ChunkCoord,
