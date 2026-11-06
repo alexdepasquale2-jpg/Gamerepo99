@@ -6,19 +6,22 @@ import {
   DATA_CARAVAN_ROLES,
   DATA_FACILITY_KINDS,
   DATA_ORE_IDS,
+  DATA_RESOURCE_IDS,
   GRID,
   headingToFrame4,
   headingToFrame8,
   listMissingKeys,
+  listPlaceholderKeys,
   lookupAsset,
   OVERWORLD_ASSETS,
+  PROPOSED_FACILITY_KINDS,
   resolveHeadingFrame,
 } from '../../src/render/asset-manifest';
 
 describe('GRID ortho bridge', () => {
-  it('maps q,r to x,y and flags pending Loom lock', () => {
+  it('maps Loom-locked square ortho q=x, r=y', () => {
     expect(GRID.kind).toBe('square_ortho');
-    expect(GRID.pendingLoomLock).toBe(true);
+    expect(GRID.pendingLoomLock).toBe(false);
     expect(GRID.qrToCell(3, 5)).toEqual({ x: 3, y: 5 });
   });
 });
@@ -75,6 +78,28 @@ describe('data id coverage', () => {
     }
   });
 
+  it('covers Loom-locked resource ids as cargo/ore', () => {
+    expect([...DATA_RESOURCE_IDS]).toEqual([
+      'food_grain',
+      'timber',
+      'ore_iron',
+      'wool',
+      'fuel_cord',
+      'coin',
+    ]);
+    expect(lookupAsset('cargo.food_grain')).toBeTruthy();
+    expect(lookupAsset('cargo.timber')).toBeTruthy();
+    expect(lookupAsset('ore.ore_iron')).toBeTruthy();
+    expect(lookupAsset('cargo.wool')).toBeTruthy();
+    expect(lookupAsset('cargo.fuel_cord')).toBeTruthy();
+    expect(lookupAsset('cargo.coin')).toBeTruthy();
+  });
+
+  it('keeps farm as proposed, not in OVERWORLD_ASSETS', () => {
+    expect(PROPOSED_FACILITY_KINDS.farm.cropResourceId).toBe('food_grain');
+    expect(OVERWORLD_ASSETS['facility.farm.idle']).toBeUndefined();
+  });
+
   it('resolves aliases', () => {
     expect(lookupAsset('caravan.guild')?.key).toBe('caravan.caravaner');
     expect(lookupAsset('caravan.ferry')?.key).toBe('caravan.ferryman');
@@ -82,12 +107,18 @@ describe('data id coverage', () => {
 });
 
 describe('gaps', () => {
-  it('lists farm + fauna as missing', () => {
+  it('lists only art-import gaps as missing (not farm/fauna)', () => {
     const missing = listMissingKeys();
-    expect(missing).toContain('facility.farm.idle');
-    expect(missing).toContain('fauna.rabbit');
+    expect(missing).not.toContain('facility.farm.idle');
+    expect(missing).not.toContain('fauna.rabbit');
     expect(missing).toContain('caravan.mount');
     expect(missing).toContain('caravan.ferryman');
+  });
+
+  it('lists fauna as placeholders', () => {
+    const ph = listPlaceholderKeys();
+    expect(ph).toContain('fauna.rabbit');
+    expect(ph).toContain('fauna.deer');
   });
 });
 
@@ -99,6 +130,7 @@ describe('JSON mirror', () => {
     );
     const doc = JSON.parse(raw) as { assets: Record<string, unknown>; grid: { kind: string } };
     expect(doc.grid.kind).toBe('square_ortho');
+    expect((doc.grid as { pendingLoomLock: boolean }).pendingLoomLock).toBe(false);
     for (const id of DATA_BIOME_IDS) {
       expect(doc.assets[`biome.${id}`]).toBeTruthy();
     }

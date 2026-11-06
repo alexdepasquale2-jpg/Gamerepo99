@@ -1,31 +1,59 @@
 {
-  "version": 1,
   "grid": {
     "kind": "square_ortho",
     "q": "x",
     "r": "y",
-    "pendingLoomLock": true
+    "pendingLoomLock": false,
+    "note": "Loom locked square ortho: q=x (column), r=y (row)."
   },
-  "heading": {
-    "unit": "deg_cw_from_north",
-    "eightWayOrder": [
-      "N",
-      "NE",
-      "E",
-      "SE",
-      "S",
-      "SW",
-      "W",
-      "NW"
+  "dataIds": {
+    "biomes": [
+      "river_margin",
+      "ash_wood",
+      "mill_heath",
+      "glare_approach"
     ],
-    "fourWayOrder": [
-      "N",
-      "E",
-      "S",
-      "W"
+    "facilities": [
+      "mill",
+      "lumber_camp",
+      "waystation",
+      "mine"
     ],
-    "index8": "((round(deg/45)%8)+8)%8",
-    "index4": "((round(deg/90)%4)+4)%4"
+    "resources": [
+      "food_grain",
+      "timber",
+      "ore_iron",
+      "wool",
+      "fuel_cord",
+      "coin"
+    ],
+    "ores": [
+      "ore_iron"
+    ],
+    "caravanRoles": [
+      "carter",
+      "caravaner",
+      "ferryman",
+      "mount",
+      "guide",
+      "courier",
+      "smuggler",
+      "gouger",
+      "scammer",
+      "highwayman"
+    ]
+  },
+  "proposed": {
+    "farm": {
+      "states": [
+        "idle",
+        "working",
+        "abandoned"
+      ],
+      "sheet": "vendor-josehzz-crops",
+      "notes": "Not a data type. Crop art maps to resource/cargo food_grain. CC0: josehzz Farming crops 16x16.",
+      "cropResourceId": "food_grain"
+    }
   },
   "assets": {
     "biome.river_margin": {
@@ -35,7 +63,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "Tiny Town water/grass"
+      "notes": "Tiny Town grass/cobble + reed props"
     },
     "biome.ash_wood": {
       "key": "biome.ash_wood",
@@ -44,7 +72,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "trees"
+      "notes": "Tiny Town trees 15-16, 27-28"
     },
     "biome.mill_heath": {
       "key": "biome.mill_heath",
@@ -53,7 +81,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "heath"
+      "notes": "open heath + autumn trees"
     },
     "biome.glare_approach": {
       "key": "biome.glare_approach",
@@ -62,7 +90,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "ready",
-      "notes": "verge"
+      "notes": "dirt 39-42 + stone verge"
     },
     "road.track": {
       "key": "road.track",
@@ -70,7 +98,8 @@
       "frame": 0,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "1 cell dirt"
     },
     "road.road": {
       "key": "road.road",
@@ -78,7 +107,8 @@
       "frame": 1,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "2 cell dirt+cobble"
     },
     "road.highway": {
       "key": "road.highway",
@@ -86,7 +116,8 @@
       "frame": 2,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "3 cell cobble"
     },
     "facility.mill.idle": {
       "key": "facility.mill.idle",
@@ -94,7 +125,8 @@
       "frame": 0,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "cold panes"
     },
     "facility.mill.working": {
       "key": "facility.mill.working",
@@ -102,7 +134,8 @@
       "frame": 1,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "lit windows + render smoke"
     },
     "facility.mill.abandoned": {
       "key": "facility.mill.abandoned",
@@ -110,7 +143,8 @@
       "frame": 2,
       "variant": "swap",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
     },
     "facility.lumber_camp.idle": {
       "key": "facility.lumber_camp.idle",
@@ -118,7 +152,8 @@
       "frame": 3,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "cold panes"
     },
     "facility.lumber_camp.working": {
       "key": "facility.lumber_camp.working",
@@ -126,7 +161,8 @@
       "frame": 4,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "lit windows + render smoke"
     },
     "facility.lumber_camp.abandoned": {
       "key": "facility.lumber_camp.abandoned",
@@ -134,7 +170,8 @@
       "frame": 5,
       "variant": "swap",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
     },
     "facility.waystation.idle": {
       "key": "facility.waystation.idle",
@@ -142,7 +179,8 @@
       "frame": 6,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "cold panes"
     },
     "facility.waystation.working": {
       "key": "facility.waystation.working",
@@ -150,7 +188,8 @@
       "frame": 7,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "lit windows + render smoke"
     },
     "facility.waystation.abandoned": {
       "key": "facility.waystation.abandoned",
@@ -158,7 +197,8 @@
       "frame": 8,
       "variant": "swap",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
     },
     "facility.mine.idle": {
       "key": "facility.mine.idle",
@@ -166,7 +206,8 @@
       "frame": 9,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "cold panes"
     },
     "facility.mine.working": {
       "key": "facility.mine.working",
@@ -174,7 +215,8 @@
       "frame": 10,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "lit windows + render smoke"
     },
     "facility.mine.abandoned": {
       "key": "facility.mine.abandoned",
@@ -182,31 +224,8 @@
       "frame": 11,
       "variant": "swap",
       "heading": "none",
-      "status": "ready"
-    },
-    "facility.farm.idle": {
-      "key": "facility.farm.idle",
-      "sheet": "kit-facilities",
-      "frame": 12,
-      "variant": "palette",
-      "heading": "none",
-      "status": "missing"
-    },
-    "facility.farm.working": {
-      "key": "facility.farm.working",
-      "sheet": "kit-facilities",
-      "frame": 13,
-      "variant": "palette",
-      "heading": "none",
-      "status": "missing"
-    },
-    "facility.farm.abandoned": {
-      "key": "facility.farm.abandoned",
-      "sheet": "kit-facilities",
-      "frame": 14,
-      "variant": "palette",
-      "heading": "none",
-      "status": "missing"
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
     },
     "ore.ore_iron": {
       "key": "ore.ore_iron",
@@ -214,7 +233,8 @@
       "frame": 0,
       "variant": "palette",
       "heading": "none",
-      "status": "stub"
+      "status": "stub",
+      "notes": "Import Kenney Caves & Dungeons / Jetrel / DCSS"
     },
     "cargo.food_grain": {
       "key": "cargo.food_grain",
@@ -222,7 +242,8 @@
       "frame": 0,
       "variant": "palette",
       "heading": "none",
-      "status": "stub"
+      "status": "stub",
+      "notes": "Crop visuals map here (no separate crop ids). CC0: josehzz Farming crops 16x16."
     },
     "cargo.timber": {
       "key": "cargo.timber",
@@ -230,7 +251,8 @@
       "frame": 93,
       "variant": "palette",
       "heading": "none",
-      "status": "ready"
+      "status": "ready",
+      "notes": "Tiny Town log tile_0093"
     },
     "cargo.wool": {
       "key": "cargo.wool",
@@ -262,7 +284,8 @@
       "frame": 57,
       "variant": "palette",
       "heading": "8",
-      "status": "ready"
+      "status": "ready",
+      "notes": "cart tile; walker overlay uses Tiny Dungeon"
     },
     "caravan.caravaner": {
       "key": "caravan.caravaner",
@@ -270,7 +293,17 @@
       "frame": 57,
       "variant": "palette",
       "heading": "8",
-      "status": "stub"
+      "status": "stub",
+      "notes": "multi-cart wagon stub"
+    },
+    "caravan.guild": {
+      "key": "caravan.guild",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.caravaner"
     },
     "caravan.ferryman": {
       "key": "caravan.ferryman",
@@ -278,7 +311,17 @@
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "missing",
+      "notes": "Need Roguelike water/boat import"
+    },
+    "caravan.ferry": {
+      "key": "caravan.ferry",
+      "sheet": "vendor-roguelike-boat",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.ferryman"
     },
     "caravan.mount": {
       "key": "caravan.mount",
@@ -286,7 +329,8 @@
       "frame": 0,
       "variant": "palette",
       "heading": "8",
-      "status": "missing"
+      "status": "missing",
+      "notes": "CC0 animal pack (davidcrybao / critters)"
     },
     "caravan.guide": {
       "key": "caravan.guide",
@@ -294,7 +338,8 @@
       "frame": 100,
       "variant": "palette",
       "heading": "4",
-      "status": "ready"
+      "status": "ready",
+      "notes": "Elder stub; replace with 8-way walk sheet"
     },
     "caravan.courier": {
       "key": "caravan.courier",
@@ -310,7 +355,8 @@
       "frame": 87,
       "variant": "palette",
       "heading": "4",
-      "status": "ready"
+      "status": "ready",
+      "notes": "Rogue recolor"
     },
     "caravan.gouger": {
       "key": "caravan.gouger",
@@ -352,71 +398,54 @@
       "heading": "4",
       "status": "ready"
     },
-    "caravan.guild": {
-      "key": "caravan.guild",
-      "sheet": "kenney-tiny-town",
-      "frame": 57,
-      "variant": "palette",
-      "heading": "none",
-      "status": "alias",
-      "aliasOf": "caravan.caravaner"
-    },
-    "caravan.ferry": {
-      "key": "caravan.ferry",
-      "sheet": "vendor-roguelike-boat",
-      "frame": 0,
-      "variant": "palette",
-      "heading": "none",
-      "status": "alias",
-      "aliasOf": "caravan.ferryman"
-    },
     "fauna.rabbit": {
       "key": "fauna.rabbit",
-      "sheet": "vendor-fauna",
+      "sheet": "vendor-grey-roguelike",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder",
+      "notes": "Placeholder until Loom adds fauna table"
     },
     "fauna.deer": {
       "key": "fauna.deer",
-      "sheet": "vendor-fauna",
+      "sheet": "vendor-andhegames",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder"
     },
     "fauna.bird": {
       "key": "fauna.bird",
-      "sheet": "vendor-fauna",
+      "sheet": "vendor-davidcrybao",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder"
     },
     "fauna.pig": {
       "key": "fauna.pig",
-      "sheet": "vendor-fauna",
+      "sheet": "vendor-pig-look",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder"
     },
     "fauna.fox": {
       "key": "fauna.fox",
-      "sheet": "vendor-fauna",
-      "frame": 0,
+      "sheet": "vendor-andhegames",
+      "frame": 1,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder"
     },
     "fauna.fish": {
       "key": "fauna.fish",
-      "sheet": "vendor-fauna",
-      "frame": 0,
+      "sheet": "vendor-davidcrybao",
+      "frame": 1,
       "variant": "palette",
       "heading": "4",
-      "status": "missing"
+      "status": "placeholder"
     }
   }
 }
