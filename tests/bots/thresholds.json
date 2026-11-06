@@ -1,0 +1,7 @@
+{
+  "stuckTicks": 10,
+  "boredomTicks": 10,
+  "methodDominanceCap": 0.65,
+  "defaultSeeds": [1, 2, 3],
+  "maxTicksPerRun": 200
+}
