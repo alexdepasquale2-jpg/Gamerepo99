@@ -15,8 +15,9 @@ import { FEEL } from './feel';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
 import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
+import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
+import { heroWalkAnim } from './painters/overworld-paint';
 
-const PLAYER = 0xf2b84b;
 const CHUNK_MARGIN = 1;
 const NEAR_TOWN_PX = TILE_PX * 2.5;
 
@@ -25,7 +26,8 @@ export class OverworldScene extends Phaser.Scene {
   private source!: TileSource;
   private layout!: WorldLayout;
   private layer!: ChunkLayer;
-  private player!: Phaser.GameObjects.Rectangle;
+  private player!: Phaser.GameObjects.Sprite;
+  private playerShadow?: Phaser.GameObjects.Image;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: {
     W: Phaser.Input.Keyboard.Key;
@@ -99,6 +101,13 @@ export class OverworldScene extends Phaser.Scene {
       this.player.x += step.dx;
       this.player.y += step.dy;
       applySpriteSort(this.player);
+      if (this.playerShadow) {
+        this.playerShadow.setPosition(this.player.x, this.player.y - 2);
+        this.playerShadow.setDepth(this.player.y - 0.5);
+      }
+      this.playHeroWalk(dx, dy);
+    } else if (this.player.anims?.currentAnim?.key?.startsWith('hero-walk')) {
+      this.player.play('hero-idle-down', true);
     }
     this.syncChunks(false);
   }
@@ -121,10 +130,16 @@ export class OverworldScene extends Phaser.Scene {
     const foot = start
       ? tileFootWorld(start.q, start.r + 1)
       : { x: TILE_PX / 2, y: TILE_PX };
-    this.player = this.add
-      .rectangle(foot.x, foot.y, TILE_PX * 0.55, TILE_PX * 0.8, PLAYER)
-      .setStrokeStyle(2, 0x5ec8c8, 1);
+    // Exact single ansimuz hero frame (16×16 sheet), scaled ×2; soft shadow sibling.
+    if (this.textures.exists(SHADOW_TEX)) {
+      this.playerShadow = this.add.image(foot.x, foot.y - 2, SHADOW_TEX);
+      this.playerShadow.setDepth(foot.y - 0.5);
+    }
+    const frame = this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7') ? '7' : undefined;
+    this.player = this.add.sprite(foot.x, foot.y, HERO_TEX, frame);
+    this.player.setScale(2);
     applySpriteSort(this.player);
+    if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down');
     const cam = this.cameras.main;
     cam.setRoundPixels(true);
     cam.startFollow(
@@ -193,6 +208,15 @@ export class OverworldScene extends Phaser.Scene {
     });
     const hud = this.registry.get('hud') as { setTown?: (id: string) => void } | undefined;
     hud?.setTown?.(town.id);
+  }
+
+
+  private playHeroWalk(dx: number, dy: number): void {
+    const { key, flipX } = heroWalkAnim(dx, dy);
+    this.player.setFlipX(flipX);
+    if (this.anims.exists(key) && this.player.anims.currentAnim?.key !== key) {
+      this.player.play(key, true);
+    }
   }
 
   private nearestTown(): { id: string; q: number; r: number } | null {

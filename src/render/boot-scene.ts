@@ -1,5 +1,11 @@
 import Phaser from 'phaser';
-import { BAKED_SHEETS } from './asset-manifest';
+import {
+  createHeroAnims,
+  generateCalmGround,
+  generateSoftShadow,
+  preloadOverworldSheets,
+  registerSheetFrames,
+} from './sheet-frames';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -7,17 +13,14 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    for (const [id, path] of Object.entries(BAKED_SHEETS)) {
-      if (typeof path === 'string' && path.length > 0) {
-        this.load.image(id, path);
-        // Also under basename so chunk-layer sheet lookups resolve.
-        const base = path.split('/').pop()?.replace(/\.png$/, '');
-        if (base && base !== id) this.load.image(base, path);
-      }
-    }
+    preloadOverworldSheets(this.load);
   }
 
   create(): void {
+    registerSheetFrames(this.textures);
+    generateSoftShadow(this);
+    generateCalmGround(this);
+    createHeroAnims(this.anims);
     this.scene.start('overworld');
   }
 }
