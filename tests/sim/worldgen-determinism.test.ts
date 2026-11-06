@@ -105,6 +105,37 @@ describe('worldgen cross-seed structural diversity (Probe NO-SHIP killers)', () 
   });
 });
 
+
+describe('worldgen includeAnchors merge', () => {
+  it('includes authored ashford anchors when includeAnchors true', () => {
+    const w = generateWorld({ seed: 7, peopleCount: 3, includeAnchors: true });
+    const byId = Object.fromEntries(w.people.map((p) => [p.id, p]));
+    expect(byId.marta_ellison?.anchor || byId.marta_ellison?.authored).toBeTruthy();
+    expect(byId.jonah_pike?.anchor || byId.jonah_pike?.authored).toBeTruthy();
+    expect(byId.harold_finch?.anchor || byId.harold_finch?.authored).toBeTruthy();
+    expect(byId.ruth_calder?.anchor || byId.ruth_calder?.authored).toBeTruthy();
+    expect(byId.elias_boone?.anchor || byId.elias_boone?.authored).toBeTruthy();
+    expect(byId.clara_whitby?.anchor || byId.clara_whitby?.authored).toBeTruthy();
+  });
+
+  it('same seed + includeAnchors is deterministic', () => {
+    const a = generateWorld({ seed: 7, peopleCount: 3, includeAnchors: true });
+    const b = generateWorld({ seed: 7, peopleCount: 3, includeAnchors: true });
+    expect(a).toEqual(b);
+    expect(a.fingerprint).toBe(b.fingerprint);
+  });
+
+  it('omitted / false includeAnchors keeps procedural-only people for Probe', () => {
+    const omitted = generateWorld({ seed: 42, peopleCount: 8 });
+    const falsy = generateWorld({ seed: 42, peopleCount: 8, includeAnchors: false });
+    expect(omitted.people.map((p) => p.id)).toEqual(falsy.people.map((p) => p.id));
+    expect(omitted.people.every((p) => p.id.startsWith('gen_p_'))).toBe(true);
+    expect(omitted.people.some((p) => p.id === 'marta_ellison')).toBe(false);
+    expect(omitted.fingerprint).toBe(falsy.fingerprint);
+    expect(omitted.people).toHaveLength(8);
+  });
+});
+
 describe('worldgen Probe structural floors', () => {
   for (const seed of [7, 42, 1, 99]) {
     it(`seed ${seed} keeps historyCoherence / kinConnectedness / gapSpread above floors`, () => {

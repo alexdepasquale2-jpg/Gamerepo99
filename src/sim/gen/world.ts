@@ -6,6 +6,7 @@ import { loadHistoryTables } from './load-history';
 import { generateHistoryEvents, historyChainCoherent } from './history-gen';
 import { generateGapSites } from './gap-sites';
 import { generateKinEdges } from './kin-gen';
+import { loadAuthoredAnchors } from './load-anchors';
 
 export type KinEdge = { from: string; to: string; kind?: string };
 export type GapSite = { id: string; gap01: number };
@@ -36,7 +37,7 @@ export type FabricWorld = {
 export type GenerateWorldOpts = {
   seed: number;
   peopleCount?: number;
-  /** TODO(Task E+/F): merge authored Ashford people when true. */
+  /** Merge authored people.json anchors (Ashford cast) into people list. */
   includeAnchors?: boolean;
 };
 
@@ -79,12 +80,16 @@ function worldFingerprint(
 
 /**
  * Deterministic world: ≥3 people, seed-varying history/gap/kin, Probe shape.
- * Anchors: includeAnchors reserved — peopleCount API unchanged.
+ * includeAnchors merges authored people.json anchors; peopleCount path unchanged when false/omitted.
  */
 export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const seed = opts.seed >>> 0;
   const peopleCount = Math.max(3, opts.peopleCount ?? 3);
-  const people = generatePeople({ seed, count: peopleCount });
+  const procedural = generatePeople({ seed, count: peopleCount });
+  const people =
+    opts.includeAnchors === true
+      ? [...loadAuthoredAnchors(), ...procedural]
+      : procedural;
 
   const tables = loadHistoryTables();
   const rng = createRng(seed ^ 0xc0ffee);
@@ -96,9 +101,6 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
 
   const chainOk = historyChainCoherent(history, tables);
   const historyCoherence = chainOk ? 1 : 0.5;
-
-  // includeAnchors: reserved for Ashford merge (do not block peopleCount path).
-  void opts.includeAnchors;
 
   const fingerprint = worldFingerprint(seed, people, history, gapSites, kinEdges);
 

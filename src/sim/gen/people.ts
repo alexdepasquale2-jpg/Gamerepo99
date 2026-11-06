@@ -7,6 +7,9 @@ export type PersonDraft = {
   fingerprint: string;
   vector?: Record<string, number>;
   lines?: { id: string; text: string; source?: 'fixed' | 'blend' | 'fallback' }[];
+  /** Authored Ashford (etc.) fabric anchor from people.json. */
+  anchor?: boolean;
+  authored?: boolean;
 };
 
 export type GeneratePeopleOpts = {
