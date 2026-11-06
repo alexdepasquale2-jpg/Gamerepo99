@@ -11,13 +11,16 @@ hearthfall/
     render/   Phaser scenes, sprites, effects. Reads sim state, never mutates it directly.
     ui/       HUD, menus, input mapping. Sends commands to sim.
     main.ts   Entry: boots Phaser, wires sim + render + ui.
-  tests/      Mirrors src/ (tests/sim/combat.test.ts for src/sim/combat.ts).
-    e2e/    Playwright smoke/playthrough specs (*.spec.ts). Artifacts gitignored.
-  assets/     Images, audio, fonts.
+  tests/      Unit tests mirror src/ (tests/sim/combat.test.ts for src/sim/combat.ts).
+    e2e/      Playwright browser tests (*.spec.ts). artifacts/ is gitignored.
+    bots/     Automated playthrough bots (Probe).
+  .superpowers/sdd/  Task briefs, reports, review ledger. Scratch (tmp/, *.diff, *.patch) is gitignored.
+  assets/     Images, audio, fonts. vendor/*.zip archives are gitignored.
   scripts/    Dev tooling (validate-data.mjs). Not shipped.
   docs/       STRUCTURE.md, DESIGN.md, SCHEDULE.xlsx
     superpowers/plans|specs/  Dated plans and specs (YYYY-MM-DD-name.md).
-    art/      Reference art (palettes, swatches). Game assets go in assets/.
+    art/      Reference art (palettes, swatches, mockups, MOODBOARD/PALETTE notes). Game assets go in assets/.
+    qa/       QA notes and playtest reports (reports/). QA write-ups live here, not at docs/ root.
     archive/  Retired designs. Read-only; never imported.
   README.md   What it is, how to run, how to test.
 ```
@@ -53,6 +56,7 @@ hearthfall/
 7. Naming follows the rules above.
 8. README and this doc are current; new folders are listed here.
 9. `npm run build` and `npm test` pass.
+10. Author followed superpowers: spec and plan exist in docs/superpowers/, tests came first, report lists skills used.
 
 ## Team schedule (docs/SCHEDULE.xlsx)
 - One tab per teammate; `Overview (Niblet)` is Niblet's only.
