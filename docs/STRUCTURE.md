@@ -38,9 +38,11 @@ hearthfall/
   scripts/    Dev tooling (validate-data.mjs). Not shipped.
   docs/       STRUCTURE.md, DESIGN.md, SCHEDULE.xlsx
     superpowers/plans|specs/  Dated plans and specs (YYYY-MM-DD-name.md).
+      Multi-part specs use a dated folder: index.md + numbered parts (e.g. specs/2026-11-06-social-graph/ 01-07).
     art/      Reference art (palettes, swatches, mockups, MOODBOARD/PALETTE notes). Game assets go in assets/.
     qa/       QA notes and playtest reports (reports/). QA write-ups live here, not at docs/ root.
-    design/   Design notes and specs by topic (e.g. interaction-pacing.md).
+      Milestone gate checklists: QUALITY_GATE.md (rubric), M4_GATE.md (M4 living-world gate).
+    design/   Design notes and specs by topic (e.g. interaction-pacing.md: interaction strain/spark pacing retune).
     archive/  Retired designs. Read-only; never imported.
   README.md   What it is, how to run, how to test.
 ```
