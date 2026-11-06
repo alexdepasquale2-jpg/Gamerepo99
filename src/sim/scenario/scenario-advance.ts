@@ -1,10 +1,10 @@
 /** Advance play clocks (dusk/dawn/day/ticks) and fire dusk personal-cost hooks. */
 
-import { runHooks } from './hooks';
-import type { DataTables } from './load-data';
-import { pushJuice } from './packets';
-import type { Rng } from './rng';
-import type { SimState } from './types/runtime';
+import { runHooks } from '../hooks';
+import type { DataTables } from '../load-data';
+import { pushJuice } from '../packets';
+import type { Rng } from '../rng';
+import type { SimState } from '../types/runtime';
 
 export type AdvanceTarget = 'dusk' | 'dawn' | 'day' | { ticks: number };
 

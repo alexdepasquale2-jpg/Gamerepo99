@@ -1,6 +1,6 @@
 /** Travel route / encounter shapes shared by travel + travel-tables. */
 
-import type { SimState } from './types/runtime';
+import type { SimState } from '../types/runtime';
 
 export type TravelRoute = {
   id: string;

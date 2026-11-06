@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createPlaySession, generateWorld } from '../../src/sim';
 import type { PlaySession } from '../../src/sim';
 import { loadData } from '../../src/sim/load-data';
-import { peopleFromWorld } from '../../src/sim/play-session-boot';
+import { peopleFromWorld } from '../../src/sim/play-session/play-session-boot';
 
 /** Prefer a person on a Fabric kin edge whose towns differ (after boot town assign). */
 function findPersonWithKin(seed: number): string {

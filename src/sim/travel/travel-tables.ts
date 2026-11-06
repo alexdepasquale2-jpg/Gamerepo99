@@ -1,8 +1,8 @@
 /** Authored travel/encounter/biome tables for travel.ts. No gen/ imports. */
 
-import biomesJson from '../data/world/biomes.json';
-import roadEncountersJson from '../data/world/road-encounters.json';
-import routesJson from '../data/world/routes.json';
+import biomesJson from '../../data/world/biomes.json';
+import roadEncountersJson from '../../data/world/road-encounters.json';
+import routesJson from '../../data/world/routes.json';
 import type { EncounterTable, TravelRoute } from './travel-types';
 
 type AuthoredRoute = {

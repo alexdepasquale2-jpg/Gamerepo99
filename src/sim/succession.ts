@@ -3,7 +3,7 @@
 import archetypesJson from '../data/people/archetypes.json';
 import type { DataTables } from './load-data';
 import type { Inhabitant, SimState } from './types/runtime';
-import type { PlayEvent } from './play-session-types';
+import type { PlayEvent } from './play-session/play-session-types';
 
 export type SuccessionUi = {
   screenCopy: string;

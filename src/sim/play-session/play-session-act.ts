@@ -1,17 +1,17 @@
 /** Play-session act helpers: methodId@personId → commitMethod + juice events. */
 
-import { installFabricReactionSelector } from './dyn/line-select';
-import type { DataTables } from './load-data';
-import { commitMethod } from './methods';
+import { installFabricReactionSelector } from '../dyn/line-select';
+import type { DataTables } from '../load-data';
+import { commitMethod } from '../methods';
 import {
   advanceDays,
   advanceToDawn,
   advanceToDusk,
   parseAdvanceAction,
-} from './scenario-advance';
+} from '../scenario/scenario-advance';
 import type { PlayLastResolve } from './play-session-types';
-import { listRoutesFrom, startTravel, type TravelSimState } from './travel';
-import type { SimState } from './types/runtime';
+import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
+import type { SimState } from '../types/runtime';
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };

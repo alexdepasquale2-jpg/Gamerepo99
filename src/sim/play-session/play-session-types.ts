@@ -1,7 +1,7 @@
-import type { FabricWorld } from './gen/world-types';
+import type { FabricWorld } from '../gen/world-types';
 /** Play session public types (soft-cap extract from play-session). */
 
-import type { ScenarioPersonView } from './scenario-resolve';
+import type { ScenarioPersonView } from '../scenario/scenario-resolve';
 
 export type PlayAction = { id: string; family?: string };
 export type PlayEvent = { type: string; methodId?: string };

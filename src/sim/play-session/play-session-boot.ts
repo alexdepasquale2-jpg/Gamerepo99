@@ -1,11 +1,11 @@
 /** Play-session boot helpers: people index + town pick + snapshot. */
 
-import type { FabricWorld } from './gen/world';
-import type { DataTables } from './load-data';
-import { siteKindFromSiteId } from './scenario-resolve';
-import { isBurnedOut } from './succession';
+import type { FabricWorld } from '../gen/world';
+import type { DataTables } from '../load-data';
+import { siteKindFromSiteId } from '../scenario/scenario-resolve';
+import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
-import type { PersonState, SimState } from './types/runtime';
+import type { PersonState, SimState } from '../types/runtime';
 
 /** Spread unset townIds across settlements so Fabric kin can be cross-town. */
 export function assignSettlementTowns(

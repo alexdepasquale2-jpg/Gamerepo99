@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createPlaySession } from '../../src/sim';
+import { createPlaySession } from '../../../src/sim';
 
 describe('createPlaySession play', () => {
   it('boots generated world for marrow seed 42', () => {

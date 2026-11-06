@@ -1,18 +1,18 @@
 /** Play + inspect session factory. Play boots generateWorld into SimState. */
 
-import { createEventBus } from './event-bus';
-import { generateWorld } from './fabric/fabric-bake';
-import type { FabricWorld } from './gen/world';
+import { createEventBus } from '../event-bus';
+import { generateWorld } from '../fabric/fabric-bake';
+import type { FabricWorld } from '../gen/world';
 import {
   createPlaySession as createInspectSession,
   dumpWorld,
   type InspectSession,
-} from './fabric/world-dump';
-import { assembleInhabitant } from './inhabitant';
-import { loadData } from './load-data';
+} from '../fabric/world-dump';
+import { assembleInhabitant } from '../inhabitant';
+import { loadData } from '../load-data';
 import { buildPlaySnapshot, peopleFromWorld, pickTownId } from './play-session-boot';
 import { actMethod, installPlayReactions, listMethodActions } from './play-session-act';
-import { createRng } from './rng';
+import { createRng } from '../rng';
 import {
   listRoutesFrom,
   loadBiomeTerrainMuls,
@@ -22,15 +22,15 @@ import {
   toTravelRoutes,
   type TravelRoute,
   type TravelSimState,
-} from './travel';
-import { tickPackets } from './packets';
+} from '../travel/travel';
+import { tickPackets } from '../packets';
 import {
   attachSuccessionHandle,
   lockedSuccessionUi,
   maybeOpenSuccession,
   type SuccessionUi,
-} from './succession';
-import { siteKindFromSiteId, type ScenarioPersonView } from './scenario-resolve';
+} from '../succession';
+import { siteKindFromSiteId, type ScenarioPersonView } from '../scenario/scenario-resolve';
 
 export type {
   PlayAction,

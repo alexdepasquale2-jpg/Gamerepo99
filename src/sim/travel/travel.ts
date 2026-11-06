@@ -1,6 +1,6 @@
 /** Travel days + roadside encounters. Pure sim; no Phaser/DOM/Math.random; no gen/ imports. */
 
-import type { Rng } from './rng';
+import type { Rng } from '../rng';
 import {
   loadBiomeTerrainMuls,
   loadEncounterTables,
@@ -13,7 +13,7 @@ import type {
   TravelRoute,
   TravelSimState,
 } from './travel-types';
-import type { Inhabitant, SimState } from './types/runtime';
+import type { Inhabitant, SimState } from '../types/runtime';
 
 export type { TravelRoute, EncounterEntry, EncounterTable, TravelSimState } from './travel-types';
 export { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravelRoutes };

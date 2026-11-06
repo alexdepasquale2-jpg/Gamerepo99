@@ -55,7 +55,7 @@ export {
   type PlayEvent,
   type PlayMetrics,
   type PlayLastResolve,
-} from './play-session';
+} from './play-session/play-session';
 
 export {
   resolveScenarioPerson,
@@ -63,7 +63,7 @@ export {
   type ScenarioPersonQuery,
   type ScenarioPersonView,
   type ScenarioPeopleSource,
-} from './scenario-resolve';
+} from './scenario/scenario-resolve';
 
 export {
   parseAdvanceAction,
@@ -71,4 +71,4 @@ export {
   advanceToDawn,
   advanceDays,
   type AdvanceTarget,
-} from './scenario-advance';
+} from './scenario/scenario-advance';

@@ -17,6 +17,10 @@ hearthfall/
       Both stay pure (headless-testable); tests mirror them under tests/sim/gen/ and tests/sim/dyn/.
       fabric.ts Public Fabric API facade (e.g. connectFabricApi for bots). Thin re-export shim; Probe hardcodes this path.
       fabric/ holds fabric-bake.ts (only place gen output and dyn are composed), fabric-bake-score.ts, and world-dump.ts; facade re-exports them.
+      play-session/  Play + inspect session factory and act/boot/types helpers.
+      travel/        Route tables, encounter rolls, travel state helpers.
+      scenario/      Advance clocks (dusk/dawn/day) and scenario person resolve.
+      Tests mirror under tests/sim/{play-session,travel,scenario}/ when dedicated.
     data/     JSON content (units, items, levels, tuning). No code. Large registries split by category (e.g. hooks/).
       Grouped by domain subfolders (final layout pending Loom's M2 data redesign).
       New tables go in the matching group; a new group needs a STRUCTURE.md line.

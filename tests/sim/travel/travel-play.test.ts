@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createPlaySession } from '../../src/sim';
-import { listRoutesFrom, startTravel } from '../../src/sim/travel';
-import type { PlaySession } from '../../src/sim';
+import { createPlaySession } from '../../../src/sim';
+import { listRoutesFrom, startTravel } from '../../../src/sim/travel/travel';
+import type { PlaySession } from '../../../src/sim';
 
 describe('travel play', () => {
   it('travel advances day by daysEff and may emit encounter', () => {

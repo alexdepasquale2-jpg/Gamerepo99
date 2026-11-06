@@ -51,13 +51,13 @@ export type { WorldRenderSnapshot } from './world-render-snapshot';
 export {
   resolveScenarioPerson,
   siteKindFromSiteId,
-} from './scenario-resolve';
+} from './scenario/scenario-resolve';
 export type {
   ScenarioPersonQuery,
   ScenarioPersonView,
   ScenarioPeopleSource,
-} from './scenario-resolve';
-export type { PlayMetrics, PlayLastResolve } from './play-session-types';
+} from './scenario/scenario-resolve';
+export type { PlayMetrics, PlayLastResolve } from './play-session/play-session-types';
 
 /** Map TileSource seam (stamp now; native later). */
 export { fingerprintHex } from './map/fingerprint';

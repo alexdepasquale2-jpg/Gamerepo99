@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createPlaySession } from '../../src/sim';
 import type { PlaySession } from '../../src/sim';
-import { advanceToDawn } from '../../src/sim/scenario-advance';
+import { advanceToDawn } from '../../src/sim/scenario/scenario-advance';
 import { loadData } from '../../src/sim/load-data';
 import { createRng } from '../../src/sim/rng';
-import { startTravel } from '../../src/sim/travel';
+import { startTravel } from '../../src/sim/travel/travel';
 import { forceSpark } from '../../src/sim/succession';
 import type { SimState } from '../../src/sim/types/runtime';
 
