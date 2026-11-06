@@ -1,37 +1,38 @@
 # M2 Fabric alive — generator quality report
 
-**Generated:** 2026-11-05 10:36 PM (America/New_York)  
-**Harness:** `tests/bots/fabric/` via `connectFabricApi()` → `src/sim/fabric.ts`  
-**Status:** `OK` (live matrix; API present)  
-**Candidate HEAD:** `f40b89e` (includes Fabric C `75d3e45` / Loom frags `0eb7655` / D `99c1013`)
+**Generated:** 2026-11-05 10:43 PM (America/New_York)  
+**Harness:** `tests/bots/fabric/` via `connectFabricApi()` → `src/sim/fabric.ts` (+ `fabric-bake.ts`)  
+**Status:** `OK` (live matrix; API present; 0 stub-voice on public path)  
+**Candidate HEAD:** `079d119` (includes bake `3595ccc` + zero-stub tests `079d119`; C/D + Loom frags underneath)
 
 ## Verdict
 **Call: NO-SHIP**
 
 **Question:** Does the fabric make people (and worlds) feel unique and alive?  
-**Answer:** **No.** Tasks C+D landed in `src/sim/dyn/` (reaction line-select, coherence asserts, 1439 fragments on disk when present), but **`generateWorld` / `generatePeople` never call them**. The headless worldgen path Probe gates still emits scaffold voice.
+**Answer:** **No.** Stub-voice is gone and lines are real baked fragments — that unblocks the assertion floor — but the matrix still reads as a **small shared catchphrase deck** pasted onto scaffold-identical worlds.
 
-### Concrete evidence (fresh `generateWorld`)
-| Seed | Fingerprint | Sample line texts | assertVoice |
-|------|-------------|-------------------|-------------|
-| 1 | `wf-008231e5-8` | `stub-voice-1-0` … `stub-voice-1-3` (`source: fallback`) | all `scaffold_line` reject |
-| 2 | `wf-00b04796-8` | `stub-voice-2-0` … | all reject |
-| 7 | `wf-0072bf43-8` | `stub-voice-7-0` … | all reject |
-| 17 | `wf-00bc3e35-8` | `stub-voice-17-0` … | all reject |
+### Concrete evidence (fresh `generateWorld`, peopleCount 8)
+| Seed | Fingerprint | Sample line texts | Notes |
+|------|-------------|-------------------|-------|
+| 1 | `wf-008231e5-8` | `Light the lamp. One more night.` / `One more sack. Morning needs bread.` / `Rain's coming. Always is.` / `Midships. I'll balance.` (×2 in first 6) | in-world exact dup |
+| 4 | `wf-00518768-8` | `Stack the files here. I'll walk them.` (×3 in 8) / `Don't rock the boat for pride.` (×2) | `repeatLineRate: 0.375` |
+| 7 | `wf-0072bf43-8` | `Light the lamp. One more night.` (×2) / `Don't rock the boat for pride.` / `He's traveling. Leave it.` | parent-noted dup |
+| 23 | `wf-006bb70f-8` | `Crossing was quiet. Quiet's a story.` (×2) / `Don't raise your voice in a quiet house.` (×2) | `repeatLineRate: 0.25` |
 
-- `src/sim/gen/people.ts` still hard-codes `` `stub-voice-${seed}-${index}` `` — same as pre-C.
-- Fingerprints match the pre-C matrix (`wf-008231e5-8`, `wf-00b04796-8`, …) — worldgen plumbing unchanged.
-- History is still the fixed three-event stub (`founding`/`kin`/`rift`); gap sites still `{0, 0.5, 1}`; kin is chain+loop.
-- Live `runFabricAssertions` → **`assertionViolationRate: 1`** (cap `0`). Honest fail; caps **not** retuned.
-- Exact-text `repeatLineRate: 0` is meaningless here: every string differs by seed/index, pattern is pure template.
+**Cross-matrix (12×8 = 96 lines):** only **24 unique** texts. Top repeats: `Light the lamp. One more night.` ×9, `Don't rock the boat for pride.` ×8, `Crossing was quiet. Quiet's a story.` ×7, `Midships. I'll balance.` ×6. Exact-text reuse across the Probe seed set ≈ **0.75**.
 
-Green structural floors + green unit bots are **necessary**, not a ship. Samey scaffold worlds = **NO-SHIP**.
+**World structure still scaffold** (same as pre-bake fingerprints hex):
+- History: always three events `founding` → `kin` → `rift` (ids only change by seed).
+- Gap sites: always `{0, 0.5, 1}`.
+- Kin: chain (+ loop) — connectedness metric maxes out without feeling varied.
+- Fingerprints match pre-bake (`wf-008231e5-8`, `wf-00b04796-8`, …) — bake changed line *text*, not world identity plumbing.
 
-### Forge gap (for wire-up, not Probe)
-`gen/` must stay pure per architecture notes — but the **public** `generateWorld` path Probe exercises needs baked lines somehow (thin dyn call from facade, or gen output that already carries real fragment text). Until worldgen lines stop being `stub-voice-*`, assertion floor cannot clear and the alive question stays **no**.
+**Assertions:** live `runFabricAssertions` / `assertVoice` on line objects → **`assertionViolationRate: 0`** (cap `0`). Honest clear: no empty/scaffold/`stub-voice-*` left on the public path. Coherence-deep asserts only fire when person+fragment+constraints are all passed; the bake path supplies `{id,text,source}` and passes the voice gate as designed.
+
+Green structural floors + green unit/build are **necessary, not a ship**. Recycled catchphrases on clone-shaped towns = **NO-SHIP**. Caps **not** retuned.
 
 ## Live matrix (12 seeds)
-Seeds: `1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29` (`fabric-thresholds.json`)
+Seeds: `1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29` (`fabric-thresholds.json` — **unchanged**)
 
 | Metric | Threshold | Live aggregate | Pass? |
 |--------|-----------|----------------|-------|
@@ -39,29 +40,31 @@ Seeds: `1, 2, 3, 4, 5, 7, 11, 13, 17, 19, 23, 29` (`fabric-thresholds.json`)
 | history_coherence | ≥ 0.95 | **1** | yes |
 | kin_connectedness | ≥ 0.5 | **1** | yes |
 | gap_spread | ≥ 0.55 | **1** | yes |
-| assertion_violation_rate | ≤ 0 | **1** | **no (scaffolds)** |
+| assertion_violation_rate | ≤ 0 | **0** | yes (real lines; no scaffolds) |
 | people_diversity | ≥ 0.75 | **1** | yes |
 | determinism | true | **true** | yes |
-| repeat_line_rate | ≤ 0.15 | **0** | yes (exact text only) |
+| repeat_line_rate | ≤ 0.15 | **0.15625** | **no** |
 
-Caps/floors **unchanged**. `assertionViolationRateCap` stays `0`.
+Per-seed `repeatLineRate` over cap: seed **1** 0.25, **3** 0.25, **4** 0.375, **5** 0.25, **23** 0.25. (2/7/11/13/17/19/29 at or under 0.15.)
 
 ## Automated truth (this turn)
 | Command | Result |
 |---------|--------|
 | `npm run test:bots` | **54/54** pass |
 | `npx vite-node scripts/run-fabric-suite.mts` | status OK; aggregates above |
-| `npm test` | **88 pass / 1 fail** (+ 10 files fail collect) — see note |
-| `npm run build` | **FAIL** — missing `src/data/dialogue/line-fragments.json` |
+| `npm test` | **136/136** pass |
+| `npm run build` | **OK** (`tsc --noEmit` + vite build) |
 
-**Note (not Probe):** Working tree mid-split deleted monolithic `line-fragments.json` / `history-tables.json` / `assertions.json` into folders (`src/data/dialogue/fragments/`, etc.) while `src/sim/load-data.ts` and `scripts/validate/fabric-content.mjs` still expect the old single files. Fabric bots stay green because stub `generateWorld` does not load those JSONs. Fix is Forge/Loom load-data + validator — out of Probe scope.
+Stub-voice sample check on default seeds: **0** matches in 96 lines.
 
 ## What would flip this to SHIP
-1. `generateWorld` people lines = baked fragments (via dyn line-select or equivalent), **not** `stub-voice-*`.
-2. Live assertion rate ≤ 0 on those real lines (still rejecting scaffolds/empty).
-3. History/kin/gap that vary meaningfully by seed (not one hard-coded scaffold).
-4. `npm test` + `npm run build` green on candidate SHA.
-5. Probe re-run of this suite + feel pass answering the same alive question.
+1. Within-world and cross-seed **repeat line rate** under cap (mean ≤ 0.15; no seed at 0.25+), without shrinking the fragment pool into a handful of favorites.
+2. Worlds that **feel** distinct — history / gap / kin that vary by seed, not only fingerprint hex + swapped catchphrases.
+3. Alive voice: people within one town don't echo the same 2–3 lines; blend selection spreads across the 1439-frag library.
+4. Probe re-run of this suite + feel pass answering the same alive question. Caps stay unless Forge/Niblet explicitly retune.
+
+## Caps
+`tests/bots/fabric/fabric-thresholds.json` **unchanged** this turn. Failures are product (bake selection / world scaffold), not Probe harness shape breaks. No harness edit required for connectFabricApi / assertVoice / evaluateWorld.
 
 ## Commands
 ```bash
@@ -70,10 +73,3 @@ npx vite-node scripts/run-fabric-suite.mts
 npm test
 npm run build
 ```
-
-## Tidy (this turn, Probe)
-- Split `fabric-run.ts` → `fabric-report.ts` (types/evaluate/aggregate) + `fabric-run.ts` (runner).
-- Split `fabric-metrics-types.ts` out of `fabric-metrics.ts` (under soft cap).
-- Move-only: all fabric-* (+ thresholds) → `tests/bots/fabric/`; `scripts/run-fabric-suite.mts` + PLAYTHROUGH_BOTS paths updated.
-- `npm run test:bots` still **54/54** after move.
-
