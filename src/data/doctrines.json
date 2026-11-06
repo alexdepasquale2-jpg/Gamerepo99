@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-doctrine-legitimacy-design.md",
+  "formulas": {
+    "legitimacy": "clamp(0.15 + 0.7*perceivedDelivery + 0.15*control, 0, 1)",
+    "strainNote": "city promises use feltByMaxGapAxis so village realDelivery may stay 0",
+    "collapse": "if gap>0.25 and exposure>0.4: legitimacy *= (1 - 2.5 * gap^2)"
+  },
+  "acts": [
+    {
+      "id": "act_expose_lie",
+      "methodIds": [
+        "challenge",
+        "shame"
+      ],
+      "requiresTargetTagsAny": [
+        "doctrine_voice",
+        "leader"
+      ],
+      "effects": [
+        {
+          "target": "doctrine.exposure",
+          "op": "add",
+          "value": 0.25
+        }
+      ],
+      "tags": [
+        "doctrine",
+        "expose"
+      ]
+    },
+    {
+      "id": "act_carry_promise",
+      "methodIds": [
+        "carry_burden",
+        "inspire"
+      ],
+      "requiresPromiseId": true,
+      "effects": [
+        {
+          "target": "doctrine.realDelivery",
+          "op": "add",
+          "value": 0.08
+        },
+        {
+          "target": "doctrine.perceivedDelivery",
+          "op": "add",
+          "value": 0.03
+        }
+      ],
+      "tags": [
+        "doctrine",
+        "keep"
+      ]
+    },
+    {
+      "id": "act_become_voice",
+      "methodIds": [
+        "inspire",
+        "challenge"
+      ],
+      "requiresActorTagsAny": [
+        "civic_voice"
+      ],
+      "effects": [
+        {
+          "target": "town.standing",
+          "op": "add",
+          "value": 0.05
+        },
+        {
+          "target": "doctrine.propaganda",
+          "op": "add",
+          "value": -0.05
+        }
+      ],
+      "tags": [
+        "doctrine",
+        "voice"
+      ]
+    }
+  ],
+  "doctrines": [
+    {
+      "id": "doctrine_mill_bread",
+      "name": "Mill & Bread Compact",
+      "townId": "ashford",
+      "leaderPersonId": "ruth_calder",
+      "m2Optional": true,
+      "blurb": "Keep the mill turning and the ovens honest \u2014 a town-side doctrine that still speaks a life Ashford recognizes.",
+      "goals": [
+        {
+          "id": "goal_mill_shifts",
+          "promise": "Every willing hand gets a shift",
+          "feltByMaxGapAxis": 1.0
+        },
+        {
+          "id": "goal_ovens_lit",
+          "promise": "Bread for those who queue",
+          "feltByMaxGapAxis": 1.0
+        }
+      ],
+      "start": {
+        "realDelivery": 0.25,
+        "perceivedDelivery": 0.35,
+        "propaganda": 0.1,
+        "control": 0.05,
+        "exposure": 0.0,
+        "legitimacy": 0.4
+      }
+    },
+    {
+      "id": "doctrine_strand_crossings",
+      "name": "Strand Crossings Pact",
+      "townId": "lowmere",
+      "leaderPersonId": "leon_march",
+      "m2Optional": false,
+      "milestone": "m3",
+      "blurb": "Post work, run the ferry, answer the night knock.",
+      "goals": [
+        {
+          "id": "goal_ferry_runs",
+          "promise": "The ferry runs when called",
+          "feltByMaxGapAxis": 1.0
+        },
+        {
+          "id": "goal_posted_work",
+          "promise": "Honest work stays on the board",
+          "feltByMaxGapAxis": 1.0
+        }
+      ],
+      "start": {
+        "realDelivery": 0.2,
+        "perceivedDelivery": 0.3,
+        "propaganda": 0.15,
+        "control": 0.1,
+        "exposure": 0.05,
+        "legitimacy": 0.35
+      }
+    },
+    {
+      "id": "doctrine_reach_progress",
+      "name": "Reach Progress Creed",
+      "townId": "city_reach",
+      "leaderPersonId": "mira_whitby",
+      "m2Optional": false,
+      "milestone": "m3",
+      "blurb": "City doctrine: efficiency, boards, glare. Its promises are written for lives villagers cannot feel.",
+      "goals": [
+        {
+          "id": "goal_quota_days",
+          "promise": "Quotas met mean prosperity",
+          "feltByMaxGapAxis": 0.4
+        },
+        {
+          "id": "goal_letter_silence",
+          "promise": "Distance is maturity",
+          "feltByMaxGapAxis": 0.35
+        }
+      ],
+      "start": {
+        "realDelivery": 0.55,
+        "perceivedDelivery": 0.8,
+        "propaganda": 0.55,
+        "control": 0.4,
+        "exposure": 0.1,
+        "legitimacy": 0.75
+      }
+    }
+  ]
+}
