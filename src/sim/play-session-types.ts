@@ -1,3 +1,4 @@
+import type { FabricWorld } from './gen/world-types';
 /** Play session public types (soft-cap extract from play-session). */
 
 import type { ScenarioPersonView } from './scenario-resolve';
@@ -37,6 +38,8 @@ export type PlaySession = {
   listRoutes(): string[];
   travel(routeId: string): void;
   dump(): string;
+  getWorld(): FabricWorld | null;
+  getSeed(): number;
   listPeople(): ScenarioPersonView[];
   metrics(): PlayMetrics;
   lastResolve(): PlayLastResolve | undefined;

@@ -1,140 +1,134 @@
-/** Minimal Phaser overworld — colored 32px town chips from session dump. */
+/** Continuous chunked 2.5D overworld — stamp TileSource + foot-Y depth. */
 
 import Phaser from 'phaser';
 import {
   createPlaySession,
-  townsFromDump,
+  createStampRasterSource,
+  layoutWorld,
   type PlaySession,
-  type TownMarker,
+  type TileSource,
 } from '../sim';
+import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
+import { chunksAround } from '../sim/map/chunks-around';
+import type { WorldLayout } from '../sim/map/world-layout';
 import { FEEL } from './feel';
-import { GRID } from './asset-manifest';
+import { createChunkLayer, type ChunkLayer } from './chunk-layer';
+import { applySpriteSort, tileFootWorld } from './depth-sort';
 
-const TILE = 32;
-const TOWN_FILL = 0xd97b3a;
-const GROUND = 0x2f4f3a;
 const PLAYER = 0xf2b84b;
-
-export type OverworldRegistry = {
-  playSession: PlaySession;
-};
+const CHUNK_MARGIN = 1;
+const NEAR_TOWN_PX = TILE_PX * 2.5;
 
 export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
-  private towns: TownMarker[] = [];
+  private source!: TileSource;
+  private layout!: WorldLayout;
+  private layer!: ChunkLayer;
   private player!: Phaser.GameObjects.Rectangle;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private wasd!: {
+    W: Phaser.Input.Keyboard.Key;
+    A: Phaser.Input.Keyboard.Key;
+    S: Phaser.Input.Keyboard.Key;
+    D: Phaser.Input.Keyboard.Key;
+  };
   private sparkFill = 1;
   private sparkBar!: Phaser.GameObjects.Rectangle;
   private hint!: Phaser.GameObjects.Text;
+  private lastChunkKey = '';
 
   constructor() {
     super('overworld');
   }
 
   create(): void {
-    const existing = this.registry.get('playSession') as PlaySession | undefined;
-    if (existing && typeof existing.dump === 'function') {
-      this.session = existing;
-    } else {
-      const s = createPlaySession({
-        mode: 'play',
-        seed: 42,
-        archetypeId: 'marrow',
-      });
-      if (!s || !('start' in s)) {
-        throw new Error('overworld requires play session');
-      }
-      this.session = s as PlaySession;
-      this.session.start({ seed: 42, archetypeId: 'marrow' });
-      this.registry.set('playSession', this.session);
-    }
+    this.bootSession();
+    const world = this.session.getWorld();
+    const seed = this.session.getSeed();
+    if (!world) throw new Error('overworld requires booted world');
+    this.layout = layoutWorld(world, seed);
+    this.source = createStampRasterSource(world, seed);
 
-    this.towns = townsFromDump(this.session.dump());
-    this.drawGround();
-    this.drawTowns();
+    this.layer = createChunkLayer(this, this.source, this.layout.settlements);
     this.spawnPlayer();
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
+    this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.add
-      .text(8, 8, 'Overworld — arrows/WASD move · Enter/click town for methods', {
+      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#f2e9e4',
       })
       .setScrollFactor(0)
-      .setDepth(20);
+      .setDepth(1_000_000);
 
     this.hint = this.add
-      .text(8, 26, `towns: ${this.towns.length}`, {
+      .text(8, 26, `settlements: ${this.layout.settlements.length}`, {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#8a7a68',
       })
       .setScrollFactor(0)
-      .setDepth(20);
+      .setDepth(1_000_000);
 
-    this.input.keyboard?.on('keydown-ENTER', () => this.tryEnterTown());
+    this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
+    this.syncChunks(true);
     this.syncSparkFromSession(false);
+    const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
+    hud?.setStatus?.('continuous overworld');
   }
 
   update(): void {
-    const step = TILE;
     let dx = 0;
     let dy = 0;
-    if (this.cursors.left?.isDown) dx -= 1;
-    if (this.cursors.right?.isDown) dx += 1;
-    if (this.cursors.up?.isDown) dy -= 1;
-    if (this.cursors.down?.isDown) dy += 1;
+    if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
+    if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
+    if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
+    if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
     if (dx !== 0 || dy !== 0) {
-      this.player.x += dx * 2;
-      this.player.y += dy * 2;
-      this.cameras.main.centerOn(this.player.x, this.player.y);
+      this.player.x += dx * 3;
+      this.player.y += dy * 3;
+      applySpriteSort(this.player);
     }
+    this.syncChunks(false);
   }
 
-  private drawGround(): void {
-    const w = Math.max(8, ...this.towns.map((t) => t.q + 2)) * TILE;
-    const h = Math.max(6, ...this.towns.map((t) => t.r + 2)) * TILE;
-    this.add.rectangle(w / 2, h / 2, w + TILE * 4, h + TILE * 4, GROUND).setDepth(0);
-    this.cameras.main.setBounds(-TILE, -TILE, w + TILE * 4, h + TILE * 4);
-  }
-
-  private drawTowns(): void {
-    for (const town of this.towns) {
-      const cell = GRID.qrToCell(town.q, town.r);
-      const x = cell.x * TILE + TILE / 2;
-      const y = cell.y * TILE + TILE / 2;
-      const rect = this.add
-        .rectangle(x, y, TILE - 2, TILE - 2, TOWN_FILL)
-        .setStrokeStyle(2, 0xf2b84b, 0.9)
-        .setDepth(2)
-        .setInteractive({ useHandCursor: true });
-      rect.on('pointerdown', () => this.enterTown(town.id));
-      this.add
-        .text(x, y - TILE * 0.7, town.id, {
-          fontFamily: 'monospace',
-          fontSize: '10px',
-          color: '#f2e9e4',
-        })
-        .setOrigin(0.5)
-        .setDepth(3);
+  private bootSession(): void {
+    const existing = this.registry.get('playSession') as PlaySession | undefined;
+    if (existing && typeof existing.dump === 'function' && existing.getWorld?.()) {
+      this.session = existing;
+      return;
     }
+    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' });
+    if (!s || !('start' in s)) throw new Error('overworld requires play session');
+    this.session = s as PlaySession;
+    this.session.start({ seed: 42, archetypeId: 'marrow' });
+    this.registry.set('playSession', this.session);
   }
 
   private spawnPlayer(): void {
-    const start = this.towns[0];
-    const cell = start
-      ? GRID.qrToCell(start.q, start.r)
-      : { x: 0, y: 0 };
-    const x = cell.x * TILE + TILE / 2;
-    const y = cell.y * TILE + TILE / 2 + TILE;
+    const start = this.layout.settlements[0];
+    const foot = start
+      ? tileFootWorld(start.q, start.r + 1)
+      : { x: TILE_PX / 2, y: TILE_PX };
     this.player = this.add
-      .rectangle(x, y, TILE * 0.55, TILE * 0.55, PLAYER)
-      .setStrokeStyle(2, 0x5ec8c8, 1)
-      .setDepth(5);
-    this.cameras.main.startFollow(this.player, true, 0.15, 0.15);
+      .rectangle(foot.x, foot.y, TILE_PX * 0.55, TILE_PX * 0.8, PLAYER)
+      .setStrokeStyle(2, 0x5ec8c8, 1);
+    applySpriteSort(this.player);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.setZoom(1);
+  }
+
+  private syncChunks(force: boolean): void {
+    const q = Math.floor(this.player.x / TILE_PX);
+    const r = Math.floor(this.player.y / TILE_PX);
+    const coords = chunksAround(q, r, CHUNK_SIZE, CHUNK_MARGIN);
+    const key = coords.map((c) => `${c.cx},${c.cy}`).join('|');
+    if (!force && key === this.lastChunkKey) return;
+    this.lastChunkKey = key;
+    this.layer.sync(coords);
   }
 
   private createSparkHud(): void {
@@ -143,17 +137,16 @@ export class OverworldScene extends Phaser.Scene {
       .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight, h.emptyColor)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
-      .setDepth(40);
+      .setDepth(1_000_001);
     this.sparkBar = this.add
       .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight - 2, h.fillColor)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
-      .setDepth(41);
+      .setDepth(1_000_002);
   }
 
   private syncSparkFromSession(lerp: boolean): void {
-    const snap = this.session.snapshot();
-    const next = Math.max(0, Math.min(1, snap.spark / 100));
+    const next = Math.max(0, Math.min(1, this.session.snapshot().spark / 100));
     if (lerp) {
       this.tweens.add({
         targets: { v: this.sparkFill },
@@ -171,38 +164,32 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
-  private tryEnterTown(): void {
-    const nearest = this.nearestTown();
-    if (nearest) this.enterTown(nearest.id);
+  private tryOpenMethods(): void {
+    const town = this.nearestTown();
+    if (!town) return;
+    this.hint.setText(`near ${town.id} — methods`);
+    const menu = this.registry.get('methodMenu') as
+      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
+      | undefined;
+    menu?.show(this.session.listActions(), (actionId) => {
+      this.session.act(actionId);
+      this.syncSparkFromSession(true);
+    });
+    const hud = this.registry.get('hud') as { setTown?: (id: string) => void } | undefined;
+    hud?.setTown?.(town.id);
   }
 
-  private nearestTown(): TownMarker | null {
-    let best: TownMarker | null = null;
+  private nearestTown(): { id: string; q: number; r: number } | null {
+    let best: { id: string; q: number; r: number } | null = null;
     let bestD = Infinity;
-    for (const t of this.towns) {
-      const cell = GRID.qrToCell(t.q, t.r);
-      const x = cell.x * TILE + TILE / 2;
-      const y = cell.y * TILE + TILE / 2;
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, x, y);
+    for (const t of this.layout.settlements) {
+      const foot = tileFootWorld(t.q, t.r);
+      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, foot.x, foot.y);
       if (d < bestD) {
         bestD = d;
         best = t;
       }
     }
-    return bestD <= TILE * 1.6 ? best : null;
-  }
-
-  private enterTown(townId: string): void {
-    // Continuous overworld: open method menu in-place (no TownScene boot).
-    this.hint.setText(`near ${townId} — methods`);
-    const menu = this.registry.get('methodMenu') as
-      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
-      | undefined;
-    if (menu && typeof this.session.listActions === 'function') {
-      menu.show(this.session.listActions(), (actionId) => {
-        this.session.act(actionId);
-        this.syncSparkFromSession(true);
-      });
-    }
+    return bestD <= NEAR_TOWN_PX ? best : null;
   }
 }

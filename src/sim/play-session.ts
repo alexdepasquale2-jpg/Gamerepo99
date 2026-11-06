@@ -156,6 +156,8 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       eventLog.push({ type: 'travel' });
     },
     dump: () => (world ? dumpWorld(world).text : ''),
+    getWorld: () => world,
+    getSeed: () => seed,
     listPeople: () => Object.values(state?.people ?? {}).map(toPersonView),
     metrics: () => ({ ...metrics }),
     lastResolve: () => (lastResolveVal ? { ...lastResolveVal } : undefined),
