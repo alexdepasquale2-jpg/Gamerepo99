@@ -22,5 +22,8 @@
   },
   "forgeRule": "Never branch on archetypeId. Apply traits, hooks, and effects from data only.",
   "designStatus": "LOCKED",
-  "successionUiRef": "archetypes.json succession.ui"
+  "successionUiRef": "archetypes.json succession.ui",
+  "features": {
+    "bakedDynamismLines": false
+  }
 }

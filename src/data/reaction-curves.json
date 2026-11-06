@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-baked-dynamism-design.md",
+  "curves": [
+    {
+      "id": "curve_default_reaction",
+      "drives": [
+        {
+          "statePath": "person.flame01",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "warmth": 0.3,
+            "weariness": -0.2
+          }
+        },
+        {
+          "statePath": "player.trust",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "warmth": 0.25,
+            "bite": -0.15
+          }
+        },
+        {
+          "statePath": "person.mark.hollowness",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "bite": 0.2,
+            "secrecy": 0.15
+          }
+        },
+        {
+          "statePath": "town.doctrine.legitimacy",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "piety": 0.2
+          }
+        },
+        {
+          "statePath": "player.notoriety",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "secrecy": 0.2,
+            "bite": 0.1
+          }
+        },
+        {
+          "statePath": "kin.strain",
+          "from": 0,
+          "to": 1,
+          "influence": {
+            "bite": 0.25,
+            "warmth": -0.2
+          }
+        }
+      ]
+    }
+  ]
+}

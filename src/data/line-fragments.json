@@ -1,0 +1,352 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-baked-dynamism-design.md",
+  "fragments": [
+    {
+      "id": "frag_marta_ellison_challenge_alone",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument.",
+      "tags": [
+        "method:challenge",
+        "person:marta_ellison",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_marta_ellison_shame_alone",
+      "text": "Say it. Call me lazy. The bread still won't rise for spite.",
+      "tags": [
+        "method:shame",
+        "person:marta_ellison",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_marta_ellison_inspire_alone",
+      "text": "\u2026Someone ate. Alright. Flour. Water. Don't watch.",
+      "tags": [
+        "method:inspire",
+        "person:marta_ellison",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_marta_ellison_carry_burden_alone",
+      "text": "Your hands are bigger. Doesn't mean the dough forgives you.",
+      "tags": [
+        "method:carry_burden",
+        "person:marta_ellison",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone",
+      "text": "Tomorrow's full of customers? Sure. Lie closer to the oven.",
+      "tags": [
+        "method:lie",
+        "person:marta_ellison",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_marta_ellison_carry_burden_wary",
+      "text": "I'll take the sack. Don't watch the door after. Hill's colder when people notice kindness.",
+      "tags": [
+        "method:carry_burden",
+        "person:marta_ellison",
+        "mood:wary",
+        "state:lonely"
+      ],
+      "weight": 0.85,
+      "requiresAny": [
+        "state:lonely",
+        "mood:wary"
+      ],
+      "slot": "alone"
+    },
+    {
+      "id": "frag_jonah_pike_challenge_alone",
+      "text": "You can't dare a blank page. \u2026Okay. One wing.",
+      "tags": [
+        "method:challenge",
+        "person:jonah_pike",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_jonah_pike_shame_alone",
+      "text": "\u2026I don't want that word. Please pick another.",
+      "tags": [
+        "method:shame",
+        "person:jonah_pike",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_jonah_pike_inspire_alone",
+      "text": "Somebody else made a thing and lived. Fine. Bad bird. Mine.",
+      "tags": [
+        "method:inspire",
+        "person:jonah_pike",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_jonah_pike_carry_burden_alone",
+      "text": "You held the paper still. That's\u2026 not nothing.",
+      "tags": [
+        "method:carry_burden",
+        "person:jonah_pike",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone",
+      "text": "Nobody will laugh? People always laugh. But\u2014 okay.",
+      "tags": [
+        "method:lie",
+        "person:jonah_pike",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_harold_finch_challenge_alone",
+      "text": "You calling me soft? Get out of the way of the boots.",
+      "tags": [
+        "method:challenge",
+        "person:harold_finch",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_harold_finch_shame_alone",
+      "text": "I know. The kids know. Saying it louder doesn't feed them.",
+      "tags": [
+        "method:shame",
+        "person:harold_finch",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_harold_finch_inspire_alone",
+      "text": "Someone else stood up. Annoying. Pass me the left boot.",
+      "tags": [
+        "method:inspire",
+        "person:harold_finch",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_harold_finch_carry_burden_alone",
+      "text": "You don't get to carry my kids. You can haul me to the yard.",
+      "tags": [
+        "method:carry_burden",
+        "person:harold_finch",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_harold_finch_lie_alone",
+      "text": "It gets easier? Don't sell me weather. Just\u2014 hand me the lace.",
+      "tags": [
+        "method:lie",
+        "person:harold_finch",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_ruth_calder_challenge_alone",
+      "text": "Argue with the county, not me\u2014 \u2026Fine. One sentence on the board.",
+      "tags": [
+        "method:challenge",
+        "person:ruth_calder",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_ruth_calder_shame_alone",
+      "text": "Low priority. I heard it. You don't get to grade me with it.",
+      "tags": [
+        "method:shame",
+        "person:ruth_calder",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_ruth_calder_inspire_alone",
+      "text": "Proof, not sermons. Show me someone kept a promise.",
+      "tags": [
+        "method:inspire",
+        "person:ruth_calder",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_ruth_calder_carry_burden_alone",
+      "text": "Ring it yourself if you must. I'll write after the sound dies.",
+      "tags": [
+        "method:carry_burden",
+        "person:ruth_calder",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_ruth_calder_lie_alone",
+      "text": "Funding's coming? Ink that lie elsewhere.",
+      "tags": [
+        "method:lie",
+        "person:ruth_calder",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_elias_boone_challenge_alone",
+      "text": "You want noise? Bellows. He was better. I'm what's left.",
+      "tags": [
+        "method:challenge",
+        "person:elias_boone",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_elias_boone_shame_alone",
+      "text": "Shame me for mourning and I'll forge you a quieter mouth.",
+      "tags": [
+        "method:shame",
+        "person:elias_boone",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_elias_boone_inspire_alone",
+      "text": "A warm thing someone else made. \u2026Alright. Coal.",
+      "tags": [
+        "method:inspire",
+        "person:elias_boone",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone",
+      "text": "Haul the iron. I'll find his rhythm or invent a worse one.",
+      "tags": [
+        "method:carry_burden",
+        "person:elias_boone",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_elias_boone_lie_alone",
+      "text": "He's proud? Don't. Just pump.",
+      "tags": [
+        "method:lie",
+        "person:elias_boone",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_clara_whitby_challenge_alone",
+      "text": "Open it or I will. Credit's uglier in the dark.",
+      "tags": [
+        "method:challenge",
+        "person:clara_whitby",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_clara_whitby_shame_alone",
+      "text": "Call me thief again. I've rehearsed the bow.",
+      "tags": [
+        "method:shame",
+        "person:clara_whitby",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_clara_whitby_inspire_alone",
+      "text": "Light on the books. If I'm guilty, at least I'm legible.",
+      "tags": [
+        "method:inspire",
+        "person:clara_whitby",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_clara_whitby_carry_burden_alone",
+      "text": "Pry the nails. I'll face the first customer.",
+      "tags": [
+        "method:carry_burden",
+        "person:clara_whitby",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_clara_whitby_lie_alone",
+      "text": "Absolved? Save that for church. Hand me the crowbar.",
+      "tags": [
+        "method:lie",
+        "person:clara_whitby",
+        "fallback_mirror"
+      ],
+      "weight": 1.0,
+      "slot": "alone"
+    }
+  ]
+}
