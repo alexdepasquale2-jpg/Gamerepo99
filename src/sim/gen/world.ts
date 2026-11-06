@@ -1,7 +1,11 @@
-/** Seeded world stub for Probe Fabric bots. Pure; no dyn/ imports. */
+/** Seeded Fabric worldgen: history + gap sites + kin from tables. Pure; no dyn/. */
 
 import { createRng } from '../rng';
 import { generatePeople, type PersonDraft } from './people';
+import { loadHistoryTables } from './load-history';
+import { generateHistoryEvents, historyChainCoherent } from './history-gen';
+import { generateGapSites } from './gap-sites';
+import { generateKinEdges } from './kin-gen';
 
 export type KinEdge = { from: string; to: string; kind?: string };
 export type GapSite = { id: string; gap01: number };
@@ -32,61 +36,71 @@ export type FabricWorld = {
 export type GenerateWorldOpts = {
   seed: number;
   peopleCount?: number;
+  /** TODO(Task E+/F): merge authored Ashford people when true. */
+  includeAnchors?: boolean;
 };
 
 function fpHex(n: number): string {
   return (n >>> 0).toString(16).padStart(8, '0');
 }
 
-function chainKin(people: PersonDraft[]): KinEdge[] {
-  const edges: KinEdge[] = [];
-  for (let i = 0; i < people.length - 1; i++) {
-    edges.push({ from: people[i]!.id, to: people[i + 1]!.id, kind: 'kin' });
+function mixStr(acc: number, s: string): number {
+  let h = acc;
+  for (let i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
   }
-  if (people.length >= 3) {
-    edges.push({
-      from: people[people.length - 1]!.id,
-      to: people[0]!.id,
-      kind: 'friend',
-    });
+  return h;
+}
+
+/** Structural fingerprint: history + gap + kin + people — not seed alone. */
+function worldFingerprint(
+  seed: number,
+  people: PersonDraft[],
+  history: HistoryEvent[],
+  gapSites: GapSite[],
+  kinEdges: KinEdge[],
+): string {
+  let mix = seed >>> 0;
+  for (const p of people) mix = mixStr(mix, p.fingerprint);
+  for (const h of history) {
+    mix = mixStr(mix, h.id);
+    for (const t of h.tags ?? []) mix = mixStr(mix, t);
+    mix = (mix ^ Math.imul((h.at ?? 0) + 1, 0x9e3779b9)) >>> 0;
   }
-  return edges;
+  for (const g of gapSites) {
+    mix = mixStr(mix, g.id);
+    mix = (mix ^ Math.imul(Math.round(g.gap01 * 1000) + 1, 0x85ebca6b)) >>> 0;
+  }
+  for (const e of kinEdges) {
+    mix = mixStr(mix, `${e.kind ?? 'kin'}:${e.from}->${e.to}`);
+  }
+  return `wf-${fpHex(mix)}-${people.length}`;
 }
 
-function gapSitesFor(seed: number): GapSite[] {
-  return [
-    { id: `gap_village_${seed}`, gap01: 0 },
-    { id: `gap_mid_${seed}`, gap01: 0.5 },
-    { id: `gap_city_${seed}`, gap01: 1 },
-  ];
-}
-
-function historyFor(seed: number, people: PersonDraft[]): HistoryEvent[] {
-  const ids = people.map((p) => p.id);
-  return [
-    { id: `hist_${seed}_founding`, at: 1, tags: ['founding'], personIds: ids.slice(0, 1) },
-    { id: `hist_${seed}_kin`, at: 2, tags: ['kin'], personIds: ids.slice(0, 2) },
-    { id: `hist_${seed}_rift`, at: 4, tags: ['rift'], personIds: ids },
-  ];
-}
-
-/** Deterministic stub world: ≥3 people, kin chain, gap [0,1], ordered history. */
+/**
+ * Deterministic world: ≥3 people, seed-varying history/gap/kin, Probe shape.
+ * Anchors: includeAnchors reserved — peopleCount API unchanged.
+ */
 export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const seed = opts.seed >>> 0;
   const peopleCount = Math.max(3, opts.peopleCount ?? 3);
   const people = generatePeople({ seed, count: peopleCount });
-  const kinEdges = chainKin(people);
-  const gapSites = gapSitesFor(seed);
-  const history = historyFor(seed, people);
+
+  const tables = loadHistoryTables();
+  const rng = createRng(seed ^ 0xc0ffee);
+
+  const history = generateHistoryEvents(rng, tables, people);
+  const gapSites = generateGapSites(rng, tables.settlementSizes);
+  const kinEdges = generateKinEdges(rng, people);
   const lines = people.flatMap((p) => p.lines ?? []);
 
-  // Mix seed + people fingerprints so distinct seeds diverge.
-  const rng = createRng(seed ^ 0xa5a5a5a5);
-  const mix = people.reduce(
-    (acc, p) => (acc ^ Math.imul(p.fingerprint.length + 1, rng.int(1, 1e6))) >>> 0,
-    seed,
-  );
-  const fingerprint = `wf-${fpHex(mix)}-${people.length}`;
+  const chainOk = historyChainCoherent(history, tables);
+  const historyCoherence = chainOk ? 1 : 0.5;
+
+  // includeAnchors: reserved for Ashford merge (do not block peopleCount path).
+  void opts.includeAnchors;
+
+  const fingerprint = worldFingerprint(seed, people, history, gapSites, kinEdges);
 
   return {
     seed,
@@ -94,7 +108,7 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
     people,
     lines,
     history,
-    historyCoherence: 1,
+    historyCoherence,
     kinEdges,
     gapSites,
     assertions: [{ ok: true }, { ok: true }],
