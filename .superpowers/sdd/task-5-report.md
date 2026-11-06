@@ -1,7 +1,7 @@
 # Task 5 Report — Inhabitant assembly + tile access
 
 **Status:** DONE_WITH_CONCERNS  
-**Commit:** 6b03107  
+**Commit:** 595d722  
 **Skills used:** test-driven-development, verification-before-completion  
 **Stopped:** no Task 6; createPlaySession not started
 
