@@ -338,8 +338,8 @@ export function paintTree(
   const foot = tileFootWorld(q, r);
   addSoftShadow(host, container, foot.x, foot.y, 1.1);
   // Integer uniform scale only (same x/y) — never setDisplaySize stretch.
-  // Trees & Bushes CC0 frames are already ~building-height; use scale 1 (authored large).
-  // Skinny buildings-sheet fallback stays at artScale so 16px-density crops match the pack.
+  // Prefer remapped ansimuz Trees & Bushes (town olive palette) at scale 1 — authored large.
+  // Fallback: town-pack pines from sheet-buildings at artScale.
   if (host.textures.exists(TREES_TEX)) {
     const tex = host.textures.get(TREES_TEX);
     const pick = variant % 3 === 0 ? 'tree-oak' : variant % 3 === 1 ? 'tree-pine' : 'tree-fir';
@@ -347,7 +347,7 @@ export function paintTree(
     if (fr) {
       const img = host.add.image(foot.x, foot.y, TREES_TEX, fr);
       applySpriteSort(img);
-      img.setScale(1); // native pixels; fuller via clusters, not upscale
+      img.setScale(1);
       container?.add(img);
       return;
     }
@@ -429,12 +429,20 @@ function paintSpacedVillagers(
   // Screen-space: clear if dx OR dy clears scaled sprite (16*artScale + gap)
   const minAxis = FEEL.worldScale.artScale * 16 + 12;
   const placed: { x: number; y: number }[] = [];
-  // Cliff strip is painted at town.r+4 — keep feet south of face+clearance
+  // Cliff strip at town.r+4 — feet must be north of (cliffR - 0.4) OR south of cliffR+clear
   const cliffR = town.r + 4;
-  const minR = cliffR + FEEL.worldScale.cliffClearTiles;
+  const clear = FEEL.worldScale.cliffClearTiles;
+  const maxUpperR = cliffR - 0.6;
+  const minLowerR = cliffR + clear;
   for (const [dq, dr, frame, flip] of candidates) {
     let q = town.q + dq;
-    let r = Math.max(town.r + dr, minR);
+    let r = town.r + dr;
+    // Snap into a legal band from the intended side
+    if (r < cliffR) {
+      if (r > maxUpperR) r = maxUpperR;
+    } else if (r < minLowerR) {
+      r = minLowerR;
+    }
     let foot = tileFootWorld(q, r);
     for (let attempt = 0; attempt < 14; attempt++) {
       const overlaps = placed.some((p) => {
@@ -442,11 +450,15 @@ function paintSpacedVillagers(
         const dy = Math.abs(foot.y - p.y);
         return dx < minAxis && dy < minAxis;
       });
-      const onCliff = r < minR;
+      // Strict interior of cliff band only (maxUpperR itself is legal upper meadow)
+      const onCliff = r > maxUpperR && r < minLowerR;
       if (!overlaps && !onCliff) break;
-      r += 0.9;
-      q += attempt % 2 === 0 ? 1.2 : -0.7;
-      if (r < minR) r = minR + attempt * 0.15;
+      q += attempt % 2 === 0 ? 1.5 : -1.2;
+      if (r <= maxUpperR || (r < cliffR && onCliff)) {
+        r = Math.min(r - 0.25, maxUpperR); // nudge north away from face
+      } else {
+        r = Math.max(r + 0.25, minLowerR);
+      }
       foot = tileFootWorld(q, r);
     }
     placed.push(foot);
@@ -618,19 +630,23 @@ export function paintTownMarker(
     container?.add(img);
   }
 
-  // Fuller groves: clusters of native-aspect trees (CC0 pack) — never non-uniform scale
+  // Town-palette CC0 oaks/pines in clusters west/east — footprints clear of building stamp
+  const exQ = FEEL.worldScale.treeExcludeQ;
+  const exR = FEEL.worldScale.treeExcludeR;
   for (const [dq, dr, v] of [
-    [-2.6, 0.2, 0],
-    [-3.3, -0.4, 1],
-    [-2.0, -0.55, 0],
-    [-3.8, 0.45, 2],
-    [-3.0, -1.0, 1],
-    [5.0, 0.25, 1],
-    [5.8, -0.35, 0],
-    [5.3, -0.85, 2],
-    [6.4, 0.15, 0],
-    [6.0, -1.1, 1],
+    [-4.2, 0.3, 0],
+    [-5.0, -0.5, 1],
+    [-4.6, -1.1, 0],
+    [-5.4, 0.6, 2],
+    [-3.8, -1.4, 1],
+    [6.2, 0.3, 1],
+    [7.0, -0.4, 0],
+    [6.6, -1.0, 2],
+    [7.6, 0.2, 0],
+    [7.2, -1.2, 1],
   ] as const) {
+    // Exclusion AABB around settlement origin (inn+house stamp)
+    if (Math.abs(dq - 0.8) < exQ && Math.abs(dr) < exR) continue;
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
@@ -645,11 +661,12 @@ export function paintTownMarker(
   paintScatterProps(host, container, town);
 
   // Meadow south of cliff (r+4); paintSpacedVillagers also enforces cliffClearTiles
+  // Boot camera: place on upper meadow (south of stamp, north of cliff at r+4) — on-screen & clear of face
   paintSpacedVillagers(host, container, town, [
-    [-3.5, 9.0, '1', true],
-    [0.5, 10.5, '7', false],
-    [4.0, 9.5, '4', false],
-    [7.5, 11.0, '7', true],
+    [-4.2, 2.2, '1', true],
+    [8.4, 2.3, '7', false],
+    [-5.2, 3.0, '4', false],
+    [9.2, 3.1, '7', true],
   ]);
 
   const labelY = foot.y - TILE_PX * 4.2 - 12;

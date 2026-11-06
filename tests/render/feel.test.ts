@@ -48,8 +48,10 @@ describe('FEEL render config', () => {
     // 16px ansimuz × artScale 2 → 32px = 1 tile ≈ door height
     expect(FEEL.worldScale.artScale * 16).toBe(FEEL.worldScale.tilePx);
     expect(FEEL.worldScale.cliffClearTiles).toBeGreaterThanOrEqual(2);
+    expect(FEEL.worldScale.cliffClearTiles).toBeLessThanOrEqual(2.5);
     expect(FEEL.worldScale.scatterMinPx).toBeGreaterThanOrEqual(32);
-    expect(FEEL.worldScale.poissonKeepA).toBeGreaterThanOrEqual(30);
-    expect(FEEL.worldScale.poissonCellA).toBeLessThanOrEqual(20);
+    expect(FEEL.worldScale.poissonKeepA).toBeLessThanOrEqual(25);
+    expect(FEEL.worldScale.poissonKeepA).toBeGreaterThanOrEqual(15);
+    expect(FEEL.worldScale.treeExcludeQ).toBeGreaterThan(3);
   });
 });

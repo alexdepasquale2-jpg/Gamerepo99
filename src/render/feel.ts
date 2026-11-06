@@ -93,7 +93,10 @@ export const FEEL = {
     artScale: 2,
     camZoom: 1,
     /** Min tiles south of cliff row (town.r+4) for NPC feet */
-    cliffClearTiles: 4.0,
+    cliffClearTiles: 2.0,
+    /** Keep tree feet outside this AABB around settlement stamp (tiles) */
+    treeExcludeQ: 4.2,
+    treeExcludeR: 2.2,
     cratePx: 14,
     fencePostH: 14,
     fenceRailH: 2,
@@ -102,12 +105,12 @@ export const FEEL = {
     /** Meadow scatter min gap — dense but non-overlapping */
     scatterMinPx: 36,
     /** Poisson grass detail — Stardew meadow density */
-    poissonCellA: 14,
-    poissonKeepA: 45,
-    poissonCellB: 18,
-    poissonKeepB: 30,
-    poissonCellC: 24,
-    poissonKeepC: 22,
+    poissonCellA: 18,
+    poissonKeepA: 22,
+    poissonCellB: 26,
+    poissonKeepB: 14,
+    poissonCellC: 32,
+    poissonKeepC: 10,
     bushR: 8,
     rockR: 6,
     logW: 22,
