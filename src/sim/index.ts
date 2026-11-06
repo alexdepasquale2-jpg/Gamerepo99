@@ -19,6 +19,8 @@ export {
   runFabricAssertions,
   assertLineCandidate,
   assertWorldCoherence,
+  dumpWorld,
+  createPlaySession,
 } from './fabric';
 export type {
   FabricWorld,
@@ -30,4 +32,8 @@ export type {
   LineFragment,
   CoherenceWorld,
   WorldCoherenceResult,
+  WorldDump,
+  InspectSnapshot,
+  InspectSession,
+  CreatePlaySessionOpts,
 } from './fabric';

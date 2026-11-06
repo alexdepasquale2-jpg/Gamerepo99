@@ -38,3 +38,13 @@ export {
   type CoherenceWorld,
   type WorldCoherenceResult,
 } from './dyn/coherence';
+
+export {
+  dumpWorld,
+  createPlaySession,
+  type WorldDump,
+  type InspectSnapshot,
+  type InspectSession,
+  type CreatePlaySessionOpts,
+} from './world-dump';
+
