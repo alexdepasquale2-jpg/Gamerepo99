@@ -61,6 +61,18 @@ export function dumpWorld(world: FabricWorld): WorldDump {
     lines.push(`settlement:${s.id} gap01=${s.gap01}`);
   }
 
+  const routes = world.routes ?? [];
+  lines.push(`routeCount:${routes.length}`);
+  for (const r of routes) {
+    lines.push(`route:${r.id} ${r.fromId}->${r.toId}`);
+  }
+
+  const doctrines = world.doctrines ?? [];
+  lines.push(`doctrineCount:${doctrines.length}`);
+  for (const d of doctrines) {
+    lines.push(`doctrine:${d.id} town=${d.townId}`);
+  }
+
   const history = world.history ?? [];
   lines.push(`historyCount:${history.length}`);
   for (const h of history) {

@@ -40,6 +40,19 @@ describe('dumpWorld', () => {
     expect(a.hash).not.toBe(b.hash);
   });
 
+  it('lists routes and doctrines alongside settlements', () => {
+    const world = generateWorld({ seed: 42, peopleCount: 4 });
+    const { text } = dumpWorld(world);
+    expect((world.routes ?? []).length).toBeGreaterThan(0);
+    expect((world.doctrines ?? []).length).toBeGreaterThan(0);
+    for (const r of world.routes ?? []) {
+      expect(text).toContain(`route:${r.id}`);
+    }
+    for (const d of world.doctrines ?? []) {
+      expect(text).toContain(`doctrine:${d.id}`);
+    }
+  });
+
   it('lists history, kin, and people ids', () => {
     const world = generateWorld({ seed: 11, peopleCount: 4 });
     const { text } = dumpWorld(world);
