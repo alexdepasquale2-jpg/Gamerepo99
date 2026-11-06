@@ -123,9 +123,9 @@ function paintChunkGrassFill(
   const tex = host.textures.exists(key) ? key : GRASS_CALM_TEX;
   // Single stretched image — no per-tile hue variation possible
   if (host.textures.exists(tex)) {
-    const img = host.add.image(originQ * TILE_PX, originR * TILE_PX, tex);
+    const img = host.add.image(originQ * TILE_PX - 3, originR * TILE_PX - 3, tex);
     img.setOrigin(0, 0);
-    img.setDisplaySize(size + 2, size + 2);
+    img.setDisplaySize(size + 8, size + 8);
     img.setDepth(0);
     container.add(img);
   } else {
@@ -444,19 +444,19 @@ export function paintTownMarker(
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
-  // Props + 3–4 villagers, min 24px from each other/crates/fence
-  paintCrate(host, container, town.q + 0.2, town.r + 0.5);
-  paintCrate(host, container, town.q + 1.15, town.r + 0.45);
-  paintCrate(host, container, town.q + 2.1, town.r + 0.5);
+  // Crates clustered at porch with ≥24px gaps
+  paintCrate(host, container, town.q + 0.15, town.r + 0.45);
+  paintCrate(host, container, town.q + 1.2, town.r + 0.4);
+  paintCrate(host, container, town.q + 2.25, town.r + 0.45);
 
-  // Spread around settlement like v4 (west / porch / east) — 3 villagers + optional 4th SE
-  paintVillager(host, container, town.q - 1.8, town.r + 1.0, '1', true);
-  paintVillager(host, container, town.q + 0.4, town.r + 1.5, '7');
-  paintVillager(host, container, town.q + 3.2, town.r + 1.05, '4');
-  paintVillager(host, container, town.q + 5.2, town.r + 1.55, '7');
+  // 4 villagers spread around settlement (≥1.5 tiles / ~48px centers — clear of sprite overlap)
+  paintVillager(host, container, town.q - 2.2, town.r + 1.15, '1', true);
+  paintVillager(host, container, town.q + 0.2, town.r + 1.7, '7');
+  paintVillager(host, container, town.q + 2.6, town.r + 1.15, '4');
+  paintVillager(host, container, town.q + 5.0, town.r + 1.85, '7');
 
-  // Fence along road edge east of courtyard (does not cross villagers)
-  paintFenceAlongRoad(host, container, town.q, town.r, 9);
+  // Fence along road edge well east of courtyard (no villager/fence overlap)
+  paintFenceAlongRoad(host, container, town.q + 0.5, town.r, 8);
 
   const labelY = foot.y - TILE_PX * 4.2 - 12;
   const label = host.add
