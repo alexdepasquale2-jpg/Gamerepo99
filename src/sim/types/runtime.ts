@@ -63,4 +63,6 @@ export type SimState = {
   rng?: unknown;
   /** Per-state reaction-line picker (see method-reactions). Never module-global. */
   reactionLineSelector?: unknown;
+  /** Fabric kinship graph for cross-town ripples. */
+  kinEdges?: { from: string; to: string; kind?: string }[];
 };

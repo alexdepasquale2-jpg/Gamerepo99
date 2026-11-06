@@ -4,6 +4,21 @@ import type { FabricWorld } from './gen/world';
 import type { DataTables } from './load-data';
 import type { PersonState } from './types/runtime';
 
+/** Spread unset townIds across settlements so Fabric kin can be cross-town. */
+export function assignSettlementTowns(
+  people: Record<string, PersonState>,
+  world: FabricWorld,
+): void {
+  const settlements = (world.settlements ?? []).map((s) => s.id);
+  if (settlements.length === 0) return;
+  let i = 0;
+  for (const p of Object.values(people)) {
+    if (p.townId) continue;
+    p.townId = settlements[i % settlements.length]!;
+    i += 1;
+  }
+}
+
 export function peopleFromWorld(world: FabricWorld, data: DataTables): Record<string, PersonState> {
   const out: Record<string, PersonState> = {};
   for (const draft of world.people) {
@@ -20,6 +35,7 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables): Record<st
       marks: [],
     };
   }
+  assignSettlementTowns(out, world);
   return out;
 }
 

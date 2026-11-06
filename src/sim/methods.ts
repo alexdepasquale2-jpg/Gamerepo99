@@ -11,6 +11,7 @@ import {
   selectReactionLine,
   type MethodSimState,
 } from './method-reactions';
+import { maybeEmitCrossTownPacket, pushJuice } from './packets';
 
 export type { MethodSimState } from './method-reactions';
 export {
@@ -43,15 +44,6 @@ function requireMethodState(state: SimState): MethodSimState {
   const s = state as MethodSimState;
   if (!s.data || !s.rng) throw new Error('commitMethod requires state.data and state.rng');
   return s;
-}
-
-function pushJuice(state: SimState, eventId: string, payload?: unknown): void {
-  const bus = (state.bus ??= { lastIds: [] }) as {
-    lastIds?: string[];
-    emit?: (e: string, p: unknown) => void;
-  };
-  (bus.lastIds ??= []).push(eventId);
-  bus.emit?.(eventId, payload);
 }
 
 function methodMod(player: SimState['player'], methodId: string) {
@@ -187,6 +179,7 @@ export function commitMethod(state: SimState, personId: string, methodId: string
   if (markId) {
     marks = grantMark(person, markId);
     pushJuice(s, 'mark.applied', { personId, markId });
+    maybeEmitCrossTownPacket(s, personId, markId);
   }
 
   person.flame += flameDelta;

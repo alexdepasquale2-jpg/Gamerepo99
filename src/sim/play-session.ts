@@ -27,6 +27,7 @@ import {
   type TravelRoute,
   type TravelSimState,
 } from './travel';
+import { tickPackets } from './packets';
 
 export type PlayAction = { id: string; family?: string };
 export type PlayEvent = { type: string; methodId?: string };
@@ -87,6 +88,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       data,
       rng: createRng(seed),
       routes,
+      kinEdges: world.kinEdges ?? [],
       encounterTables: loadEncounterTables(),
       biomeTerrainMuls: loadBiomeTerrainMuls(),
       sizeTravelMuls: loadSizeTravelMuls(),
@@ -120,6 +122,9 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       if (!state) return;
       tickN += 1;
       state.day += 1;
+      const beforeLen = state.bus?.lastIds?.length ?? 0;
+      tickPackets(state);
+      appendJuiceSince(beforeLen);
       eventLog.push({ type: 'tick' });
     },
     snapshot(): PlaySnapshot {
