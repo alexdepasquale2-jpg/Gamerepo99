@@ -8,3 +8,20 @@ export { tick } from './tick';
 export type { Npc, Tile, WorldConfig } from './types';
 export { serializeSave, parseSave } from './save';
 export type { SaveBlob } from './save';
+
+/** Fabric public surface (also via ./fabric.ts). */
+export {
+  generateWorld,
+  generatePeople,
+  generatePersonDraft,
+  interpolateLine,
+  assertVoice,
+  runFabricAssertions,
+} from './fabric';
+export type {
+  FabricWorld,
+  GenerateWorldOpts,
+  PersonDraft,
+  FabricLine,
+  AssertionResult,
+} from './fabric';

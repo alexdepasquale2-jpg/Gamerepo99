@@ -13,3 +13,5 @@ Task 3: complete (commit 6e71cd2, npm test 50/50, build exit 0) — STOPPED, no 
 Task 4: complete (commit cc48d22, npm test 52/52, build exit 0) — STOPPED, no Task 5
 Task 5: complete (commit 595d722, npm test 61/61, build exit 0) — STOPPED, no Task 6
 Task 6: complete (commit 784681b, npm test 63/63, build exit 0) — STOPPED, no Task 7
+Fabric Probe stub: complete (see fabric-task-a-report.md) — generateWorld + fabric.ts facade
+Fabric Task A (load-data dialogue tables): DEFERRED — parent/sibling data git-mv in flight; do not edit load-data paths
