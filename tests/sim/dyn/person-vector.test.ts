@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { loadData } from '../../src/sim/load-data';
-import { buildStateVector, isAuthoredAnchor } from '../../src/sim/person-vector';
+import { loadData } from '../../../src/sim/load-data';
+import { buildStateVector, isAuthoredAnchor } from '../../../src/sim/dyn/person-vector';
 
 describe('person state vector', () => {
   it('authored ashford marta is anchor and has finite vector', () => {

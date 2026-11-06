@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { assembleInhabitant } from '../../src/sim/inhabitant';
-import { loadData } from '../../src/sim/load-data';
+import { assembleInhabitant } from '../../../src/sim/inhabitant';
+import { loadData } from '../../../src/sim/load-data';
 import {
   installFabricReactionSelector,
   pickFabricReactionLine,
-} from '../../src/sim/line-select';
+} from '../../../src/sim/dyn/line-select';
 import {
   selectReactionLine,
   setReactionLineSelector,
   type MethodSimState,
-} from '../../src/sim/method-reactions';
-import { createRng } from '../../src/sim/rng';
-import type { SimState } from '../../src/sim/types/runtime';
-import { seedPeopleFlame } from '../../src/sim/world';
+} from '../../../src/sim/method-reactions';
+import { createRng } from '../../../src/sim/rng';
+import type { SimState } from '../../../src/sim/types/runtime';
+import { seedPeopleFlame } from '../../../src/sim/world';
 
 function bootFabricState(data: ReturnType<typeof loadData>, seed: number): MethodSimState {
   const rng = createRng(seed);

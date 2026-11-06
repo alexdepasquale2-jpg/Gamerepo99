@@ -1,14 +1,14 @@
 /** Fabric reaction-line blend selector. Pure; wires via state-scoped setReactionLineSelector. */
 
-import type { DataTables } from './load-data';
+import type { DataTables } from '../load-data';
 import {
   setReactionLineSelector,
   type ReactionLineResult,
   type ReactionPickCtx,
-} from './method-reactions';
+} from '../method-reactions';
 import { buildStateVector, type PersonStateVector } from './person-vector';
-import { createRng } from './rng';
-import type { SimState } from './types/runtime';
+import { createRng } from '../rng';
+import type { SimState } from '../types/runtime';
 import {
   scoreFragment,
   violatesConstraints,

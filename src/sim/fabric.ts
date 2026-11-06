@@ -24,3 +24,14 @@ export {
   runFabricAssertions,
   type FabricLine,
 } from './dyn/voice';
+
+export {
+  buildStateVector,
+  isAuthoredAnchor,
+  type PersonStateVector,
+} from './dyn/person-vector';
+
+export {
+  installFabricReactionSelector,
+  pickFabricReactionLine,
+} from './dyn/line-select';

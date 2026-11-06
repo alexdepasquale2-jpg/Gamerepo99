@@ -1,6 +1,6 @@
 /** Per-person continuous state vector for fabric line blending. Pure sim. */
 
-import type { DataTables } from './load-data';
+import type { DataTables } from '../load-data';
 
 export type PersonStateVector = {
   warmth: number;

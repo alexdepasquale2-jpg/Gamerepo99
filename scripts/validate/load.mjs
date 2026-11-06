@@ -5,29 +5,15 @@ import { fileURLToPath } from 'node:url';
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const dataDir = join(root, 'src', 'data');
 
-/** Prefer grouped subfolder path; fall back to flat root (legacy). */
+/** Resolve a path under src/data (grouped subfolders only; no flat fallback). */
 export function resolveDataFile(...parts) {
-  if (parts.length === 1) {
-    const flat = join(dataDir, parts[0]);
-    try {
-      statSync(flat);
-      return flat;
-    } catch {
-      return flat;
-    }
+  if (parts.length === 0) {
+    throw new Error('resolveDataFile requires at least one path segment');
   }
-  const grouped = join(dataDir, ...parts);
-  try {
-    statSync(grouped);
-    return grouped;
-  } catch {
-    const flat = join(dataDir, parts[parts.length - 1]);
-    return flat;
-  }
+  return join(dataDir, ...parts);
 }
 
-
-/** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json (+ legacy flats if any). */
+/** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json until Task G. */
 const DATA_SUBDIRS = ['dialogue', 'people', 'world', 'economy', 'systems'];
 
 const loadHooksDir = (dataDir, errors) => {
