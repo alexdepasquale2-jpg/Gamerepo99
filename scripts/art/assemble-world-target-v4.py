@@ -4,7 +4,7 @@
 Root causes fixed:
 - hero/npc vendor sheets are 3×4 grids of 16×16 frames; v3 pasted whole sheets → stacks
 - RGB paste / black fill → black boxes; we only alpha_composite RGBA
-- single grass tile repeat → seams; we wang-hash multiple variants + edge blend
+- calm low-noise grass base + soft noise-mask blobs + sparse poisson tufts (no checkerboard)
 - despair desaturates RGB only (alpha preserved)
 """
 from __future__ import annotations
@@ -103,60 +103,107 @@ def extract_components(tiles_path: Path) -> dict[str, Image.Image]:
     return out
 
 
-def grass_variants() -> list[Image.Image]:
-    vars_: list[Image.Image] = []
+def _seed_rng(seed: bytes) -> np.random.Generator:
+    h = hashlib.md5(seed).digest()
+    return np.random.default_rng(int.from_bytes(h[:8], "little"))
+
+
+def calm_grass_mean() -> tuple[int, int, int]:
+    """Average ansimuz grass into one calm base RGB (low visual noise)."""
+    samples = []
     for name in ("ansimuz-grass-tile.png", "ansimuz-grass-tile-2.png", "ansimuz-grass-tile-3.png"):
-        g = load_rgba(VENDOR / name)
-        assert g.size == (GT, GT)
-        vars_.append(g)
-    # Extra variants via light channel shift + flips (same tile family → soft seams)
-    base = vars_[:]
-    for i, g in enumerate(base):
-        arr = np.array(g, dtype=np.int16)
-        arr[:, :, 1] = np.clip(arr[:, :, 1] + (i + 1) * 4, 0, 255)
-        arr[:, :, 0] = np.clip(arr[:, :, 0] - i * 2, 0, 255)
-        vars_.append(Image.fromarray(arr.astype(np.uint8), "RGBA"))
-        vars_.append(g.transpose(Image.Transpose.FLIP_LEFT_RIGHT))
-        vars_.append(g.transpose(Image.Transpose.FLIP_TOP_BOTTOM))
-    return vars_
+        arr = np.array(load_rgba(VENDOR / name), dtype=np.float32)
+        samples.append(arr[:, :, :3].mean(axis=(0, 1)))
+    mean = np.mean(samples, axis=0)
+    return int(mean[0]), int(mean[1]), int(mean[2])
 
 
-def blend_tile(a: Image.Image, b: Image.Image, edge: str) -> Image.Image:
-    """1–2px edge blend toward neighbor variant to break hard seams."""
-    aa = np.array(a, dtype=np.float32)
-    bb = np.array(b, dtype=np.float32)
-    out = aa.copy()
-    if edge == "right":
-        for i, w in enumerate((0.65, 0.35)):
-            x = GT - 1 - i
-            out[:, x] = aa[:, x] * (1 - w) + bb[:, x] * w
-    elif edge == "bottom":
-        for i, w in enumerate((0.65, 0.35)):
-            y = GT - 1 - i
-            out[y, :] = aa[y, :] * (1 - w) + bb[y, :] * w
-    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")
+def _lowfreq_noise(h: int, w: int, rng: np.random.Generator, scale: int = 48) -> np.ndarray:
+    """Soft irregular field in [0,1] — no square tile structure."""
+    sh, sw = max(2, h // scale + 2), max(2, w // scale + 2)
+    small = rng.random((sh, sw))
+    # Upsample with bilinear via PIL
+    im = Image.fromarray((small * 255).astype(np.uint8), "L")
+    big = im.resize((w, h), Image.Resampling.BILINEAR)
+    return np.array(big, dtype=np.float32) / 255.0
 
 
-def tile_grass(canvas: Image.Image, variants: list[Image.Image], region, seed: bytes) -> None:
+def paint_calm_grass(canvas: Image.Image, region, seed: bytes, alive: bool) -> None:
+    """Fill region with calm base + soft blob tint + sparse organic tufts (no checkerboard)."""
     x0, y0, x1, y1 = region
-    n = len(variants)
-    # Precompute index grid
-    cols = list(range(x0, x1, GT))
-    rows = list(range(y0, y1, GT))
-    idx = {}
-    for gy, y in enumerate(rows):
-        for gx, x in enumerate(cols):
-            h = hashlib.md5(seed + bytes([gx & 255, gy & 255])).digest()
-            idx[(gx, gy)] = h[0] % n
-    for gy, y in enumerate(rows):
-        for gx, x in enumerate(cols):
-            t = variants[idx[(gx, gy)]]
-            # blend toward right/bottom neighbors
-            if (gx + 1, gy) in idx:
-                t = blend_tile(t, variants[idx[(gx + 1, gy)]], "right")
-            if (gx, gy + 1) in idx:
-                t = blend_tile(t, variants[idx[(gx, gy + 1)]], "bottom")
-            paste_alpha(canvas, t, (x, y))
+    w, h = x1 - x0, y1 - y0
+    if w <= 0 or h <= 0:
+        return
+    rng = _seed_rng(seed)
+    br, bg, bb = calm_grass_mean()
+    # Slightly greener/calmer for reignited; cooler for despair base (desat later)
+    if alive:
+        br, bg, bb = br - 4, min(255, bg + 6), bb - 2
+    else:
+        br, bg, bb = br - 2, bg - 2, bb + 2
+
+    base = np.zeros((h, w, 4), dtype=np.float32)
+    base[:, :, 0] = br
+    base[:, :, 1] = bg
+    base[:, :, 2] = bb
+    base[:, :, 3] = 255
+    # Micro noise ±2 (not tileable pattern)
+    micro = rng.integers(-2, 3, size=(h, w, 3))
+    base[:, :, :3] = np.clip(base[:, :, :3] + micro, 0, 255)
+
+    # Soft irregular variant blobs via low-freq noise mask (not square patches)
+    n1 = _lowfreq_noise(h, w, rng, scale=56)
+    n2 = _lowfreq_noise(h, w, rng, scale=36)
+    blob = np.clip((n1 - 0.45) * 2.2, 0, 1) * 0.55 + np.clip((n2 - 0.55) * 1.8, 0, 1) * 0.35
+    # Warm patch tint vs cool moss tint
+    warm = np.array([18, 10, -6], dtype=np.float32)
+    cool = np.array([-8, 6, 4], dtype=np.float32)
+    tint = warm[None, None, :] * blob[:, :, None] + cool[None, None, :] * (1.0 - blob)[:, :, None] * 0.35
+    # Only apply where blob strength is meaningful — soft edges already from bilinear noise
+    strength = np.clip(blob * 0.85 + 0.15, 0, 1)[:, :, None]
+    base[:, :, :3] = np.clip(base[:, :, :3] + tint * strength * 0.55, 0, 255)
+
+    layer = Image.fromarray(base.astype(np.uint8), "RGBA")
+    paste_alpha(canvas, layer, (x0, y0))
+
+    # Sparse organic detail — poisson-ish (min distance), not grid
+    min_dist = 22 if alive else 28
+    count = max(4, (w * h) // (min_dist * min_dist * 3))
+    pts: list[tuple[int, int]] = []
+    attempts = 0
+    while len(pts) < count and attempts < count * 40:
+        attempts += 1
+        px = int(rng.integers(2, max(3, w - 2)))
+        py = int(rng.integers(2, max(3, h - 2)))
+        ok = True
+        for qx, qy in pts:
+            if (px - qx) ** 2 + (py - qy) ** 2 < min_dist * min_dist:
+                ok = False
+                break
+        if ok:
+            pts.append((px, py))
+
+    d = ImageDraw.Draw(canvas)
+    for px, py in pts:
+        ax, ay = x0 + px, y0 + py
+        kind = int(rng.integers(0, 5))
+        if kind == 0:
+            # short tuft
+            col = (max(0, br - 20), min(255, bg + 12), max(0, bb - 10), 200)
+            d.line([(ax, ay), (ax, ay - 3)], fill=col, width=1)
+            d.point([(ax - 1, ay - 2), (ax + 1, ay - 2)], fill=col)
+        elif kind == 1 and alive:
+            # tiny flower
+            petal = (240, 220, 90, 220) if rng.random() > 0.4 else (230, 140, 160, 220)
+            d.point([(ax, ay), (ax - 1, ay), (ax + 1, ay), (ax, ay - 1)], fill=petal)
+            d.point([(ax, ay)], fill=(80, 140, 50, 255))
+        elif kind == 2:
+            # darker speck
+            d.point([(ax, ay)], fill=(max(0, br - 30), max(0, bg - 20), max(0, bb - 15), 180))
+        else:
+            # pale blade
+            col = (min(255, br + 25), min(255, bg + 20), min(255, bb + 8), 160)
+            d.point([(ax, ay), (ax, ay - 1)], fill=col)
 
 
 def dirt_band(canvas: Image.Image, y0: int, y1: int, seed: bytes, dirt_stamp: Image.Image | None) -> None:
@@ -174,15 +221,14 @@ def dirt_band(canvas: Image.Image, y0: int, y1: int, seed: bytes, dirt_stamp: Im
 
 def build_half(alive: bool, comps: dict[str, Image.Image], chars: list[Image.Image]) -> Image.Image:
     half = Image.new("RGBA", (HALF, H), (0, 0, 0, 0))
-    seed = b"alive-v4" if alive else b"despair-v4"
-    variants = grass_variants()
+    seed = b"alive-v4b" if alive else b"despair-v4b"
 
     sky = (118, 168, 208, 255) if alive else (88, 98, 108, 255)
     ImageDraw.Draw(half).rectangle([0, HDR, HALF, 100], fill=sky)
 
-    tile_grass(half, variants, (0, 70, HALF, 250), seed + b"u")
+    paint_calm_grass(half, (0, 70, HALF, 250), seed + b"u", alive)
     dirt_band(half, 248, 248 + 56, seed, comps.get("dirt"))
-    tile_grass(half, variants, (0, 300, HALF, H), seed + b"l")
+    paint_calm_grass(half, (0, 300, HALF, H), seed + b"l", alive)
 
     # Cliff strip
     if "cliff" in comps:
@@ -279,7 +325,7 @@ def main() -> None:
     d.text((10, 6), "Hearthfall — 2.5D world target v4", fill=(242, 233, 228, 255), font=font)
     d.text(
         (310, 8),
-        "ansimuz CC0 • single 16px frames • alpha_composite • 1 char/spot • blended grass",
+        "ansimuz CC0 • single frames • alpha_composite • 1 char/spot • calm grass + soft blobs",
         fill=(160, 150, 140, 255),
         font=small,
     )
