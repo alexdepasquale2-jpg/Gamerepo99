@@ -5,7 +5,7 @@
 **Files:**
 - Create: `src/sim/world-dump.ts` (if not inside worldgen)
 - Modify: `src/sim/index.ts` export `generateWorld`, `dumpWorld`, `createPlaySession` (or `createWorldSession`)
-- Test: `tests/sim/world-dump.test.ts`
+- Test: `tests/sim/fabric/world-dump.test.ts`
 
 **Interfaces:**
 - `createPlaySession({ mode: 'inspect', seed })` returns session with `dump(): string` / `snapshot()` including town count

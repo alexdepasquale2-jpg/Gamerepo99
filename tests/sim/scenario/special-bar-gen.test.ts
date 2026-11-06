@@ -7,7 +7,7 @@ import {
   createPlaySession,
   resolveScenarioPerson,
   type PlaySession,
-} from '../../src/sim';
+} from '../../../src/sim';
 
 const MEMORABLE = [
   'moment_warm_loaf_cold_hill',

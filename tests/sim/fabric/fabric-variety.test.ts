@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateWorld } from '../../src/sim/gen/world';
+import { generateWorld } from '../../../src/sim/gen/world';
 
 const SEEDS = [7, 11, 42, 99, 256, 1024, 4096, 7777];
 

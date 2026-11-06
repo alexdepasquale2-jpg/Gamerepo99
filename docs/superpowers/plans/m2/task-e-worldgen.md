@@ -6,7 +6,7 @@
 - Create: `src/sim/worldgen.ts`, `src/sim/history-gen.ts`
 - Create data: `src/data/history-tables.json` (flat) → later `world/history-tables.json`
 - Modify: towns/kinship as outputs of gen (anchors merged)
-- Test: `tests/sim/worldgen-determinism.test.ts`, `tests/sim/worldgen-coherence.test.ts`
+- Test: `tests/sim/gen/worldgen-determinism.test.ts`, `tests/sim/gen/worldgen-coherence.test.ts`
 
 **Interfaces:**
 - Produces: `generateWorld(seed: number, opts?: { includeAnchors?: boolean }): GeneratedWorld`
@@ -45,7 +45,7 @@ it('coherence ok for seed 42', () => {
 });
 ```
 
-- [ ] **Step 2: FAIL** — `npx vitest run tests/sim/worldgen-determinism.test.ts tests/sim/worldgen-coherence.test.ts`
+- [ ] **Step 2: FAIL** — `npx vitest run tests/sim/gen/worldgen-determinism.test.ts tests/sim/gen/worldgen-coherence.test.ts`
 
 - [ ] **Step 3: Implement** — place N settlements on gapAxis 0..1; attach biomes/routes/facilities from tables; spawn non-anchor people via history-tables; wire kin/friend/pen_pal; merge Ashford anchors; doctrines per polity size.
 
@@ -54,7 +54,7 @@ it('coherence ok for seed 42', () => {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/sim/worldgen.ts src/sim/history-gen.ts src/data/history-tables.json tests/sim/worldgen-determinism.test.ts tests/sim/worldgen-coherence.test.ts
+git add src/sim/worldgen.ts src/sim/history-gen.ts src/data/history-tables.json tests/sim/gen/worldgen-determinism.test.ts tests/sim/gen/worldgen-coherence.test.ts
 git commit -m "feat(m2-fabric): seeded worldgen with determinism and coherence"
 ```
 

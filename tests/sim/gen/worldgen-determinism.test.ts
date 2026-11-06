@@ -3,9 +3,9 @@ import {
   gapSpread,
   historyCoherence,
   kinConnectedness,
-} from '../bots/fabric/fabric-metrics';
-import thresholds from '../bots/fabric/fabric-thresholds.json';
-import { generateWorld } from '../../src/sim/gen/world';
+} from '../../bots/fabric/fabric-metrics';
+import thresholds from '../../bots/fabric/fabric-thresholds.json';
+import { generateWorld } from '../../../src/sim/gen/world';
 
 function historyBeatIds(seed: number): string[] {
   return (generateWorld({ seed, peopleCount: 8 }).history ?? []).map((h) => h.id);

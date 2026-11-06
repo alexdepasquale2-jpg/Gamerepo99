@@ -4,14 +4,14 @@ import {
   generatePeople,
   generatePersonDraft,
   generateWorld,
-} from '../../src/sim/fabric';
+} from '../../../src/sim/fabric';
 import {
   scoreBakeCandidate,
   trailingWordClause,
   leadingWordPrefix,
-} from '../../src/sim/fabric/fabric-bake-score';
-import { loadData } from '../../src/sim/load-data';
-import { generateWorld as generateWorldGen } from '../../src/sim/gen/world';
+} from '../../../src/sim/fabric/fabric-bake-score';
+import { loadData } from '../../../src/sim/load-data';
+import { generateWorld as generateWorldGen } from '../../../src/sim/gen/world';
 
 describe('fabric facade baked lines (Probe seam)', () => {
   it('generateWorld(42) lines are not stub-voice and come from fragment corpus', () => {

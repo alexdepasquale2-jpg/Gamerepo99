@@ -1,5 +1,8 @@
 # Seeded scenario suite (Loom → Forge / Probe)
 
+**Moved:** Gate test `special-bar-gen.test.ts` → `tests/sim/scenario/special-bar-gen.test.ts`.
+Run: `npx vitest run tests/sim/scenario/special-bar-gen.test.ts`.
+
 **Data:** `src/data/scenarios.json`  
 **API:** Forge `createPlaySession` (M2 plan / Probe `BotSession` + scenario extensions)  
 **Gate:** M2 “What makes this special” — ≥3 of 5 memorable moments + first-10-min timing checks.
@@ -112,4 +115,4 @@ Memorable moments retarget via `worldSeed` + `resolvePerson` on each scenario JS
 - Resolver: `resolveScenarioPerson(session, { preferAnchorId?, woundId?, tagsAny?, siteKind? })` (anchors preferred when present).
 - Advance: `act('advance:dusk'|'advance:dawn'|…)` fires dusk personal-cost hooks.
 - Metrics: `session.metrics()` records `firstChoiceAtTick` / `firstConsequenceAtTick` on `approach@` / method commit.
-- Gate test: `npx vitest run tests/scenarios/special-bar-gen.test.ts` — BAR ≥3 of 5 memorable moments on gen seeds.
+- Gate test: `npx vitest run tests/sim/scenario/special-bar-gen.test.ts` — BAR ≥3 of 5 memorable moments on gen seeds.

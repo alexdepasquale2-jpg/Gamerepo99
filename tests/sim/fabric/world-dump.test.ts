@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   createPlaySession,
   dumpWorld,
-} from '../../src/sim/fabric/world-dump';
-import { generateWorld } from '../../src/sim/gen/world';
+} from '../../../src/sim/fabric/world-dump';
+import { generateWorld } from '../../../src/sim/gen/world';
 import {
   createPlaySession as createPlaySessionFromIndex,
   dumpWorld as dumpWorldFromIndex,
-} from '../../src/sim/index';
+} from '../../../src/sim/index';
 import {
   createPlaySession as createPlaySessionFromFabric,
   dumpWorld as dumpWorldFromFabric,
-} from '../../src/sim/fabric';
+} from '../../../src/sim/fabric';
 
 describe('dumpWorld', () => {
   it('includes seed and site ids from Task E gapSites', () => {

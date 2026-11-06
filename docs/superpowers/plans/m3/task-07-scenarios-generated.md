@@ -4,7 +4,7 @@
 
 **Files:**
 - Modify: `src/data/systems/scenarios/` (one file per scenario + `index.json`) — add `worldSeed` + `resolvePerson` by tag/wound
-- Modify: `tests/scenarios/README.md`; create `tests/scenarios/special-bar-gen.test.ts`
+- Modify: `tests/scenarios/README.md`; create `tests/sim/scenario/special-bar-gen.test.ts`
 - Spec: M3 design §5
 
 **Interfaces:**
@@ -30,7 +30,7 @@ it('warm-loaf path finds bakery-capable person on seed with anchors', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run tests/scenarios/special-bar-gen.test.ts`  
+Run: `npx vitest run tests/sim/scenario/special-bar-gen.test.ts`  
 Expected: FAIL
 
 - [ ] **Step 3: Write minimal implementation**
@@ -39,7 +39,7 @@ Resolver + dusk advance helpers; ≥3 of 5 moments implementable; first-10-min m
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run tests/scenarios/special-bar-gen.test.ts`  
+Run: `npx vitest run tests/sim/scenario/special-bar-gen.test.ts`  
 Expected: PASS (≥3 moments)
 
 - [ ] **Step 5: Commit**

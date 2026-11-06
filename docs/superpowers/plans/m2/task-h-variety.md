@@ -6,7 +6,7 @@
 
 **Files (Forge):**
 - Modify: `src/sim/gen/settlements-gen.ts`, `gap-sites.ts`, `history-gen.ts`, `kin-gen.ts`, `doctrines-gen.ts`, `routes-gen.ts`, `biomes-gen.ts`, `load-world-tables.ts` (merge `world/towns/gap-poles.json`, load `world-shapes.json`, `kin-patterns.json`, `fauna.json` as needed)
-- Test: `tests/sim/fabric-variety.test.ts` (new)
+- Test: `tests/sim/fabric/fabric-variety.test.ts` (new)
 
 **Data already landed (Loom):** gap-pole towns, doctrines, branching history beats (by kind), world-shapes, kin-patterns, biomes+, fauna, crops, ores, extra routes/links. Validator merges `world/towns/`.
 
@@ -70,7 +70,7 @@ describe('fabric variety thresholds', () => {
 });
 ```
 
-Run: `npx vitest run tests/sim/fabric-variety.test.ts` — **expect FAIL** on HEAD before formula wiring.
+Run: `npx vitest run tests/sim/fabric/fabric-variety.test.ts` — **expect FAIL** on HEAD before formula wiring.
 
 ---
 
@@ -87,7 +87,7 @@ Run: `npx vitest run tests/sim/fabric-variety.test.ts` — **expect FAIL** on HE
 
 ## Step 3: Re-run variety test + Fabric suite
 
-- `npx vitest run tests/sim/fabric-variety.test.ts` PASS  
+- `npx vitest run tests/sim/fabric/fabric-variety.test.ts` PASS  
 - Full `npm test` stays green (186+).  
 - Probe: re-run fabric bots; history/gap/kin should no longer read as clones.
 
@@ -96,6 +96,6 @@ Run: `npx vitest run tests/sim/fabric-variety.test.ts` — **expect FAIL** on HE
 ## Step 4: Commit (Forge)
 
 ```bash
-git add src/sim/gen tests/sim/fabric-variety.test.ts
+git add src/sim/gen tests/sim/fabric/fabric-variety.test.ts
 git commit -m "feat(m2-fabric): variety shapes, kin patterns, branching history"
 ```

@@ -64,7 +64,7 @@
 - Pick rate ~4.8% rest+travel is enough to prove the policy, **not** enough to keep any of 27 cells alive.
 
 ## Special-bar cite
-`npx vitest run tests/scenarios/special-bar-gen.test.ts` → **6/6 pass** @ `ca882cd`.
+`npx vitest run tests/sim/scenario/special-bar-gen.test.ts` → **6/6 pass** @ `ca882cd`.
 
 ## Playwright / manual
 **Skipped** (conserve). Prior green @ `c91755e`: `npm run test:e2e:m3` **1/1**.
@@ -88,6 +88,6 @@
 ```bash
 npx vite-node scripts/run-playthrough-matrix.mts
 npm run test:bots
-npx vitest run tests/scenarios/special-bar-gen.test.ts
+npx vitest run tests/sim/scenario/special-bar-gen.test.ts
 npm run build
 ```

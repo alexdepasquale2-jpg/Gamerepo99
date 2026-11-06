@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { generateWorld } from '../../src/sim/gen/world';
-import { loadHistoryTables } from '../../src/sim/gen/load/load-history';
-import { historyChainCoherent } from '../../src/sim/gen/society/history-gen';
-import { assertWorldCoherence } from '../../src/sim/dyn/coherence';
+import { generateWorld } from '../../../src/sim/gen/world';
+import { loadHistoryTables } from '../../../src/sim/gen/load/load-history';
+import { historyChainCoherent } from '../../../src/sim/gen/society/history-gen';
+import { assertWorldCoherence } from '../../../src/sim/dyn/coherence';
 
 describe('worldgen coherence', () => {
   it('history chainsFrom order is coherent for seed 42', () => {
