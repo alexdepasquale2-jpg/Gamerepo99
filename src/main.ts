@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import mapData from './data/map.json';
+import mapData from './data/world/map.json';
 import { BootScene } from './render/boot-scene';
 import { WanderScene } from './render/wander-scene';
 import { createHud } from './ui/hud';

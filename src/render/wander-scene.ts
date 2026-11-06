@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import mapData from '../data/map.json';
+import mapData from '../data/world/map.json';
 import { createWorld, tick, type World } from '../sim';
 import { attachSparkFx } from './spark-fx';
 

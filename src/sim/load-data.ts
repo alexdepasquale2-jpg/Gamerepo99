@@ -2,23 +2,23 @@
 
 import type { ArchetypeDef, HookDef } from './types/data';
 
-import archetypesJson from '../data/archetypes.json';
-import traitsJson from '../data/traits.json';
-import methodsJson from '../data/methods.json';
-import peopleJson from '../data/people.json';
-import townsJson from '../data/towns.json';
-import linksJson from '../data/links.json';
-import playerJson from '../data/player.json';
-import woundsJson from '../data/wounds.json';
-import marksJson from '../data/marks.json';
-import eventsJson from '../data/events.json';
-import proofsJson from '../data/proofs.json';
-import timeJson from '../data/time.json';
-import ripplesJson from '../data/ripples.json';
+import archetypesJson from '../data/people/archetypes.json';
+import traitsJson from '../data/people/traits.json';
+import methodsJson from '../data/systems/methods.json';
+import peopleJson from '../data/people/people.json';
+import townsJson from '../data/world/towns.json';
+import linksJson from '../data/world/links.json';
+import playerJson from '../data/systems/player.json';
+import woundsJson from '../data/systems/wounds.json';
+import marksJson from '../data/systems/marks.json';
+import eventsJson from '../data/systems/events.json';
+import proofsJson from '../data/people/proofs.json';
+import timeJson from '../data/systems/time.json';
+import ripplesJson from '../data/systems/ripples.json';
 import linesJson from '../data/lines.json';
-import kinshipJson from '../data/kinship.json';
-import lettersJson from '../data/letters.json';
-import doctrinesJson from '../data/doctrines.json';
+import kinshipJson from '../data/people/kinship.json';
+import lettersJson from '../data/dialogue/letters.json';
+import doctrinesJson from '../data/systems/doctrines.json';
 
 import hooksSparkRecovery from '../data/hooks/spark-recovery.json';
 import hooksPersonalCost from '../data/hooks/personal-cost.json';

@@ -1,9 +1,12 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const dataDir = join(root, 'src', 'data');
+
+/** Subfolders from Loom §5 / Tidy layout. Root still holds lines.json (+ legacy flats if any). */
+const DATA_SUBDIRS = ['dialogue', 'people', 'world', 'economy', 'systems'];
 
 const loadHooksDir = (dataDir, errors) => {
   const hooksDir = join(dataDir, 'hooks');
@@ -16,14 +19,30 @@ const loadHooksDir = (dataDir, errors) => {
   return { version: index.version, description: index.description, hooks };
 };
 
-export const loadAll = (errors) => {
-  const files = {};
-  for (const name of readdirSync(dataDir).filter((f) => f.endsWith('.json'))) {
+function loadJsonFilesInDir(dir, files, errors) {
+  for (const name of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+    const full = join(dir, name);
     try {
-      files[name] = JSON.parse(readFileSync(join(dataDir, name), 'utf8'));
+      files[name] = JSON.parse(readFileSync(full, 'utf8'));
     } catch (e) {
       errors.push(`PARSE ${name}: ${e.message}`);
     }
+  }
+}
+
+export const loadAll = (errors) => {
+  const files = {};
+  // Root-level JSON (lines.json, etc.)
+  loadJsonFilesInDir(dataDir, files, errors);
+  // Grouped folders — keyed by basename so REQUIRED_FILES stay stable
+  for (const sub of DATA_SUBDIRS) {
+    const dir = join(dataDir, sub);
+    try {
+      if (!statSync(dir).isDirectory()) continue;
+    } catch {
+      continue;
+    }
+    loadJsonFilesInDir(dir, files, errors);
   }
   try {
     files['hooks.json'] = loadHooksDir(dataDir, errors);
@@ -65,4 +84,8 @@ export const REQUIRED_FILES = [
   'stash-sites.json',
   'patrons.json',
   'scenarios.json',
+  'voice-anchors.json',
+  'line-fragments.json',
+  'reaction-curves.json',
+  'voice-constraints.json',
 ];
