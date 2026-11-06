@@ -30,7 +30,7 @@ type PlaySession = {
   };
   events(): { type: string; methodId?: string }[];
   travel?(routeId: string): void;
-  dump(): string;
+  dump(): string; // play mode may wrap dumpWorld(world).text; inspect already returns text
 };
 ```
 
@@ -60,7 +60,7 @@ Expected: FAIL (export missing or mode unimplemented)
 
 - [ ] **Step 3: Write minimal implementation**
 
-`generateWorld(seed, { includeAnchors: true })` → bind people/towns into `SimState`; place player in anchor town if any else first village; implement BotSession surface.
+`generateWorld({ seed, includeAnchors: true })`  // HEAD opts-object API; never positional seed → bind people/towns into `SimState`; place player in anchor town if any else first village; implement BotSession surface.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -74,7 +74,9 @@ git add src/sim/play-session.ts src/sim/index.ts tests/sim/play-session.test.ts
 git commit -m "feat(m3): createPlaySession play mode on generated world"
 ```
 
-**Depends on:** M2 Fabric Tasks E–F.  
+**HEAD note:** Today `createPlaySession` only implements `mode:'inspect'` (`src/sim/world-dump.ts`). Play mode is this task.
+
+**Depends on:** M2 Fabric Tasks E–F (+ Task H variety recommended before Probe).  
 **Acceptance:** Probe `connectBotSession()` no longer null when this export lands.
 
 ---

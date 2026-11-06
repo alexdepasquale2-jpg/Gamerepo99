@@ -15,7 +15,8 @@
 ```ts
 it('boot exposes overworld town markers from session', async () => {
   // headless: createPlaySession dump parsed by a pure helper used by scene
-  const towns = townsFromDump(createPlaySession({ mode: 'inspect', seed: 42 }).dump());
+  const session = createPlaySession({ mode: 'inspect', seed: 42, peopleCount: 8 });
+  const towns = townsFromDump(session!.dump()); // dump() → text; or dumpWorld(generateWorld({seed:42})).text
   expect(towns.length).toBeGreaterThanOrEqual(3);
 });
 ```
@@ -46,3 +47,6 @@ git commit -m "feat(m3): phaser walk generated overworld and town"
 
 ---
 
+
+
+**Render grid:** square orthogonal (`q=x`,`r=y`), not hex — wilderness-economy §6.

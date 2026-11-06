@@ -127,6 +127,8 @@ Hiring **trades time for risk**: lower `daysEff` but encounter table may swap to
 
 `src/sim` exposes a **read-only** snapshot each frame/tick. Phaser/`src/render` never mutates it.
 
+**Grid:** square & orthogonal. `q = x`, `r = y`. **Not hex.** Locked for Prism asset projection.
+
 ```typescript
 /** Warmth = 1 - despair (clamped). */
 export type Warmth01 = number; // 0..1
@@ -142,9 +144,14 @@ export interface Vec2 {
 /** Degrees clockwise from north. 0 = north, 90 = east. No vector variant. */
 export type HeadingDeg = number;
 
+/**
+ * Grid lock (2026-11-05 overnight): **square orthogonal**, not hex.
+ * `q` is world X (column), `r` is world Y (row). Axis-aligned neighbors only
+ * (N/E/S/W). Prism must not hex-mask or axial-hex project these tiles.
+ */
 export interface TileRenderView {
-  q: number; // tile column
-  r: number; // tile row
+  q: number; // = x (column) on the square ortho grid
+  r: number; // = y (row) on the square ortho grid
   biomeId: string; // → asset biome.<biomeId>
   warmth: Warmth01; // inverse of local despair / void
 }

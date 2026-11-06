@@ -45,6 +45,8 @@ git add src/sim/packets.ts src/sim tests/sim/ripple-play.test.ts
 git commit -m "feat(m3): cross-town ripples on generated kin"
 ```
 
+**HEAD:** Ripples follow `FabricWorld.kinEdges` (`kind`: kin|friend|pen_pal) across `settlements` / towns — not Ashford-only links.
+
 **Depends on:** Task 2.  
 **Acceptance:** Seed 11 (or documented seed) reproducible.
 

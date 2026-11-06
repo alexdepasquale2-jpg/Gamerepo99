@@ -75,5 +75,12 @@
   },
   "features": {
     "bakedDynamismLines": false
-  }
+  },
+  "worldSeed": 99,
+  "generatedWorld": true,
+  "resolvePerson": {
+    "preferAnchorId": "harold_finch",
+    "fallback": "first_matching_tags"
+  },
+  "specialBar": true
 }

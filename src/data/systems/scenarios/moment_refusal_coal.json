@@ -45,5 +45,12 @@
   },
   "features": {
     "bakedDynamismLines": false
-  }
+  },
+  "worldSeed": 42,
+  "generatedWorld": true,
+  "resolvePerson": {
+    "preferAnchorId": "jonah_pike",
+    "fallback": "first_matching_tags"
+  },
+  "specialBar": true
 }

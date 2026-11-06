@@ -45,6 +45,8 @@ git add src/sim/travel.ts src/sim/play-session.ts tests/sim/travel-play.test.ts
 git commit -m "feat(m3): travel days and roadside encounters"
 ```
 
+**HEAD:** Travel consumes `generateWorld(...).routes` + `road-encounters` tables; days advance while LOD ticks.
+
 **Depends on:** Task 1.  
 **Acceptance:** World continues ticking during travel (LOD/despair hooks may no-op if economy off).
 

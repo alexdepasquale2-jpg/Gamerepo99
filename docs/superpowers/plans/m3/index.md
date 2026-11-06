@@ -13,10 +13,29 @@
 
 ## Global Constraints
 
+### HEAD API lock (post–Fabric A–G, ~2f545d0+)
+
+Use these signatures — do **not** invent alternates:
+
+```ts
+import { generateWorld, dumpWorld, createPlaySession } from '../src/sim'; // or fabric / world-dump paths
+
+generateWorld({ seed, peopleCount?, includeAnchors? }): FabricWorld
+dumpWorld(world: FabricWorld): { text: string; hash: string }  // NOT a bare string
+createPlaySession({ mode: 'inspect', seed, peopleCount? }): InspectSession | null
+// InspectSession: { dump(): string; snapshot(): InspectSnapshot }
+// M3 Task 1 extends createPlaySession with mode: 'play' (currently inspect-only → null/unimplemented)
+```
+
+Grid/render: wilderness §6 — **square orthogonal**, `q = x`, `r = y`, not hex.
+
+**What makes this special (Fabric → M3):** keep the bar explicit — ≥3 of 5 seeded moments must pass as scenario tests against **generated** worlds (Task 7). Fabric variety (Task H) must land so gen seeds are not clone-shaped before Probe’s M3 gate.
+
+
 - No `archetypeId ===` in `src/sim/`.
 - Brood `activeBodiesMax: 1` (595d722); no dual-active in M3.
 - Travel advances calendar days while world ticks; `MobileRenderView.heading` is `number` degrees (0 north, 90 east).
-- Dialogue from `line-fragments` (canonical); do not revive `lines.json` as source of truth.
+- Dialogue from `dialogue/fragments/` (canonical line-fragments merge) (canonical); do not revive `lines.json` as source of truth.
 - Quality > schedule; Probe matrix must not stay `API_PENDING`.
 - Data paths: prefer `src/data/{dialogue,people,world,economy,systems,hooks}/` after Tidy move; flat fallback until then.
 

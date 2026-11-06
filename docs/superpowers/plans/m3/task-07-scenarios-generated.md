@@ -50,7 +50,9 @@ git commit -m "feat(m3): special-bar scenarios on generated world"
 ```
 
 **Depends on:** Tasks 2, 5.  
-**Acceptance:** Moments do not hard-require sole Ashford loop; anchors preferred when present.
+**BAR LOCK (Fabric → M3):** At least **3 of 5** memorable-moment scenarios must green on generated worlds (`worldSeed` + person resolver). Suggested first three: `moment_warm_loaf_cold_hill`, `moment_refusal_coal`, `moment_mark_comes_back`. First-10-minutes remains a fourth track.
+
+**Acceptance:** Moments do not hard-require sole Ashford loop; anchors preferred when present; ≥3/5 moments + first-10-min flags on gen seeds.
 
 ---
 

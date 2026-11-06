@@ -53,5 +53,12 @@
   },
   "features": {
     "bakedDynamismLines": false
-  }
+  },
+  "worldSeed": 7,
+  "generatedWorld": true,
+  "resolvePerson": {
+    "preferAnchorId": "marta_ellison",
+    "fallback": "first_matching_tags"
+  },
+  "specialBar": true
 }
