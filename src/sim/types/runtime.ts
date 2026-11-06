@@ -35,6 +35,9 @@ export type PersonState = {
   siteId?: string;
   woundId?: string;
   tags?: string[];
+  age?: number;
+  x?: number;
+  y?: number;
 };
 
 export type PacketState = {
@@ -54,5 +57,8 @@ export type SimState = {
   packets: PacketState[];
   deliveredProofs?: unknown[];
   ended?: string;
-  bus?: { lastIds?: string[] };
+  bus?: { lastIds?: string[]; emit?: (event: string, payload: unknown) => void };
+  /** Attached by boot / play session for pure resolve. */
+  data?: unknown;
+  rng?: unknown;
 };

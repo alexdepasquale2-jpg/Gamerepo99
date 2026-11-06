@@ -2,6 +2,7 @@ import { createEventBus, type EventBus } from './event-bus';
 import type { DataTables } from './load-data';
 import { createRng, type Rng } from './rng';
 import type { Npc, Tile, WorldConfig } from './types';
+import type { PersonState } from './types/runtime';
 
 export type World = {
   seed: number;
@@ -129,3 +130,47 @@ export function loadTownGrid(data: DataTables, townId: string): TownGrid {
     sites: (town.sites ?? []).map(parseSite),
   };
 }
+
+type PersonRow = {
+  id: string;
+  townId?: string;
+  siteId?: string;
+  woundId?: string;
+  flameStart?: number;
+  tags?: string[];
+  age?: number;
+};
+
+/** Seed runtime people with flame from people.json (optional town filter). */
+export function seedPeopleFlame(data: DataTables, townId?: string): Record<string, PersonState> {
+  const sitesByPerson = new Map<string, { x: number; y: number }>();
+  for (const town of data.towns as TownRow[]) {
+    for (const raw of town.sites ?? []) {
+      const personId = raw.personId == null ? null : String(raw.personId);
+      if (!personId) continue;
+      sitesByPerson.set(personId, { x: Number(raw.x ?? 0), y: Number(raw.y ?? 0) });
+    }
+  }
+
+  const out: Record<string, PersonState> = {};
+  for (const row of data.people as PersonRow[]) {
+    if (townId && row.townId !== townId) continue;
+    const start = Number(row.flameStart ?? 0);
+    const site = sitesByPerson.get(row.id);
+    out[row.id] = {
+      id: row.id,
+      flame: start,
+      flameStart: start,
+      townId: row.townId,
+      siteId: row.siteId,
+      woundId: row.woundId,
+      tags: Array.isArray(row.tags) ? [...row.tags] : [],
+      age: typeof row.age === 'number' ? row.age : undefined,
+      x: site?.x,
+      y: site?.y,
+      marks: [],
+    };
+  }
+  return out;
+}
+
