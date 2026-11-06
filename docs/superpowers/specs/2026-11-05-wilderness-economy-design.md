@@ -139,10 +139,8 @@ export interface Vec2 {
   y: number;
 }
 
-/** Prefer degrees clockwise from north, or unit vector — pick ONE and keep it. */
-export type Heading =
-  | { kind: 'deg'; deg: number } // 0 = north, 90 = east
-  | { kind: 'vec'; x: number; y: number }; // unit vector
+/** Degrees clockwise from north. 0 = north, 90 = east. No vector variant. */
+export type HeadingDeg = number;
 
 export interface TileRenderView {
   q: number; // tile column
@@ -164,7 +162,7 @@ export interface MobileRenderView {
   id: string;
   type: string; // worker | caravan | traveler | carter | ferryman | highwayman | …
   state: AgentRenderState;
-  heading: Heading;
+  heading: HeadingDeg; // 0 north, 90 east
   position: Vec2;
   // assets: fauna.<id> | caravan.<type> | ore.<id> as applicable
 }
