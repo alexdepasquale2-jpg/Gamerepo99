@@ -2,6 +2,9 @@
 
 export type Rng = {
   next: () => number;
+  /** Inclusive-exclusive integer in [min, max). Plan name. */
+  int: (min: number, max: number) => number;
+  /** Alias kept for M1 world/tick call sites. */
   nextInt: (min: number, max: number) => number;
 };
 
@@ -16,10 +19,10 @@ export function createRng(seed: number): Rng {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 
-  const nextInt = (min: number, max: number): number => {
+  const int = (min: number, max: number): number => {
     if (max <= min) return min;
     return min + Math.floor(next() * (max - min));
   };
 
-  return { next, nextInt };
+  return { next, int, nextInt: int };
 }
