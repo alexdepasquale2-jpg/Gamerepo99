@@ -30,7 +30,7 @@ hearthfall/
     render/   Phaser scenes, sprites, effects. Reads sim state, never mutates it directly.
     ui/       HUD, menus, input mapping. Sends commands to sim.
     main.ts   Entry: boots Phaser, wires sim + render + ui.
-  tests/      Unit tests mirror src/ (tests/sim/combat.test.ts for src/sim/combat.ts).
+  tests/      Unit tests mirror src/ (tests/sim/tick.test.ts for src/sim/tick.ts).
     e2e/      Playwright browser tests (*.spec.ts). artifacts/ is gitignored.
     bots/     Automated playthrough bots (Probe).
   .superpowers/sdd/  Task briefs, reports, review ledger. Scratch (tmp/, *.diff, *.patch) is gitignored.
@@ -47,7 +47,7 @@ hearthfall/
 ## Module boundaries
 - `sim` imports only `sim` and types from `data`. It must run headless under tests.
 - `render` and `ui` may import `sim` (read state, issue commands) and `data`.
-- `render` and `ui` do not import each other; share via sim state or a small event bus in `src/sim/events.ts`.
+- `render` and `ui` do not import each other; share via sim state or a small event bus in `src/sim/event-bus.ts`.
 - `data` is plain JSON with a matching type in `src/sim/types/`. Validate on load.
 - Nothing imports from `tests/`.
 - Visual values (colors, sprite keys) belong in `render` or `data`, not `sim`.
