@@ -1,7 +1,7 @@
 # Task 6 Report — Method resolve + diegetic refusals
 
 **Status:** DONE_WITH_CONCERNS  
-**Commit:** (see git after commit)  
+**Commit:** 784681b  
 **Skills used:** test-driven-development, verification-before-completion  
 **Stopped:** no Task 7; createPlaySession not started
 
