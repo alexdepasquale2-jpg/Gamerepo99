@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "resources": [
+    {
+      "id": "food_grain",
+      "name": "Grain",
+      "category": "food",
+      "spoilPerDawn": 0.02,
+      "tags": [
+        "food",
+        "supply"
+      ]
+    },
+    {
+      "id": "timber",
+      "name": "Timber",
+      "category": "material",
+      "spoilPerDawn": 0,
+      "tags": [
+        "build",
+        "fuel_source"
+      ]
+    },
+    {
+      "id": "ore_iron",
+      "name": "Iron Ore",
+      "category": "mineral",
+      "spoilPerDawn": 0,
+      "tags": [
+        "mineral",
+        "extractive"
+      ]
+    },
+    {
+      "id": "wool",
+      "name": "Wool",
+      "category": "goods",
+      "spoilPerDawn": 0.01,
+      "tags": [
+        "trade"
+      ]
+    },
+    {
+      "id": "fuel_cord",
+      "name": "Cordwood",
+      "category": "fuel",
+      "spoilPerDawn": 0,
+      "tags": [
+        "fuel",
+        "hearth"
+      ]
+    }
+  ]
+}

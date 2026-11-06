@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-wilderness-economy-design.md\u00a75",
+  "trades": [
+    {
+      "id": "carter_honest",
+      "role": "carter",
+      "lean": "good",
+      "baseSpark": 4,
+      "baseCoin": 2,
+      "speedMul": 0.75,
+      "trustBias": 0.1,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "prism": "caravan.carter"
+    },
+    {
+      "id": "caravaner_guild",
+      "role": "caravaner",
+      "lean": "good",
+      "baseSpark": 6,
+      "baseCoin": 4,
+      "speedMul": 0.7,
+      "trustBias": 0.15,
+      "routeIds": [
+        "route_ashford_lowmere",
+        "route_ashford_city_glare"
+      ],
+      "prism": "caravan.guild"
+    },
+    {
+      "id": "ferryman_briggs",
+      "role": "ferryman",
+      "lean": "good",
+      "baseSpark": 3,
+      "baseCoin": 1,
+      "speedMul": 0.65,
+      "trustBias": 0.2,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "requiresPersonBurning": "tom_briggs",
+      "prism": "caravan.ferry"
+    },
+    {
+      "id": "mount_stable",
+      "role": "mount",
+      "lean": "good",
+      "baseSpark": 5,
+      "baseCoin": 5,
+      "speedMul": 0.55,
+      "trustBias": 0.05,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "prism": "caravan.mount"
+    },
+    {
+      "id": "guide_local",
+      "role": "guide",
+      "lean": "good",
+      "baseSpark": 3,
+      "baseCoin": 2,
+      "speedMul": 0.9,
+      "trustBias": 0.15,
+      "encounterRerollBad": true,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "prism": "caravan.guide"
+    },
+    {
+      "id": "courier_letter",
+      "role": "courier",
+      "lean": "good",
+      "baseSpark": 2,
+      "baseCoin": 1,
+      "speedMul": 0.5,
+      "trustBias": 0.1,
+      "packetDaysMul": 0.5,
+      "routeIds": [
+        "route_ashford_lowmere",
+        "route_ashford_city_glare"
+      ],
+      "prism": "caravan.courier"
+    },
+    {
+      "id": "smuggler_gap",
+      "role": "smuggler",
+      "lean": "mixed",
+      "baseSpark": 3,
+      "baseCoin": 3,
+      "speedMul": 0.45,
+      "trustBias": -0.1,
+      "exposureAdd": 0.08,
+      "routeIds": [
+        "route_ashford_city_glare"
+      ],
+      "prism": "caravan.smuggler"
+    },
+    {
+      "id": "gouger_cart",
+      "role": "gouger",
+      "lean": "bad",
+      "baseSpark": 9,
+      "baseCoin": 8,
+      "speedMul": 0.7,
+      "trustBias": -0.25,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "prism": "caravan.gouger"
+    },
+    {
+      "id": "scammer_shortcut",
+      "role": "scammer",
+      "lean": "bad",
+      "baseSpark": 2,
+      "baseCoin": 2,
+      "speedMul": 0.4,
+      "trustBias": -0.3,
+      "lieDays": true,
+      "routeIds": [
+        "route_ashford_lowmere"
+      ],
+      "prism": "caravan.scammer"
+    },
+    {
+      "id": "highwayman",
+      "role": "highwayman",
+      "lean": "bad",
+      "baseSpark": 0,
+      "baseCoin": 0,
+      "speedMul": 1.0,
+      "trustBias": -0.5,
+      "hostile": true,
+      "routeIds": [
+        "route_ashford_lowmere",
+        "route_ashford_city_glare"
+      ],
+      "prism": "caravan.highwayman"
+    }
+  ],
+  "fastRouteUnlocks": [
+    {
+      "routeId": "route_ashford_lowmere",
+      "id": "unlock_strand_bond",
+      "when": {
+        "minBondWithAny": [
+          "tom_briggs",
+          "priya_sen"
+        ],
+        "minBond": 4
+      },
+      "daysMul": 0.75
+    },
+    {
+      "routeId": "route_ashford_city_glare",
+      "id": "unlock_mira_letter",
+      "when": {
+        "minBondWithAny": [
+          "mira_whitby",
+          "clara_whitby"
+        ],
+        "minBond": 3
+      },
+      "daysMul": 0.8,
+      "notes": "M4 player walk; M3 letters only"
+    }
+  ]
+}

@@ -78,7 +78,13 @@ const required = [
   'lines.json',
   'kinship.json',
   'letters.json',
-  'doctrines.json'
+  'doctrines.json',
+  'biomes.json',
+  'economy-resources.json',
+  'facilities.json',
+  'routes.json',
+  'road-encounters.json',
+  'travel-trades.json',
 ];
 for (const f of required) req(!!data[f], `missing ${f}`);
 
@@ -362,6 +368,32 @@ for (const a of acts) {
 const ash = (data['towns.json']?.towns || []).find((x) => x.id === 'ashford');
 if (ash?.doctrineId) req(doctrineIds.has(ash.doctrineId), 'ashford.doctrineId unknown');
 req(hooks.has('cost_town_despair'), 'cost_town_despair hook required');
+
+
+// wilderness economy refs
+const biomes = ids(data['biomes.json']?.biomes);
+const ecoRes = ids(data['economy-resources.json']?.resources);
+const facilities = ids(data['facilities.json']?.facilities);
+const routeIds = ids(data['routes.json']?.routes);
+const encTables = new Set((data['road-encounters.json']?.tables || []).map((x) => x.id));
+for (const r of data['routes.json']?.routes || []) {
+  req(towns.has(r.fromTownId) && towns.has(r.toTownId), `route ${r.id} towns`);
+  if (r.linkId) req(links.has(r.linkId), `route ${r.id} link`);
+  for (const b of r.biomeIds || []) req(biomes.has(b), `route ${r.id} biome ${b}`);
+  for (const f of r.facilityIds || []) req(facilities.has(f), `route ${r.id} facility ${f}`);
+  if (r.encounterTableId) req(encTables.has(r.encounterTableId), `route ${r.id} encounters`);
+}
+for (const f of data['facilities.json']?.facilities || []) {
+  if (f.townId) req(towns.has(f.townId), `facility ${f.id} town`);
+  if (f.routeId) req(routeIds.has(f.routeId), `facility ${f.id} route`);
+  for (const o of [...(f.outputs||[]), ...(f.inputs||[])]) req(ecoRes.has(o.resourceId), `facility ${f.id} resource`);
+}
+for (const tr of data['travel-trades.json']?.trades || []) {
+  for (const rid of tr.routeIds || []) req(routeIds.has(rid), `trade ${tr.id} route`);
+  if (tr.requiresPersonBurning) req(people.has(tr.requiresPersonBurning), `trade ${tr.id} person`);
+}
+req((data['travel-trades.json']?.trades || []).length >= 8, 'travel-trades need full cast');
+req(hooks.has('cost_road_labor'), 'cost_road_labor hook required');
 
 console.log('Files:', Object.keys(data).sort().join(', '));
 console.log(

@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "id": "enc_ashford_strand",
+      "entries": [
+        {
+          "id": "enc_carter_grain",
+          "weight": 40,
+          "blurb": "A cart of grain waits on the heath.",
+          "effects": [
+            {
+              "target": "town.stock.food_grain",
+              "op": "add",
+              "value": 1,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "encounter.spawn.carter"
+        },
+        {
+          "id": "enc_tired_logger",
+          "weight": 30,
+          "blurb": "A logger sits on a stump, not rising.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -1
+            }
+          ],
+          "workHook": "cost_road_labor",
+          "prism": "encounter.spawn.worker"
+        },
+        {
+          "id": "enc_kin_letter",
+          "weight": 20,
+          "blurb": "A runner with a damp letter.",
+          "effects": [
+            {
+              "target": "link.packet",
+              "op": "emit_packet",
+              "value": 1
+            }
+          ],
+          "prism": "encounter.spawn.runner"
+        },
+        {
+          "id": "enc_quiet_road",
+          "weight": 10,
+          "blurb": "Only wind in the ash leaves.",
+          "effects": [],
+          "prism": "biome.ambience.wood"
+        }
+      ]
+    },
+    {
+      "id": "enc_glare_road",
+      "entries": [
+        {
+          "id": "enc_ore_wagon",
+          "weight": 35,
+          "blurb": "City-bound ore; village dust in its wake.",
+          "effects": [
+            {
+              "target": "doctrine.realDelivery",
+              "op": "add",
+              "value": -0.02,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "route.caravan"
+        },
+        {
+          "id": "enc_propaganda_handbill",
+          "weight": 25,
+          "blurb": "A handbill promises prosperity no Ashford day matches.",
+          "effects": [
+            {
+              "target": "doctrine.propaganda",
+              "op": "add",
+              "value": 0.05,
+              "doctrineId": "doctrine_reach_progress"
+            }
+          ],
+          "prism": "encounter.spawn.handbill"
+        },
+        {
+          "id": "enc_broken_axle",
+          "weight": 20,
+          "blurb": "A caravan axle cracked \u2014 supply thins.",
+          "effects": [
+            {
+              "target": "route.condition",
+              "op": "add",
+              "value": -0.15,
+              "routeId": "route_ashford_city_glare"
+            }
+          ],
+          "prism": "route.break"
+        },
+        {
+          "id": "enc_empty_glare",
+          "weight": 20,
+          "blurb": "White road. No one to meet.",
+          "effects": [
+            {
+              "target": "town.despair",
+              "op": "add",
+              "value": 0.02,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "biome.ambience.glare"
+        }
+      ]
+    }
+  ]
+}

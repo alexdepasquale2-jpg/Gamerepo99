@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "m2Note": "Economy dormant unless sim reads routes; Ashford boots without requiring stock.",
+  "routes": [
+    {
+      "id": "route_ashford_lowmere",
+      "fromTownId": "ashford",
+      "toTownId": "lowmere",
+      "days": 2,
+      "linkId": "ashford_lowmere_mill_road",
+      "biomeIds": [
+        "mill_heath",
+        "ash_wood",
+        "river_margin"
+      ],
+      "condition": 1.0,
+      "broken": false,
+      "extractive": false,
+      "receiveShare": {
+        "ashford": 0.5,
+        "lowmere": 0.5
+      },
+      "facilityIds": [
+        "fac_ashford_mill",
+        "fac_ash_wood_camp",
+        "fac_lowmere_waystation"
+      ],
+      "encounterTableId": "enc_ashford_strand",
+      "unlockWhen": null,
+      "fastUnlockIds": [
+        "unlock_strand_bond"
+      ]
+    },
+    {
+      "id": "route_ashford_city_glare",
+      "fromTownId": "ashford",
+      "toTownId": "city_reach",
+      "days": 3,
+      "linkId": "ashford_city_reach_rumor",
+      "biomeIds": [
+        "glare_approach"
+      ],
+      "condition": 0.85,
+      "broken": false,
+      "extractive": true,
+      "receiveShare": {
+        "ashford": 0.3,
+        "city_reach": 0.7
+      },
+      "facilityIds": [
+        "fac_reach_quarry"
+      ],
+      "encounterTableId": "enc_glare_road",
+      "travelPlayerAllowed": false,
+      "notes": "Letters/caravan LOD; player walk optional M4",
+      "fastUnlockIds": [
+        "unlock_mira_letter"
+      ]
+    }
+  ],
+  "sizeTravelMuls": {
+    "large": 1.2,
+    "human": 1.0,
+    "multi": 1.05
+  }
+}
