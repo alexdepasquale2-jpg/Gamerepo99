@@ -134,7 +134,7 @@ function paintChunkGrassFill(
       originR * TILE_PX + size / 2,
       size + 2,
       size + 2,
-      0x7ebe49,
+      0x74af51,
     );
     rect.setDepth(0);
     container.add(rect);
@@ -157,7 +157,7 @@ function paintGrassTile(
   container.add(img);
 }
 
-/** Sparse world-space poisson tufts/flowers (not per-tile hash). */
+/** Sparse world-space poisson tufts/flowers — two layers so grass isn't a flat fill. */
 function paintPoissonGrassDetail(
   host: PaintHost,
   container: Phaser.GameObjects.Container,
@@ -165,31 +165,49 @@ function paintPoissonGrassDetail(
   originR: number,
   chunkTiles: number,
 ): void {
-  const minDist = 28; // px between detail marks
-  const cell = minDist;
   const ox = originQ * TILE_PX;
   const oy = originR * TILE_PX;
   const size = chunkTiles * TILE_PX;
+
+  // Layer A: mid tufts + flowers
+  paintPoissonLayer(host, container, ox, oy, size, originQ, originR, 28, 18, 0x3d6b28, true);
+  // Layer B: darker, sparser tufts (breaks neon flatness)
+  paintPoissonLayer(host, container, ox, oy, size, originQ + 17, originR + 9, 40, 12, 0x2a4f1c, false);
+}
+
+function paintPoissonLayer(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container,
+  ox: number,
+  oy: number,
+  size: number,
+  seedQ: number,
+  seedR: number,
+  cell: number,
+  keepPct: number,
+  tuftColor: number,
+  allowFlowers: boolean,
+): void {
   const cols = Math.ceil(size / cell);
   const rows = Math.ceil(size / cell);
   for (let gy = -1; gy <= rows; gy++) {
     for (let gx = -1; gx <= cols; gx++) {
-      const h = hash2(originQ * 64 + gx * 3 + 11, originR * 64 + gy * 5 + 19);
-      // ~18% of cells get a candidate → sparse after jitter
-      if (h % 100 > 17) continue;
+      const h = hash2(seedQ * 64 + gx * 3 + 11, seedR * 64 + gy * 5 + 19);
+      if (h % 100 >= keepPct) continue;
       const jx = ((h >> 8) % cell) - cell / 2;
       const jy = ((h >> 16) % cell) - cell / 2;
       const wx = ox + gx * cell + cell / 2 + jx;
       const wy = oy + gy * cell + cell / 2 + jy;
       if (wx < ox - 4 || wy < oy - 4 || wx > ox + size + 4 || wy > oy + size + 4) continue;
-      const kind = h % 7;
-      if (kind <= 4) {
-        const g = host.add.rectangle(wx, wy - 3, 2, 5, 0x3d6b28);
-        g.setAlpha(0.65);
+      const kind = h % 9;
+      if (!allowFlowers || kind <= 5) {
+        const ht = tuftColor === 0x2a4f1c ? 4 + (h % 3) : 5;
+        const g = host.add.rectangle(wx, wy - 3, 2, ht, tuftColor);
+        g.setAlpha(tuftColor === 0x2a4f1c ? 0.55 : 0.7);
         g.setDepth(0.15);
         container.add(g);
       } else {
-        const fl = host.add.rectangle(wx, wy - 4, 2, 2, kind === 5 ? 0xf0d878 : 0xe8a0c0);
+        const fl = host.add.rectangle(wx, wy - 4, 2, 2, kind === 6 ? 0xf0d878 : 0xe8a0c0);
         fl.setDepth(0.16);
         container.add(fl);
       }
@@ -378,6 +396,37 @@ function paintFenceAlongRoad(
   }
 }
 
+
+/** Place villagers with screen-space AABB gaps (sprite ~32×48 at scale 2). */
+function paintSpacedVillagers(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container | null,
+  town: { q: number; r: number },
+  candidates: [number, number, string, boolean][],
+): void {
+  // Screen-space: clear if dx>=56 OR dy>=56 (covers sprite width/height at scale 2)
+  const minAxis = 56;
+  const placed: { x: number; y: number }[] = [];
+  for (const [dq, dr, frame, flip] of candidates) {
+    let q = town.q + dq;
+    let r = town.r + dr;
+    let foot = tileFootWorld(q, r);
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const overlaps = placed.some((p) => {
+        const dx = Math.abs(foot.x - p.x);
+        const dy = Math.abs(foot.y - p.y);
+        return dx < minAxis && dy < minAxis;
+      });
+      if (!overlaps) break;
+      r += 0.85;
+      q += attempt % 2 === 0 ? 1.1 : -0.6;
+      foot = tileFootWorld(q, r);
+    }
+    placed.push(foot);
+    paintVillager(host, container, q, r, frame, flip);
+  }
+}
+
 function paintVillager(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
@@ -444,19 +493,22 @@ export function paintTownMarker(
     paintTree(host, container, town.q + dq, town.r + dr, v);
   }
 
-  // Crates clustered at porch with ≥24px gaps
+  // Crates at porch (upper terrace)
   paintCrate(host, container, town.q + 0.15, town.r + 0.45);
   paintCrate(host, container, town.q + 1.2, town.r + 0.4);
   paintCrate(host, container, town.q + 2.25, town.r + 0.45);
 
-  // 4 villagers spread around settlement (≥1.5 tiles / ~48px centers — clear of sprite overlap)
-  paintVillager(host, container, town.q - 2.2, town.r + 1.15, '1', true);
-  paintVillager(host, container, town.q + 0.2, town.r + 1.7, '7');
-  paintVillager(host, container, town.q + 2.6, town.r + 1.15, '4');
-  paintVillager(host, container, town.q + 5.0, town.r + 1.85, '7');
-
-  // Fence along road edge well east of courtyard (no villager/fence overlap)
+  // Fence along road edge on upper terrace
   paintFenceAlongRoad(host, container, town.q + 0.5, town.r, 8);
+
+  // Villagers on lower meadow / around road approach (south of cliff at r+4), screen-AABB spaced
+  // Lower meadow just south of cliff (cliff at town.r+4); wide screen spacing
+  paintSpacedVillagers(host, container, town, [
+    [-3.2, 5.6, '1', true],
+    [0.2, 7.4, '7', false],
+    [3.8, 5.5, '4', false],
+    [7.4, 6.9, '7', true],
+  ]);
 
   const labelY = foot.y - TILE_PX * 4.2 - 12;
   const label = host.add

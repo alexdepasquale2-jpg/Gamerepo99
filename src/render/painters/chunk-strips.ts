@@ -61,7 +61,7 @@ export function bakeCliffStrip(
   const lipH = 12;
   const faceH = 40;
   const baseH = 10;
-  const lowerShade = 7 * TILE_PX;
+  const lowerShade = 4 * TILE_PX; // Pass 5: short shade tied to rock face
   const pad = 20;
   const h = pad + lipH + faceH + baseH + lowerShade + 8;
   const canvas = document.createElement('canvas');
@@ -75,19 +75,19 @@ export function bakeCliffStrip(
     const cy = cliffContourY(x, baseY);
     const end = Math.min(x, w - 1 - x);
     // Wide soft terminus (~128px): slope/ramp into grass, no hard vertical cut
-    const taper = end < 128 ? end / 128 : 1;
-    if (taper < 0.015) continue;
-    const endFade = Math.min(1, end / 96);
-    const rampZone = taper < 0.7; // wide grassy ramp termini
+    const taper = end < 160 ? end / 160 : 1;
+    if (taper < 0.012) continue;
+    const endFade = Math.min(1, end / 120);
+    const rampZone = taper < 0.55; // grassy ramp termini
 
-    // Smooth ease into rock face (no sudden vertical wall)
-    const faceT = rampZone ? 0 : (taper - 0.7) / 0.3;
-    const faceEase = faceT * faceT * (3 - 2 * faceT);
+    // Face grows from taper 0.25 with ease-in so left edge is a long slope
+    const faceT = Math.max(0, Math.min(1, (taper - 0.25) / 0.75));
+    const faceEase = faceT * faceT * faceT; // cubic ease-in: slow start
     const faceHt = Math.max(0, Math.floor(faceH * faceEase));
     const lipHt = rampZone
-      ? Math.max(2, Math.floor(14 * Math.pow(taper, 0.7)))
+      ? Math.max(2, Math.floor(12 * Math.pow(taper, 0.75)))
       : Math.max(5, Math.floor(lipH));
-    const baseHt = faceHt > 8 ? Math.max(2, Math.floor(baseH * faceEase)) : 0;
+    const baseHt = faceHt > 6 ? Math.max(2, Math.floor(baseH * faceEase)) : 0;
 
     // Low-freq rock noise (no 64 period)
     const n =
@@ -103,28 +103,17 @@ export function bakeCliffStrip(
       const t = dy / lipHt;
       // Ends: reignited grass ramp; middle: rocky lip
       if (rampZone) {
-        const gr = 110 + n * 12;
-        const gg = 175 + n * 18;
-        const gb = 60 + n * 8;
-        put(img, w, x, y, gr, gg, gb, Math.floor(255 * endFade * (0.55 + 0.45 * taper)));
+        // Match calm grass (~0x76b84a) so termini don't smear dark green
+        const gr = 118 + n * 8;
+        const gg = 184 + n * 10;
+        const gb = 74 + n * 4;
+        put(img, w, x, y, gr, gg, gb, Math.floor(200 * endFade * taper));
       } else {
         put(img, w, x, y, 95 + n * 20, 140 + n * 25, 55 + n * 10, Math.floor(255 * endFade));
         if (t > 0.7) put(img, w, x, y, 150 + n * 15, 125 + n * 10, 80, Math.floor(255 * endFade));
       }
     }
-    // Grass ramp wedge at termini (slopes into lower terrace)
-    if (rampZone && taper > 0.05) {
-      const rampH = Math.floor(28 * taper);
-      for (let dy = 0; dy < rampH; dy++) {
-        const y = Math.round(cy + dy);
-        if (y < 0 || y >= h) continue;
-        const t = dy / rampH;
-        const a = Math.floor((180 * (1 - t) * taper) * endFade);
-        put(img, w, x, y, 100 + n * 10, 160 + n * 15, 55 + n * 6, a);
-      }
-    }
-
-    // Face — continuous rock, pebble flecks
+    // Face — continuous rock, pebble flecks (no green ramp wedge smear)
     for (let dy = 0; dy < faceHt; dy++) {
       const y = Math.round(cy + dy);
       if (y < 0 || y >= h) continue;
@@ -132,14 +121,12 @@ export function bakeCliffStrip(
       let r = (155 + n * 25) * shade;
       let g = (125 + n * 15) * shade;
       let b = (80 + n * 10) * shade;
-      // sparse pebbles (hash, not periodic)
       const hsh = hash2(x * 3 + dy, dy * 7 + x);
       if (hsh % 47 === 0) {
         r += 30;
         g += 25;
         b += 15;
       }
-      // horizontal strata
       if (dy % 7 === 0) {
         r *= 0.88;
         g *= 0.88;
@@ -153,19 +140,25 @@ export function bakeCliffStrip(
       if (y < 0 || y >= h) continue;
       put(img, w, x, y, 65, 50, 32, Math.floor((210 - dy * 15) * endFade));
     }
-    // Lower terrace shade (baked). Ramp ends: soft grass darkening only.
-    const shadeDepth = rampZone ? Math.floor(lowerShade * 0.45 * taper) : lowerShade;
-    for (let dy = 0; dy < shadeDepth; dy++) {
-      const y = Math.round(cy + faceHt + baseHt + dy);
-      if (y < 0 || y >= h) continue;
-      const a = Math.max(12, (rampZone ? 70 : 150) - dy * 1.6);
-      put(img, w, x, y, 45, 85, 35, Math.floor(a * endFade));
+    // Lower terrace shade ONLY under rock face — grows with faceEase (no free-floating rectangle)
+    if (faceHt > 2) {
+      const shadeDepth = Math.floor(lowerShade * faceEase);
+      const shadePeak = 55 * faceEase;
+      for (let dy = 0; dy < shadeDepth; dy++) {
+        const y = Math.round(cy + faceHt + baseHt + dy);
+        if (y < 0 || y >= h) continue;
+        const fall = 1 - dy / Math.max(1, shadeDepth);
+        // Extra horizontal soften near strip ends already in faceEase/endFade
+        const a = Math.floor(shadePeak * fall * fall * endFade);
+        if (a < 5) continue;
+        put(img, w, x, y, 42, 80, 34, a);
+      }
     }
   }
 
   ctx.putImageData(img, 0, 0);
-  // Mild horizontal blur to kill any residual column seams
-  blurH(ctx, w, h, 1);
+  // Blur rock face only (skip lower shade band) to avoid green smear bleed
+  blurHRockOnly(ctx, w, h, pad + lipH + faceH + baseH + 4, 1);
 
   if (host.textures.exists(key)) host.textures.remove(key);
   host.textures.addCanvas(key, canvas);
@@ -190,9 +183,22 @@ function put(
 }
 
 function blurH(ctx: CanvasRenderingContext2D, w: number, h: number, radius: number): void {
+  blurHRockOnly(ctx, w, h, h, radius);
+}
+
+/** Horizontal blur limited to y < yMax (keeps terrace shade edges clean). */
+function blurHRockOnly(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  yMax: number,
+  radius: number,
+): void {
   const src = ctx.getImageData(0, 0, w, h);
   const dst = ctx.createImageData(w, h);
-  for (let y = 0; y < h; y++) {
+  dst.data.set(src.data);
+  const yLim = Math.min(h, yMax);
+  for (let y = 0; y < yLim; y++) {
     for (let x = 0; x < w; x++) {
       let r = 0,
         g = 0,
@@ -306,7 +312,7 @@ export function bakeRoadRibbon(
   for (const p of left) ctx.lineTo(p.x, p.y);
   for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i]!.x, right[i]!.y);
   ctx.closePath();
-  ctx.fillStyle = '#9a7a48';
+  ctx.fillStyle = '#8c6e40';
   ctx.fill();
 
   // Inner slightly lighter band
@@ -327,7 +333,7 @@ export function bakeRoadRibbon(
     ctx.lineTo(r.x * 0.4 + p.x * 0.6, r.y * 0.4 + p.y * 0.6);
   }
   ctx.closePath();
-  ctx.fillStyle = '#a88854';
+  ctx.fillStyle = '#9a7a48';
   ctx.fill();
 
   // Soft feather: draw edge stroke with low alpha then blur
@@ -342,15 +348,21 @@ export function bakeRoadRibbon(
     ctx.stroke();
   }
 
-  // Sparse pebbles
-  for (let i = 0; i < samples.length; i += 6) {
+  // Denser, darker stipple like v4 mockup
+  for (let i = 0; i < samples.length; i += 2) {
     const p = samples[i]!;
     const h = hash2(Math.floor(p.x * 3), Math.floor(p.y * 5));
-    if (h % 3 !== 0) continue;
-    ctx.fillStyle = 'rgba(110,88,55,0.5)';
+    if (h % 5 === 0) continue; // ~80% keep
+    const ox = ((h % 7) - 3) * 0.9;
+    const oy = (((h >> 3) % 7) - 3) * 0.7;
+    ctx.fillStyle = h % 2 === 0 ? 'rgba(88,68,40,0.72)' : 'rgba(72,56,34,0.55)';
     ctx.beginPath();
-    ctx.ellipse(p.x + (h % 5) - 2, p.y + ((h >> 3) % 5) - 2, 1.6, 1.1, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x + ox, p.y + oy, 1.8 + (h % 3) * 0.3, 1.2, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (h % 4 === 0) {
+      ctx.fillStyle = 'rgba(60,46,28,0.45)';
+      ctx.fillRect(p.x + ox + 2, p.y + oy - 1, 1, 1);
+    }
   }
 
   // Alpha feather pass on the whole canvas edges of opaque region
