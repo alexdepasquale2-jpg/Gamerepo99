@@ -80,6 +80,18 @@ export function dumpWorld(world: FabricWorld): WorldDump {
     lines.push(`kin:${e.kind ?? 'kin'}:${e.from}->${e.to}`);
   }
 
+  const facilities = world.facilities ?? [];
+  lines.push(`facilityCount:${facilities.length}`);
+  for (const f of facilities) {
+    lines.push(`facility:${f.id}`);
+  }
+
+  const biomes = world.biomes ?? [];
+  lines.push(`biomeCount:${biomes.length}`);
+  for (const b of biomes) {
+    lines.push(`biome:${b.id}`);
+  }
+
   const text = lines.join('\n');
   return { text, hash: hashText(text) };
 }
