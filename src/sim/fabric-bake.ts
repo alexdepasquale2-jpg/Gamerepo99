@@ -9,7 +9,12 @@ import {
   type GeneratePeopleOpts,
   type GeneratePersonDraftOpts,
 } from './gen/people';
-import { leadingWordPrefix, pickPool, scoreBakeCandidate } from './fabric-bake-score';
+import {
+  leadingWordPrefix,
+  pickPool,
+  scoreBakeCandidate,
+  trailingWordClause,
+} from './fabric-bake-score';
 
 function pickBakedLine(
   seed: number,
@@ -37,9 +42,12 @@ function pickBakedLine(
   }
 
   const usedLeadingPrefixes = new Set<string>();
+  const usedTrailingClauses = new Set<string>();
   for (const t of usedTexts) {
     const prefix = leadingWordPrefix(t, 5);
     if (prefix) usedLeadingPrefixes.add(prefix);
+    const trail = trailingWordClause(t);
+    if (trail) usedTrailingClauses.add(trail);
   }
 
   let best = candidates[0]!;
@@ -55,6 +63,7 @@ function pickBakedLine(
       fragId: frag.id,
       candidateText: frag.text,
       usedLeadingPrefixes,
+      usedTrailingClauses,
     });
     // When fresh is empty, keep used texts as last resort.
     if (usedTexts.has(frag.text) || usedIds.has(frag.id)) score -= 1e9;

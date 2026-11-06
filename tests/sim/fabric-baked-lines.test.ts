@@ -143,6 +143,29 @@ describe('fabric facade baked lines (Probe seam)', () => {
     expect(fresh).toBeGreaterThan(shared);
   });
 
+  it('scoreBakeCandidate prefers a fresh trailing clause when alternatives exist', () => {
+    // Same poolIndex/fragId → identical base score; only trail penalty may differ.
+    const usedTrailingClauses = new Set(['i keep the notice.']);
+    const base = {
+      poolIndex: 10,
+      poolLength: 100,
+      personIndex: 1,
+      seed: 99,
+      usedPoolIndices: [] as number[],
+      fragId: 'same-id',
+      usedTrailingClauses,
+    };
+    const shared = scoreBakeCandidate({
+      ...base,
+      candidateText: 'Shame the storm if you want. The notice says so. I keep the notice.',
+    });
+    const fresh = scoreBakeCandidate({
+      ...base,
+      candidateText: "Inventory me later. The shelf doesn't owe you a duel.",
+    });
+    expect(fresh).toBeGreaterThan(shared);
+  });
+
   it('scoreBakeCandidate prefers rotated band and penalizes recent neighbors', () => {
     const poolLength = 1000;
     const seed = 42;

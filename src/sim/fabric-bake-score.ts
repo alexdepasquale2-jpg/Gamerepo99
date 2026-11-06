@@ -49,9 +49,31 @@ export function leadingWordPrefix(text: string, n = 5): string | null {
 }
 
 /**
+ * Trailing clause key: last clause after final . / — / ; if ≥ minWords;
+ * else last fallbackWords. Null if too short. Lowercased.
+ */
+export function trailingWordClause(
+  text: string,
+  minWords = 4,
+  fallbackWords = 5,
+): string | null {
+  const t = text.trim();
+  const parts = t.split(/(?<=[.—;])\s+/);
+  if (parts.length >= 2) {
+    const last = parts[parts.length - 1]!.trim();
+    const w = last.split(/\s+/).filter(Boolean);
+    if (w.length >= minWords) return last.toLowerCase();
+  }
+  const w = t.split(/\s+/).filter(Boolean);
+  if (w.length < fallbackWords) return null;
+  return w.slice(-fallbackWords).join(' ').toLowerCase();
+}
+
+/**
  * Higher is better. Deterministic from seed + personIndex + used set + fragId.
  * Rotation pulls toward a per-person band; novelty penalizes sitting near recent picks.
- * Optional leading-prefix penalty reduces audible chorus when fresh-prefix options exist.
+ * Optional leading-prefix / trailing-clause penalties reduce audible chorus when
+ * fresh options exist. Magnitude: exact(-1e9) > prefix(1e6) > trail(1e5) > rotation.
  */
 export function scoreBakeCandidate(args: {
   poolIndex: number;
@@ -62,6 +84,7 @@ export function scoreBakeCandidate(args: {
   fragId: string;
   candidateText?: string;
   usedLeadingPrefixes?: ReadonlySet<string>;
+  usedTrailingClauses?: ReadonlySet<string>;
   prefixWords?: number;
 }): number {
   const {
@@ -73,6 +96,7 @@ export function scoreBakeCandidate(args: {
     fragId,
     candidateText,
     usedLeadingPrefixes,
+    usedTrailingClauses,
     prefixWords = 5,
   } = args;
   if (poolLength <= 0) return 0;
@@ -99,5 +123,11 @@ export function scoreBakeCandidate(args: {
     if (prefix && usedLeadingPrefixes.has(prefix)) prefixPenalty = 1e6;
   }
 
-  return rotationBonus * 4 - noveltyPenalty * 8 + jitter - prefixPenalty;
+  let trailPenalty = 0;
+  if (candidateText && usedTrailingClauses && usedTrailingClauses.size > 0) {
+    const trail = trailingWordClause(candidateText);
+    if (trail && usedTrailingClauses.has(trail)) trailPenalty = 1e5;
+  }
+
+  return rotationBonus * 4 - noveltyPenalty * 8 + jitter - prefixPenalty - trailPenalty;
 }
