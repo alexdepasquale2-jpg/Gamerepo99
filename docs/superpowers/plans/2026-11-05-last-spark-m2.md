@@ -18,6 +18,7 @@
 - Dependence bonds ×0.5; dependence successors get `inherited_dependence`.
 - Free toolchain only; 32px tiles; `npm run build` && `npm test` must pass for M2 done.
 - Schedule: M2 due **Fri 8 AM**; M3–M5 Friday; polish Sat; showcase Sun. Feel > features. Defer LOD, multi-active Brood, full history gen to M3+.
+- **Save format (forward-compat only):** any M2 save JSON must include `version: 1` and may include reserved optional `imprint: null` (or omit). Do not implement imprint→NPC or world import/export in M2 — see `specs/2026-11-05-async-legacy-npc-design.md` (M5+).
 
 ---
 

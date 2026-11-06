@@ -2,7 +2,7 @@
 
 **Decision:** `docs/superpowers/specs/2026-11-05-design-backlog-design.md` (option C)  
 **Plans:** M2 `plans/2026-11-05-last-spark-m2.md` · M3 `plans/2026-11-05-last-spark-m3.md`  
-**Lore / Doctrine / Wilderness:** founding-lore-gap · doctrine-legitimacy · wilderness-economy specs  
+**Lore / Doctrine / Wilderness / Async:** founding-lore-gap · doctrine-legitimacy · wilderness-economy · async-legacy-npc specs  
 **Status:** `todo` · `ready` · `in_progress` · `done` · `blocked`  
 **Size:** `S` (<2h) · `M` (half-day) · `L` (full day)  
 
@@ -32,9 +32,16 @@
 | 22 | Full succession multi-gen | M4 | M | ready | |
 | 23 | history-tables + archetypes + relapse | M4 | M | ready | |
 | 24 | Balance / juice / showcase | M5 | M | todo | |
-| 25 | Save/audio/playable city pole | post | L | todo | |
+| 25 | World-file export/import (seed+deltas+imprint) | M5 | M | ready | async-legacy-npc §4; zero-cost files only |
+| 26 | Imprint → legacy NPC (tendencies→hooks, no archetype branch) | M5 | M | ready | §5 |
+| 27 | Graves / letters / marks from imported deltas visible | M5 | S | ready | |
+| 28 | Discovery UX: file picker + legend/grave inspect | M6 | M | ready | §6 |
+| 29 | Legacy NPC depth: memory/opinion/routine/goal/gossip tables | M6 | M | ready | §7 |
+| 30 | Share sheet / drag-drop / curated starter packs | M7 | M | todo | |
+| 31 | Optional free static host index | M8 | L | blocked | **Needs Niblet+Alex clearance before anything public** |
+| 32 | Save/audio/playable city pole | post | L | todo | |
 
-**Idle pull:** 1–5 M2 → 6–19 M3 → 20–23 M4 → 24 M5.
+**Idle pull:** 1–5 M2 → 6–19 M3 → 20–23 M4 → 24–27 M5 → 28–30 M6/M7 → 31 M8 (clearance).
 
 ## Completeness check
-Every row has Pri, Milestone, Size, Status. M3 deepening (prop/LOD/history/UI/tests) already in spec; wilderness+travel+render folded in.
+Every row has Pri, Milestone, Size, Status. M3 deepening (prop/LOD/history/UI/tests) already in spec; wilderness+travel+render folded in. Async legacy NPCs staged M5+; M2 only gets save `version` + reserved optional `imprint` slot (plan note).

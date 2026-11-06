@@ -11,9 +11,13 @@
 - Build `npm run build` artifact; fix P0 bugs only.  
 - Optional: one authored ending card per town clear (static text).
 
+## Also (depth / files)
+
+Async legacy world-file export/import + imprint→NPC per `specs/2026-11-05-async-legacy-npc-design.md` and BACKLOG rows 25–27. Zero-cost files only; no hosting in M5.
+
 ## Out
 
-New archetypes, new towns, combat, audio soundtrack, cloud saves, refactor sprees.
+New archetypes, new towns, combat, audio soundtrack, cloud saves / public hosting, refactor sprees, co-op.
 
 ## Acceptance
 

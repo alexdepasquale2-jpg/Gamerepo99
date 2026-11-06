@@ -53,6 +53,8 @@ Leaders carry **doctrines** (goals/promises). Track **realDelivery** vs **percei
 ### Wilderness & economy (pointer)
 Route-graph economy between settlements; travel takes days while the world ticks; hire trades; Prism `WorldRenderSnapshot` — `specs/2026-11-05-wilderness-economy-design.md`. M2 Ashford `economyOptIn:false`.
 
+### Asynchronous legacy NPCs (pointer)
+No co-op. Import/export versioned world files (seed + delta log + protagonist imprint); former PCs live on as legends/NPCs/graves. Zero-cost files first; free host only as M8 option with Niblet+Alex clearance. — `specs/2026-11-05-async-legacy-npc-design.md`. M2: save `version` + reserved optional `imprint` slot only.
 
 ---
 
