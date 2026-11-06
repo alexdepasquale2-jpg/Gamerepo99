@@ -58,3 +58,13 @@ export type {
   ScenarioPeopleSource,
 } from './scenario-resolve';
 export type { PlayMetrics, PlayLastResolve } from './play-session-types';
+
+/** Map TileSource seam (stamp now; native later). */
+export { fingerprintHex } from './map/fingerprint';
+export type { TileSource } from './map/tile-source';
+export type {
+  ChunkCoord,
+  ChunkTiles,
+  FacilityRenderView,
+  TileRenderView,
+} from './map/types';
