@@ -5,7 +5,11 @@ import {
   generatePersonDraft,
   generateWorld,
 } from '../../src/sim/fabric';
-import { scoreBakeCandidate } from '../../src/sim/fabric-bake-score';
+import {
+  scoreBakeCandidate,
+  trailingWordClause,
+  leadingWordPrefix,
+} from '../../src/sim/fabric-bake-score';
 import { loadData } from '../../src/sim/load-data';
 import { generateWorld as generateWorldGen } from '../../src/sim/gen/world';
 
@@ -122,7 +126,11 @@ describe('fabric facade baked lines (Probe seam)', () => {
 
   it('scoreBakeCandidate prefers a fresh leading-5-word prefix when alternatives exist', () => {
     // Same poolIndex/fragId → identical base score; only prefix penalty may differ.
-    const usedLeadingPrefixes = new Set(['if i start, will you']);
+    const sharedText =
+      "If I start, will you look away until I'm done?. Keep talking.";
+    const prefixKey = leadingWordPrefix(sharedText, 5);
+    expect(prefixKey).toBeTruthy();
+    const usedLeadingPrefixes = new Set([prefixKey!]);
     const base = {
       poolIndex: 10,
       poolLength: 100,
@@ -134,18 +142,24 @@ describe('fabric facade baked lines (Probe seam)', () => {
     };
     const shared = scoreBakeCandidate({
       ...base,
-      candidateText: "If I start, will you look away until I'm done?. Keep talking.",
+      candidateText: sharedText,
     });
     const fresh = scoreBakeCandidate({
       ...base,
       candidateText: "Paper can be an oath. Your shout isn't. The notice says so.",
     });
+    expect(shared).toBeLessThan(fresh - 1e5); // prefix 1e6 must dominate
     expect(fresh).toBeGreaterThan(shared);
   });
 
   it('scoreBakeCandidate prefers a fresh trailing clause when alternatives exist', () => {
     // Same poolIndex/fragId → identical base score; only trail penalty may differ.
-    const usedTrailingClauses = new Set(['i keep the notice.']);
+    // Key must match trailingWordClause output so the 1e5 penalty actually bites.
+    const sharedText =
+      'Shame the storm if you want. The notice says so. I keep the notice.';
+    const trailKey = trailingWordClause(sharedText);
+    expect(trailKey).toBeTruthy();
+    const usedTrailingClauses = new Set([trailKey!]);
     const base = {
       poolIndex: 10,
       poolLength: 100,
@@ -157,12 +171,13 @@ describe('fabric facade baked lines (Probe seam)', () => {
     };
     const shared = scoreBakeCandidate({
       ...base,
-      candidateText: 'Shame the storm if you want. The notice says so. I keep the notice.',
+      candidateText: sharedText,
     });
     const fresh = scoreBakeCandidate({
       ...base,
       candidateText: "Inventory me later. The shelf doesn't owe you a duel.",
     });
+    expect(shared).toBeLessThan(fresh - 1e4); // trail 1e5 must dominate jitter/rotation
     expect(fresh).toBeGreaterThan(shared);
   });
 
