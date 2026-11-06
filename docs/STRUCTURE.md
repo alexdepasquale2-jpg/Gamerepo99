@@ -14,6 +14,7 @@ hearthfall/
       Both stay pure (headless-testable); tests mirror them under tests/sim/gen/ and tests/sim/dyn/.
       fabric.ts Public Fabric API facade (e.g. connectFabricApi for bots). Re-exports from gen/ and dyn/ only; no logic.
       fabric-bake.ts is the only place gen output and dyn are composed.
+      gen/ worldgen helpers (history/gap/kin/settlements/routes/doctrines/facilities/biomes/anchors) stay pure; world-dump.ts + fabric-bake.ts sit at sim/ root.
       Split each into subfolders by stage once it passes ~8 files.
     data/     JSON content (units, items, levels, tuning). No code. Large registries split by category (e.g. hooks/).
       Grouped by domain subfolders (final layout pending Loom's M2 data redesign).
