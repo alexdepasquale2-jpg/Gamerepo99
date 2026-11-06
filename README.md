@@ -32,7 +32,7 @@ npm run test:e2e:m1               # M1 smoke (build + preview)
 npm run verify:m1                 # unit + build + M1 smoke
 ```
 
-See `docs/PROBE_M1_VERIFY.md`.
+See `docs/qa/PROBE_M1_VERIFY.md`.
 
 ## Build
 
