@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - No `archetypeId ===` branches in `src/sim/`.
-- Formulas verbatim from M3 spec §2–§3 (emit chance `0.4 + 0.25*weight`, LOD soft factor `0.85`).
+- Formulas verbatim from M3 spec §2–§3 including gap strain (`(0.4+0.25*w)/strainMul*connectionMul`); LOD soft factor `0.85`.
 - Authored people (`authored` or M2 cast) never overwritten by history gen.
 - `npm test && npm run validate` green; feel bus events remain.
 
@@ -76,12 +76,12 @@ git commit -m "feat(m3): dual active bodies via trait data"
 **Interfaces:**
 - Consumes: kinship edges, ripples.crossTown
 - Produces: `emitAfterResolve(state, personId)`, `deliverDuePackets(state)`
-- Emit proof chance: `0.4 + 0.25 * maxEdgeWeightToOtherTown`
+- Emit proof chance: `(0.4 + 0.25 * edge.weight) / strainMul * connectionMul` where `strainMul = 1 + 1.5 * abs(gapAxisA-gapAxisB)`, `connectionMul = 0.7 + 0.6 * connection` (M3 §2.3)
 
 - [ ] **Step 1: Write the failing test**
 
 ```ts
-it('baker cousin: marta growth can packet priya after mill_road.days', () => {
+it('baker cousin: strained chance ~0.47 then priya packet after mill_road.days', () => {
   const state = bootM2World(loadData(), 'marrow', 11);
   // force genuine_growth on marta, force emit roll success via rng stub
   emitAfterResolve(state, 'marta_ellison');
@@ -305,6 +305,116 @@ Expected: PASS
 ```bash
 git add src/sim tests/sim/gap.test.ts src/data/towns.json src/data/kinship.json
 git commit -m "feat(m3): gap axis strain representation bridge acts"
+```
+
+---
+
+### Task 7: Doctrine dawn tick + acts (no archetype branches)
+
+**Files:**
+- Create: `src/sim/doctrine.ts`
+- Data: `src/data/doctrines.json` (present)
+- Modify: `src/sim/sim-context.ts` dawn order
+- Test: `tests/sim/doctrine.test.ts`
+- Spec: M3 §11; decision `specs/2026-11-05-doctrine-legitimacy-design.md`
+
+**Interfaces:**
+- Produces: `tickDoctrine(state, townId)`, `applyDoctrineAct(state, actId, ctx)`
+- Forbidden: `archetypeId ===` in doctrine.ts
+
+- [ ] **Step 1: Write the failing test**
+
+```ts
+it('expose collapses legitimacy when gap and exposure high', () => {
+  const state = bootM2World(loadData(), 'ivy_quill', 8);
+  const d = state.towns.city_reach.doctrine;
+  d.realDelivery = 0.55; d.perceivedDelivery = 0.8; d.exposure = 0.5;
+  const leg0 = d.legitimacy;
+  applyDoctrineAct(state, 'act_expose_lie', { personId: 'mira_whitby' });
+  tickDoctrine(state, 'city_reach');
+  expect(state.towns.city_reach.doctrine.legitimacy).toBeLessThan(leg0);
+});
+
+it('ashford without doctrine tick still boots', () => {
+  const state = bootM2World(loadData(), 'marrow', 1);
+  expect(state.towns.ashford.doctrineId).toBe('doctrine_mill_bread');
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run tests/sim/doctrine.test.ts`
+Expected: FAIL
+
+- [ ] **Step 3: Write minimal implementation**
+
+Implement §11 formulas; acts from data; feltByMaxGapAxis filter.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run tests/sim/doctrine.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/sim/doctrine.ts tests/sim/doctrine.test.ts src/data/doctrines.json
+git commit -m "feat(m3): doctrine legitimacy tick and acts"
+```
+
+---
+
+### Task 8: Wilderness economy LOD + travel hire (Ashford-safe)
+
+**Files:**
+- Create: `src/sim/economy.ts`, `src/sim/travel.ts`, `src/sim/render-snapshot.ts`
+- Data: `biomes.json`, `economy-resources.json`, `facilities.json`, `routes.json`, `road-encounters.json`, `travel-trades.json`
+- Test: `tests/sim/economy.test.ts`, `tests/sim/render-snapshot.test.ts`
+- Spec: M3 §12; decision note §§5–6
+
+**Interfaces:**
+- Produces: `tickEconomyLod(state)`, `startTravel(state, routeId)`, `hireTrade(state, tradeId)`, `getWorldRenderSnapshot(state): WorldRenderSnapshot`
+- Forbidden: archetypeId branches; use embodiment size tags for `sizeTravelMuls`
+
+- [ ] **Step 1: Write the failing test**
+
+```ts
+it('economyOptIn false does not add despair from empty stock', () => {
+  const state = bootM2World(loadData(), 'marrow', 2);
+  state.towns.ashford.economyOptIn = false;
+  const d0 = state.towns.ashford.despair;
+  tickEconomyLod(state);
+  expect(state.towns.ashford.despair).toBe(d0);
+});
+
+it('snapshot has warmth inverse despair', () => {
+  const state = bootM2World(loadData(), 'marrow', 2);
+  state.towns.ashford.despair = 0.25;
+  const snap = getWorldRenderSnapshot(state);
+  const tile = snap.tiles.find(t => t.biomeId === 'mill_heath') ?? snap.tiles[0];
+  expect(tile.warmth).toBeCloseTo(0.75, 1);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run tests/sim/economy.test.ts tests/sim/render-snapshot.test.ts`
+Expected: FAIL
+
+- [ ] **Step 3: Write minimal implementation**
+
+Opt-in economy; travel advances days; hire uses trust formula; snapshot matches decision note interfaces.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run tests/sim/economy.test.ts tests/sim/render-snapshot.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/sim/economy.ts src/sim/travel.ts src/sim/render-snapshot.ts src/data/biomes.json src/data/economy-resources.json src/data/facilities.json src/data/routes.json src/data/road-encounters.json src/data/travel-trades.json tests/sim
+git commit -m "feat(m3): wilderness economy travel and render snapshot"
 ```
 
 ---

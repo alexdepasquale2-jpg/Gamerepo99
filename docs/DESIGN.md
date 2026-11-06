@@ -47,6 +47,13 @@ The void is not random entropy. It is the felt gap between lives that used to an
 
 **Tone reminder:** savage but human — blame the drift, not the villagers for being “behind,” and not the city kin for existing.
 
+### Doctrine & legitimacy (pointer)
+Leaders carry **doctrines** (goals/promises). Track **realDelivery** vs **perceivedDelivery**; legitimacy follows perceived; propaganda/control widen the gap; exposing it collapses legitimacy nonlinearly. Full formulas: `specs/2026-11-05-doctrine-legitimacy-design.md` + M3 §11. M2: optional Ashford `doctrine_mill_bread` only — null-safe.
+
+### Wilderness & economy (pointer)
+Route-graph economy between settlements; travel takes days while the world ticks; hire trades; Prism `WorldRenderSnapshot` — `specs/2026-11-05-wilderness-economy-design.md`. M2 Ashford `economyOptIn:false`.
+
+
 ---
 
 ## 2. Protagonist System (core)

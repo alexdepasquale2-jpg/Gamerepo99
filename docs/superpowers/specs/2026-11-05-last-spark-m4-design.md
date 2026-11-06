@@ -59,3 +59,34 @@ Narrative ending gallery polish (M5), infinite archetypes, multiplayer, voice ac
 4. Relapse arcs dawn + banner  
 5. Validate/commit
 
+---
+
+## Doctrine competition & collapse cascades (M4)
+
+**Depends on:** M3 §11 doctrine tick.
+
+### Competition
+Towns may hold `secondaryDoctrineIds[]`. Each dawn, legitimacy compared; if challenger legitimacy > incumbent + 0.15 for 3 consecutive days → swap leader doctrine (peaceful) unless `control > 0.5` (suppress; +exposure risk).
+
+### Collapse cascade
+When legitimacy collapse fires:
+1. Local despair pulse.  
+2. Emit `relapse_pressure` packets along kin with `relapseMulAdd = 0.1 + gap`.  
+3. Cross-gap city doctrines: if collapse in city_reach, village `perceivedDelivery` of any imported city promises −0.1 (representation shock).
+
+### Tests
+- Three-day challenger swap without high control.  
+- Collapse emits pressure packet to kin town.  
+- City collapse reduces ashford perceived for Reach-linked promises.
+
+---
+
+## Wilderness M4 (procgen & mobiles)
+
+**Decision:** wilderness-economy-design.md staging M4.
+
+- Procgen extra route segments between Hollow Ford / new settlements using biome tables.  
+- Caravans as `MobileRenderView` agents moving along routes each dawn.  
+- Unlock mounts/ferry/smuggler via bonds; highwayman hostile encounters.  
+- Extractive receiveShare politics bite doctrine realDelivery for villages.  
+- Tests: caravan reaches town; smuggler adds exposure; fast route unlock when bond≥threshold.

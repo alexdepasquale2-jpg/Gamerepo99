@@ -5,6 +5,8 @@
 **Schedule (uncapped):** M3 Friday with M4/M5; polish Sat; showcase Sun
 
 **Brainstorm decision:** option C (full build contract) — `docs/superpowers/specs/2026-11-05-m3-worldgen-ripple-brainstorm.md`  
+**Finish-queue decision:** `docs/superpowers/specs/2026-11-05-backlog-m3-finish-design.md` (option C — patch formulas, don't rewrite).
+
 **Implementation plan:** `docs/superpowers/plans/2026-11-05-last-spark-m3.md`
 
 ## Goal
@@ -83,14 +85,22 @@ if target has hollowness OR resentment:
 Witness rule (feel pass): Manhattan distance ≤ 3 from acting body to a burning person →  
 `genuine_growth` mark weight ×1.15 on kind methods; `hollowness` weight ×1.1 on savage methods.
 
-### 2.3 Cross-town packet emit
+### 2.3 Cross-town packet emit (includes gap strain)
 
 ```
-chance = ripples.crossTown.onGenuineGrowthChance (0.4)
-       + 0.25 * maxWeight(edges from target to person in other town)
+edge = max-weight kinship edge from target to a person in another town
+       (else best link by preferLinksWithTags)
+gapDelta = abs(gapAxis[town(target)] - gapAxis[town(edge.to)])
+strainMul = 1 + 1.5 * gapDelta          // §10.2; same-side ≈ 1.0–1.2
+connectionMul = 0.7 + 0.6 * town(target).connection   // default connection 0.4 → 0.94
+
+chance = (ripples.crossTown.onGenuineGrowthChance (0.4)
+       + 0.25 * edge.weight)
+       * (1 / strainMul)
+       * connectionMul
+
 if roll < chance:
-  pick edge with max weight to other town (else preferLinksWithTags)
-  delayDays = link.days
+  delayDays = link.days  // from edge.townPath[0] or chosen link
   packet = {
     type: 'proof_packet',
     proofId: target.proofId,
@@ -98,16 +108,20 @@ if roll < chance:
     toTownId: edge.to person's town,
     toPersonId: edge.toPersonId | null,
     arrivesOnDay: state.day + delayDays,
-    vitalityDelta: 0
+    vitalityDelta: 0,
+    strainMul: strainMul
   }
   emit packet.emit
+  // if genuine_growth && gapDelta >= 0.35 && emit succeeded → bridge act (§10.4)
 ```
 
 Hollowness path:
 
 ```
-chance = onHollownessChance (0.25)
-packet type relapse_pressure, relapseMulAdd 0.1, toTownId random linked town
+chance = onHollownessChance (0.25) * (1 / strainMul) * connectionMul
+packet type relapse_pressure
+relapseMulAdd = 0.1 * strainMul    // strained quiet hits harder when it lands
+toTownId / toPersonId from edge (prefer pen_pal / cross_gap)
 ```
 
 ### 2.4 Packet delivery (dawn)
@@ -124,17 +138,23 @@ for packet in packets where arrivesOnDay <= state.day:
 
 ### 2.5 Worked examples
 
-**A — Baker's cousin**  
-1. Player Carry-reignites Marta → flame ≥ 35, mark `genuine_growth` (or Carry threshold growth).  
-2. Local ripple may help Ashford stalled neighbor.  
-3. Emit roll: base 0.4 + 0.25×0.7 = **0.575** toward Priya via mill road.  
-4. `delayDays = 2` on mill road → dawn day+2: Priya `flame += 4`, letter UI shows *“Marta’s loaf reached the strand.”*, Lowmere vitality +1.  
+**A — Baker's cousin** (same-side; mild strain)  
+1. Carry/Inspire reignites Marta → `genuine_growth`.  
+2. Edge `marta→priya` weight 0.7; towns ashford 0.15 / lowmere 0.25 → `gapDelta=0.10` → `strainMul=1+1.5*0.10=1.15`.  
+3. Ashford `connection≈0.4` → `connectionMul=0.7+0.6*0.4=0.94`.  
+4. `chance = (0.4 + 0.25*0.7) / 1.15 * 0.94 = 0.575 / 1.15 * 0.94 ≈ **0.470**`.  
+5. Mill road `days=2` → day+2: Priya flame +4; letter *“Marta’s loaf reached the strand.”*; Lowmere vitality +1.  
 
-**B — Shamed man's pen pal**  
-1. Player Shames Leon (or Ruth) → `hollowness` lands.  
-2. Local ripple may harm a burning neighbor.  
-3. Cross-town hollowness chance 0.25 → packet `relapse_pressure` to Ashford (if Leon) along mill road.  
-4. On arrival Ashford `relapsePressure *= 1.1`; Ruth’s dawn relapse chance rises. Letter: *“Ink from Lowmere. It smells like giving up.”*
+**B — Shamed man's pen pal** (same-side pressure)  
+1. Shame/hollow Leon → `hollowness`.  
+2. Edge `leon→ruth` weight 0.55; gapDelta ashford↔lowmere 0.10 → strainMul 1.15; connectionMul from Lowmere ≈0.91.  
+3. `chance = 0.25 / 1.15 * 0.91 ≈ **0.198**`; if emits, `relapseMulAdd = 0.1*1.15=0.115`.  
+4. On arrival Ashford `relapsePressure *= 1.115`; Ruth’s dawn relapse rises. Letter: *“Ink from Lowmere. It smells like giving up.”*
+
+**C — Clara’s city sister** (cross-gap; heavy strain)  
+1. Clara gains `genuine_growth`; edge `clara→mira` weight 0.65; gapDelta `|0.15-0.85|=0.70` → `strainMul=1+1.05=2.05`.  
+2. `chance = (0.4+0.25*0.65) / 2.05 * 0.94 = 0.5625/2.05*0.94 ≈ **0.258**` (warmth rarely crosses).  
+3. If it lands + bridge act: both gapAxes pull ≤0.025 toward midpoint; bus `gap.bridge`.
 
 ---
 
@@ -221,8 +241,8 @@ M3 ships **handwritten** Hollow Ford trio + kinship edges; generator stub functi
 ## 8. Test cases (Forge must automate)
 
 1. **Multi-body strain:** 2 bodies / 2 towns → dusk spark −3.  
-2. **Baker's cousin:** seed RNG so Marta growth emits; after `mill_road.days`, Priya flame +4 and letter exists.  
-3. **Shamed pen pal:** hollowness on Leon → pressure packet → Ashford relapsePressure increases.  
+2. **Baker's cousin:** with strain/connection, emit chance ≈0.47; after mill_road.days, Priya flame +4 and letter exists.  
+3. **Shamed pen pal:** hollowness on Leon → chance ≈0.20; pressure packet raises Ashford relapsePressure by ×1.115.  
 4. **LOD:** leave Lowmere; advance 3 dawns without entry; vitality drifts down; no throw.  
 5. **Promote:** enter Lowmere after LOD days; full tick works.  
 6. **No archetype branch:** grep `src/sim` for `basilisk_brood` equality — forbid except data display names in UI.  
@@ -307,3 +327,88 @@ Ashford starts far from city pole; many sessions needed to matter — intentiona
 ### 10.6 M2 compatibility
 No required M2 code path. Missing `gapAxis` defaults to `0.2`. Missing `connection`/`standing` default `0.4`. Ashford loop unchanged if bridge/city node absent.
 
+---
+
+## 11. Doctrine & legitimacy (M3 core)
+
+**Decision:** `docs/superpowers/specs/2026-11-05-doctrine-legitimacy-design.md` (option C).
+
+### Data
+`src/data/doctrines.json` — doctrines, acts, start meters. Towns may set `doctrineId` (Ashford optional in M2).
+
+### Dawn tick (full towns; LOD samples lighter)
+
+```
+D = town.doctrine
+gap = D.perceivedDelivery - D.realDelivery
+// felt promises: for each goal, if town.gapAxis > goal.feltByMaxGapAxis: that goal contributes 0 to realDelivery delta for this town
+D.realDelivery = clamp(D.realDelivery + keepDelta - 0.01, 0, 1)
+D.perceivedDelivery += D.propaganda*0.08 + D.control*0.05 + visibleKeep*0.1 - D.exposure*0.2
+D.perceivedDelivery = lerp(D.perceivedDelivery, D.realDelivery, 0.05)
+D.legitimacy = clamp(0.15 + 0.7*D.perceivedDelivery + 0.15*D.control, 0, 1)
+town.despair = clamp(town.despair + 0.05*(1 - D.realDelivery), 0, 1)
+```
+
+### Player acts (generic)
+Resolve methods against targets with tags `doctrine_voice|leader` or doctrine object — match `doctrines.acts[]` by methodId + tags. **No archetypeId branches.** Ivy’s shame/lie muls apply via methodModifiers automatically.
+
+### Spread
+On proof_packet along kinship: receiver town’s doctrine `perceivedDelivery += 0.02 * sender.legitimacy` (propaganda of success) OR if hollowness packet: `exposure += 0.05`.
+
+### Worked example — Expose the Reach
+1. City doctrine `doctrine_reach_progress`: real 0.55, perceived 0.80, gap 0.25, legitimacy ≈ 0.15+0.56+0.06=0.77.  
+2. Player Challenge Mira (`doctrine_voice`) → `act_expose_lie` → exposure 0.10→0.35.  
+3. Second expose → exposure 0.60; gap still 0.25 → collapse: legitimacy *= (1-2.5*0.0625)= (1-0.156)=0.844× → ~0.65; perceived lerps toward real; despair +0.2 on city_reach; letters carry exposure to Ashford.
+
+### Worked example — Carry the mill promise
+1. Ashford `doctrine_mill_bread` real 0.25.  
+2. `act_carry_promise` via Carry on Marta’s oven goal → real +0.08, perceived +0.03; legitimacy ticks up next dawn; despair softens.
+
+### Tests
+11. Null `doctrineId` towns do not throw.  
+12. Expose when gap>0.25 & exposure>0.4 drops legitimacy nonlinearly.  
+13. City goal with feltByMaxGapAxis 0.4 grants 0 realDelivery credit in ashford (gapAxis 0.15).  
+14. Ivy methodMods increase expose effect magnitude vs Marrow without referencing archetype id in sim (compare assembled mods only).
+
+---
+
+## 12. Wilderness & economy (M3 slice)
+
+**Decision:** `docs/superpowers/specs/2026-11-05-wilderness-economy-design.md` (option C + travel fold-in).
+
+### Data files
+`biomes.json`, `economy-resources.json`, `facilities.json`, `routes.json`, `road-encounters.json`, `travel-trades.json`.
+
+### LOD economy dawn (opt-in `town.economyOptIn` or when player travels)
+```
+for route in routes affecting town:
+  if route.broken: town.despair += 0.05; doctrine.realDelivery -= 0.05 if supply promise
+  else: apply facility outputs * staffedMul * condition * receiveShare
+travel: daysEff = route.days * biomeAvgTerrainMul * sizeTravelMul
+each travel day: world dawn tick + roll encounter table + emit route.travel_step
+```
+
+### Travel hire
+```
+trust = clamp(0.3 + 0.4*(1-despair) + 0.2*legitimacy + 0.1*condition + trade.trustBias, 0, 1)
+priceSpark = baseSpark * (1.4 - 0.6*trust) * sizeMul
+daysEff *= trade.speedMul
+```
+
+### Worked example — Broken glare axle
+1. Encounter `enc_broken_axle` on city route → condition 0.85→0.70.  
+2. Next LOD: ashford food inflow down; despair +0.05; Reach doctrine propaganda still high → gap widens.  
+3. Player may hire `courier_letter` (trust from low despair) to rush a packet in 0.5× days.
+
+### Worked example — Honest carter
+Hire `carter_honest` on ashford↔lowmere: daysEff 2×0.75=1.5→2 dawn steps; encounter table once; stock grain +1 on deliver event `stock.deliver`.
+
+### Tests
+15. Economy off (`economyOptIn:false`) → no despair from stock.  
+16. Broken route raises despair when opt-in.  
+17. sizeTravelMuls.large applies via embodiment tags not archetype id.  
+18. Hire gouger costs more spark than carter at same trust.  
+19. Render snapshot includes tiles/facilities/mobiles shapes (type-level test).
+
+### Prism
+See decision note §6 render contract + event ids.
