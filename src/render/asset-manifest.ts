@@ -71,6 +71,7 @@ export const BAKED_SHEETS = {
   fauna: doc.bakedSheets.fauna,
   crops: doc.bakedSheets.crops,
   ores: doc.bakedSheets.ores,
+  caravans: doc.bakedSheets.caravans ?? 'assets/sprites/sheet-caravans.png',
 } as const;
 
 /**

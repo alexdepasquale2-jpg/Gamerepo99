@@ -19,7 +19,8 @@
     "biomes": "assets/sprites/sheet-biomes.png",
     "fauna": "assets/sprites/sheet-fauna.png",
     "crops": "assets/sprites/sheet-crops.png",
-    "ores": "assets/sprites/sheet-ores.png"
+    "ores": "assets/sprites/sheet-ores.png",
+    "caravans": "assets/sprites/sheet-caravans.png"
   },
   "dataIds": {
     "biomes": [
@@ -325,7 +326,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "Imported Kenney Roguelike Caves & Dungeons — frame bake TBD"
+      "notes": "Imported Kenney Roguelike Caves & Dungeons \u2014 frame bake TBD"
     },
     "ore.ore_copper": {
       "key": "ore.ore_copper",
@@ -352,7 +353,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "Imported josehzz FarmingCrops16x16 — wheat stages",
+      "notes": "Imported josehzz FarmingCrops16x16 \u2014 wheat stages",
       "despairHint": "wilted stalks",
       "aliveHint": "golden heads"
     },
@@ -385,7 +386,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "No reed in josehzz — pastoral wet prop / Tiny Town reed until dedicated",
+      "notes": "No reed in josehzz \u2014 pastoral wet prop / Tiny Town reed until dedicated",
       "despairHint": "broken stems",
       "aliveHint": "tall green reed"
     },
@@ -396,7 +397,7 @@
       "variant": "palette",
       "heading": "none",
       "status": "stub",
-      "notes": "No flax in josehzz — sunflower/blue flower stand-in",
+      "notes": "No flax in josehzz \u2014 sunflower/blue flower stand-in",
       "despairHint": "dry fibre",
       "aliveHint": "blue flax bloom"
     },
@@ -471,16 +472,22 @@
     },
     "caravan.ferryman": {
       "key": "caravan.ferryman",
-      "sheet": "vendor-roguelike-boat",
+      "sheet": "sheet-caravans",
       "frame": 0,
       "variant": "palette",
       "heading": "4",
-      "status": "missing",
-      "notes": "Need Roguelike water/boat import"
+      "status": "ready",
+      "notes": "Prism procedural boat+figure CC0; 4-way N,E,S,W sheet-caravans row0",
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ]
     },
     "caravan.ferry": {
       "key": "caravan.ferry",
-      "sheet": "vendor-roguelike-boat",
+      "sheet": "sheet-caravans",
       "frame": 0,
       "variant": "palette",
       "heading": "none",
@@ -489,12 +496,22 @@
     },
     "caravan.mount": {
       "key": "caravan.mount",
-      "sheet": "vendor-animals",
-      "frame": 0,
+      "sheet": "sheet-caravans",
+      "frame": 8,
       "variant": "palette",
       "heading": "8",
-      "status": "missing",
-      "notes": "CC0 animal pack (davidcrybao / critters)"
+      "status": "ready",
+      "notes": "Prism procedural mule CC0; 8-way N..NW sheet-caravans row1 frames 8-15",
+      "frames": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
     },
     "caravan.guide": {
       "key": "caravan.guide",
@@ -569,7 +586,7 @@
       "variant": "palette",
       "heading": "4",
       "status": "stub",
-      "notes": "Imported gaymoo 50 monochrome 32×32; recolor for warmth"
+      "notes": "Imported gaymoo 50 monochrome 32\u00d732; recolor for warmth"
     },
     "fauna.deer": {
       "key": "fauna.deer",
@@ -596,7 +613,7 @@
       "variant": "palette",
       "heading": "4",
       "status": "stub",
-      "notes": "Imported Pig_Look 32×32 anim sheet"
+      "notes": "Imported Pig_Look 32\u00d732 anim sheet"
     },
     "fauna.fox": {
       "key": "fauna.fox",

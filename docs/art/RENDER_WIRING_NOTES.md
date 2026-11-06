@@ -34,6 +34,7 @@ Despair / alive: **palette shift / desaturation of RGB only** from `warmth`. Nev
 | `sheet-fauna` | `assets/sprites/sheet-fauna.png` | 32×32 | `fauna.<id>` (stub polish OK) |
 | `sheet-crops` | `assets/sprites/sheet-crops.png` | 32×32 | `crop.<id>` |
 | `sheet-ores` | `assets/sprites/sheet-ores.png` | 32×32 | `ore.<id>` |
+| `sheet-caravans` | `assets/sprites/sheet-caravans.png` | 32×32 | `caravan.ferryman` frames 0–3 (4-way); `caravan.mount` frames 8–15 (8-way) |
 
 `BAKED_SHEETS` in the manifest mirrors these paths.
 
@@ -43,7 +44,7 @@ Despair / alive: **palette shift / desaturation of RGB only** from `warmth`. Nev
 - Roads: `road.track|road|highway` → `sheet-ground` 4–6
 - Facilities: `facility.mill|lumber_camp|waystation|mine.<idle|working|abandoned>` → `sheet-buildings`
 - Fauna / crops / ores: `fauna.*` / `crop.*` / `ore.*` → matching sheets
-- Caravans: `caravan.<role>` — Tiny Town/Dungeon keys for ready roles; `caravan.ferryman` / `caravan.mount` still `missing` (colored rect OK)
+- Caravans: `caravan.<role>` — ferryman/mount on `sheet-caravans`; other roles Tiny Town/Dungeon until rebaked
 - Farm is **proposed only** (`PROPOSED_FACILITY_KINDS.farm`) — not a data gap
 
 ## Heading
@@ -53,9 +54,9 @@ Despair / alive: **palette shift / desaturation of RGB only** from `warmth`. Nev
 
 ## Safe now vs placeholders
 
-**Use now:** ground, cliff, buildings, biomes, roads.
+**Use now:** ground, cliff, buildings, biomes, roads, `caravan.ferryman`, `caravan.mount`.
 
-**Colored rect / stub OK:** fauna/crop polish, cargo piles, `caravan.ferryman` / `caravan.mount` (missing art).
+**Colored rect / stub OK:** fauna/crop polish, cargo piles, remaining caravan roles on Tiny Town/Dungeon frames.
 
 ## Target mockup
 

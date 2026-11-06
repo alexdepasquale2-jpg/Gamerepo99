@@ -165,8 +165,12 @@ describe('gaps', () => {
     const missing = listMissingKeys();
     expect(missing).not.toContain('facility.farm.idle');
     expect(missing).not.toContain('fauna.rabbit');
-    expect(missing).toContain('caravan.mount');
-    expect(missing).toContain('caravan.ferryman');
+    expect(missing).not.toContain('caravan.mount');
+    expect(missing).not.toContain('caravan.ferryman');
+    expect(lookupAsset('caravan.mount')?.status).toBe('ready');
+    expect(lookupAsset('caravan.ferryman')?.status).toBe('ready');
+    expect(lookupAsset('caravan.mount')?.sheet).toBe('sheet-caravans');
+    expect(BAKED_SHEETS.caravans).toContain('sheet-caravans.png');
   });
 
   it('does not leave fauna as placeholders once data exists', () => {
