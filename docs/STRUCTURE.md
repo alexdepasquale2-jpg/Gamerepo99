@@ -21,7 +21,8 @@ hearthfall/
       play-session/  Play + inspect session factory and act/boot/types helpers.
       travel/        Route tables, encounter rolls, travel state helpers.
       scenario/      Advance clocks (dusk/dawn/day) and scenario person resolve.
-      Tests mirror under tests/sim/{play-session,travel,scenario}/ when dedicated.
+      interaction/   Interaction model + method→interaction compat; load-interactions.ts is its only JSON entry (via loadData).
+      Tests mirror under tests/sim/{play-session,travel,scenario,interaction}/ when dedicated.
                 Scenario suite tests (e.g. special-bar-gen) live under tests/sim/scenario/.
     data/     JSON content (units, items, levels, tuning). No code. Large registries split by category (e.g. hooks/).
       Grouped by domain subfolders (final layout pending Loom's M2 data redesign).
