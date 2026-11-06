@@ -57,6 +57,11 @@ Economy/doctrine/letter modules **new** under `src/sim/`; wire into `advanceToDa
 - [Task C: Doctrine competition & collapse](./task-c-doctrine-collapse.md)
 - [Task D: Letters & rumors at scale](./task-d-letters-rumors.md)
 
+## Forge packets
+
+- [Packet 01 — Dawn economy LOD (Task A)](./packet-01.md) — merged @ `b6d2681`
+- [Packet 02 — Caravans from schedules (Task B)](./packet-02.md) — draft; depends on Task A green
+
 ## M4 acceptance
 
 1. `npm run validate && npm test && npm run build` green.  
