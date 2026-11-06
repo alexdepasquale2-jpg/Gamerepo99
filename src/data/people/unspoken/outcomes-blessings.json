@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-social-graph/06-blessings-and-burdens.md",
+  "description": "ComeToPassOutcome rows with kind blessing. Mild meter deltas; surfacing via carrier fragments only.",
+  "outcomes": [
+    {
+      "id": "dance_for_kids",
+      "kind": "blessing",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_dance_for_kids"],
+      "effects": {
+        "flame01": 0.02,
+        "trust": 0.02,
+        "despair": -0.01,
+        "edgeWeightDelta": 0.05
+      }
+    },
+    {
+      "id": "oven_shared",
+      "kind": "blessing",
+      "carrierPrefer": "same_town",
+      "fragmentIds": ["frag_unspoken_oven_shared"],
+      "effects": {
+        "flame01": 0.015,
+        "trust": 0.02,
+        "despair": -0.01,
+        "marksAdd": [{ "markId": "fragile_hope", "stacks": 1 }]
+      }
+    },
+    {
+      "id": "debt_forgiven_soft",
+      "kind": "blessing",
+      "carrierPrefer": "trade",
+      "fragmentIds": ["frag_unspoken_debt_forgiven_soft"],
+      "effects": {
+        "trust": 0.03,
+        "despair": -0.015,
+        "edgeWeightDelta": 0.08
+      }
+    },
+    {
+      "id": "letter_of_thanks",
+      "kind": "blessing",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_letter_of_thanks"],
+      "effects": {
+        "flame01": 0.02,
+        "trust": 0.025,
+        "letterOrRumor": "letter"
+      }
+    },
+    {
+      "id": "shift_cover",
+      "kind": "blessing",
+      "carrierPrefer": "friendship",
+      "fragmentIds": ["frag_unspoken_shift_cover"],
+      "effects": {
+        "flame01": 0.015,
+        "trust": 0.02,
+        "edgeWeightDelta": 0.04
+      }
+    },
+    {
+      "id": "kin_visit_warm",
+      "kind": "blessing",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_kin_visit_warm"],
+      "effects": {
+        "flame01": 0.02,
+        "despair": -0.01,
+        "letterOrRumor": "letter"
+      }
+    },
+    {
+      "id": "shared_watch",
+      "kind": "blessing",
+      "carrierPrefer": "friendship",
+      "fragmentIds": ["frag_unspoken_shared_watch"],
+      "effects": {
+        "trust": 0.02,
+        "marksAdd": [{ "markId": "genuine_growth", "stacks": 1 }],
+        "edgeWeightDelta": 0.05
+      }
+    },
+    {
+      "id": "market_favor",
+      "kind": "blessing",
+      "carrierPrefer": "trade",
+      "fragmentIds": ["frag_unspoken_market_favor"],
+      "effects": {
+        "trust": 0.015,
+        "despair": -0.01,
+        "edgeWeightDelta": 0.06
+      }
+    },
+    {
+      "id": "loaf_left",
+      "kind": "blessing",
+      "carrierPrefer": "same_town",
+      "fragmentIds": ["frag_unspoken_loaf_left"],
+      "effects": {
+        "flame01": 0.015,
+        "despair": -0.01,
+        "marksAdd": [{ "markId": "fragile_hope", "stacks": 1 }]
+      }
+    },
+    {
+      "id": "path_cleared",
+      "kind": "blessing",
+      "carrierPrefer": "influential",
+      "fragmentIds": ["frag_unspoken_path_cleared"],
+      "effects": {
+        "flame01": 0.02,
+        "trust": 0.02,
+        "despair": -0.015,
+        "edgeWeightDelta": 0.05
+      }
+    }
+  ]
+}

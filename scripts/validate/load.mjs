@@ -182,6 +182,31 @@ const loadInteractionsDir = (dataDir, errors) => {
   return out;
 };
 
+
+/** Assemble people/unspoken/ into virtual unspoken-classes / come-to-pass-outcomes / blessings-burdens-tuning. */
+const loadUnspokenDir = (dataDir, errors) => {
+  const dir = join(dataDir, 'people', 'unspoken');
+  const index = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8'));
+  const classes = [];
+  const outcomes = [];
+  let tuning = null;
+  for (const name of index.files || []) {
+    const part = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+    if (Array.isArray(part.classes)) classes.push(...part.classes);
+    if (Array.isArray(part.outcomes)) outcomes.push(...part.outcomes);
+    if (part.caps || part.runtime || name === 'tuning.json') {
+      const { classes: _c, outcomes: _o, ...rest } = part;
+      tuning = { ...(tuning || {}), ...rest };
+    }
+  }
+  const meta = { version: index.version, spec: index.spec, description: index.description };
+  return {
+    classesFile: { ...meta, classes },
+    outcomesFile: { ...meta, outcomes },
+    tuningFile: tuning ? { ...meta, ...tuning } : null,
+  };
+};
+
 export const loadAll = (errors) => {
   const files = {};
   // Root-level JSON (lines.json, etc.)
@@ -224,6 +249,15 @@ export const loadAll = (errors) => {
   } catch (e) {
     errors.push(`PARSE systems/interactions/: ${e.message}`);
   }
+
+  try {
+    const unspoken = loadUnspokenDir(dataDir, errors);
+    files['unspoken-classes.json'] = unspoken.classesFile;
+    files['come-to-pass-outcomes.json'] = unspoken.outcomesFile;
+    if (unspoken.tuningFile) files['blessings-burdens-tuning.json'] = unspoken.tuningFile;
+  } catch (e) {
+    errors.push(`PARSE people/unspoken/: ${e.message}`);
+  }
   try {
     files['history-tables.json'] = loadHistoryDir(dataDir, errors);
   } catch (e) {
@@ -258,6 +292,14 @@ export const loadAll = (errors) => {
   try {
     if (readdirSync(worldDir).includes('history-tables.json')) {
       errors.push('world/history-tables.json must be removed — use world/history/');
+    }
+  } catch { /* missing */ }
+  try {
+    const peopleDir = join(dataDir, 'people');
+    for (const banned of ['unspoken-classes.json', 'come-to-pass-outcomes.json', 'blessings-burdens-tuning.json']) {
+      if (readdirSync(peopleDir).includes(banned)) {
+        errors.push(`people/${banned} must be removed — use people/unspoken/`);
+      }
     }
   } catch { /* missing */ }
   return files;
@@ -300,4 +342,7 @@ export const REQUIRED_FILES = [
   'assertions.json',
   'history-tables.json',
   'interactions.json',
+  'unspoken-classes.json',
+  'come-to-pass-outcomes.json',
+  'blessings-burdens-tuning.json',
 ];

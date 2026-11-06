@@ -1,0 +1,379 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-social-graph/06-blessings-and-burdens.md",
+  "description": "UnspokenClass table — encode triggers, decay, come-to-pass pools. No archetypeId branching.",
+  "classes": [
+    {
+      "id": "unspoken_favor_warmth",
+      "kind": "favor",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["favor_do"],
+        "tagsAny": ["favor", "errand"]
+      },
+      "baseWeight": 0.4,
+      "halfLifeDays": 7,
+      "comeToPass": {
+        "requireTagsAny": ["kin_visit", "town_festival", "quiet_dawn"],
+        "minWeight": 0.18,
+        "baseP": 0.28,
+        "blessingOutcomeIds": ["dance_for_kids", "oven_shared", "letter_of_thanks"],
+        "burdenOutcomeIds": ["favor_called_bitter", "festival_cancelled"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.45,
+        "onPlaceTown": 0.12
+      }
+    },
+    {
+      "id": "unspoken_kept_promise_warmth",
+      "kind": "promise",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["promise_keep"],
+        "tagsAny": ["promise", "keep"]
+      },
+      "baseWeight": 0.55,
+      "halfLifeDays": 10,
+      "comeToPass": {
+        "requireTagsAny": ["kin_visit", "letter_arrived", "show_up_day"],
+        "minWeight": 0.2,
+        "baseP": 0.32,
+        "blessingOutcomeIds": ["letter_of_thanks", "debt_forgiven_soft", "shift_cover"],
+        "burdenOutcomeIds": ["debt_called_in", "rumor_twist"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.5,
+        "onPlaceTown": 0.1
+      }
+    },
+    {
+      "id": "unspoken_stand_shield",
+      "kind": "stand",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["stand_up"],
+        "tagsAny": ["stand_up", "defend"]
+      },
+      "baseWeight": 0.5,
+      "halfLifeDays": 9,
+      "comeToPass": {
+        "requireTagsAny": ["doctrine_sermon", "town_festival", "caravan_arrive"],
+        "minWeight": 0.2,
+        "baseP": 0.3,
+        "blessingOutcomeIds": ["shared_watch", "path_cleared", "shift_cover"],
+        "burdenOutcomeIds": ["grudge_retold", "sermon_pointed"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.55,
+        "onPlaceTown": 0.15
+      }
+    },
+    {
+      "id": "unspoken_gift_glow",
+      "kind": "gift",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["gift_give"],
+        "tagsAny": ["gift"]
+      },
+      "baseWeight": 0.45,
+      "halfLifeDays": 8,
+      "comeToPass": {
+        "requireTagsAny": ["town_festival", "kin_visit", "quiet_dawn"],
+        "minWeight": 0.18,
+        "baseP": 0.27,
+        "blessingOutcomeIds": ["loaf_left", "oven_shared", "market_favor"],
+        "burdenOutcomeIds": ["favor_called_bitter", "cold_shoulder"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.4,
+        "onPlaceTown": 0.08
+      }
+    },
+    {
+      "id": "unspoken_work_shoulder",
+      "kind": "work",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["work_alongside"],
+        "tagsAny": ["work", "meaning"]
+      },
+      "baseWeight": 0.42,
+      "halfLifeDays": 6,
+      "comeToPass": {
+        "requireTagsAny": ["caravan_arrive", "quiet_dawn", "town_festival"],
+        "minWeight": 0.16,
+        "baseP": 0.26,
+        "blessingOutcomeIds": ["shift_cover", "path_cleared", "oven_shared"],
+        "burdenOutcomeIds": ["shift_dumped", "debt_called_in"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.35,
+        "onPlaceTown": 0.2
+      }
+    },
+    {
+      "id": "unspoken_introduce_bridge",
+      "kind": "introduce",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["introduce"],
+        "tagsAny": ["introduce", "kin"]
+      },
+      "baseWeight": 0.38,
+      "halfLifeDays": 12,
+      "comeToPass": {
+        "requireTagsAny": ["kin_visit", "letter_arrived", "caravan_arrive"],
+        "minWeight": 0.15,
+        "baseP": 0.24,
+        "blessingOutcomeIds": ["kin_visit_warm", "letter_of_thanks", "market_favor"],
+        "burdenOutcomeIds": ["rumor_twist", "bridge_burned"]
+      },
+      "deposit": {
+        "onSourcePerson": 0.8,
+        "onPathEdges": 0.7,
+        "onPlaceTown": 0.05
+      }
+    },
+    {
+      "id": "unspoken_gentle_word",
+      "kind": "favor",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["talk_gentle"],
+        "tagsAny": ["gentle", "talk"]
+      },
+      "baseWeight": 0.3,
+      "halfLifeDays": 5,
+      "comeToPass": {
+        "requireTagsAny": ["quiet_dawn", "show_up_day", "kin_visit"],
+        "minWeight": 0.14,
+        "baseP": 0.22,
+        "blessingOutcomeIds": ["dance_for_kids", "loaf_left", "kin_visit_warm"],
+        "burdenOutcomeIds": ["cold_shoulder", "rumor_twist"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.3,
+        "onPlaceTown": 0.05
+      }
+    },
+    {
+      "id": "unspoken_show_presence",
+      "kind": "favor",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "interactionIds": ["show_up"],
+        "tagsAny": ["presence"]
+      },
+      "baseWeight": 0.28,
+      "halfLifeDays": 5,
+      "comeToPass": {
+        "requireTagsAny": ["show_up_day", "quiet_dawn", "town_festival"],
+        "minWeight": 0.12,
+        "baseP": 0.2,
+        "blessingOutcomeIds": ["shared_watch", "kin_visit_warm"],
+        "burdenOutcomeIds": ["cold_shoulder", "festival_cancelled"],
+        "mixedBias": 0.05
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.25,
+        "onPlaceTown": 0.1
+      }
+    },
+    {
+      "id": "unspoken_reignite_afterglow",
+      "kind": "reignite",
+      "leaning": "blessing",
+      "encodeFrom": {
+        "requireReignite": true,
+        "tagsAny": ["keep", "stand_up", "meaning"]
+      },
+      "baseWeight": 0.6,
+      "halfLifeDays": 14,
+      "comeToPass": {
+        "requireTagsAny": ["town_festival", "kin_visit", "doctrine_sermon"],
+        "minWeight": 0.22,
+        "baseP": 0.34,
+        "blessingOutcomeIds": ["dance_for_kids", "path_cleared", "letter_of_thanks"],
+        "burdenOutcomeIds": ["sermon_pointed", "grudge_retold"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.6,
+        "onPlaceTown": 0.25
+      }
+    },
+    {
+      "id": "unspoken_shame_scar",
+      "kind": "shame",
+      "leaning": "burden",
+      "encodeFrom": {
+        "interactionIds": ["talk_hard_shame"],
+        "tagsAny": ["shame_lean", "hard"]
+      },
+      "baseWeight": 0.48,
+      "halfLifeDays": 11,
+      "comeToPass": {
+        "requireTagsAny": ["doctrine_sermon", "town_festival", "letter_arrived"],
+        "minWeight": 0.2,
+        "baseP": 0.3,
+        "blessingOutcomeIds": ["debt_forgiven_soft", "shared_watch"],
+        "burdenOutcomeIds": ["grudge_retold", "rumor_twist", "sermon_pointed"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.55,
+        "onPlaceTown": 0.1
+      }
+    },
+    {
+      "id": "unspoken_broken_promise",
+      "kind": "betrayal",
+      "leaning": "burden",
+      "encodeFrom": {
+        "interactionIds": ["promise_break"],
+        "tagsAny": ["promise", "break"]
+      },
+      "baseWeight": 0.58,
+      "halfLifeDays": 14,
+      "comeToPass": {
+        "requireTagsAny": ["doctrine_sermon", "caravan_arrive", "letter_arrived"],
+        "minWeight": 0.22,
+        "baseP": 0.35,
+        "blessingOutcomeIds": ["debt_forgiven_soft"],
+        "burdenOutcomeIds": ["debt_called_in", "bridge_burned", "letter_of_blame", "grudge_retold"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.65,
+        "onPlaceTown": 0.18
+      }
+    },
+    {
+      "id": "unspoken_hard_word",
+      "kind": "shame",
+      "leaning": "burden",
+      "encodeFrom": {
+        "interactionIds": ["talk_hard"],
+        "tagsAny": ["hard", "talk"]
+      },
+      "baseWeight": 0.32,
+      "halfLifeDays": 6,
+      "comeToPass": {
+        "requireTagsAny": ["quiet_dawn", "doctrine_sermon", "show_up_day"],
+        "minWeight": 0.14,
+        "baseP": 0.22,
+        "blessingOutcomeIds": ["loaf_left", "kin_visit_warm"],
+        "burdenOutcomeIds": ["cold_shoulder", "grudge_retold", "rumor_twist"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.35,
+        "onPlaceTown": 0.05
+      }
+    },
+    {
+      "id": "unspoken_favor_asked",
+      "kind": "favor",
+      "leaning": "mixed",
+      "encodeFrom": {
+        "interactionIds": ["favor_ask"],
+        "tagsAny": ["favor", "ask"]
+      },
+      "baseWeight": 0.35,
+      "halfLifeDays": 8,
+      "comeToPass": {
+        "requireTagsAny": ["kin_visit", "letter_arrived", "caravan_arrive"],
+        "minWeight": 0.16,
+        "baseP": 0.25,
+        "blessingOutcomeIds": ["shift_cover", "market_favor"],
+        "burdenOutcomeIds": ["favor_called_bitter", "debt_called_in"],
+        "mixedBias": 0.0
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.4,
+        "onPlaceTown": 0.08
+      }
+    },
+    {
+      "id": "unspoken_empty_cheer",
+      "kind": "shame",
+      "leaning": "burden",
+      "encodeFrom": {
+        "interactionIds": ["talk_empty_cheer"],
+        "tagsAny": ["cheer", "assert_gate"]
+      },
+      "baseWeight": 0.3,
+      "halfLifeDays": 7,
+      "comeToPass": {
+        "requireTagsAny": ["town_festival", "doctrine_sermon", "quiet_dawn"],
+        "minWeight": 0.14,
+        "baseP": 0.23,
+        "blessingOutcomeIds": ["loaf_left"],
+        "burdenOutcomeIds": ["festival_cancelled", "cold_shoulder", "rumor_twist"]
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.3,
+        "onPlaceTown": 0.12
+      }
+    },
+    {
+      "id": "unspoken_trade_ledger",
+      "kind": "gift",
+      "leaning": "mixed",
+      "encodeFrom": {
+        "interactionIds": ["trade_fair"],
+        "tagsAny": ["trade", "fair"]
+      },
+      "baseWeight": 0.33,
+      "halfLifeDays": 9,
+      "comeToPass": {
+        "requireTagsAny": ["caravan_arrive", "town_festival", "letter_arrived"],
+        "minWeight": 0.15,
+        "baseP": 0.24,
+        "blessingOutcomeIds": ["market_favor", "debt_forgiven_soft"],
+        "burdenOutcomeIds": ["debt_called_in", "favor_called_bitter"],
+        "mixedBias": 0.05
+      },
+      "deposit": {
+        "onSourcePerson": 0.9,
+        "onPathEdges": 0.5,
+        "onPlaceTown": 0.15
+      }
+    },
+    {
+      "id": "unspoken_promise_pending",
+      "kind": "promise",
+      "leaning": "mixed",
+      "encodeFrom": {
+        "interactionIds": ["promise_make"],
+        "tagsAny": ["promise", "make"]
+      },
+      "baseWeight": 0.36,
+      "halfLifeDays": 10,
+      "comeToPass": {
+        "requireTagsAny": ["show_up_day", "letter_arrived", "kin_visit"],
+        "minWeight": 0.16,
+        "baseP": 0.2,
+        "blessingOutcomeIds": ["letter_of_thanks", "shift_cover"],
+        "burdenOutcomeIds": ["letter_of_blame", "debt_called_in", "bridge_burned"],
+        "mixedBias": -0.05
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.45,
+        "onPlaceTown": 0.08
+      }
+    }
+  ]
+}
