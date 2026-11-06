@@ -283,6 +283,8 @@ export const REQUIRED_FILES = [
   'doctrines.json',
   'biomes.json',
   'economy-resources.json',
+  'dawn-stock.json',
+  'economy-lod.json',
   'facilities.json',
   'routes.json',
   'road-encounters.json',

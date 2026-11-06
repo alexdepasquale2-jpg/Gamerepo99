@@ -22,6 +22,7 @@ import { validateScenarios } from './validate/scenarios.mjs';
 import { validateDynamism } from './validate/dynamism.mjs';
 import { validateFabricContent } from './validate/fabric-content.mjs';
 import { validateInteractions } from './validate/interactions.mjs';
+import { validateEconomyLod } from './validate/economy-lod.mjs';
 
 const { errors, warnings, req, ids } = createBag();
 const data = loadAll(errors);
@@ -49,6 +50,7 @@ validateDoctrines(data, { req, towns, people, methods, hooks });
 validateWilderness(data, { req, ids, towns, links, people, hooks });
 validateRoadContent(data, { req, ids, people, towns });
 validateHoarder(data, { req, ids, towns, hooks });
+validateEconomyLod(data, { req, ids, towns });
 validateDynamism(data, { req, ids, people, methods });
 validateFabricContent(data, { req, ids, people, methods });
 validateInteractions(data, { req, ids, people, methods, marks });
