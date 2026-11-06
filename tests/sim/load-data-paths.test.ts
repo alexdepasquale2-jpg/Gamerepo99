@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadData } from '../../src/sim/load-data';
 
 describe('loadData fabric dialogue paths', () => {
-  it('loads line-fragments from dialogue/ subfolder', () => {
+  it('loads line-fragments from dialogue/fragments/ folder', () => {
     const data = loadData();
     expect(data.lineFragments?.fragments?.length).toBeGreaterThan(50);
     expect(

@@ -19,7 +19,7 @@ import linesJson from '../data/lines.json';
 import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
-import lineFragmentsJson from '../data/dialogue/line-fragments.json';
+import { loadLineFragmentsTable } from './load-fragments';
 import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
 import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
 import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
@@ -176,7 +176,7 @@ export function loadData(): DataTables {
     kinship: kinshipJson,
     letters: lettersJson,
     doctrines: doctrinesJson,
-    lineFragments: lineFragmentsJson as LineFragmentsTable,
+    lineFragments: loadLineFragmentsTable(),
     voiceAnchors: voiceAnchorsJson as VoiceAnchorsTable,
     reactionCurves: reactionCurvesJson as ReactionCurvesTable,
     voiceConstraints: voiceConstraintsJson as VoiceConstraintsTable,
