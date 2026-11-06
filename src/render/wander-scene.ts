@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import mapData from '../data/map.json';
 import { createWorld, tick, type World } from '../sim';
+import { attachSparkFx } from './spark-fx';
 
 const TILE_COLORS: Record<string, number> = {
   grass: 0x2f4f3a,
@@ -54,6 +55,37 @@ export class WanderScene extends Phaser.Scene {
       this.world.width * this.tileSize,
       this.world.height * this.tileSize,
     );
+
+    attachSparkFx(this, this.world.bus);
+    this.add
+      .text(8, 28, 'VFX demo: 1 spark spend · 2 reignite · 3 refusal · 4 burnout', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#8a7a68',
+      })
+      .setScrollFactor(0)
+      .setDepth(10);
+
+    const center = () => ({
+      x: (this.world.width * this.tileSize) / 2,
+      y: (this.world.height * this.tileSize) / 2,
+    });
+    this.input.keyboard?.on('keydown-ONE', () => {
+      const c = center();
+      this.world.bus.emit('vfx.spark_spent', { ...c, amount01: 0.2 });
+    });
+    this.input.keyboard?.on('keydown-TWO', () => {
+      const c = center();
+      this.world.bus.emit('vfx.reignite', { ...c, warmthBefore: 0.2, warmthAfter: 0.8 });
+    });
+    this.input.keyboard?.on('keydown-THREE', () => {
+      const c = center();
+      this.world.bus.emit('vfx.refusal', { ...c, kind: 'shame_child' });
+    });
+    this.input.keyboard?.on('keydown-FOUR', () => {
+      const c = center();
+      this.world.bus.emit('vfx.burnout', c);
+    });
   }
 
   update(_time: number, delta: number): void {
