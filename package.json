@@ -10,12 +10,17 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate-data": "node scripts/validate-data.mjs"
+    "validate-data": "node scripts/validate-data.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:m1": "playwright test tests/e2e/m1-smoke.spec.ts",
+    "verify:m1": "npm test && npm run build && npm run test:e2e:m1",
+    "validate": "node scripts/validate-data.mjs"
   },
   "dependencies": {
     "phaser": "^3.87.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.11",
     "vitest": "^3.0.5"
