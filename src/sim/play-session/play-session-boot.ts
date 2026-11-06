@@ -6,8 +6,7 @@ import { siteKindFromSiteId } from '../scenario/scenario-resolve';
 import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
 import type { PersonState, SimState } from '../types/runtime';
-import { createCompatRuntime } from '../interaction-compat';
-import type { InteractionRuntime } from '../interactions';
+import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
 
 /** Default trust for people seeded into the interaction compat runtime (no trust in PersonState yet). */
 export const COMPAT_TRUST_DEFAULT = 0.35;
@@ -16,7 +15,8 @@ export const COMPAT_TRUST_DEFAULT = 0.35;
 export function interactionRuntimeFromPeople(
   people: Record<string, PersonState>,
   playerSpark: number,
-): InteractionRuntime {
+  tables: InteractionTables,
+): CompatRuntime {
   const seeds = Object.values(people).map((p) => ({
     id: p.id,
     flame01: Math.min(1, Math.max(0, p.flame / 100)),
@@ -28,6 +28,7 @@ export function interactionRuntimeFromPeople(
     spark: playerSpark,
   }));
   const rt = createCompatRuntime(
+    tables,
     seeds[0] ?? { id: '__none__', flame01: 0, trust: 0, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: playerSpark },
   );
   if (!seeds[0]) rt.people.clear();

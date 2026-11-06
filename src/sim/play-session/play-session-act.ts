@@ -12,8 +12,7 @@ import {
 import type { PlayLastResolve } from './play-session-types';
 import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
 import type { SimState } from '../types/runtime';
-import { expandMethodAct } from '../interaction-compat';
-import { resolveInteraction, type InteractionRuntime } from '../interactions';
+import { expandMethodAct, resolveInteraction, type CompatRuntime } from '../interaction';
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };
@@ -70,7 +69,7 @@ export function actMethod(
   actionId: string,
   eventLog: PlayEvent[],
   extras?: ActExtras,
-  opts?: { interactionCompat?: InteractionRuntime },
+  opts?: { interactionCompat?: CompatRuntime },
 ): void {
   if (actionId.startsWith('approach@')) {
     if (extras && extras.metrics.firstChoiceAtTick == null) {
@@ -107,7 +106,7 @@ export function actMethod(
     return;
   }
   const compat = opts?.interactionCompat;
-  const interactionId = compat ? expandMethodAct(parsed.methodId) : undefined;
+  const interactionId = compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
   if (compat && interactionId && compat.people.has(parsed.personId)) {
     resolveInteraction(compat, interactionId, parsed.personId);
     eventLog.push({ type: 'interaction', methodId: interactionId });

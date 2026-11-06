@@ -1,36 +1,18 @@
 /** Play + inspect session factory. Play boots generateWorld into SimState. */
 
-import { createEventBus } from '../event-bus';
-import { generateWorld } from '../fabric/fabric-bake';
 import type { FabricWorld } from '../gen/world';
 import {
   createPlaySession as createInspectSession,
   dumpWorld,
   type InspectSession,
 } from '../fabric/world-dump';
-import { assembleInhabitant } from '../inhabitant';
-import { loadData } from '../load-data';
-import {
-  buildPlaySnapshot,
-  interactionRuntimeFromPeople,
-  peopleFromWorld,
-  pickTownId,
-} from './play-session-boot';
-import {
-  actMethod,
-  installPlayReactions,
-  listMethodActions,
-  parseMethodAction,
-} from './play-session-act';
-import type { InteractionRuntime } from '../interactions';
-import { createRng } from '../rng';
+import type { CompatRuntime } from '../interaction';
+import { buildPlaySnapshot } from './play-session-boot';
+import { actMethod, listMethodActions, parseMethodAction } from './play-session-act';
+import { bootPlayState } from './play-session-state';
 import {
   listRoutesFrom,
-  loadBiomeTerrainMuls,
-  loadEncounterTables,
-  loadSizeTravelMuls,
   startTravel,
-  toTravelRoutes,
   type TravelRoute,
   type TravelSimState,
 } from '../travel/travel';
@@ -89,7 +71,7 @@ function createPlayModeSession(defaults: {
   let successionUi: SuccessionUi = lockedSuccessionUi();
   const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
   let lastResolveVal: PlayLastResolve | undefined;
-  let interactionRt: InteractionRuntime | undefined;
+  let interactionRt: CompatRuntime | undefined;
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
@@ -101,32 +83,7 @@ function createPlayModeSession(defaults: {
     metrics.firstChoiceAtTick = undefined;
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
-    const data = loadData();
-    world = generateWorld({ seed, includeAnchors: true });
-    routes = toTravelRoutes(world.routes ?? []);
-    const player = assembleInhabitant(data, archetypeId);
-    player.townId = pickTownId(player.townId, world);
-    const bus = createEventBus();
-    state = {
-      day: 1,
-      seed,
-      player,
-      people: peopleFromWorld(world, data),
-      flags: {},
-      packets: [],
-      bus: { lastIds: [], ...bus },
-      data,
-      rng: createRng(seed),
-      routes,
-      kinEdges: world.kinEdges ?? [],
-      encounterTables: loadEncounterTables(),
-      biomeTerrainMuls: loadBiomeTerrainMuls(),
-      sizeTravelMuls: loadSizeTravelMuls(),
-    };
-    installPlayReactions(state);
-    interactionRt = useInteractionCompat
-      ? interactionRuntimeFromPeople(state.people, player.spark)
-      : undefined;
+    ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId, useInteractionCompat));
   }
 
   function appendJuiceSince(beforeLen: number): void {

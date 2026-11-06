@@ -64,7 +64,11 @@ export {
   createInteractionRuntime,
   resolveInteraction,
   REIGNITE_MIN_KINDS,
-} from './interactions';
+  createCompatRuntime,
+  expandMethodAct,
+  loadMigrationMap,
+  loadInteractionTables,
+} from './interaction';
 export type {
   InteractionDef,
   InteractionResult,
@@ -73,9 +77,12 @@ export type {
   InteractionScoring,
   InteractionTouch,
   MarkAdd,
-} from './interactions';
-export type { InteractionPerson, PromiseStatus } from './interaction-state';
-export { createCompatRuntime, expandMethodAct, loadMigrationMap } from './interaction-compat';
+  InteractionPerson,
+  PromiseStatus,
+  CompatRuntime,
+  InteractionTables,
+  MigrationTable,
+} from './interaction';
 
 /** Map TileSource seam (stamp now; native later). */
 export { fingerprintHex } from './map/fingerprint';

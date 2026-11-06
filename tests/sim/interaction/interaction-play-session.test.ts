@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createPlaySession } from '../../src/sim';
-import type { PlaySession } from '../../src/sim/play-session/play-session';
+import { createPlaySession } from '../../../src/sim';
+import type { PlaySession } from '../../../src/sim/play-session/play-session';
 
 function playSession(compat = true): PlaySession {
   const s = createPlaySession({

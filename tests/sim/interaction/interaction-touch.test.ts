@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInteractionRuntime, resolveInteraction } from '../../src/sim/interactions';
+import { createInteractionRuntime, resolveInteraction } from '../../../src/sim/interaction/interactions';
 
 describe('resolveInteraction', () => {
   it('work_alongside changes flame01 and spark by table (no methods.sparkCost)', () => {

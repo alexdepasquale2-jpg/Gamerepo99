@@ -6,7 +6,7 @@ import {
   createCompatRuntime,
   loadMigrationMap,
   REIGNITE_MIN_KINDS,
-} from '../../src/sim';
+} from '../../../src/sim';
 import type {
   InteractionDef,
   InteractionResult,
@@ -17,7 +17,7 @@ import type {
   InteractionPerson,
   MarkAdd,
   PromiseStatus,
-} from '../../src/sim';
+} from '../../../src/sim';
 
 describe('sim barrel: interaction APIs', () => {
   it('exports interaction runtime + compat functions', () => {

@@ -19,6 +19,7 @@ import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
 import { loadLineFragmentsTable } from './load-fragments';
+import { loadInteractionTables, type InteractionTables } from './interaction/load-interactions';
 import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
 import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
 import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
@@ -100,6 +101,8 @@ export type DataTables = {
   voiceAnchors: VoiceAnchorsTable;
   reactionCurves: ReactionCurvesTable;
   voiceConstraints: VoiceConstraintsTable;
+  /** Interaction catalog/scoring/migration (interaction/). */
+  interactions: InteractionTables;
   hooksById: Map<string, HookDef>;
 };
 
@@ -179,6 +182,7 @@ export function loadData(): DataTables {
     voiceAnchors: voiceAnchorsJson as VoiceAnchorsTable,
     reactionCurves: reactionCurvesJson as ReactionCurvesTable,
     voiceConstraints: voiceConstraintsJson as VoiceConstraintsTable,
+    interactions: loadInteractionTables(),
     hooksById,
   };
 }

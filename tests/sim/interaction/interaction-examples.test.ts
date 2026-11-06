@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import catalogJson from '../../src/data/systems/interactions/catalog.json';
-import examplesJson from '../../src/data/systems/interactions/examples.json';
-import scoringJson from '../../src/data/systems/interactions/scoring.json';
+import catalogJson from '../../../src/data/systems/interactions/catalog.json';
+import examplesJson from '../../../src/data/systems/interactions/examples.json';
+import scoringJson from '../../../src/data/systems/interactions/scoring.json';
 import {
   createInteractionRuntime,
   resolveInteraction,
   type InteractionDef,
   type InteractionScoring,
-} from '../../src/sim/interactions';
+} from '../../../src/sim/interaction/interactions';
 
 interface Step {
   day: number;
