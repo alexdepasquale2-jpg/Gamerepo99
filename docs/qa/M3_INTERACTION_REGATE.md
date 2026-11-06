@@ -2,11 +2,11 @@
 
 **Authority:** Alex via Niblet — Probe is the quality gate.  
 **Rubric:** `docs/qa/QUALITY_GATE.md` (M3 Hybrid-C).  
-**Status:** **HOLD** until Forge pings that `interactionCompat` default-ON is green (special-bar + ripple side effects ported; legacy spark path deleted).  
-**Do not gate on tip `a8bcf43` alone** (compat opt-in / recipe map only; hollow/reignite still 0 in Forge smoke).
+**Status:** **GATED @ `ddd546f`** — HOLD lifted (Forge green: `2a912b1` juice bridge + `ddd546f` default-ON / legacy act spark path removed). Probe verdict: **SHIP** — see `docs/qa/reports/m3-worth-playing.md`.  
+Historical: do not treat tip `a8bcf43` alone as a final gate (compat opt-in / recipe map only; hollow/reignite still 0 in that smoke).
 
-Prior committed worth-playing: **SHIP-WITH-FIXES** @ `ca882cd` era (`docs/qa/reports/m3-worth-playing.md`).  
-Forge smoke @ `a8bcf43`: burnoutRate ≈ **0.111** (3/27), stuck/bored/dominance clean, hollow/reignite **0** — not a final Probe verdict.
+Prior committed worth-playing: **SHIP-WITH-FIXES** @ `ca882cd` era.  
+This gate @ `ddd546f`: burnoutRate ≈ **0.111** (3/27), stuck/bored/dominance clean, hollow/reignite **190/231**, 24/27 @ maxTicks 200.
 
 ---
 

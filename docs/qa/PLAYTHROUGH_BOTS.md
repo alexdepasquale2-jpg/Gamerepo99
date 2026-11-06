@@ -13,7 +13,7 @@ Design (playthrough): `docs/superpowers/specs/2026-11-05-playthrough-bots-design
 
 # Playthrough bots (hybrid C) — **M3 gate**
 
-**Status:** **HOLD** — awaiting Forge `interactionCompat` **default-ON** green (special-bar + ripple side effects ported; legacy spark path deleted). Last committed worth-playing: **SHIP-WITH-FIXES** @ `ca882cd` era. Forge smoke @ `a8bcf43` (opt-in compat) had burnoutRate ≈ 0.111 but hollow/reignite 0 — **not** a Probe verdict; do not gate on that tip alone. Re-gate checklist: `docs/qa/M3_INTERACTION_REGATE.md`. Report target: `docs/qa/reports/m3-worth-playing.md`.
+**Status:** **GATED @ `ddd546f`** — **SHIP** (interactionCompat always ON; legacy spark act path removed). burnoutRate ≈ 0.111 (3/27); H/R 190/231; 24/27 @ maxTicks 200. Checklist: `docs/qa/M3_INTERACTION_REGATE.md`. Report: `docs/qa/reports/m3-worth-playing.md`. Prior: SHIP-WITH-FIXES @ `ca882cd`; `a8bcf43` smoke was not a Probe verdict (H/R 0).
 
 ## Goal
 Headless bots exercise the **public sim API** (no Phaser) across playable archetypes × play styles, measuring feel/balance. Playwright stays UI-smoke only (`npm run test:e2e:m1`).
