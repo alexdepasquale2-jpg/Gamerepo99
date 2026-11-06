@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-social-graph/02-propagation.md",
+  "formula": "reach(h) = baseStrength * falloff^h * edgeWeight; stop when h > maxHops or reach < epsilon",
+  "falloff": 0.55,
+  "maxHops": 6,
+  "epsilon": 0.02,
+  "introduceWeight": 0.3
+}

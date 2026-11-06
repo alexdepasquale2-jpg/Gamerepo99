@@ -32,6 +32,16 @@ import type {
   EconomyRouteState,
   FacilityRow,
 } from './economy/economy-lod-types';
+import socialWebJson from '../data/people/social-web.json';
+import socialCentralityJson from '../data/people/social-centrality.json';
+import socialPropagationJson from '../data/people/social-propagation.json';
+import { normalizeSocialEdge } from './social/social-graph';
+import {
+  DEFAULT_SOCIAL_PROPAGATION,
+  type CentralityTable,
+  type SocialPropagation,
+  type SocialWebTable,
+} from './social/social-types';
 import voiceAnchorsJson from '../data/dialogue/voice-anchors.json';
 import reactionCurvesJson from '../data/dialogue/reaction-curves.json';
 import voiceConstraintsJson from '../data/dialogue/voice-constraints.json';
@@ -126,7 +136,34 @@ export type DataTables = {
   economyResources: EconomyResourceRow[];
   /** world/routes.json rows (LOD flow; condition/broken/receiveShare). */
   economyRoutes: EconomyRouteState[];
+  /** Social graph 05: prebaked web for default seed (legacy kinds mapped at load). */
+  socialWeb: SocialWebTable;
+  /** Social graph 05: prebaked centrality (read-only). */
+  socialCentrality: CentralityTable;
+  /** Social graph 05: falloff / maxHops / epsilon. */
+  socialPropagation: SocialPropagation;
 };
+
+function loadSocialWeb(): SocialWebTable {
+  const raw = socialWebJson as unknown as { version?: number; seed?: number; meanHops?: number; edges?: unknown[] };
+  return {
+    version: raw.version ?? 1,
+    seed: raw.seed ?? 0,
+    meanHops: raw.meanHops ?? 0,
+    edges: (raw.edges ?? []).map((e) => normalizeSocialEdge(e as Record<string, unknown>)),
+  };
+}
+
+function loadSocialPropagation(): SocialPropagation {
+  const raw = socialPropagationJson as Partial<SocialPropagation>;
+  const d = DEFAULT_SOCIAL_PROPAGATION;
+  return {
+    falloff: typeof raw.falloff === 'number' ? raw.falloff : d.falloff,
+    maxHops: typeof raw.maxHops === 'number' ? raw.maxHops : d.maxHops,
+    epsilon: typeof raw.epsilon === 'number' ? raw.epsilon : d.epsilon,
+    introduceWeight: typeof raw.introduceWeight === 'number' ? raw.introduceWeight : d.introduceWeight,
+  };
+}
 
 const HOOK_PARTS = [
   hooksSparkRecovery,
@@ -220,5 +257,8 @@ export function loadData(): DataTables {
       receiveShare: r.receiveShare as unknown as Record<string, number> | undefined,
       facilityIds: [...(r.facilityIds ?? [])],
     })),
+    socialWeb: loadSocialWeb(),
+    socialCentrality: socialCentralityJson as unknown as CentralityTable,
+    socialPropagation: loadSocialPropagation(),
   };
 }

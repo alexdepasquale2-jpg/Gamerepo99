@@ -52,6 +52,27 @@ export type {
   TownEconomyState,
 } from './economy';
 
+/** Social graph 05: prebaked web, centrality table, falloff walk (no runtime ML). */
+export {
+  createSocialGraph,
+  introduce,
+  meanHopDistance,
+  pickRumorNext,
+  preferInfluential,
+  shortestPath,
+  walkCascade,
+  weaveSocialWeb,
+} from './social';
+export type {
+  CascadeHit,
+  CascadePayload,
+  CentralityTable,
+  SocialEdge,
+  SocialEdgeKind,
+  SocialGraph,
+  SocialPropagation,
+} from './social';
+
 export { townsFromDump } from './towns-from-dump';
 export type { TownMarker } from './towns-from-dump';
 export { getWorldRenderSnapshot } from './world-render-snapshot';

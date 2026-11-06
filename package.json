@@ -16,6 +16,7 @@
     "test:e2e:m3": "playwright test tests/e2e/m3-overworld-smoke.spec.ts",
     "verify:m1": "npm test && npm run build && npm run test:e2e:m1",
     "validate": "node scripts/validate-data.mjs",
+    "bake:social": "vite-node scripts/bake-social-web.ts",
     "test:bots": "vitest run tests/bots"
   },
   "dependencies": {
