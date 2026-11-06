@@ -30,6 +30,19 @@ const CANDIDATE_EXPORTS = [
 
 type PlayFactory = (opts?: unknown) => BotSession | Promise<BotSession>;
 
+/**
+ * Factory opts passed to feature-detected session factories.
+ * interactionCompat routes method acts (inspire→talk_gentle, …) through the
+ * interaction model instead of legacy methods.sparkCost.
+ * seed/archetypeId are placeholders — runs re-boot via start({ seed, archetypeId }).
+ */
+export const BOT_PLAY_SESSION_OPTS = {
+  mode: 'play',
+  seed: 0,
+  archetypeId: 'marrow',
+  interactionCompat: true,
+} as const;
+
 function wrapIfSession(value: unknown): BotSession | null {
   if (!value || typeof value !== 'object') return null;
   const s = value as Partial<BotSession>;
@@ -57,7 +70,7 @@ export async function connectBotSession(): Promise<BotSession | null> {
     for (const name of CANDIDATE_EXPORTS) {
       const candidate = mod[name];
       if (typeof candidate !== 'function') continue;
-      const maybe = await (candidate as PlayFactory)();
+      const maybe = await (candidate as PlayFactory)({ ...BOT_PLAY_SESSION_OPTS });
       const session = wrapIfSession(maybe);
       if (session) return session;
     }
