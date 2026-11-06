@@ -10,13 +10,23 @@ import {
 } from './fabric/world-dump';
 import { assembleInhabitant } from './inhabitant';
 import { loadData, type DataTables } from './load-data';
+import { peopleFromWorld, pickTownId } from './play-session-boot';
 import {
   actMethod,
   installPlayReactions,
   listMethodActions,
 } from './play-session-act';
 import { createRng } from './rng';
-import type { PersonState, SimState } from './types/runtime';
+import {
+  listRoutesFrom,
+  loadBiomeTerrainMuls,
+  loadEncounterTables,
+  loadSizeTravelMuls,
+  startTravel,
+  toTravelRoutes,
+  type TravelRoute,
+  type TravelSimState,
+} from './travel';
 
 export type PlayAction = { id: string; family?: string };
 export type PlayEvent = { type: string; methodId?: string };
@@ -38,44 +48,21 @@ export type PlaySession = {
   tick(): void;
   snapshot(): PlaySnapshot;
   events(): PlayEvent[];
-  travel?(routeId: string): void;
+  listRoutes(): string[];
+  travel(routeId: string): void;
   dump(): string;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
   | { mode: 'play'; seed: number; archetypeId?: string; peopleCount?: number };
 
-function peopleFromWorld(world: FabricWorld, data: DataTables): Record<string, PersonState> {
-  const out: Record<string, PersonState> = {};
-  for (const draft of world.people) {
-    const row = data.peopleById[draft.id];
-    const start = Number(row?.flameStart ?? 20);
-    out[draft.id] = {
-      id: draft.id,
-      flame: start,
-      flameStart: start,
-      townId: typeof row?.townId === 'string' ? row.townId : undefined,
-      siteId: typeof row?.siteId === 'string' ? row.siteId : undefined,
-      woundId: typeof row?.woundId === 'string' ? row.woundId : undefined,
-      tags: Array.isArray(row?.tags) ? [...(row.tags as string[])] : [],
-      marks: [],
-    };
-  }
-  return out;
-}
-
-function pickTownId(playerTown: string | undefined, world: FabricWorld): string {
-  if (playerTown) return playerTown;
-  const site = world.gapSites?.[0]?.id ?? world.settlements?.[0]?.id;
-  return site ?? 'unknown';
-}
-
 function createPlayModeSession(defaults: { seed: number; archetypeId: string }): PlaySession {
   let seed = defaults.seed;
   let archetypeId = defaults.archetypeId;
   let world: FabricWorld | null = null;
-  let state: SimState | null = null;
+  let state: TravelSimState | null = null;
   let tickN = 0;
+  let routes: TravelRoute[] = [];
   const eventLog: PlayEvent[] = [];
 
   function boot(nextSeed: number, nextArchetype: string): void {
@@ -85,6 +72,7 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
     eventLog.length = 0;
     const data = loadData();
     world = generateWorld({ seed, includeAnchors: true });
+    routes = toTravelRoutes(world.routes ?? []);
     const player = assembleInhabitant(data, archetypeId);
     player.townId = pickTownId(player.townId, world);
     const bus = createEventBus();
@@ -98,8 +86,19 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       bus: { lastIds: [], ...bus },
       data,
       rng: createRng(seed),
+      routes,
+      encounterTables: loadEncounterTables(),
+      biomeTerrainMuls: loadBiomeTerrainMuls(),
+      sizeTravelMuls: loadSizeTravelMuls(),
     };
     installPlayReactions(state);
+  }
+
+  function appendJuiceSince(beforeLen: number): void {
+    const ids = state?.bus?.lastIds ?? [];
+    for (const type of ids.slice(beforeLen)) {
+      eventLog.push({ type });
+    }
   }
 
   return {
@@ -146,6 +145,18 @@ function createPlayModeSession(defaults: { seed: number; archetypeId: string }):
       };
     },
     events: () => [...eventLog],
+    listRoutes() {
+      if (!state?.player.townId) return [];
+      return listRoutesFrom(routes, state.player.townId);
+    },
+    travel(routeId) {
+      if (!state) return;
+      const beforeLen = state.bus?.lastIds?.length ?? 0;
+      const { daysEff } = startTravel(state, routeId);
+      tickN += daysEff;
+      appendJuiceSince(beforeLen);
+      eventLog.push({ type: 'travel' });
+    },
     dump: () => (world ? dumpWorld(world).text : ''),
   };
 }
