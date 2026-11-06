@@ -87,7 +87,7 @@
       "townId": "ashford",
       "leaderPersonId": "ruth_calder",
       "m2Optional": true,
-      "blurb": "Keep the mill turning and the ovens honest \u2014 a town-side doctrine that still speaks a life Ashford recognizes.",
+      "blurb": "Keep the mill turning and the ovens honest — a town-side doctrine that still speaks a life Ashford recognizes.",
       "goals": [
         {
           "id": "goal_mill_shifts",
@@ -165,6 +165,75 @@
         "control": 0.4,
         "exposure": 0.1,
         "legitimacy": 0.75
+      }
+    },
+    {
+      "id": "doctrine_brine_tithe",
+      "name": "Brine Tithe",
+      "townId": "brine_hitch",
+      "leaderPersonId": null,
+      "m2Optional": true,
+      "blurb": "Salt and catch shared by weight of rope — a wet compact.",
+      "goals": [
+        {
+          "id": "goal_nets_mended",
+          "promise": "Nets mended before dawn tide",
+          "feltByMaxGapAxis": 0.5
+        }
+      ],
+      "start": {
+        "realDelivery": 0.4,
+        "perceivedDelivery": 0.45,
+        "propaganda": 0.3,
+        "control": 0.25,
+        "exposure": 0.1,
+        "legitimacy": 0.4
+      }
+    },
+    {
+      "id": "doctrine_chalk_quiet",
+      "name": "Chalk Quiet",
+      "townId": "chalk_warren",
+      "leaderPersonId": null,
+      "m2Optional": true,
+      "blurb": "Mark doors, keep quarrels soft, remember names in white dust.",
+      "goals": [
+        {
+          "id": "goal_doors_marked",
+          "promise": "Every door carries a living mark",
+          "feltByMaxGapAxis": 0.6
+        }
+      ],
+      "start": {
+        "realDelivery": 0.4,
+        "perceivedDelivery": 0.45,
+        "propaganda": 0.3,
+        "control": 0.25,
+        "exposure": 0.1,
+        "legitimacy": 0.4
+      }
+    },
+    {
+      "id": "doctrine_spur_quota",
+      "name": "Spur Quota",
+      "townId": "glare_spur",
+      "leaderPersonId": null,
+      "m2Optional": true,
+      "blurb": "Carts counted; ore and grain owed uphill toward the glare.",
+      "goals": [
+        {
+          "id": "goal_carts_counted",
+          "promise": "No cart passes uncounted",
+          "feltByMaxGapAxis": 1.0
+        }
+      ],
+      "start": {
+        "realDelivery": 0.4,
+        "perceivedDelivery": 0.45,
+        "propaganda": 0.3,
+        "control": 0.25,
+        "exposure": 0.1,
+        "legitimacy": 0.4
       }
     }
   ]

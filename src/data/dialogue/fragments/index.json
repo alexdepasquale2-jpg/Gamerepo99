@@ -113,9 +113,19 @@
     "tom_briggs/shame.json"
   ],
   "orderFiles": [
-    "order__p01.json",
-    "order__p02.json",
-    "order__p03.json",
-    "order__p04.json"
-  ]
+    "order-marta_ellison.json",
+    "order-jonah_pike.json",
+    "order-harold_finch.json",
+    "order-ruth_calder.json",
+    "order-elias_boone.json",
+    "order-clara_whitby.json",
+    "order-nora_voss.json",
+    "order-samir_okafor.json",
+    "order-tom_briggs.json",
+    "order-priya_sen.json",
+    "order-leon_march.json",
+    "order-mira_whitby.json",
+    "order-generic_blend.json"
+  ],
+  "orderNote": "Regrouped by voice (person) then topic (method) — Tidy overnight variety."
 }

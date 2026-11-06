@@ -6,11 +6,22 @@
     "roles.json",
     "woundWeights.json",
     "settlementSizes.json",
-    "historyBeats__p01.json",
-    "historyBeats__p02.json"
+    "historyBeats-founding.json",
+    "historyBeats-drift.json",
+    "historyBeats-loss.json",
+    "historyBeats-feud.json",
+    "historyBeats-miracle.json",
+    "historyBeats-departure.json",
+    "historyBeats-doctrine_arrival.json"
   ],
   "historyBeatsFiles": [
-    "historyBeats__p01.json",
-    "historyBeats__p02.json"
-  ]
+    "historyBeats-founding.json",
+    "historyBeats-drift.json",
+    "historyBeats-loss.json",
+    "historyBeats-feud.json",
+    "historyBeats-miracle.json",
+    "historyBeats-departure.json",
+    "historyBeats-doctrine_arrival.json"
+  ],
+  "notes": "Beats grouped by kind/topic; branching arcs via chainsFrom + arc tags (variety fix)."
 }

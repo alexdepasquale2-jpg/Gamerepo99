@@ -60,6 +60,27 @@
         "hoard",
         "optional_m2"
       ]
+    },
+    {
+      "id": "ore_copper",
+      "name": "Copper Ore",
+      "category": "mineral",
+      "spoilPerDawn": 0,
+      "tags": [
+        "mineral",
+        "extractive"
+      ]
+    },
+    {
+      "id": "ore_slag_tin",
+      "name": "Slag Tin",
+      "category": "mineral",
+      "spoilPerDawn": 0,
+      "tags": [
+        "mineral",
+        "extractive",
+        "slag"
+      ]
     }
   ]
 }

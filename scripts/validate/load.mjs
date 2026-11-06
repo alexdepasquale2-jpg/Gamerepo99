@@ -112,6 +112,20 @@ const loadAssertionsDir = (dataDir, errors) => {
 };
 
 /** Assemble world/history/ into virtual history-tables.json. */
+
+/** Merge world/towns/* into towns.json when folder present (anchors + gap-poles). */
+const loadTownsDir = (dataDir, errors) => {
+  const dir = join(dataDir, 'world', 'towns');
+  const index = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8'));
+  const towns = [];
+  for (const name of index.files || []) {
+    const part = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+    towns.push(...(part.towns || []));
+  }
+  const { files: _f, forgeNote: _n, ...meta } = index;
+  return { ...meta, towns };
+};
+
 const loadHistoryDir = (dataDir, errors) => {
   const dir = join(dataDir, 'world', 'history');
   const index = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8'));
@@ -190,6 +204,12 @@ export const loadAll = (errors) => {
     files['history-tables.json'] = loadHistoryDir(dataDir, errors);
   } catch (e) {
     errors.push(`PARSE world/history/: ${e.message}`);
+  }
+  try {
+    files['towns.json'] = loadTownsDir(dataDir, errors);
+  } catch (e) {
+    // Folder optional until fully migrated; keep flat towns.json from loadJsonFilesInDir
+    if (!files['towns.json']) errors.push(`PARSE world/towns/: ${e.message}`);
   }
   // Monoliths must not coexist with split dirs
   const systemsDir = join(dataDir, 'systems');

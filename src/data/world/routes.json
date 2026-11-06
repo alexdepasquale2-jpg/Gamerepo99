@@ -56,6 +56,51 @@
       "fastUnlockIds": [
         "unlock_mira_letter"
       ]
+    },
+    {
+      "id": "route_ashford_brine",
+      "fromTownId": "ashford",
+      "toTownId": "brine_hitch",
+      "days": 1,
+      "linkId": "ashford_brine_path",
+      "biomeIds": [
+        "brine_marsh",
+        "river_margin"
+      ],
+      "condition": 1.0,
+      "broken": false,
+      "extractive": false,
+      "receiveShare": {
+        "ashford": 0.5,
+        "brine_hitch": 0.5
+      },
+      "facilityIds": [],
+      "encounterTableId": "enc_ashford_strand",
+      "unlockWhen": null,
+      "fastUnlockIds": []
+    },
+    {
+      "id": "route_chalk_spur_reach",
+      "fromTownId": "chalk_warren",
+      "toTownId": "glare_spur",
+      "days": 2,
+      "linkId": "chalk_spur_path",
+      "biomeIds": [
+        "chalk_downs",
+        "slag_verge",
+        "glare_approach"
+      ],
+      "condition": 0.9,
+      "broken": false,
+      "extractive": true,
+      "receiveShare": {
+        "chalk_warren": 0.3,
+        "glare_spur": 0.7
+      },
+      "facilityIds": [],
+      "encounterTableId": "enc_ashford_strand",
+      "unlockWhen": null,
+      "fastUnlockIds": []
     }
   ],
   "sizeTravelMuls": {

@@ -78,7 +78,56 @@
       "packetCapacity": 1,
       "travelSparkCost": 0,
       "travelPlayerAllowed": false,
-      "notes": "Letters only \u2014 player does not walk the city pole in M3"
+      "notes": "Letters only — player does not walk the city pole in M3"
+    },
+    {
+      "id": "ashford_brine_path",
+      "fromTownId": "ashford",
+      "toTownId": "brine_hitch",
+      "bidirectional": true,
+      "days": 1,
+      "tags": [
+        "marsh_road"
+      ],
+      "packetCapacity": 2,
+      "travelSparkCost": 1
+    },
+    {
+      "id": "lowmere_peat_path",
+      "fromTownId": "lowmere",
+      "toTownId": "peat_ladder",
+      "bidirectional": true,
+      "days": 2,
+      "tags": [
+        "wet_road"
+      ],
+      "packetCapacity": 1,
+      "travelSparkCost": 1
+    },
+    {
+      "id": "chalk_spur_path",
+      "fromTownId": "chalk_warren",
+      "toTownId": "glare_spur",
+      "bidirectional": true,
+      "days": 2,
+      "tags": [
+        "ridge_road"
+      ],
+      "packetCapacity": 2,
+      "travelSparkCost": 1
+    },
+    {
+      "id": "spur_reach_path",
+      "fromTownId": "glare_spur",
+      "toTownId": "city_reach",
+      "bidirectional": true,
+      "days": 1,
+      "tags": [
+        "glare_road",
+        "extractive"
+      ],
+      "packetCapacity": 3,
+      "travelSparkCost": 2
     }
   ],
   "packetTypes": [

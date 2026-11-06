@@ -41,6 +41,8 @@ See spec §5. Until move: keep importing `../data/line-fragments.json` etc. Afte
 
 ## Task files
 
+- [Task H: Fabric variety (Probe NO-SHIP follow-up)](./task-h-variety.md)
+
 - [Task A: Loader + validator ready for subfolder data (coordinate Tidy/Forge git-mv)](./task-a-loader.md)
 - [Task B: Person state vector + authored anchors](./task-b-state-vector.md)
 - [Task C: Pluggable blend selector (wire setReactionLineSelector)](./task-c-line-selector.md)

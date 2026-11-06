@@ -1,0 +1,100 @@
+{
+  "historyBeats": [
+    {
+      "id": "hb_founding_mill",
+      "kind": "founding",
+      "summary": "They raised the mill before the school, and called that wisdom.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.facility",
+          "value": "mill"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "mill_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null,
+      "arc": "mill_compact"
+    },
+    {
+      "id": "hb_founding_ferry",
+      "kind": "founding",
+      "summary": "A rope across the strand made Lowmere a place you could leave.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ferry_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null,
+      "arc": "strand_water"
+    },
+    {
+      "id": "hb_founding_desk",
+      "kind": "founding",
+      "summary": "The Reach desk arrived with stamps and a promise of elsewhere.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "desk_founded"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null,
+      "arc": "reach_glare"
+    },
+    {
+      "id": "hb_founding_ladder",
+      "kind": "founding",
+      "summary": "They cut a ladder into the peat and called the first fire a town.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ladder_founded"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "founding"
+        }
+      ],
+      "chainsFrom": [],
+      "arc": "peat_rise"
+    },
+    {
+      "id": "hb_founding_hitch",
+      "kind": "founding",
+      "summary": "A hitching post for salt barges became a street by accident.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "hitch_founded"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "founding"
+        }
+      ],
+      "chainsFrom": [],
+      "arc": "brine_rise"
+    }
+  ]
+}

@@ -23,4 +23,13 @@ export function validateWilderness(data, ctx) {
   }
   req((data['travel-trades.json']?.trades || []).length >= 8, 'travel-trades need full cast');
   if (hooks) req(hooks.has('cost_road_labor'), 'cost_road_labor hook required');
+
+  // Variety overnight: fauna / crops reference known biomes + resources when present
+  for (const f of data['fauna.json']?.fauna || []) {
+    for (const b of f.biomeIds || []) req(biomes.has(b), `fauna ${f.id} biome ${b}`);
+  }
+  for (const c of data['crops.json']?.crops || []) {
+    for (const b of c.biomeIds || []) req(biomes.has(b), `crop ${c.id} biome ${b}`);
+    if (c.resourceId) req(ecoRes.has(c.resourceId), `crop ${c.id} resource ${c.resourceId}`);
+  }
 }

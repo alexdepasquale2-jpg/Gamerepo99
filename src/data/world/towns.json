@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tileSizePx": 32,
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
   "towns": [
     {
       "id": "marrow_den",
@@ -333,7 +333,7 @@
     {
       "id": "city_reach",
       "name": "The Reach (City Pole)",
-      "blurb": "Not a playable street in M3 \u2014 the unrelatable city lives felt from the road. Letters sink here; kin disappear into glare.",
+      "blurb": "Not a playable street in M3 — the unrelatable city lives felt from the road. Letters sink here; kin disappear into glare.",
       "mapWidth": 1,
       "mapHeight": 1,
       "starting": false,
@@ -376,5 +376,6 @@
       },
       "economyOptIn": false
     }
-  ]
+  ],
+  "notes": "Variety gap-poles live in world/towns/gap-poles.json — Forge Task H merges via loadWorldTables."
 }
