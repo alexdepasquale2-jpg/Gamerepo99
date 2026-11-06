@@ -513,68 +513,119 @@ function paintBush(
   paintScatterOne(host, container, foot.x, foot.y, 'bush');
 }
 
-/** Short crop strip along the road east of town (sheet-crops frames 0–2). */
+/**
+ * Small tilled wheat patch south of the roadside fence (not on it).
+ * Tiny stalks (~⅓–½ tile), jittered rows — never sheet-crops veggie icons.
+ */
 function paintRoadsideCrops(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   town: { q: number; r: number },
 ): void {
-  if (!host.textures.exists('sheet-crops')) return;
-  const tex = host.textures.get('sheet-crops');
-  // South of road ribbon, north of cliff — keeps the path itself clear
-  const rowR = town.r + 1.15;
-  for (let i = 0; i < 6; i++) {
-    const q = town.q + 3.2 + i * 0.95;
-    const foot = tileFootWorld(q, rowR);
-    const fr = String(i % 3);
-    if (!tex.has(fr)) continue;
-    addSoftShadow(host, container, foot.x, foot.y, 0.55);
-    const img = host.add.image(foot.x, foot.y, 'sheet-crops', fr);
-    applySpriteSort(img);
-    img.setDisplaySize(TILE_PX * 0.9, TILE_PX * 0.9);
-    container?.add(img);
+  // Clearly below fence/road (fence ~town.r), north of cliff
+  const baseR = town.r + 1.85;
+  const baseQ = town.q + 3.5;
+  const rows = 3;
+  const cols = 6;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const h = hash2(town.q * 17 + col * 5 + row * 11, town.r * 13 + row * 19 + col);
+      // empty gaps
+      if (h % 100 < 28) continue;
+      const jx = (((h >> 8) % 1000) / 1000 - 0.5) * 0.45;
+      const jy = (((h >> 16) % 1000) / 1000 - 0.5) * 0.35;
+      const q = baseQ + col * 0.42 + jx;
+      const r = baseR + row * 0.42 + jy;
+      const foot = tileFootWorld(q, r);
+      paintWheatStalk(host, container, foot.x, foot.y, h);
+    }
   }
 }
 
+/** Tiny wheat stalk (≤ half tile), stem + small gold tip. */
+function paintWheatStalk(
+  host: PaintHost,
+  container: Phaser.GameObjects.Container | null,
+  x: number,
+  y: number,
+  seed: number,
+): void {
+  const h = 8 + (seed % 4); // 8–11px ≈ ¼–⅓ tile
+  const stem = host.add.rectangle(x, y - h / 2, 1, h, 0x5a7a28);
+  applySpriteSort(stem);
+  container?.add(stem);
+  const head = host.add.rectangle(x, y - h - 1, 3, 3, seed % 2 === 0 ? 0xd4b84a : 0xc4a840);
+  head.setDepth(y + 0.12);
+  container?.add(head);
+}
 
-/** Fill visible empty grass: just below cliff + left flank. Respects cliff/building exclusion. */
+
+/**
+ * Jittered poisson clusters for left flank + lower meadow.
+ * Varied spacing + skip chance leave empty grass (no rigid grid rows).
+ */
 function paintMeadowFillRing(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   town: { q: number; r: number },
 ): void {
   const ws = FEEL.worldScale;
-  const min = ws.scatterMinPx * 0.92;
   const cliffR = town.r + 4;
   const clear = ws.cliffClearTiles;
   const exQ = ws.treeExcludeQ;
   const exR = ws.treeExcludeR;
   type Kind = 'bush' | 'rock' | 'log' | 'stump' | 'hay' | 'flowers';
-  const kinds: Kind[] = ['bush', 'flowers', 'rock', 'bush', 'flowers', 'stump', 'hay', 'bush', 'rock', 'flowers'];
+  const kinds: Kind[] = ['bush', 'flowers', 'rock', 'flowers', 'bush', 'stump', 'hay', 'rock', 'flowers'];
   const placed: { x: number; y: number }[] = [];
-  const spots: { dq: number; dr: number }[] = [];
-  // South of cliff — first 3 tiles of lower meadow (boot-visible)
-  for (let dq = -9; dq <= 10; dq += 1.35) {
-    for (let dr = clear + 0.35; dr <= clear + 3.2; dr += 1.15) {
-      spots.push({ dq, dr: 4 + dr });
-    }
-  }
-  // Left flank upper terrace (west of settlement AABB)
-  for (let dq = -9.5; dq <= -5.2; dq += 1.2) {
-    for (let dr = -0.2; dr <= 3.4; dr += 1.1) {
-      spots.push({ dq, dr });
-    }
-  }
-  let ki = 0;
-  for (const s of spots) {
-    if (Math.abs(s.dq - 0.8) < exQ && Math.abs(s.dr) < exR) continue;
-    const absR = town.r + s.dr;
-    if (absR >= cliffR - 0.3 && absR < cliffR + clear) continue;
-    const foot = tileFootWorld(town.q + s.dq, absR);
-    if (placed.some((p) => Math.hypot(p.x - foot.x, p.y - foot.y) < min)) continue;
+
+  const tryPlace = (dq: number, dr: number, kind: Kind, minPx: number) => {
+    if (Math.abs(dq - 0.8) < exQ && Math.abs(dr) < exR) return;
+    const absR = town.r + dr;
+    if (absR >= cliffR - 0.3 && absR < cliffR + clear) return;
+    const foot = tileFootWorld(town.q + dq, absR);
+    if (placed.some((p) => Math.hypot(p.x - foot.x, p.y - foot.y) < minPx)) return;
     placed.push(foot);
-    paintScatterOne(host, container, foot.x, foot.y, kinds[ki % kinds.length]!);
-    ki += 1;
+    paintScatterOne(host, container, foot.x, foot.y, kind);
+  };
+
+  // Cluster seeds (irregular), then 2–4 jittered members each — not a lattice
+  const clusters: { dq: number; dr: number; n: number; cell: number }[] = [
+    // left flank
+    { dq: -7.2, dr: 0.6, n: 3, cell: 1.1 },
+    { dq: -8.4, dr: 2.1, n: 4, cell: 1.0 },
+    { dq: -6.4, dr: 2.8, n: 2, cell: 1.2 },
+    { dq: -9.0, dr: 1.4, n: 2, cell: 0.9 },
+    // lower meadow (south of cliff)
+    { dq: -6.5, dr: 7.0, n: 3, cell: 1.15 },
+    { dq: -3.0, dr: 7.8, n: 4, cell: 1.05 },
+    { dq: 0.5, dr: 7.2, n: 3, cell: 1.2 },
+    { dq: 3.8, dr: 8.0, n: 4, cell: 1.0 },
+    { dq: 7.0, dr: 7.5, n: 3, cell: 1.15 },
+    { dq: -5.0, dr: 9.5, n: 3, cell: 1.1 },
+    { dq: -1.2, dr: 10.0, n: 2, cell: 1.25 },
+    { dq: 2.5, dr: 9.8, n: 3, cell: 1.05 },
+    { dq: 6.2, dr: 10.4, n: 3, cell: 1.1 },
+    { dq: 9.0, dr: 9.2, n: 2, cell: 1.2 },
+    { dq: -8.0, dr: 11.0, n: 3, cell: 1.0 },
+    { dq: 0.0, dr: 12.2, n: 2, cell: 1.3 },
+    { dq: 4.5, dr: 12.0, n: 3, cell: 1.15 },
+  ];
+
+  let ki = 0;
+  for (const c of clusters) {
+    // ~25% chance to skip whole cluster → empty grass pockets
+    const ch = hash2(Math.floor(town.q + c.dq * 10), Math.floor(town.r + c.dr * 10));
+    if (ch % 100 < 25) continue;
+    for (let i = 0; i < c.n; i++) {
+      const h = hash2(Math.floor(c.dq * 40) + i * 17, Math.floor(c.dr * 40) + i * 23 + ch);
+      // per-member skip for more empty grass
+      if (h % 100 < 22) continue;
+      const jx = (((h >> 8) % 1000) / 1000 - 0.5) * c.cell * 2.2;
+      const jy = (((h >> 16) % 1000) / 1000 - 0.5) * c.cell * 2.2;
+      const minPx = ws.scatterMinPx * (0.75 + ((h >> 4) % 50) / 100); // varied spacing
+      tryPlace(c.dq + jx, c.dr + jy, kinds[ki % kinds.length]!, minPx);
+      ki += 1;
+    }
   }
 }
 
@@ -587,9 +638,8 @@ function paintScatterProps(
   const ws = FEEL.worldScale;
   const min = ws.scatterMinPx;
   type Kind = 'bush' | 'rock' | 'log' | 'stump' | 'sign' | 'hay' | 'flowers';
-  // Upper terrace + left flank + lower meadow (south of cliff). Cliff band filtered below.
+  // Porch accents only — left/lower density comes from jittered poisson clusters
   const candidates: { dq: number; dr: number; kind: Kind }[] = [
-    // porch / upper terrace
     { dq: -4.5, dr: 1.2, kind: 'bush' },
     { dq: -1.0, dr: 2.4, kind: 'rock' },
     { dq: 3.0, dr: 2.0, kind: 'log' },
@@ -599,50 +649,7 @@ function paintScatterProps(
     { dq: -5.5, dr: 0.4, kind: 'flowers' },
     { dq: 8.5, dr: 2.2, kind: 'bush' },
     { dq: 4.2, dr: -0.8, kind: 'rock' },
-    { dq: -6.8, dr: 1.8, kind: 'flowers' },
-    { dq: -7.2, dr: 2.6, kind: 'bush' },
-    { dq: -6.0, dr: 3.2, kind: 'rock' },
     { dq: 9.6, dr: 1.4, kind: 'flowers' },
-    { dq: 10.2, dr: 2.8, kind: 'bush' },
-    // meadow south of cliff (dr past cliffClear) — fill the big empty lower field
-    { dq: -2.5, dr: 7.2, kind: 'bush' },
-    { dq: 1.0, dr: 8.5, kind: 'flowers' },
-    { dq: 5.5, dr: 7.5, kind: 'rock' },
-    { dq: 8.0, dr: 9.2, kind: 'bush' },
-    { dq: -4.0, dr: 8.5, kind: 'log' },
-    { dq: 2.5, dr: 9.8, kind: 'stump' },
-    { dq: 7.5, dr: 10.5, kind: 'flowers' },
-    { dq: -1.5, dr: 10.2, kind: 'hay' },
-    { dq: -6.0, dr: 9.0, kind: 'flowers' },
-    { dq: 3.5, dr: 11.2, kind: 'bush' },
-    { dq: -3.2, dr: 11.0, kind: 'rock' },
-    { dq: 6.2, dr: 8.2, kind: 'hay' },
-    { dq: 0.2, dr: 12.0, kind: 'flowers' },
-    { dq: 9.0, dr: 11.5, kind: 'log' },
-    { dq: -5.0, dr: 12.0, kind: 'stump' },
-    { dq: 4.8, dr: 12.5, kind: 'bush' },
-    { dq: -0.8, dr: 7.0, kind: 'flowers' },
-    // left lower meadow
-    { dq: -7.5, dr: 7.4, kind: 'bush' },
-    { dq: -8.2, dr: 8.6, kind: 'flowers' },
-    { dq: -6.8, dr: 9.8, kind: 'rock' },
-    { dq: -9.0, dr: 10.2, kind: 'bush' },
-    { dq: -7.8, dr: 11.4, kind: 'flowers' },
-    { dq: -5.6, dr: 13.0, kind: 'bush' },
-    { dq: -8.6, dr: 12.6, kind: 'stump' },
-    { dq: -4.4, dr: 13.4, kind: 'flowers' },
-    { dq: -9.4, dr: 7.8, kind: 'log' },
-    // center/right lower meadow fill
-    { dq: 0.8, dr: 13.2, kind: 'bush' },
-    { dq: 2.2, dr: 14.0, kind: 'flowers' },
-    { dq: 5.8, dr: 13.6, kind: 'rock' },
-    { dq: 7.2, dr: 14.2, kind: 'bush' },
-    { dq: 9.4, dr: 13.0, kind: 'flowers' },
-    { dq: 1.6, dr: 7.8, kind: 'bush' },
-    { dq: 3.8, dr: 8.8, kind: 'flowers' },
-    { dq: -2.0, dr: 13.8, kind: 'hay' },
-    { dq: 6.8, dr: 11.8, kind: 'stump' },
-    { dq: -1.0, dr: 14.4, kind: 'rock' },
   ];
   const placed: { x: number; y: number }[] = [];
   const cliffR = town.r + 4;
@@ -780,33 +787,25 @@ export function paintTownMarker(
 
   paintFenceAlongRoad(host, container, town.q + 0.5, town.r, 8);
 
-  // Crop row south of the east road (josehzz sheet-crops) — keeps path readable
+  // Small wheat patch south of roadside fence (procedural stalks, not veggie icons)
   paintRoadsideCrops(host, container, town);
 
-  // Extra CC0 bushes/small trees on left flank + lower meadow (outside building AABB)
+  // Sparse irregular accent trees (not a grid) — left + lower meadow
   for (const [dq, dr, v] of [
-    [-7.0, 0.2, 2],
-    [-8.0, 1.0, 2],
-    [-7.5, 7.0, 2],
-    [-8.5, 9.5, 0],
-    [1.5, 13.5, 2],
-    [8.5, 12.8, 2],
-    [-3.5, 13.0, 1],
+    [-7.6, 0.4, 2],
+    [-8.8, 9.2, 0],
+    [8.2, 12.5, 2],
   ] as const) {
     if (Math.abs(dq - 0.8) < exQ && Math.abs(dr) < exR) continue;
     const absR = town.r + dr;
     const cliffR = town.r + 4;
     if (absR >= cliffR - 0.3 && absR < cliffR + FEEL.worldScale.cliffClearTiles) continue;
-    if (v === 2) {
-      paintBush(host, container, town.q + dq, absR);
-    } else {
-      paintTree(host, container, town.q + dq, absR, v);
-    }
+    if (v === 2) paintBush(host, container, town.q + dq, absR);
+    else paintTree(host, container, town.q + dq, absR, v);
   }
 
-  // Scatter props so open grass isn't empty (min spacing from worldScale)
+  // Scatter props + jittered poisson meadow clusters (empty grass mixed in)
   paintScatterProps(host, container, town);
-  // Dense ring just south of cliff + left flank (visible boot framing)
   paintMeadowFillRing(host, container, town);
 
   // Meadow south of cliff (r+4); paintSpacedVillagers also enforces cliffClearTiles
