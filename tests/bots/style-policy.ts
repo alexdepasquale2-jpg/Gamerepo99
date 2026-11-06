@@ -11,9 +11,9 @@ export type StylePolicy = {
 
 /** Family weight tables — higher weight = preferred. No archetype branches. */
 const WEIGHTS: Record<StyleId, Record<string, number>> = {
-  savage: { savage: 10, mixed: 2, kind: 1, noop: 0.1 },
-  kind: { kind: 10, mixed: 2, savage: 1, noop: 0.1 },
-  mixed: { mixed: 10, savage: 3, kind: 3, noop: 0.1 },
+  savage: { savage: 10, mixed: 2, kind: 1, rest: 2, travel: 2, noop: 0.1 },
+  kind: { kind: 10, mixed: 2, savage: 1, rest: 5, travel: 3, noop: 0.1 },
+  mixed: { mixed: 10, savage: 3, kind: 3, rest: 3, travel: 3, noop: 0.1 },
 };
 
 function weightFor(style: StyleId, family: string | undefined): number {
@@ -30,10 +30,16 @@ export function createStylePolicy(style: StyleId): StylePolicy {
         id: a.id,
         w: weightFor(style, a.family),
       }));
-      const maxW = Math.max(...scored.map((s) => s.w));
-      const top = scored.filter((s) => s.w === maxW);
-      const idx = Math.min(top.length - 1, Math.floor(rng() * top.length));
-      return top[idx]!.id;
+      const total = scored.reduce((sum, s) => sum + s.w, 0);
+      if (total <= 0) return scored[0]!.id;
+      let roll = rng() * total;
+      if (roll < 0) roll = 0;
+      if (roll >= total) roll = total - Number.EPSILON;
+      for (const s of scored) {
+        roll -= s.w;
+        if (roll < 0) return s.id;
+      }
+      return scored[scored.length - 1]!.id;
     },
   };
 }
