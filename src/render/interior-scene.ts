@@ -314,7 +314,7 @@ export class InteriorScene extends Phaser.Scene {
     const d = this.data0;
     const style = { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#f2e2b8', stroke: '#1b1612', strokeThickness: 3 };
     this.add.text(10, 8, `${d.townName} · ${INTERIOR_TITLE[d.kind]}`, { ...style, fontSize: '13px', color: '#f2b84b' }).setScrollFactor(0).setDepth(1_000_000);
-    this.add.text(10, 26, d.occupant ? `${d.occupant.name} ${OCCUPANT_ROLE[d.kind]}.` : 'Empty for now.', { ...style, fontSize: '11px', color: '#c8b898' })
+    this.add.text(10, 26, d.occupant ? `${d.occupant.name} ${OCCUPANT_ROLE[d.kind]}.` : 'Nobody is home right now.', { ...style, fontSize: '11px', color: '#c8b898' })
       .setScrollFactor(0).setDepth(1_000_000);
     this.add.text(10, this.scale.height - 20, 'Walk: WASD · E: talk / leave at the door · Esc: leave', { ...style, fontSize: '11px', color: '#c8b898' })
       .setScrollFactor(0).setDepth(1_000_000);

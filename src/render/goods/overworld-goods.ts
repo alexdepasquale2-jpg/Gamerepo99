@@ -5,7 +5,6 @@ import type { PlaySession } from '../../sim';
 import type { FabricWorld } from '../../sim/gen/world-types';
 import type { WorldLayout } from '../../sim/map/world-layout';
 import { applyDeedGoods, isGoodsDeed } from '../../sim/goods/deed-goods';
-import schedJson from '../../data/world/npc-schedules.json';
 import { tileFootWorld } from '../depth-sort';
 import { HEARTH_OFFSET, type WorldLife } from '../world-life';
 import type { PeopleLayer } from '../people-layer';
@@ -21,10 +20,10 @@ import { unreadReplies } from '../../sim/letter-replies';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
 import type { Navigator } from '../../sim/map/nav';
+import { townBuildings, type Building } from '../../sim/map/interiors';
+import { placeAt, residences } from '../../sim/map/residency';
 
 type Pt = { x: number; y: number };
-const SCHED = schedJson as { phases: { until: number; place: 'home' | 'work' | 'gather' }[] };
-
 export type OverworldGoods = {
   update: (time: number, dt: number, player: Pt) => void;
   onDawn: () => void;
@@ -74,9 +73,17 @@ export function attachOverworldGoods(
     const f = tileFootWorld(t.q, t.r);
     return { x: f.x + HEARTH_OFFSET.x, y: f.y + HEARTH_OFFSET.y + 18 };
   };
+  // Residency: each town's people are dealt one per enterable building; the day phase decides who is indoors.
+  const homes = new Map<string, Building>();
+  for (const t of layout.settlements) {
+    const bs = townBuildings(t);
+    const ids = session.listPeople().filter((p) => p.townId === t.id).map((p) => p.id);
+    for (const [pid, b] of residences(bs, ids)) homes.set(pid, b);
+  }
+  people.setResidency(() => life.phase(), homes);
   people.setSchedule((p) => {
     const ph = life.phase();
-    const place = SCHED.phases.find((x) => ph < x.until)?.place ?? 'home';
+    const place = placeAt(ph);
     const h = hash(p.id);
     if (place === 'gather') {
       const c = hearthOf(p.town.id, p.home);

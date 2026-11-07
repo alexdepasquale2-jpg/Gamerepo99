@@ -24,7 +24,7 @@ import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
 import { createPeopleLayer, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
 import { INTERIOR_SCENE_KEY, type InteriorEnterData, type InteriorScene } from './interior-scene';
-import { allBuildings, nearestDoor, occupantOf, townBuildings, type Building, type InteriorKind } from '../sim/map/interiors';
+import { allBuildings, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
 import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
@@ -115,6 +115,11 @@ export class OverworldScene extends Phaser.Scene {
       },
       // Interiors: enter(spec?) teleports to a door and walks in (instant, for screenshots/e2e).
       interior: {
+        residents: (buildingId: string) => this.people.insideOf(buildingId),
+        /** Jump the day clock and re-settle who is indoors (instant; for screenshots/e2e). */
+        setHour: (p01: number) => { this.life.setPhase(p01); this.people.settle(); },
+        /** Per villager: { id, inside: buildingId|null, visible } - the exclusivity check. */
+        whereabouts: () => this.people.people.map((p) => ({ id: p.id, inside: p.inside?.id ?? null, visible: p.sprite.visible })),
         buildings: () => this.buildings.map((b) => ({ id: b.id, townId: b.townId, kind: b.kind, door: { ...b.door } })),
         enter: (spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }) => this.debugEnterInterior(spec),
         exit: () => this.interiorScene()?.leave(true),
@@ -309,11 +314,8 @@ export class OverworldScene extends Phaser.Scene {
     this.doorPrompt.setVisible(false);
     const world = this.session.getWorld();
     const town = world?.settlements?.find((s) => s.id === b.townId);
-    const resident = occupantOf(
-      b,
-      townBuildings(this.layout.settlements.find((t) => t.id === b.townId)!),
-      this.session.listPeople().filter((p) => p.townId === b.townId).map((p) => p.id),
-    );
+    // Only people the schedule has actually put in this room are there; if the resident is out, it is empty.
+    const resident = this.people.insideOf(b.id)[0];
     const payload: InteriorEnterData = {
       returnTo: this.scene.key,
       buildingId: b.id,
@@ -422,6 +424,7 @@ export class OverworldScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
       this.life.dawn();
+      this.people.settle();
       this.goods.onDawn();
       (this.registry.get('autosave') as (() => void) | undefined)?.();
       this.syncSparkFromSession(false);
