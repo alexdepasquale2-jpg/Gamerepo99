@@ -32,10 +32,10 @@ import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
 import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
+import { getWalkMul, setWalkMul } from '../dev/dev-flags';
+import { featuresIn } from '../sim/map/ladder/features';
 
 const CHUNK_MARGIN = 1;
-/** Playtest only: ?speed=20 walks 20x faster across the big world. */
-const TEST_SPEED = Math.max(1, Number(new URLSearchParams(globalThis.location?.search ?? '').get('speed')) || 1);
 const VERB: Record<string, string> = {
   inspire: 'Inspire', carry_burden: 'Carry burden', challenge: 'Challenge', shame: 'Shame',
   lie: 'Lie', show_up: 'Show up', listen: 'Listen',
@@ -125,6 +125,41 @@ export class OverworldScene extends Phaser.Scene {
         this.session.tick();
       },
       // Interiors: enter(spec?) teleports to a door and walks in (instant, for screenshots/e2e).
+      // Dev menu hooks (src/ui/dev-menu.ts).
+      dev: {
+        where: () => {
+          const q = Math.floor(this.player.x / TILE_PX), r = Math.floor(this.player.y / TILE_PX);
+          return { q, r, biome: this.terrain.biome(q, r), objects: this.children.list.length, fps: Math.round(this.game.loop.actualFps), day: this.session.snapshot().day };
+        },
+        teleport: (q: number, r: number) => {
+          const at = this.nav.snap(Math.round(q), Math.round(r), 12) ?? { q: Math.round(q), r: Math.round(r) };
+          const f = tileFootWorld(at.q, at.r);
+          this.player.setPosition(f.x, f.y);
+          this.syncChunks(true);
+        },
+        towns: () => this.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r + 2 })),
+        /** Nearest feature of a kind ('farm', 'outcrop', 'stream') or spot type ('camp', 'ruin', ...) within ~400 tiles. */
+        nearest: (what: string) => {
+          const q = Math.floor(this.player.x / TILE_PX), r = Math.floor(this.player.y / TILE_PX), R = 400;
+          let best: { q: number; r: number } | null = null, bd = Infinity;
+          for (const f of featuresIn(this.session.getSeed(), this.layout.settlements, q - R, r - R, q + R, r + R)) {
+            const pts = f.kind === 'stream' ? (f.kind === what ? f.cells : [])
+              : f.kind === 'farm' ? (what === 'farm' ? [f.house] : [])
+              : f.kind === 'outcrop' ? (what === 'outcrop' ? [f.center] : [])
+              : f.type === what ? [f.center] : [];
+            for (const p of pts) { const d = Math.hypot(p.q - q, p.r - r); if (d > 6 && d < bd) { bd = d; best = { q: p.q, r: p.r + 2 }; } }
+          }
+          return best;
+        },
+        speed: { get: getWalkMul, set: setWalkMul },
+        dawn: () => this.session.tick(),
+        give: (itemId: string, n: number) => {
+          const st = this.session.getState();
+          if (!st) return;
+          if (itemId === 'coin') st.player.coin = (st.player.coin ?? 0) + n;
+          else st.inventory = { ...(st.inventory ?? {}), [itemId]: (st.inventory?.[itemId] ?? 0) + n };
+        },
+      },
       interior: {
         residents: (buildingId: string) => this.people.insideOf(buildingId),
         /** Jump the day clock and re-settle who is indoors (instant; for screenshots/e2e). */
@@ -213,7 +248,7 @@ export class OverworldScene extends Phaser.Scene {
         dx,
         dy,
         delta,
-        FEEL.overworld.walkTilesPerSec * TEST_SPEED,
+        FEEL.overworld.walkTilesPerSec * getWalkMul(),
         TILE_PX,
       );
       // Substeps prevent tunnelling during a slow frame; slide along banks.

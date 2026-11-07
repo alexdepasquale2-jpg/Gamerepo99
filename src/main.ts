@@ -6,6 +6,7 @@ import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
+import { createDevMenu } from './ui/dev-menu';
 import { setTerrainMode } from './sim/map/terrain';
 
 // Tiles come from the refined map ladder; ?terrain=noise falls back to per-tile noise.
@@ -73,3 +74,5 @@ setInterval(() => {
   if (succession?.session !== session) succession = { session, screen: createSuccessionScreen(session) };
   succession.screen.refresh();
 }, 250);
+
+createDevMenu();

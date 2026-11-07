@@ -329,8 +329,67 @@ function paintWildProp(host: PaintHost, prop: FacilityRenderView, foot: { x: num
       const brace = host.add.rectangle(x - 6, y - 20, 3, 30, 0x7a5230); brace.setAngle(35); brace.setDepth(y + 0.04);
       return true;
     }
+    case 'campfire': {
+      const stones = host.add.ellipse(x, y - 3, 20, 9, 0x5a5550); applySpriteSort(stones);
+      const flame = host.add.ellipse(x, y - 9, 9, 14, 0xf2a03a); flame.setDepth(y + 0.1);
+      const core = host.add.ellipse(x, y - 7, 5, 8, 0xffe08a); core.setDepth(y + 0.11);
+      const tw = tweensOf(host)?.add({ targets: [flame, core], scaleY: 1.35, alpha: 0.75, duration: 180 + (prop.position.x % 5) * 30, yoyo: true, repeat: -1 });
+      if (tw) flame.once('destroy', () => tw.remove());
+      return true;
+    }
+    case 'tent': {
+      addSoftShadow(host, null, x, y, 1.3);
+      const tent = host.add.triangle(x, y - 12, 0, 24, 15, 0, 30, 24, 0xb89a6a); applySpriteSort(tent);
+      const door = host.add.triangle(x, y - 6, 0, 12, 5, 0, 10, 12, 0x5a4630); door.setDepth(y + 0.1);
+      return true;
+    }
+    case 'ruin_wall': {
+      const hgt = 10 + (prop.position.y % 3) * 6;
+      const w = host.add.rectangle(x, y - hgt / 2, 26, hgt, 0x8a8478); applySpriteSort(w);
+      const cap = host.add.rectangle(x, y - hgt, 26, 3, 0xa8a294); cap.setDepth(y + 0.1);
+      return true;
+    }
+    case 'shrine': {
+      addSoftShadow(host, null, x, y, 0.9);
+      const base = host.add.rectangle(x, y - 4, 16, 8, 0x77736a); applySpriteSort(base);
+      const stone = host.add.rectangle(x, y - 18, 10, 22, 0x9c978a); stone.setDepth(y + 0.1);
+      const glow = host.add.ellipse(x, y - 24, 6, 6, 0xf2d27a); glow.setDepth(y + 0.12);
+      const tw = tweensOf(host)?.add({ targets: glow, alpha: 0.35, duration: 1200, yoyo: true, repeat: -1 });
+      if (tw) glow.once('destroy', () => tw.remove());
+      return true;
+    }
+    case 'cart': {
+      addSoftShadow(host, null, x, y, 1.4);
+      const bed = host.add.rectangle(x, y - 14, 34, 12, 0x8b5a2b); applySpriteSort(bed);
+      for (const dx of [-11, 11]) { const wheel = host.add.circle(x + dx, y - 6, 6, 0x4a3420); wheel.setDepth(y + 0.1); }
+      const load = host.add.rectangle(x - 3, y - 23, 20, 8, 0xc9a35a); load.setDepth(y + 0.05);
+      return true;
+    }
+    case 'critter': {
+      const entry = lookupAsset(`fauna.${prop.state}`);
+      const tex = entry ? sheetTextureKey(entry.sheet) : '';
+      const fr = entry ? String(entry.frame) : '';
+      const body = host.textures.exists(tex) && host.textures.get(tex).has(fr)
+        ? host.add.image(x, y, tex, fr).setOrigin(0.5, 1)
+        : host.add.ellipse(x, y - 5, 12, 9, prop.state === 'fox' ? 0xc0602a : prop.state === 'deer' ? 0x9a6a3a : 0xcfc6b0);
+      applySpriteSort(body);
+      // Wander: drift to a nearby point and back, pausing, forever (removed with the chunk).
+      const seedish = (prop.position.x * 31 + prop.position.y * 17) % 97;
+      const fly = prop.state === 'bird';
+      const tw = tweensOf(host)?.add({
+        targets: body, x: x + ((seedish % 7) - 3) * (fly ? 18 : 10), y: y + ((seedish % 5) - 2) * (fly ? 14 : 8),
+        duration: (fly ? 900 : 2200) + seedish * 20, delay: seedish * 40, hold: 600 + seedish * 15, repeatDelay: 800,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut', onUpdate: () => body.setDepth(body.y),
+      });
+      if (tw) body.once('destroy', () => tw.remove());
+      return true;
+    }
     default: return false;
   }
+}
+
+function tweensOf(host: PaintHost): Phaser.Tweens.TweenManager | undefined {
+  return (host as PaintHost & { tweens?: Phaser.Tweens.TweenManager }).tweens;
 }
 
 /** @deprecated Prefer bakeCliffStrip — kept for API compat / tests. */
