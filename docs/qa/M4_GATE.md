@@ -1,8 +1,8 @@
-# M4 living-world gate checklist (DRAFT — not gated yet)
+# M4 living-world gate checklist (GO)
 
 **Authority:** Alex via Niblet — Probe is the quality gate.  
 **Rubric:** `docs/qa/QUALITY_GATE.md` — green unit/build tests are **necessary, not sufficient**. M4 adds a conceptual **living-world** row to the milestone map (*does the world move when the player isn't looking?*).  
-**Status:** **DRAFT / not gated yet** — checklist only. No gate run, no verdict. Prep only until the Forge go-trigger below.  
+**Status:** **GO** @ `61ff35f` — Alex, 2026-11-07. Verdict: `docs/qa/reports/m4-living-world.md`.  
 **HOLD:** Do **not** run the living-world gate until Forge → Probe lists **all four** modules (LOD, caravans, doctrine, letters) **and** cites `npm run validate && npm test && npm run build` green on that tip.  
 **Inputs:** `docs/superpowers/plans/m4/index.md` (Approach **B** chosen: dawn LOD + schedule tables + formula ticks) · task files `task-a-economy-lod.md` … `task-d-letters-rumors.md` · `packet-01.md` (authoritative for Task A / LOD paths) · `docs/superpowers/specs/2026-11-05-last-spark-m4-design.md` (living-world sections only).
 
@@ -127,9 +127,11 @@ task-b's "modify `src/sim/economy-lod.ts`" should be read as the nested packet-0
 
 ---
 
-## Verdict outputs (placeholder — not written yet)
+## Verdict outputs
 
-No verdict exists yet. At go-time Probe writes `docs/qa/reports/m4-living-world.md`, updates the Probe row in `docs/SCHEDULE.xlsx`, and reports to Niblet + Forge (priority: false). **This file does not contain a SHIP verdict.** Status remains DRAFT until the go-trigger fires and Probe runs the gate.
+**GO @ `61ff35f`** (Alex, 2026-11-07) — see `docs/qa/reports/m4-living-world.md`. Original instructions below kept for reference.
+
+~~No verdict exists yet.~~ At go-time Probe writes `docs/qa/reports/m4-living-world.md`, updates the Probe row in `docs/SCHEDULE.xlsx`, and reports to Niblet + Forge (priority: false). **This file does not contain a SHIP verdict.** Status remains DRAFT until the go-trigger fires and Probe runs the gate.
 
 ---
 
