@@ -10,7 +10,9 @@ export type Pt = { q: number; r: number };
 export type Farm = { kind: 'farm'; id: string; house: Pt; field: { q: number; r: number; w: number; h: number }; gate: Pt; sheep: Pt[] };
 export type Outcrop = { kind: 'outcrop'; id: string; center: Pt; rocks: Pt[]; hills: boolean };
 export type Stream = { kind: 'stream'; id: string; cells: Pt[] };
-export type Feature = Farm | Outcrop | Stream;
+/** A wild place to stumble on: camp, ruin, shrine, thicket, herd, pond, cart, ... (see features.json spot). */
+export type Spot = { kind: 'spot'; id: string; type: string; center: Pt; biome: Biome };
+export type Feature = Farm | Outcrop | Stream | Spot;
 type Town = { q: number; r: number };
 
 export function fhash(seed: number, a: number, b: number, c: number): number {
@@ -34,6 +36,19 @@ function farmAt(seed: number, towns: Town[], X: number, Y: number): Farm | null 
   const ns = span(F.sheep[0]!, F.sheep[1]!, h(5));
   for (let i = 0; i < ns; i++) sheep.push({ q: house.q - 1 - Math.floor(h(10 + i) * 4), r: field.r + fh + 1 + Math.floor(h(20 + i) * 3) });
   return { kind: 'farm', id: `farm#${X},${Y}`, house, field, gate, sheep };
+}
+
+function spotAt(seed: number, towns: Town[], X: number, Y: number): Spot | null {
+  const A = cfg.anchorTiles, h = (i: number) => fhash(seed ^ 0x5b07, X, Y, i);
+  if (h(0) >= cfg.spot.chance) return null;
+  const center = { q: X * A + 4 + Math.floor(h(1) * (A - 8)), r: Y * A + 4 + Math.floor(h(2) * (A - 8)) };
+  const biome = biomeAt(seed, center.q, center.r);
+  const table = (cfg.spot.byBiome as Record<string, Record<string, number>>)[biome];
+  if (!table || townDist(towns, center.q, center.r) < cfg.townClearTiles * 0.7) return null;
+  const total = Object.values(table).reduce((a, b) => a + b, 0);
+  let roll = h(3) * total, type = Object.keys(table)[0]!;
+  for (const [k, w] of Object.entries(table)) { if ((roll -= w) < 0) { type = k; break; } }
+  return { kind: 'spot', id: `spot#${X},${Y}`, type, center, biome };
 }
 
 function outcropAt(seed: number, towns: Town[], X: number, Y: number): Outcrop | null {
@@ -83,10 +98,9 @@ export function featuresIn(seed: number, towns: Town[], q0: number, r0: number, 
   const out: Feature[] = [];
   const A = cfg.anchorTiles;
   for (let Y = Math.floor(r0 / A) - 1; Y <= Math.floor((r1 - 1) / A) + 1; Y++) for (let X = Math.floor(q0 / A) - 1; X <= Math.floor((q1 - 1) / A) + 1; X++) {
-    const f = farmAt(seed, towns, X, Y);
+    // One feature per anchor cell: farm, else outcrop, else a wild spot.
+    const f = farmAt(seed, towns, X, Y) ?? outcropAt(seed, towns, X, Y) ?? spotAt(seed, towns, X, Y);
     if (f) out.push(f);
-    const o = outcropAt(seed, towns, X, Y);
-    if (o && !(f && Math.hypot(o.center.q - f.house.q, o.center.r - f.house.r) < 12)) out.push(o);
   }
   const C = cfg.stream.cellTiles, reach = Math.ceil(cfg.stream.length[1]! / C);
   for (let Y = Math.floor(r0 / C) - reach; Y <= Math.floor((r1 - 1) / C) + reach; Y++) for (let X = Math.floor(q0 / C) - reach; X <= Math.floor((q1 - 1) / C) + reach; X++) {

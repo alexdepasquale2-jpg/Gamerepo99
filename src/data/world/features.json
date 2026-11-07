@@ -1,11 +1,22 @@
 {
-  "_doc": "Structured wilderness, generated per anchor cell (lazy, seeded). Farms: farmhouse + fenced field + pasture sheep + track to the road. Outcrops: rock clusters (hills mostly) with an ore/rock node. Streams: 1-tile wadeable water lines with reeds and fishing spots. Build sites: unfinished frames near roads. Woods: dense trees inside forest, broken edge with undergrowth spilling out. Life: meadow flowers, bushes, stumps.",
-  "anchorTiles": 24,
+  "_doc": "Structured wilderness, one roll per anchor cell (lazy, seeded): a farm, else a rock outcrop, else a 'spot' picked by biome. Streams run across cells. Only roads (roadClearTiles) and towns (townClearTiles) stay open: those are for building and logistics. Woods/life passes fill the gaps. Critters wander (render only).",
+  "anchorTiles": 20,
   "townClearTiles": 44,
-  "farm": { "chance": 0.22, "biomes": ["fields", "meadow"], "fieldW": [6, 11], "fieldH": [4, 7], "sheep": [1, 3], "trackMaxTiles": 70 },
-  "outcrop": { "chanceHills": 0.55, "chanceOther": 0.05, "rocks": [4, 10], "radius": 3.2 },
-  "stream": { "cellTiles": 64, "chance": 0.35, "length": [50, 160], "fishEvery": 28, "reeds": 0.3 },
-  "site": { "chance": 0.08, "maxRoadTiles": 22 },
-  "woods": { "step": 2, "interior": 0.62, "edge": 0.35, "undergrowth": 0.4, "spill": 0.22, "edgeTiles": 2 },
-  "life": { "step": 3, "meadow": 0.07, "fields": 0.04, "hills": 0.06 }
+  "roadClearTiles": 3,
+  "farm": { "chance": 0.16, "biomes": ["fields", "meadow"], "fieldW": [6, 11], "fieldH": [4, 7], "sheep": [1, 3], "trackMaxTiles": 70 },
+  "outcrop": { "chanceHills": 0.5, "chanceOther": 0.06, "rocks": [4, 10], "radius": 3.2 },
+  "spot": {
+    "chance": 0.85,
+    "byBiome": {
+      "meadow": { "camp": 2, "ruin": 1, "shrine": 1, "thicket": 3, "deer": 2, "rabbits": 3, "pond": 2, "cart": 1, "flowers": 3, "birds": 2 },
+      "fields": { "camp": 1, "thicket": 2, "rabbits": 3, "pond": 1, "cart": 1, "haystacks": 3, "birds": 3, "shrine": 1 },
+      "forest": { "clearing": 3, "camp": 2, "deer": 3, "ruin": 2, "thicket": 3, "foxes": 2, "pond": 1 },
+      "hills": { "ruin": 3, "shrine": 2, "rabbits": 2, "camp": 1, "cairn": 3, "foxes": 1 }
+    }
+  },
+  "stream": { "cellTiles": 64, "chance": 0.45, "length": [50, 180], "fishEvery": 24, "reeds": 0.35 },
+  "site": { "chance": 0.12, "maxRoadTiles": 22 },
+  "woods": { "step": 2, "interior": 0.7, "edge": 0.42, "undergrowth": 0.45, "spill": 0.3, "edgeTiles": 2 },
+  "life": { "step": 2, "meadow": 0.16, "fields": 0.1, "hills": 0.14 },
+  "critters": { "chance": 0.3, "biomes": { "meadow": ["rabbit", "bird"], "fields": ["bird", "rabbit"], "forest": ["deer", "fox", "bird"], "hills": ["rabbit", "fox"] } }
 }

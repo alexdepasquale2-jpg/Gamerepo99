@@ -90,6 +90,10 @@ export function wildNodesIn(seed: number, settlements: Place[], q0: number, r0: 
       if (inside(p)) out.push({ id: `${f.id}#ore`, kindId: f.hills ? 'ore_vein' : 'rock', ...p });
     } else if (f.kind === 'stream') {
       f.cells.forEach((c, i) => { const p = { q: c.q + 1, r: c.r }; if (i % FEATURES.stream.fishEvery === 10 && inside(p)) out.push({ id: `${f.id}#fish${i}`, kindId: 'fishing_spot', ...p }); });
+    } else if (f.kind === 'spot') {
+      const kindId = ({ thicket: 'berry_bush', pond: 'fishing_spot', ruin: 'herb_patch', clearing: 'tree', flowers: 'herb_patch', shrine: 'herb_patch' } as Record<string, string>)[f.type];
+      const p = { q: f.center.q + 1, r: f.center.r + 1 };
+      if (kindId && inside(p)) out.push({ id: `${f.id}#${f.type}`, kindId, ...p });
     } else {
       f.sheep.forEach((p, i) => { if (inside(p)) out.push({ id: `${f.id}#sheep${i}`, kindId: 'sheep_flock', ...p }); });
     }
