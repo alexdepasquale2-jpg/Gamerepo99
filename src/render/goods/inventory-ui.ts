@@ -26,23 +26,27 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
   let held: { itemId: string; sx: number; sy: number; moved: boolean; ghost: Phaser.GameObjects.Arc } | undefined;
   const tip = scene.add.text(0, 0, '', { ...font, backgroundColor: '#1b1612', padding: { x: 4, y: 2 } }).setScrollFactor(0).setDepth(D + 40).setVisible(false);
   const endDrag = (): void => { if (!held) return; held.ghost.destroy(); held = undefined; drag?.move(null, 0, 0); };
-  scene.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+  const onMove = (p: Phaser.Input.Pointer): void => {
     if (!held) return;
     if (!held.moved && Math.hypot(p.x - held.sx, p.y - held.sy) < 5) return;
     held.moved = true;
     held.ghost.setPosition(p.x, p.y).setVisible(true);
     drag?.move(held.itemId, p.worldX, p.worldY);
-  });
-  scene.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+  };
+  const onUp = (p: Phaser.Input.Pointer): void => {
     if (!held) return;
     const { itemId, moved } = held;
     endDrag();
     // Released over the hotbar itself counts as cancel.
     if (moved && p.y < H - SLOT - 10) drag?.drop(itemId, p.worldX, p.worldY);
-  });
+  };
+  scene.input.on('pointermove', onMove);
+  scene.input.on('pointerup', onUp);
   scene.input.keyboard?.on('keydown-ESC', endDrag);
+  scene.events.once('shutdown', () => { scene.input.off('pointermove', onMove); scene.input.off('pointerup', onUp); scene.input.keyboard?.off('keydown-ESC', endDrag); });
 
   const drawSlot = (c: Phaser.GameObjects.Container, x: number, y: number, stack?: { item: { id: string; name: string; color: string; icon: string }; qty: number }, sel = false): void => {
+    const note = stack ? letterNote(stack.item.id) : '';
     const bg = scene.add.rectangle(x, y, SLOT - 2, SLOT - 2, 0x2a2018, 0.92).setStrokeStyle(2, sel ? 0xf2b84b : 0x6a5a40).setOrigin(0).setScrollFactor(0);
     bg.setInteractive({ useHandCursor: true }).on('pointerdown', (p: Phaser.Input.Pointer) => {
       const stacks = getState() ? listStacks(getState()!) : [];
@@ -55,7 +59,7 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
       }
     }).on('pointerover', () => {
       if (!stack || held) return;
-      tip.setText(`${stack.item.name} x${stack.qty}${letterNote(stack.item.id)}`).setPosition(x + SLOT / 2, y - 4).setOrigin(0.5, 1).setVisible(true);
+      tip.setText(`${stack.item.name} x${stack.qty}${note}`).setPosition(x + SLOT / 2, y - 4).setOrigin(0.5, 1).setVisible(true);
     }).on('pointerout', () => tip.setVisible(false));
     c.add(bg);
     if (!stack) return;
@@ -69,8 +73,7 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     else if (stack.item.icon === 'herb') c.add(scene.add.triangle(cx, cy, 0, 10, 5, 0, 10, 10, col));
     else c.add(scene.add.rectangle(cx, cy, 12, 12, col).setStrokeStyle(1, 0x1b1612));
     c.add(scene.add.text(x + SLOT - 4, y + SLOT - 3, String(stack.qty), font).setOrigin(1, 1));
-    const sealed = stack.item.id === 'letter' ? letterNote('letter') : '';
-    if (sealed) c.add(scene.add.text(x + 2, y + 2, '✉', font));
+    if (note) c.add(scene.add.text(x + 2, y + 2, '✉', font));
   };
 
   /** Sealed letters in the post, shown on the letter slot with their recipient. */

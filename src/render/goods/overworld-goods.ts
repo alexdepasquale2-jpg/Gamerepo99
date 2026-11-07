@@ -47,7 +47,7 @@ export type OverworldGoods = {
 
 export function attachOverworldGoods(
   scene: Phaser.Scene, session: PlaySession, world: FabricWorld, layout: WorldLayout,
-  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt, nav?: Navigator, say: (line: string) => void = () => {},
+  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt, nav?: Navigator, say: (line: string) => void = () => {}, indoors: () => boolean = () => false,
 ): OverworldGoods {
   const seed = session.getSeed();
   const st = () => session.getState();
@@ -65,11 +65,15 @@ export function attachOverworldGoods(
     return best;
   };
   let lit: string | undefined;
+  let litPrev: number | undefined;
   const light = (id?: string): void => {
     if (lit === id) return;
-    if (lit) people.byId.get(lit)?.sprite.clearTint();
+    const was = lit && people.byId.get(lit)?.sprite;
+    if (was) { if (litPrev === undefined) was.clearTint(); else was.setTint(litPrev); }
     lit = id;
-    if (id) people.byId.get(id)?.sprite.setTint(0xffe38a);
+    const sp = id ? people.byId.get(id)?.sprite : undefined;
+    litPrev = sp?.isTinted ? sp.tintTopLeft : undefined;
+    sp?.setTint(0xffe38a);
   };
   const groundViews = new Map<string, Phaser.GameObjects.Arc>();
   const showGround = (): void => {
@@ -88,10 +92,11 @@ export function attachOverworldGoods(
     }
   };
   const inv = createInventoryUi(scene, st, {
-    move: (itemId, wx, wy) => light(itemId && itemId !== 'coin' ? personAt(wx, wy) : undefined),
+    move: (itemId, wx, wy) => light(itemId && itemId !== 'coin' && !indoors() ? personAt(wx, wy) : undefined),
     drop: (itemId, wx, wy) => {
       const s = st();
       if (!s) return;
+      if (indoors()) { say('Step outside to give or set things down.'); return; }
       const pid = itemId === 'coin' ? undefined : personAt(wx, wy);
       const act = resolveDrop({ itemId, qty: 1 }, pid ? { kind: 'person', id: pid } : { kind: 'ground' });
       if (act.kind === 'gift_give') {
@@ -155,7 +160,7 @@ export function attachOverworldGoods(
     return null;
   });
 
-  let lastUnread = 0;
+  let lastUnread = st() ? unreadReplies(st()!) : 0;
   scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
   showGround();
   const api: OverworldGoods = {

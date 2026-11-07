@@ -107,7 +107,7 @@ export class OverworldScene extends Phaser.Scene {
       phase: () => this.life.phase(),
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
     });
-    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav, (l) => this.say(l));
+    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav, (l) => this.say(l), () => this.room.active);
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
       this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined),
     );
