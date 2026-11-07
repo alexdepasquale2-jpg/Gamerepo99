@@ -1,3 +1,5 @@
+import { assertScaleBy } from './util.mjs';
+
 export function validateHoarder(data, ctx) {
   const { req, ids, towns, hooks } = ctx;
   const ecoRes = ids(data['economy-resources.json']?.resources);
@@ -32,6 +34,7 @@ export function validateHoarder(data, ctx) {
   req(typeof noto?.attractorRollScale === 'number' && typeof noto?.roadWeightScale === 'number', 'notoriety roll/road scales required');
   req(Array.isArray(noto?.leverage?.tagsAny) && typeof noto.leverage.discount === 'number', 'notoriety.leverage required');
   req(typeof noto?.hoardLegacy?.peakCoinMin === 'number', 'notoriety.hoardLegacy.peakCoinMin required');
+  for (const a of noto?.attractors || []) assertScaleBy(req, a.effects, `attractor ${a.id}`);
   const attractorIds = new Set((noto?.attractors || []).map((a) => a.id));
   for (const t of data['road-encounters.json']?.tables || []) {
     for (const e of t.entries || []) {

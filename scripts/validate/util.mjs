@@ -20,3 +20,12 @@ export function assertHookList(req, hooks, hookById, list, ctx, expectKind) {
     }
   }
 }
+
+/** Allowed effect scaleBy scalars; mirrors scalarOf in src/sim/effects.ts. */
+export const SCALE_BY_KEYS = new Set(['town.despair', 'player.notoriety', 'player.visibleWealth']);
+
+export function assertScaleBy(req, effects, ctx) {
+  for (const e of effects || []) {
+    if (e.scaleBy !== undefined) req(SCALE_BY_KEYS.has(e.scaleBy), `${ctx}: effect ${e.id} unknown scaleBy ${e.scaleBy}`);
+  }
+}

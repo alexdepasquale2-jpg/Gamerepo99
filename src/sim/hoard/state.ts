@@ -1,5 +1,6 @@
 /** Hoarder runtime state (saveable) + data accessors. Coin is a meter on player.coin; never a button. */
 
+import type { Effect } from '../types/data';
 import type { DataTables } from '../load-data';
 import type { SimState } from '../types/runtime';
 
@@ -51,7 +52,7 @@ export type NotorietyTable = {
   roadWeightScale: number;
   leverage: { discount: number; tagsAny: string[] };
   spread: { rippleTag: string; kinDilution: number; emitPacketType: string };
-  attractors: { id: string; minNotoriety: number; weight: number; spawn: string; channels: string[]; raidBonus?: number }[];
+  attractors: { id: string; minNotoriety: number; weight: number; spawn: string; channels: string[]; raidBonus?: number; effects?: Effect[] }[];
   hoardLegacy: { peakCoinMin: number; endingId: string };
 };
 
