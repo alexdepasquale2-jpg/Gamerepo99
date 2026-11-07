@@ -42,7 +42,7 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
    ("Your fire went out. Someone remembers it." / Carry it on / Let it rest), save/load menu using `SaveBlob`.
    Done when: a played 10-dawn session shows each M4/M5 event to the player through people, no popups.
 
-8. **M6 juice + audio pass.** PARTIAL: overworld now fires reignite VFX; procedural sfx (src/render/sfx.ts, N mutes). Left: Playwright reignite + despair screenshots, build-size note, listen/tune cues. Reignite VFX (`plans/2026-11-05-spark-reignite-vfx.md`), color return on reignite,
+8. **M6 juice + audio pass.** PARTIAL: overworld now fires reignite VFX; procedural sfx (src/render/sfx.ts, N mutes). Screenshots + size done (docs/qa/M6_JUICE_CHECK.md). Left: reignite flash looks weak (tune FEEL), listen/tune cues. Reignite VFX (`plans/2026-11-05-spark-reignite-vfx.md`), color return on reignite,
    free audio assets (credit in `CREDITS.md`). Merge or drop leftover `wip` art/patches here.
    Done when: Playwright screenshot check of a reignite + a despairing town; build size noted.
 
