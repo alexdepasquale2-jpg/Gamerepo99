@@ -5,6 +5,13 @@
  */
 
 export const FEEL = {
+  /** Per-town despair desaturation. satFloor 0.25 is a proposal pending sign-off (never fully grey). */
+  tint: {
+    satFloor: 0.25,
+    reigniteMs: 1400,
+    townRadiusTiles: 7,
+    bubbleMs: 2600,
+  },
   spark: {
     /** Dual-cue gold (fill) */
     colorGold: 0xf2b84b,

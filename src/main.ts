@@ -3,6 +3,8 @@ import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
+import { createSuccessionScreen } from './ui/succession-screen';
+import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
 
 const hud = createHud();
@@ -57,3 +59,12 @@ runGameFlow({
     }
   },
 });
+
+// Succession overlay: polls the running session and shows the locked screen when open.
+let succession: { session: PlaySession; screen: ReturnType<typeof createSuccessionScreen> } | undefined;
+setInterval(() => {
+  const session = game?.registry.get('playSession') as PlaySession | undefined;
+  if (!session) return;
+  if (succession?.session !== session) succession = { session, screen: createSuccessionScreen(session) };
+  succession.screen.refresh();
+}, 250);
