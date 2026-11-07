@@ -53,7 +53,7 @@ export interface InteractionDef {
 }
 
 export interface InteractionScoring {
-  spark: { sparkMax: number; situationMulDefault: number };
+  spark: { sparkMax: number; situationMulDefault: number; strainMulByTag?: Record<string, number>; sparkGainAdjustByTag?: Record<string, number> };
   touchScoreWeights: Record<string, number>;
   reignite: {
     touchScoreMin: number;

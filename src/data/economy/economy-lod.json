@@ -25,13 +25,23 @@
     "onRouteBroken": 0.05,
     "onStarve": 0.05,
     "maxAddPerDawn": 0.05,
-    "clamp": [0, 1],
+    "clamp": [
+      0,
+      1
+    ],
     "starveWhenFoodBelow": 1,
     "foodResourceId": "food_grain",
     "doctrineRealDeliveryHitOnBroken": 0.05,
     "doctrineRequiresSupplyPromise": true,
     "keepMild": true,
-    "note": "Must not restore pre-pacing spark fuse; cost_town_despair stays -1"
+    "note": "Must not restore pre-pacing spark fuse; cost_town_despair stays -1",
+    "neglect": {
+      "enabled": true,
+      "onNeglect": 0.01,
+      "graceDawns": 1,
+      "neglectCap": 0.6,
+      "note": "Town untouched (no interaction/reignite there) for graceDawns adds onNeglect, never above neglectCap; never a fail state."
+    }
   },
   "juice": {
     "deliver": "stock.deliver",

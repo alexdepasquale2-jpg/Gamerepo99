@@ -8,7 +8,16 @@
     "burnoutAt": 0,
     "formula": "clamp(spark - baseStrain * situationMul + sparkGain, 0, sparkMax)",
     "situationMulDefault": 1,
-    "dawnRecoveryRef": "time.recovery_base_dawn"
+    "dawnRecoveryRef": "time.recovery_base_dawn",
+    "strainMulByTag": {
+      "hard": 0.55,
+      "shame_lean": 0.55
+    },
+    "sparkGainAdjustByTag": {
+      "gentle": -1,
+      "presence": -1
+    },
+    "balanceNote": "Harsh strain softened (~6 -> ~11 dawns to burnout for brood/marrow); gentle talk/presence net -1 spark so kindness is not free. Tag-driven, never archetype branches."
   },
   "touchScoreWeights": {
     "flame01Abs": 10,

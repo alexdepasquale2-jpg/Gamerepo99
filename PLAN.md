@@ -55,5 +55,5 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
     M8 (public build) only after your clearance.
 
 ## Blockers
-- Neglect→despair: spec §7 says despair rises when you never reignite, but LOD only raises it on starve/broken routes. Needs a rule (Alex).
-- Balance numbers (harsh burnout ~6 dawns for basilisk_brood/marrow; gentle styles cost nothing) need Alex's OK.
+- None open. Neglect→despair resolved (+0.01/dawn per untouched town, grace 1 dawn, capped 0.6, never fails; `economy-lod.json` despair.neglect). Balance resolved via `scoring.json` spark.strainMulByTag (hard/shame_lean ×0.55 → ~11 dawns) and sparkGainAdjustByTag (gentle/presence −1). M5 gate: Go (Niblet, on Alex's delegation).
+- Known: 13 vitest failures pre-existing since 98ce756 runtime wiring; not yet triaged.

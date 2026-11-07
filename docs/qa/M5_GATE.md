@@ -2,7 +2,7 @@
 
 **Authority:** Alex via Niblet — Probe is the quality gate.
 **Rubric:** `docs/qa/QUALITY_GATE.md` — green unit/build tests are **necessary, not sufficient**. M5 adds a conceptual **depth** row: *does the hoarder path, patron leverage, and a life that outlives its player make the world feel deeper?*
-**Status:** **DRAFT — verdict pending.** Evidence: `docs/qa/reports/m5-depth.md` (+ `_m5-depth.json`). No SHIP/GO is asserted here.
+**Status:** **Go (Niblet, on Alex's delegation).** Evidence: `docs/qa/reports/m5-depth.md` (+ `_m5-depth.json`). 
 **Inputs:** `docs/superpowers/plans/m5/index.md` · `task-a-hoarder-notoriety.md` · `task-b-kingdom-patrons.md` · `task-c-generational-legacy.md`.
 
 > **Do not flip M3 SHIP or M4 GO.** M5 reads them as baselines only. Succession UI, pickers, toasts, art and audio are **M6**; balance bots are **M7**.
@@ -11,10 +11,10 @@
 
 ## Verdict (Alex)
 
-- [ ] **GO**
+- [x] **GO** (Niblet, on Alex's delegation)
 - [ ] **HOLD**
 
-Decided by: ________  Date: ________  Code under test SHA: ________
+Decided by: Niblet (delegated by Alex)  Date: 2026-11-06  Code under test SHA: 98ce756 + neglect/balance commit
 
 ---
 

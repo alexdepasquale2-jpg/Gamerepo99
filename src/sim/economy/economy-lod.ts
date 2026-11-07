@@ -141,6 +141,18 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       doctrine(state, { townId: town.id, reason: 'starve', deltaRealDelivery: 0 });
     }
 
+    // 5. Neglect: no meaningful interaction in this town within graceDawns.
+    const neg = (despairCfg as { neglect?: { enabled?: boolean; onNeglect: number; graceDawns: number; neglectCap: number } }).neglect;
+    if (neg?.enabled) {
+      const day = Number((state as { day?: number }).day ?? 0);
+      const touched = ((state.flags ?? {}) as Record<string, unknown>).lastTouchDayByTown as Record<string, number> | undefined;
+      const last = touched?.[town.id];
+      const neglected = last === undefined ? day >= neg.graceDawns : day - last >= neg.graceDawns;
+      if (neglected && town.despair < neg.neglectCap) {
+        despairAdd += Math.min(neg.onNeglect, neg.neglectCap - town.despair);
+      }
+    }
+
     // Mild: total despair add capped per dawn, then clamped.
     const add = Math.min(despairAdd, despairCfg.maxAddPerDawn);
     if (add > 0) {
