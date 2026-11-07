@@ -64,6 +64,8 @@ export type PlaySession = {
   /** M6 world files: export current world / adopt an imported SimState. */
   worldFile(opts?: { exporterName?: string; createdAt?: string }): HearthWorldFile | null;
   adoptState(state: SimState): void;
+  /** Live sim state (render-side goods/nodes read + mutate through sim helpers). */
+  getState(): SimState | undefined;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
