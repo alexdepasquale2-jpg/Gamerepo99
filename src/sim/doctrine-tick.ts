@@ -63,17 +63,22 @@ export const doctrineSupplyHook: DoctrineSupplyHook = (state, { townId, deltaRea
   }
 };
 
-type ActRow = { id: string; effects?: { target: string; op: string; value: number }[] };
+type ActRow = { id: string; requiresTargetTagsAny?: string[]; effects?: { target: string; op: string; value: number }[] };
 
 /** Apply a doctrines.json act (by id) to the doctrine held in the target person's town. */
 export function applyDoctrineAct(state: SimState, actId: string, personId: string): string | undefined {
   const act = ((state.data as DataTables | undefined)?.doctrines as { acts?: ActRow[] } | undefined)?.acts?.find(
     (a) => a.id === actId,
   );
-  const townId = state.people[personId]?.townId;
+  const person = state.people[personId];
+  const townId = person?.townId;
   if (!act || !townId) return undefined;
+  const need = act.requiresTargetTagsAny;
+  if (need?.length && !need.some((t) => person.tags?.includes(t))) return undefined;
   const all = ensureDoctrines(state);
-  const id = Object.keys(all).sort().find((k) => all[k]!.townId === townId && !all[k]!.collapsed);
+  const rows = ((state.data as DataTables | undefined)?.doctrines as { doctrines?: { id: string; leaderPersonId?: string }[] } | undefined)?.doctrines ?? [];
+  const live = Object.keys(all).sort().filter((k) => all[k]!.townId === townId && !all[k]!.collapsed);
+  const id = live.find((k) => rows.find((r) => r.id === k)?.leaderPersonId === personId) ?? live[0];
   if (!id) return undefined;
   const d = all[id]!;
   for (const e of act.effects ?? []) {

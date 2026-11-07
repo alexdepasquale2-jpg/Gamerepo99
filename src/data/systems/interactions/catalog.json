@@ -45,6 +45,7 @@
     },
     {
       "id": "talk_hard",
+      "doctrineAct": "act_expose_lie",
       "kind": "conversation",
       "tags": [
         "talk",

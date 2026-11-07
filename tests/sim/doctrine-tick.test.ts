@@ -114,6 +114,7 @@ describe('doctrine player acts', () => {
     const id = Object.keys(d).sort()[0]!;
     const pid = Object.keys(s.people).sort()[0]!;
     s.people[pid]!.townId = d[id]!.townId;
+    s.people[pid]!.tags = ['leader'];
     Object.assign(d[id]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.2, control: 0 });
     expect(applyDoctrineAct(s, 'act_expose_lie', pid)).toBe(id);
     expect(d[id]!.exposure).toBeCloseTo(0.45);
@@ -131,5 +132,20 @@ describe('doctrine player acts', () => {
     applyDoctrineAct(s, 'act_carry_promise', pid);
     expect(d[id]!.realDelivery).toBeCloseTo(Math.min(1, r + 0.08));
     expect(applyDoctrineAct(s, 'nope', pid)).toBeUndefined();
+  });
+});
+
+describe('doctrine act target gating', () => {
+  it('shaming an untagged villager changes nothing and emits no exposure', () => {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = Object.keys(d).sort()[0]!;
+    const pid = Object.keys(s.people).sort()[0]!;
+    s.people[pid]!.townId = d[id]!.townId;
+    s.people[pid]!.tags = [];
+    const before = JSON.stringify(d);
+    expect(applyDoctrineAct(s, 'act_expose_lie', pid)).toBeUndefined();
+    expect(JSON.stringify(d)).toBe(before);
+    expect(s.bus?.lastIds ?? []).not.toContain('doctrine.exposed');
   });
 });
