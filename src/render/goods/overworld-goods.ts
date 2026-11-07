@@ -31,7 +31,7 @@ export type OverworldGoods = {
   gatherNear: (player: Pt) => string | null;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string) => { ok: boolean; line?: string };
-  useSelected: () => string | null;
+  useSelected: (indoors?: boolean) => string | null;
   letters: () => void;
   readBoard: (player: Pt) => boolean;
   meetCaravan: (player: Pt) => boolean;
@@ -136,11 +136,11 @@ export function attachOverworldGoods(
       living.refresh();
       return r ? { ok: r.ok, line: r.line } : { ok: true };
     },
-    useSelected() {
+    useSelected(indoors = false) {
       const s = st(), id = inv.selectedItem();
       if (!s || !id) return 'Select an item in your satchel.';
       if (ITEM_BY_ID.get(id)?.use?.correspondence) { mail.open(); return null; }
-      const message = useItem(s, id, life.nearestHearth(getPlayer())?.town.id);
+      const message = useItem(s, id, indoors ? undefined : life.nearestHearth(getPlayer())?.town.id);
       inv.refresh(); return message;
     },
     letters: () => mail.open(),

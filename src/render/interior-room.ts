@@ -1,31 +1,46 @@
 /**
- * Cozy building interior: a small room (floor, walls, furniture) with the resident, if any.
- * Launched by OverworldScene (which sleeps meanwhile). E at the door mat or Esc leaves.
+ * Cozy building interior: a small room (floor, walls, furniture) with whoever is home.
+ *
+ * The room lives INSIDE the overworld scene - it is drawn far off the map and the main camera is
+ * parked on it - so the world keeps running behind the door (day clock, residents coming and going,
+ * caravans, mail) and the shared overlays (satchel, map, letters, action ring) work unchanged.
+ * OverworldScene owns input and calls `update`; E at the exit mat / Esc leaves.
  */
 
 import Phaser from 'phaser';
 import art from '../data/art/settlements.json';
 import { TILE_PX } from '../sim/map/constants';
 import {
-  EMPTY_ROOM_LINE, INTERIOR_TITLE, OCCUPANT_ROLE, exitMat, interiorLine, interiorPlan, interiorWalkable, nearExit,
+  EMPTY_ROOM_LINE, INTERIOR_TITLE, OCCUPANT_ROLE, dayPartLabel, exitMat, interiorLine, interiorPlan, interiorWalkable, nearExit,
   type Furniture, type InteriorKind, type InteriorPlan,
 } from '../sim/map/interiors';
 import { FEEL } from './feel';
 import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
+import { skyAt } from './world-life';
 
-export const INTERIOR_SCENE_KEY = 'interior';
+/** Where the room is drawn in world space: well clear of the map, depth-sorted among itself. */
+export const ROOM_ORIGIN = { x: 400_000, y: 300_000 };
 
 export type InteriorEnterData = {
-  returnTo: string;
   buildingId: string;
   townId: string;
   townName: string;
   kind: InteriorKind;
   paletteIndex: number;
-  occupant?: { id: string; name: string; tint: number };
   despair01: number;
+};
+
+export type RoomResident = { id: string; name: string; tint: number };
+
+export type RoomHooks = {
+  /** Who is in this building right now (live; polled every frame so people can arrive and leave). */
+  residents: (buildingId: string) => RoomResident[];
+  /** Day clock 0..1. */
+  phase: () => number;
+  /** Fully closed (fade done): put the world back. */
+  onClosed: (buildingId: string) => void;
 };
 
 export type InteriorState = {
@@ -39,11 +54,15 @@ export type InteriorState = {
   furnitureCount: number;
 };
 
+type Pt = { x: number; y: number };
+type Seated = { info: RoomResident; sprite: Phaser.GameObjects.Sprite; shadow?: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; mode: 'idle' | 'arriving' | 'leaving' };
+
 const T = TILE_PX;
 const WALL_ROWS = 2;
 const ACCENTS = [0xb5524a, 0x4f7a8a, 0x7a8f4a];
 const FLOOR: Record<InteriorKind, [number, number]> = { house: [0xb88d5a, 0xa87f50], shop: [0xc9a56e, 0xb8955f], inn: [0x9c6f45, 0x8d633e] };
 const talkNear = 58;
+const WALK_MS = 1300;
 
 const hex = (s: string): number => parseInt(s.replace('#', ''), 16);
 const shade = (c: number, k: number): number => {
@@ -53,96 +72,136 @@ const shade = (c: number, k: number): number => {
   return (r << 16) | (g << 8) | b;
 };
 
-export class InteriorScene extends Phaser.Scene {
-  private data0!: InteriorEnterData;
+export class InteriorRoom {
+  active = false;
+  private d!: InteriorEnterData;
   private plan!: InteriorPlan;
   private ox = 0;
   private oy = 0;
   private player!: Phaser.GameObjects.Sprite;
-  private npc?: Phaser.GameObjects.Sprite;
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
+  private playerShadow?: Phaser.GameObjects.Image;
+  private seated: Seated | null = null;
+  private title!: Phaser.GameObjects.Text;
+  private clockText!: Phaser.GameObjects.Text;
+  private light!: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Text;
   private bubble!: Phaser.GameObjects.Text;
   private flames: { obj: Phaser.GameObjects.Ellipse | Phaser.GameObjects.Arc; base: number }[] = [];
+  private owned: Phaser.GameObjects.GameObject[] = [];
   private leaving = false;
   private born = 0;
   private visits = 0;
   private bubbleTimer?: Phaser.Time.TimerEvent;
+  private bg = 'rgba(0,0,0,0)';
+  private tracked?: Phaser.GameObjects.GameObjectFactory;
 
-  constructor() {
-    super(INTERIOR_SCENE_KEY);
+  constructor(private host: Phaser.Scene, private hooks: RoomHooks) {}
+
+  private get textures() { return this.host.textures; }
+  private get anims() { return this.host.anims; }
+  private get scale() { return this.host.scale; }
+  private get time() { return this.host.time; }
+  /** The host's factory, but everything it makes is remembered so closing the room can remove it. */
+  private get add(): Phaser.GameObjects.GameObjectFactory {
+    return (this.tracked ??= new Proxy(this.host.add, {
+      get: (target, key) => {
+        const v = (target as unknown as Record<string | symbol, unknown>)[key];
+        if (typeof v !== 'function') return v;
+        return (...args: unknown[]) => {
+          const made = (v as (...a: unknown[]) => unknown).apply(target, args);
+          if (made instanceof Phaser.GameObjects.GameObject) this.owned.push(made);
+          return made;
+        };
+      },
+    }));
   }
 
-  init(data: InteriorEnterData): void {
-    this.data0 = data;
+  /** Build the room, park the camera on it. The caller has already faded out. */
+  enter(data: InteriorEnterData): void {
+    this.d = data;
+    this.active = true;
     this.leaving = false;
     this.visits = 0;
     this.flames = [];
-  }
-
-  create(): void {
-    const d = this.data0;
+    this.owned = [];
+    this.seated = null;
     this.born = this.time.now;
-    this.plan = interiorPlan(d.kind, d.buildingId);
+    this.plan = interiorPlan(data.kind, data.buildingId);
     const p = this.plan;
     const W = this.scale.width, H = this.scale.height;
-    this.ox = Math.round((W - p.cols * T) / 2);
-    this.oy = Math.round((H - (p.rows + WALL_ROWS) * T) / 2 + WALL_ROWS * T - 8);
-    this.cameras.main.setBackgroundColor('#14100c').setZoom(1).setScroll(0, 0);
-    this.cameras.main.fadeIn(220, 20, 16, 12);
-    // Esc means "leave the room" here, not "open the pause menu" (see ui/game-flow.ts).
-    document.body.dataset.hfLocalOverlay = 'true';
+    this.ox = ROOM_ORIGIN.x + Math.round((W - p.cols * T) / 2);
+    this.oy = ROOM_ORIGIN.y + Math.round((H - (p.rows + WALL_ROWS) * T) / 2 + WALL_ROWS * T - 8);
+    const cam = this.host.cameras.main;
+    this.bg = cam.backgroundColor.rgba;
+    cam.stopFollow();
+    cam.setDeadzone();
+    cam.setBackgroundColor('#14100c').setZoom(1).setScroll(ROOM_ORIGIN.x, ROOM_ORIGIN.y);
+    cam.fadeIn(220, 20, 16, 12);
 
     this.drawRoom();
     for (const o of p.furniture) this.drawFurniture(o);
-    this.spawnPeople();
     this.addHud();
-
-    this.cursors = this.input.keyboard!.createCursorKeys();
-    this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
-    this.input.keyboard?.on('keydown-E', () => this.onInteract());
-    this.input.keyboard?.on('keydown-ENTER', () => this.onInteract());
-    this.input.keyboard?.on('keydown-ESC', () => this.leave());
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      document.body.dataset.hfLocalOverlay = 'false';
-      this.input.keyboard?.removeAllListeners();
-      this.bubbleTimer?.remove();
-    });
+    this.spawnPlayer();
+    this.syncResident(true);
   }
 
   /** Test/e2e snapshot. */
-  state(): InteriorState {
+  state(): InteriorState | null {
+    if (!this.active) return null;
     return {
-      active: this.scene.isActive(),
-      buildingId: this.data0.buildingId,
-      townId: this.data0.townId,
-      kind: this.data0.kind,
-      occupantId: this.data0.occupant?.id ?? null,
+      active: true,
+      buildingId: this.d.buildingId,
+      townId: this.d.townId,
+      kind: this.d.kind,
+      occupantId: this.seated?.info.id ?? null,
       player: { col: (this.player.x - this.ox) / T, row: (this.player.y - this.oy) / T },
       furnitureCount: this.plan.furniture.length,
     };
   }
 
-  /** Leave via the door: fade, then wake the overworld. Safe to call repeatedly. */
+  /** Where the player stands (world px, room space). */
+  playerPos(): Pt { return { x: this.player.x, y: this.player.y }; }
+  /** The seated resident's id and head anchor, when there is one to talk to. */
+  residentHead(id?: string): { id: string; x: number; y: number } | null {
+    const r = this.seated;
+    if (!r || (id && r.info.id !== id)) return null;
+    return { id: r.info.id, x: r.sprite.x, y: r.sprite.y - 36 };
+  }
+  residentSprite(id: string): Phaser.GameObjects.Sprite | undefined { return this.seated?.info.id === id ? this.seated.sprite : undefined; }
+  distanceToResident(): number {
+    return this.seated ? Phaser.Math.Distance.Between(this.player.x, this.player.y, this.seated.sprite.x, this.seated.sprite.y) : Infinity;
+  }
+
+  /** Leave via the door: fade, then hand the world back. Safe to call repeatedly. */
   leave(instant = false): void {
-    if (this.leaving) return;
+    if (!this.active || this.leaving) return;
     this.leaving = true;
     const done = (): void => {
-      const back = this.data0.returnTo;
-      this.scene.stop();
-      this.scene.wake(back, { fromInterior: this.data0.buildingId });
+      const id = this.d.buildingId;
+      this.dispose();
+      this.hooks.onClosed(id);
     };
     if (instant) return done();
-    this.cameras.main.fadeOut(180, 20, 16, 12);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, done);
+    const cam = this.host.cameras.main;
+    cam.fadeOut(180, 20, 16, 12);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, done);
+  }
+
+  private dispose(): void {
+    this.bubbleTimer?.remove();
+    for (const o of this.owned) this.host.tweens.killTweensOf(o);
+    for (const o of this.owned) o.destroy();
+    this.owned = [];
+    this.seated = null;
+    this.active = false;
+    this.host.cameras.main.setBackgroundColor(this.bg);
   }
 
   // ── drawing ──────────────────────────────────────────────────────────────
 
   private drawRoom(): void {
     const { plan: p, ox, oy } = this;
-    const pal = art.palettes[this.data0.paletteIndex % art.palettes.length]!;
+    const pal = art.palettes[this.d.paletteIndex % art.palettes.length]!;
     const wall = hex(pal.wall), wallShadow = hex(pal.shadow);
     const g = this.add.graphics().setDepth(0);
     const [fa, fb] = FLOOR[p.kind];
@@ -288,36 +347,90 @@ export class InteriorScene extends Phaser.Scene {
     }
   }
 
-  private spawnPeople(): void {
-    const { plan: p, ox, oy } = this;
-    const hasFrame = this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7');
-    const put = (col: number, row: number, tint?: number): Phaser.GameObjects.Sprite => {
-      const x = ox + (col + 0.5) * T, y = oy + (row + 1) * T - 2;
-      if (this.textures.exists(SHADOW_TEX)) this.add.image(x, y - 2, SHADOW_TEX).setScale(1.4, 0.9).setDepth(y - 0.5);
-      const s = this.add.sprite(x, y, HERO_TEX, hasFrame ? '7' : undefined).setOrigin(0.5, 1).setScale(FEEL.worldScale.artScale).setDepth(y);
-      if (tint !== undefined) s.setTint(tint);
-      if (this.anims.exists('hero-idle-down')) s.play('hero-idle-down');
-      return s;
-    };
-    const occ = this.data0.occupant;
-    if (occ) {
-      this.npc = put(p.npc.col, p.npc.row, occ.tint);
-      this.add.text(this.npc.x, this.npc.y - 36, `${occ.name}`, { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
-        .setOrigin(0.5, 1).setDepth(998_000);
-    }
-    this.player = put(p.spawn.col, p.spawn.row);
-    this.player.y = oy + (p.spawn.row + 0.5) * T + 8;
+  private hasFrame(): boolean {
+    return this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7');
+  }
+
+  private makeSprite(x: number, y: number, tint?: number): { sprite: Phaser.GameObjects.Sprite; shadow?: Phaser.GameObjects.Image } {
+    const shadow = this.textures.exists(SHADOW_TEX) ? this.add.image(x, y - 2, SHADOW_TEX).setScale(1.4, 0.9).setDepth(y - 0.5) : undefined;
+    const sprite = this.add.sprite(x, y, HERO_TEX, this.hasFrame() ? '7' : undefined).setOrigin(0.5, 1).setScale(FEEL.worldScale.artScale).setDepth(y);
+    if (tint !== undefined) sprite.setTint(tint);
+    if (this.anims.exists('hero-idle-down')) sprite.play('hero-idle-down');
+    return { sprite, shadow };
+  }
+
+  private tileXY(col: number, row: number): Pt {
+    return { x: this.ox + (col + 0.5) * T, y: this.oy + (row + 1) * T - 2 };
+  }
+
+  private spawnPlayer(): void {
+    const sp = this.plan.spawn;
+    const at = this.tileXY(sp.col, sp.row);
+    const { sprite, shadow } = this.makeSprite(at.x, this.oy + (sp.row + 0.5) * T + 8);
+    this.player = sprite;
+    this.playerShadow = shadow;
     this.player.setDepth(this.player.y);
   }
 
+  /** Make the room's seated person match who is really inside: they walk in from the door or out through it. */
+  private syncResident(instant = false): void {
+    const here = this.hooks.residents(this.d.buildingId)[0];
+    const cur = this.seated;
+    if (cur && cur.mode !== 'leaving' && cur.info.id !== here?.id) this.sendOut(cur);
+    if (here && !this.seated) this.seat(here, instant);
+    this.refreshTitle();
+  }
+
+  private seat(info: RoomResident, instant: boolean): void {
+    const spot = this.tileXY(this.plan.npc.col, this.plan.npc.row);
+    const mat = exitMat(this.plan);
+    const from = instant ? spot : { x: this.ox + mat.x, y: this.oy + mat.y - 6 };
+    const { sprite, shadow } = this.makeSprite(from.x, from.y, info.tint);
+    const label = this.add.text(from.x, from.y - 36, info.name, { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
+      .setOrigin(0.5, 1).setDepth(998_000);
+    const r: Seated = { info, sprite, shadow, label, mode: instant ? 'idle' : 'arriving' };
+    this.seated = r;
+    if (instant) return;
+    this.say(`${info.name} comes in.`, this.playerPos());
+    const { key } = heroWalkAnim(0, -1);
+    if (this.anims.exists(key)) sprite.play(key, true);
+    this.host.tweens.add({
+      targets: sprite, x: spot.x, y: spot.y, duration: WALK_MS, ease: 'Sine.inOut',
+      onComplete: () => { if (this.seated === r) { r.mode = 'idle'; if (this.anims.exists('hero-idle-down')) sprite.play('hero-idle-down', true); } },
+    });
+  }
+
+  private sendOut(r: Seated): void {
+    r.mode = 'leaving';
+    this.say(`${r.info.name} heads out.`, this.playerPos());
+    const mat = exitMat(this.plan);
+    const { key } = heroWalkAnim(0, 1);
+    if (this.anims.exists(key)) r.sprite.play(key, true);
+    this.host.tweens.killTweensOf(r.sprite);
+    this.host.tweens.add({
+      targets: r.sprite, x: this.ox + mat.x, y: this.oy + mat.y - 6, duration: WALK_MS, ease: 'Sine.inOut',
+      onComplete: () => {
+        for (const o of [r.sprite, r.shadow, r.label]) o?.destroy();
+        if (this.seated === r) this.seated = null;
+      },
+    });
+  }
+
+  private refreshTitle(): void {
+    const d = this.d, r = this.seated;
+    const who = r && r.mode !== 'leaving' ? `${r.info.name} ${OCCUPANT_ROLE[d.kind]}.` : 'Nobody is home right now.';
+    const text = `${d.townName} · ${INTERIOR_TITLE[d.kind]} — ${who}`;
+    if (this.title.text !== text) this.title.setText(text);
+  }
+
   private addHud(): void {
-    const d = this.data0;
     const style = { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#f2e2b8', stroke: '#1b1612', strokeThickness: 3 };
-    this.add.text(10, 8, `${d.townName} · ${INTERIOR_TITLE[d.kind]}`, { ...style, fontSize: '13px', color: '#f2b84b' }).setScrollFactor(0).setDepth(1_000_000);
-    this.add.text(10, 26, d.occupant ? `${d.occupant.name} ${OCCUPANT_ROLE[d.kind]}.` : 'Nobody is home right now.', { ...style, fontSize: '11px', color: '#c8b898' })
+    this.title = this.add.text(10, 8, '', { ...style, fontSize: '12px', color: '#f2b84b' }).setScrollFactor(0).setDepth(1_000_000);
+    this.clockText = this.add.text(this.scale.width - 10, 8, '', { ...style, fontSize: '11px', color: '#c8b898' }).setOrigin(1, 0).setScrollFactor(0).setDepth(1_000_000);
+    this.add.text(10, this.scale.height - 20, 'Walk: WASD · E: talk / leave at the door · I: satchel · L: letters · M: map · Esc: leave', { ...style, fontSize: '10px', color: '#c8b898' })
       .setScrollFactor(0).setDepth(1_000_000);
-    this.add.text(10, this.scale.height - 20, 'Walk: WASD · E: talk / leave at the door · Esc: leave', { ...style, fontSize: '11px', color: '#c8b898' })
-      .setScrollFactor(0).setDepth(1_000_000);
+    // Daylight/dusk through the windows follows the live day clock.
+    this.light = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0xffffff, 0).setScrollFactor(0).setDepth(899_000);
     this.prompt = this.add.text(0, 0, '', { ...style, color: '#f2b84b' }).setOrigin(0.5, 1).setDepth(998_500).setVisible(false);
     this.bubble = this.add.text(0, 0, '', {
       fontFamily: 'monospace', fontSize: '10px', color: '#f2e9e4', backgroundColor: '#1b1612', padding: { x: 5, y: 3 }, wordWrap: { width: 210 },
@@ -327,48 +440,58 @@ export class InteriorScene extends Phaser.Scene {
   // ── play ─────────────────────────────────────────────────────────────────
 
   private nearNpc(): boolean {
-    return !!this.npc && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.npc.x, this.npc.y) < talkNear;
+    const r = this.seated;
+    return !!r && r.mode === 'idle' && this.distanceToResident() < talkNear;
   }
 
-  private local(): { x: number; y: number } {
+  private local(): Pt {
     return { x: this.player.x - this.ox, y: this.player.y - this.oy };
   }
 
-  private onInteract(): void {
-    if (this.leaving || this.time.now - this.born < 250) return;
-    if (nearExit(this.plan, this.local())) return this.leave();
-    if (this.nearNpc() && this.npc) {
-      this.say(this.data0.occupant ? interiorLine(this.data0.kind, this.data0.despair01, this.visits++) : EMPTY_ROOM_LINE);
-      return;
-    }
-    if (!this.data0.occupant) this.say(EMPTY_ROOM_LINE, this.player);
+  /** E pressed. Returns the resident to talk to (host opens the action ring), or null when handled here. */
+  interact(): { id: string; x: number; y: number } | null {
+    if (this.leaving || this.time.now - this.born < 250) return null;
+    if (nearExit(this.plan, this.local())) { this.leave(); return null; }
+    if (this.nearNpc()) return this.residentHead();
+    if (!this.seated) this.say(EMPTY_ROOM_LINE, this.playerPos());
+    return null;
   }
 
-  private say(text: string, at: { x: number; y: number } | undefined = this.npc): void {
+  /** The room-flavoured murmur (the 'Chat' chip). */
+  chat(): void {
+    if (this.seated) this.say(interiorLine(this.d.kind, this.d.despair01, this.visits++), this.seated.sprite);
+  }
+
+  say(text: string, at: Pt | undefined = this.seated?.sprite): void {
     if (!at) return;
-    this.bubble.setText(text).setPosition(Phaser.Math.Clamp(at.x, 120, this.scale.width - 120), at.y - 44).setVisible(true).setAlpha(1);
+    this.bubble.setText(text).setPosition(Phaser.Math.Clamp(at.x, ROOM_ORIGIN.x + 120, ROOM_ORIGIN.x + this.scale.width - 120), at.y - 44).setVisible(true).setAlpha(1);
     this.bubbleTimer?.remove();
     this.bubbleTimer = this.time.delayedCall(3600, () => this.bubble.setVisible(false));
   }
 
-  update(time: number, delta: number): void {
+  /** Per-frame: `dx`,`dy` is the walk intent; `frozen` stops the player (overlay or ring open). */
+  update(time: number, delta: number, dx: number, dy: number, frozen: boolean): void {
+    if (!this.active) return;
     for (const f of this.flames) {
       const k = 0.88 + Math.sin(time / 90 + f.obj.x) * 0.1 + Math.sin(time / 37) * 0.05;
       if (f.base === 1) f.obj.setScale(k, 0.9 + (k - 0.85) * 2);
       else f.obj.setAlpha(f.base * (0.8 + (k - 0.88) * 2.5));
     }
-    if (this.leaving) return;
-    let dx = 0, dy = 0;
-    if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
-    if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
-    if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
-    if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
-    const ptr = this.input.activePointer;
-    if (dx === 0 && dy === 0 && ptr.isDown) {
-      const ex = ptr.worldX - this.player.x, ey = ptr.worldY - this.player.y;
-      if (Math.abs(ex) > T / 2) dx = Math.sign(ex);
-      if (Math.abs(ey) > T / 2) dy = Math.sign(ey);
+    const phase = this.hooks.phase();
+    const sky = skyAt(phase);
+    this.light.setFillStyle(sky.color, sky.alpha * 0.55);
+    const label = dayPartLabel(phase);
+    if (this.clockText.text !== label) this.clockText.setText(label);
+    this.syncResident();
+    const r = this.seated;
+    if (r) {
+      r.sprite.setDepth(r.sprite.y);
+      r.shadow?.setPosition(r.sprite.x, r.sprite.y - 2).setDepth(r.sprite.y - 0.5);
+      r.label.setPosition(r.sprite.x, r.sprite.y - 36);
+      if (r.mode === 'idle') r.sprite.setScale(FEEL.worldScale.artScale, FEEL.worldScale.artScale + Math.sin(time / 600) * 0.05);
     }
+    if (this.leaving) return;
+    if (frozen) { dx = 0; dy = 0; }
     if (dx !== 0 || dy !== 0) {
       const step = walkDelta(dx, dy, delta, FEEL.overworld.walkTilesPerSec, T);
       const n = Math.max(1, Math.ceil(Math.hypot(step.dx, step.dy) / 6));
@@ -378,6 +501,7 @@ export class InteriorScene extends Phaser.Scene {
         if (interiorWalkable(this.plan, this.player.x - this.ox, ly + step.dy / n)) this.player.y += step.dy / n;
       }
       this.player.setDepth(this.player.y);
+      this.playerShadow?.setPosition(this.player.x, this.player.y - 2).setDepth(this.player.y - 0.5);
       const { key, flipX } = heroWalkAnim(dx, dy);
       this.player.setFlipX(flipX);
       if (this.anims.exists(key) && this.player.anims.currentAnim?.key !== key) this.player.play(key, true);
@@ -386,11 +510,11 @@ export class InteriorScene extends Phaser.Scene {
     }
     // Context prompt: leave at the door, talk beside the resident.
     const mat = exitMat(this.plan);
-    if (nearExit(this.plan, this.local())) {
+    if (frozen) this.prompt.setVisible(false);
+    else if (nearExit(this.plan, this.local())) {
       this.prompt.setText('E · Leave').setVisible(true).setPosition(this.ox + mat.x, this.oy + mat.y - 44 - Math.abs(Math.sin(time / 300)) * 3);
-    } else if (this.nearNpc() && this.npc) {
-      this.prompt.setText('E · Talk').setVisible(true).setPosition(this.npc.x, this.npc.y - 50 - Math.abs(Math.sin(time / 300)) * 3);
+    } else if (this.nearNpc() && r) {
+      this.prompt.setText('E · Talk').setVisible(true).setPosition(r.sprite.x, r.sprite.y - 50 - Math.abs(Math.sin(time / 300)) * 3);
     } else this.prompt.setVisible(false);
-    if (this.npc) this.npc.setScale(FEEL.worldScale.artScale, FEEL.worldScale.artScale + Math.sin(time / 600) * 0.05);
   }
 }

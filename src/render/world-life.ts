@@ -19,6 +19,8 @@ export type WorldLife = {
   dawn: () => void;
   /** Day clock 0..1 (0 dawn). */
   phase: () => number;
+  /** Hide the outdoor day/night tint while the camera is inside a room. */
+  setSkyVisible: (on: boolean) => void;
   /** Jump the day clock (QA / tests). */
   setPhase: (p01: number) => void;
   setPrompt: (on: boolean, pos?: Pt) => void;
@@ -115,6 +117,7 @@ export function createWorldLife(scene: Phaser.Scene, settlements: Settlement[]):
   return {
     dawn: () => (clock = DAY_MS * 0.06),
     phase: () => clock / DAY_MS,
+    setSkyVisible: (on) => void sky.setVisible(on),
     setPhase: (p01) => (clock = (((p01 % 1) + 1) % 1) * DAY_MS),
     setPrompt(on, pos) {
       prompt.setVisible(on);

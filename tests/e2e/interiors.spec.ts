@@ -107,3 +107,53 @@ test('residents follow the day: indoors means not outdoors, and rooms show who i
   expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).toBeNull();
   expect(errors).toEqual([]);
 });
+
+test('the world keeps running indoors and the satchel, map, letters and ring work', async ({ page }) => {
+  const errors = await boot(page);
+  const house = await hook(page, (h) => h.interior.buildings().find((x) => x.kind === 'house')!);
+  const H = (fn: string) => page.evaluate(fn);
+  await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.setHour(0.9));
+  await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.enter(id), house.id);
+  await page.waitForTimeout(600);
+  const clock = () => page.evaluate(() => (window as unknown as { __hearth: { scene: { life: { phase: () => number } } } }).__hearth.scene.life.phase());
+  const c0 = await clock();
+  await page.waitForTimeout(1500);
+  expect(await clock()).toBeGreaterThan(c0); // day clock advances while inside
+  // Satchel opens and closes with I; Esc closes it first and does NOT leave the room.
+  await page.keyboard.press('i');
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: { scene: { goods: { overlayOpen: () => boolean } } } }).__hearth.scene.goods.overlayOpen())).toBe(true);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state())).not.toBeNull();
+  // Map likewise.
+  await page.keyboard.press('m');
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: { scene: { goods: { overlayOpen: () => boolean } } } }).__hearth.scene.goods.overlayOpen())).toBe(true);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // Letters dialog opens indoors.
+  await page.keyboard.press('l');
+  await expect(page.locator('dialog[open]')).toBeVisible();
+  await page.locator('dialog button', { hasText: 'Close' }).click();
+  await H('0');
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state())).not.toBeNull();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(900);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state())).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('a resident leaves the room when the day moves on, while you are inside', async ({ page }) => {
+  const errors = await boot(page);
+  const shop = await hook(page, (h) => h.interior.buildings().find((x) => x.kind === 'house')!);
+  await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.setHour(0.9));
+  await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.enter(id), shop.id);
+  await page.waitForTimeout(600);
+  expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).not.toBeNull();
+  // Morning comes: the schedule sends house residents out to work; the room notices.
+  await page.evaluate(() => (window as unknown as { __hearth: { scene: { life: { setPhase: (n: number) => void } } } }).__hearth.scene.life.setPhase(0.2));
+  await page.waitForTimeout(2500);
+  expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).toBeNull();
+  expect(errors).toEqual([]);
+});

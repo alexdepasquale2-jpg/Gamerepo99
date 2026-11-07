@@ -23,7 +23,7 @@ import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
 import { createPeopleLayer, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
-import { INTERIOR_SCENE_KEY, type InteriorEnterData, type InteriorScene } from './interior-scene';
+import { InteriorRoom, type InteriorEnterData } from './interior-room';
 import { allBuildings, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
 import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
@@ -70,6 +70,7 @@ export class OverworldScene extends Phaser.Scene {
   private doorPrompt!: Phaser.GameObjects.Text;
   private inside: Building | null = null;
   private entering = false;
+  private room!: InteriorRoom;
 
   constructor() {
     super('overworld');
@@ -98,11 +99,16 @@ export class OverworldScene extends Phaser.Scene {
     );
     this.buildings = allBuildings(this.layout.settlements);
     this.life = createWorldLife(this, this.layout.settlements);
+    this.room = new InteriorRoom(this, {
+      residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: pretty(id).split(' ')[0]!, tint: tintOf(id) })),
+      phase: () => this.life.phase(),
+      onClosed: (buildingId) => this.onRoomClosed(buildingId),
+    });
     this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav);
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
-      this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined,
+      this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined),
     );
-    attachSparkFx(this, this.bus, { getPlayerPos: () => ({ x: this.player.x, y: this.player.y - 20 }) });
+    attachSparkFx(this, this.bus, { getPlayerPos: () => { const a = this.room.active ? this.room.playerPos() : this.player; return { x: a.x, y: a.y - 20 }; } });
     // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
     (window as unknown as { __hearth?: unknown }).__hearth = {
       session: this.session,
@@ -122,8 +128,8 @@ export class OverworldScene extends Phaser.Scene {
         whereabouts: () => this.people.people.map((p) => ({ id: p.id, inside: p.inside?.id ?? null, visible: p.sprite.visible })),
         buildings: () => this.buildings.map((b) => ({ id: b.id, townId: b.townId, kind: b.kind, door: { ...b.door } })),
         enter: (spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }) => this.debugEnterInterior(spec),
-        exit: () => this.interiorScene()?.leave(true),
-        state: () => this.interiorScene()?.state() ?? null,
+        exit: () => this.room.leave(true),
+        state: () => this.room.state(),
       },
     };
     this.createSparkHud();
@@ -144,8 +150,13 @@ export class OverworldScene extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setDepth(998_500)
       .setVisible(false);
-    this.events.on(Phaser.Scenes.Events.WAKE, () => this.onWake());
-    this.input.keyboard?.on('keydown-ESC', () => { this.closeRing(); this.goods.closeOverlays(); });
+    // Esc closes whatever is open first (ring, satchel, map, letters); with nothing open it leaves the room.
+    this.input.keyboard?.on('keydown-ESC', () => {
+      const open = this.ring.isOpen() || this.goods.overlayOpen();
+      this.closeRing();
+      this.goods.closeOverlays();
+      if (!open && this.room.active) this.room.leave();
+    });
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
       this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
     );
@@ -153,7 +164,7 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-I', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
-    this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(); if (line) this.say(line); this.syncSparkFromSession(true); });
+    this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
@@ -171,6 +182,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    if (this.room.active) { this.updateRoom(_time, delta); return; }
     if (this.goods.overlayOpen()) { this.tickLife(delta); return; }
     let dx = 0;
     let dy = 0;
@@ -223,6 +235,39 @@ export class OverworldScene extends Phaser.Scene {
     this.tickLife(delta);
   }
 
+  /** Inside a room the world still runs (clock, residents, caravans, mail); only the player stands elsewhere. */
+  private updateRoom(time: number, delta: number): void {
+    let dx = 0, dy = 0;
+    const blocked = this.goods.overlayOpen();
+    if (!blocked) {
+      if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
+      if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
+      if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
+      if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
+      const ptr = this.input.activePointer;
+      if (dx === 0 && dy === 0 && ptr.isDown && !this.uiTap) {
+        const me = this.room.playerPos();
+        const ex = ptr.worldX - me.x, ey = ptr.worldY - me.y;
+        if (Math.abs(ex) > TILE_PX / 2) dx = Math.sign(ex);
+        if (Math.abs(ey) > TILE_PX / 2) dy = Math.sign(ey);
+      }
+    }
+    this.room.update(time, delta, dx, dy, blocked);
+    this.moving = false;
+    this.people.update(this.time.now, delta, { x: -1e9, y: -1e9 });
+    this.goods.update(this.time.now, delta, this.player);
+    this.life.update(this.time.now, delta, this.player, false);
+    this.people.setPrompt(null);
+    this.life.setPrompt(false);
+    this.doorPrompt.setVisible(false);
+    if (this.ringFor) {
+      // Walking away from the resident closes the ring, like outdoors.
+      if (dx !== 0 || dy !== 0) { if (this.room.distanceToResident() > 90) this.closeRing(); }
+      if (!this.room.residentHead(this.ringFor)) this.closeRing(); // they left the room
+    }
+    document.body.dataset.hfLocalOverlay = 'true'; // Esc leaves the room, not the pause menu
+  }
+
   private tickLife(delta: number): void {
     const t = this.time.now;
     this.people.update(t, delta, this.player);
@@ -253,7 +298,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private openRing(p: Person): void {
-    if (this.resting) return;
+    if (this.resting || p.inside) return;
     const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y);
     if (d > 110) {
       this.say('Too far. Walk closer.');
@@ -265,7 +310,20 @@ export class OverworldScene extends Phaser.Scene {
     this.people.freeze(p.id);
     this.people.setPrompt(null);
     const h = this.people.headOf(p.id);
-    this.ring.open({ x: h.x, y: h.y - 6 }, chips, (c) => this.commit(p, c));
+    this.ring.open({ x: h.x, y: h.y - 6 }, chips, (c) => this.commit(p.id, p.sprite, () => this.people.headOf(p.id), c));
+  }
+
+  /** Same deeds, same interaction system, with the resident of the room you are standing in. */
+  private openRoomRing(id: string): void {
+    const sprite = this.room.residentSprite(id);
+    const head = this.room.residentHead(id);
+    if (!sprite || !head) return;
+    const chips: Chip[] = [...this.chipsFor(id), { id: '@chat', label: 'Chat', savage: false }];
+    this.ringFor = id;
+    this.ring.open({ x: head.x, y: head.y - 6 }, chips, (c) => {
+      if (c.id === '@chat') { this.closeRing(); this.room.chat(); return; }
+      this.commit(id, sprite, () => this.room.residentHead(id) ?? { x: sprite.x, y: sprite.y - 36 }, c);
+    });
   }
 
   private closeRing(): void {
@@ -282,6 +340,11 @@ export class OverworldScene extends Phaser.Scene {
   private interact(): void {
     if (this.resting || this.goods.overlayOpen()) return;
     if (this.ring.isOpen()) return;
+    if (this.room.active) {
+      const who = this.room.interact();
+      if (who) this.openRoomRing(who.id);
+      return;
+    }
     if (this.goods.readBoard(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
@@ -302,50 +365,47 @@ export class OverworldScene extends Phaser.Scene {
     return hit.building;
   }
 
-  private interiorScene(): InteriorScene | undefined {
-    return this.scene.isActive(INTERIOR_SCENE_KEY) ? (this.scene.get(INTERIOR_SCENE_KEY) as InteriorScene) : undefined;
-  }
-
-  /** Walk through a door: fade, put the overworld to sleep, launch the room. */
+  /** Walk through a door: fade, then the camera moves to the room. The world keeps running behind it. */
   private enterBuilding(b: Building, instant = false): void {
     if (this.inside || this.entering) return;
     this.entering = true;
     this.closeRing();
     this.doorPrompt.setVisible(false);
-    const world = this.session.getWorld();
-    const town = world?.settlements?.find((s) => s.id === b.townId);
-    // Only people the schedule has actually put in this room are there; if the resident is out, it is empty.
-    const resident = this.people.insideOf(b.id)[0];
+    const town = this.session.getWorld()?.settlements?.find((s) => s.id === b.townId);
     const payload: InteriorEnterData = {
-      returnTo: this.scene.key,
       buildingId: b.id,
       townId: b.townId,
       townName: town?.name ?? pretty(b.townId),
       kind: b.kind,
       paletteIndex: b.paletteIndex,
-      occupant: resident ? { id: resident, name: pretty(resident).split(' ')[0]!, tint: tintOf(resident) } : undefined,
       despair01: this.session.townDespair()[b.townId] ?? 0,
     };
     const go = (): void => {
       this.inside = b;
       this.entering = false;
       this.moving = false;
-      this.scene.launch(INTERIOR_SCENE_KEY, payload);
-      this.scene.sleep();
+      this.hint.setVisible(false);
+      this.life.setSkyVisible(false);
+      this.input.keyboard?.resetKeys();
+      this.room.enter(payload);
     };
     if (instant) return go();
     this.cameras.main.fadeOut(160, 20, 16, 12);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, go);
   }
 
-  /** Back from a room: stand just outside the door. */
-  private onWake(): void {
+  /** Back from a room: stand just outside the door, camera follows the player again. */
+  private onRoomClosed(_buildingId: string): void {
     const b = this.inside;
     this.inside = null;
     this.entering = false;
+    this.closeRing();
     this.input.keyboard?.resetKeys();
+    this.hint.setVisible(true);
+    this.life.setSkyVisible(true);
     const cam = this.cameras.main;
     cam.resetFX();
+    this.followPlayer();
     if (b) {
       const x = b.door.x, y = b.door.y + 12;
       if (this.terrain.passable(Math.floor(x / TILE_PX), Math.floor((y - 2) / TILE_PX))) this.player.setPosition(x, y);
@@ -377,8 +437,8 @@ export class OverworldScene extends Phaser.Scene {
     return { id: b.id, kind: b.kind };
   }
 
-  private commit(p: Person, c: Chip): void {
-    const pre = this.goods.beforeDeed(c.id.slice(0, c.id.indexOf('@')), p.id);
+  private commit(id: string, sprite: Phaser.GameObjects.Sprite, headOf: () => { x: number; y: number }, c: Chip): void {
+    const pre = this.goods.beforeDeed(c.id.slice(0, c.id.indexOf('@')), id);
     if (!pre.ok) {
       this.closeRing();
       this.say(pre.line ?? 'Not now.');
@@ -394,12 +454,12 @@ export class OverworldScene extends Phaser.Scene {
     const r = this.session.lastResolve();
     this.closeRing();
     const spent = Math.max(0, (before - after) / 100);
-    const h = this.people.headOf(p.id);
+    const h = headOf();
     this.bus.emit('vfx.spark_spent', { x: h.x, y: h.y + 10, amount01: spent > 0 ? spent : 0.12 });
     this.syncSparkFromSession(true);
-    this.tweens.add({ targets: p.sprite, y: p.sprite.y - 5, duration: 110, yoyo: true });
+    this.tweens.add({ targets: sprite, y: sprite.y - 5, duration: 110, yoyo: true });
     if (juiced === 0) {
-      const who = pretty(p.id).split(' ')[0];
+      const who = pretty(id).split(' ')[0];
       const line =
         r?.kind === 'refused'
           ? `${who} turns away.`
@@ -467,14 +527,13 @@ export class OverworldScene extends Phaser.Scene {
     this.player.setScale(FEEL.worldScale.artScale);
     applySpriteSort(this.player);
     if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down');
+    this.followPlayer();
+  }
+
+  private followPlayer(): void {
     const cam = this.cameras.main;
     cam.setRoundPixels(true);
-    cam.startFollow(
-      this.player,
-      true,
-      FEEL.overworld.camLerp,
-      FEEL.overworld.camLerp,
-    );
+    cam.startFollow(this.player, true, FEEL.overworld.camLerp, FEEL.overworld.camLerp);
     cam.setDeadzone(FEEL.overworld.camDeadzoneX, FEEL.overworld.camDeadzoneY);
     cam.setZoom(FEEL.worldScale.camZoom);
   }
