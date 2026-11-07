@@ -12,14 +12,16 @@ import { createRng } from './rng';
 import { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravelRoutes } from './travel/travel';
 import { installPlayReactions } from './play-session/play-session-act';
 import { bootPlayState } from './play-session/play-session-state';
+import { rescalePoint } from './map/tile-edits';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
 
-export const SAVE_VERSION = 2 as const;
+/** 3 = 40x world (WORLD_SCALE); v2 world positions are migrated on load. */
+export const SAVE_VERSION = 3 as const;
 
 export type SaveBlob = {
-  /** 2 = full sim in `sim`; 1 = legacy thin blob (still parsed, loaded best-effort). */
-  version: 1 | 2;
+  /** 3/2 = full sim in `sim` (2 = old map scale); 1 = legacy thin blob (still parsed, loaded best-effort). */
+  version: 1 | 2 | 3;
   seed: number;
   tick: number;
   npcs: Array<{ id: string; x: number; y: number }>;
@@ -88,6 +90,9 @@ export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marro
       biomeTerrainMuls: loadBiomeTerrainMuls(),
       sizeTravelMuls: loadSizeTravelMuls(),
     };
+    if (blob.version === 2) {
+      for (const g of state.groundItems ?? []) Object.assign(g, rescalePoint(world.settlements ?? [], blob.seed, g.x, g.y));
+    }
     state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
     installPlayReactions(state);
   } else {
@@ -125,9 +130,9 @@ export function validateSave(raw: unknown): SaveCheck {
   const b = raw as Record<string, unknown>;
   if (typeof b.version !== 'number') return { ok: false, error: 'That save has no version and cannot be read.' };
   if (b.version > SAVE_VERSION) return { ok: false, error: `That save is from a newer version (${b.version}) than this game understands.` };
-  if (b.version !== 1 && b.version !== 2) return { ok: false, error: 'That save has an unknown version.' };
+  if (b.version !== 1 && b.version !== 2 && b.version !== 3) return { ok: false, error: 'That save has an unknown version.' };
   if (typeof b.seed !== 'number' || typeof b.tick !== 'number') return { ok: false, error: 'That save is missing its world.' };
-  if (b.version === 2 && (typeof b.sim !== 'object' || b.sim === null)) return { ok: false, error: 'That save is missing its world state.' };
+  if (b.version >= 2 && (typeof b.sim !== 'object' || b.sim === null)) return { ok: false, error: 'That save is missing its world state.' };
   return { ok: true, blob: { ...(b as unknown as SaveBlob), npcs: Array.isArray(b.npcs) ? (b.npcs as SaveBlob['npcs']) : [] } };
 }
 

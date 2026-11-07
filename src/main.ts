@@ -6,6 +6,10 @@ import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
+import { setTerrainMode } from './sim/map/terrain';
+
+// Tiles come from the refined map ladder; ?terrain=noise falls back to per-tile noise.
+if (new URLSearchParams(location.search).get('terrain') === 'noise') setTerrainMode('noise');
 
 const hud = createHud();
 hud.setStatus('booting overworld');

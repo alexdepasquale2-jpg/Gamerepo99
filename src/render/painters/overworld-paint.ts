@@ -251,11 +251,12 @@ export function paintProp(
   host: PaintHost,
   container: Phaser.GameObjects.Container | null,
   prop: FacilityRenderView,
-): void {
+): Phaser.GameObjects.GameObject[] {
   const foot = tileFootWorld(prop.position.x, prop.position.y);
   const assetKey = PROP_ASSET[prop.type] ?? `facility.${prop.type}.${prop.state || 'idle'}`;
   const entry = lookupAsset(assetKey);
-  addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.0);
+  const shadow = addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.0);
+  const made: Phaser.GameObjects.GameObject[] = shadow ? [shadow] : [];
 
   if (prop.type === 'field') {
     const texKey = entry ? sheetTextureKey(entry.sheet) : 'sheet-crops';
@@ -265,18 +266,19 @@ export function paintProp(
       applySpriteSort(img);
       img.setDisplaySize(TILE_PX * 0.95, TILE_PX * 0.95);
       container?.add(img);
-      return;
+      return [...made, img];
     }
     const sheaf = host.add.rectangle(foot.x, foot.y - 6, 10, 14, 0xd4b84a);
     applySpriteSort(sheaf);
     container?.add(sheaf);
-    return;
+    return [...made, sheaf];
   }
 
   const colors: Record<string, number> = {
     mine: 0x6a6a72,
     camp: 0x8b5a2b,
     waystation: 0xc4a574,
+    farmstead: 0xb08a5a,
   };
   const wall = host.add.rectangle(foot.x, foot.y - 14, 22, 26, colors[prop.type] ?? 0x8b5a2b);
   applySpriteSort(wall);
@@ -284,6 +286,7 @@ export function paintProp(
   roof.setDepth(foot.y + 0.2);
   container?.add(wall);
   container?.add(roof);
+  return [...made, wall, roof];
 }
 
 /** @deprecated Prefer bakeCliffStrip — kept for API compat / tests. */

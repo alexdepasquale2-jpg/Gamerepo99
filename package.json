@@ -20,7 +20,8 @@
     "bake:social": "vite-node scripts/bake-social-web.ts",
     "perf:dawn": "vite-node scripts/perf-dawn.mts",
     "test:bots": "vitest run tests/bots",
-    "balance": "vite-node scripts/balance-bots.mts"
+    "balance": "vite-node scripts/balance-bots.mts",
+    "map:ascii": "vite-node scripts/map-ascii.mts"
   },
   "dependencies": {
     "phaser": "^3.87.0"

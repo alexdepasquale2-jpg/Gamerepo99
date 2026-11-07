@@ -76,3 +76,6 @@ Noticeboard (E at a board) has a second page, Town economy: shortages, carts on 
 ## World scale + density (planned)
 Spec: `docs/design/2026-11-07-world-scale-plan.md`. A 40x-area world built from an ASCII refinement ladder (L0 world → L4 tiles, deterministic "diffusion-style" refine). Tiles are made only near the player; the economy graph always runs.
 Next: phase 1, L0 grid as data + `map:ascii` golden test.
+Done (this branch): phases 1-7 of the world-scale plan. L0 ASCII + `npm run map:ascii`, refine L0->L3, ladder terrain is the default (`?terrain=noise` falls back), 40x area (WORLD_SCALE 6.32, road topology/days unchanged), scatter.json density, tile edits + save v3, chunk build budget + fade-in.
+Blockers: none known. The 2 e2e failures came from wilderness nodes growing 40x (one sprite each, scanned every frame); fixed by scaling the node cell with WORLD_SCALE.
+Next: wagons now move ~6 tiles/s (days unchanged on 6x longer roads); phone check.

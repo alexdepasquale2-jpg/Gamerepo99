@@ -7,13 +7,14 @@ The map is data first and pixels last. Each level is an ASCII grid made from the
 
 | Level | Cell size | Contents | When |
 |---|---|---|---|
-| L0 world | 1 char = 256x256 tiles | biome, height band, river, town, road | worldgen, always in memory |
-| L1 region | 1 char = 64 tiles | coastlines, forests, hills, road bends | on demand, cached |
-| L2 district | 1 char = 16 tiles | fields, groves, ponds, farmsteads | on demand |
-| L3 local | 1 char = 4 tiles | paths, fences, rock clusters, building footprints | on demand |
-| L4 tiles | 1 char = 1 tile | final tiles and props (TileSource chunk) | inside the render radius only |
+| L0 world | 1 char = 64x64 tiles | biome, town, road | worldgen, always in memory |
+| L1 region | 1 char = 16 tiles | coastlines, forests, hills | on demand, cached per block |
+| L2 district | 1 char = 4 tiles | fields, groves, ponds, farmsteads | on demand |
+| L3 tiles | 1 char = 1 tile | final tiles and props (TileSource chunk) | inside the render radius only |
 
-ASCII legend (shared, data-driven in `data/world/glyphs.json`): `~` water, `^` mountain, `n` hills, `T` forest, `.` plain, `,` field, `#` town, `=` road, `:` ford/bridge.
+Roads, rivers and towns are vectors (layout paths, river curve), stamped exactly at every level; only area glyphs are refined.
+
+ASCII legend (shared, data-driven in `src/sim/map/ladder/glyphs.ts`): `~` water, `^` mountain, `n` hills, `T` forest, `.` plain, `,` field, `#` town, `=` road, `:` ford/bridge.
 
 ## "Diffusion-style" refinement (no ML, deterministic)
 To refine a parent cell into a 4x4 block of children:

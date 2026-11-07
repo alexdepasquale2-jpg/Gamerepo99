@@ -84,7 +84,7 @@ export class OverworldScene extends Phaser.Scene {
     const seed = this.session.getSeed();
     if (!world) throw new Error('overworld requires booted world');
     this.layout = layoutWorld(world, seed);
-    this.source = createStampRasterSource(world, seed);
+    this.source = createStampRasterSource(world, seed, () => this.session.getState()?.tileEdits);
     this.terrain = createTerrainAccess(this.layout, seed);
     this.nav = createNavigator(this.terrain);
 
@@ -556,8 +556,8 @@ export class OverworldScene extends Phaser.Scene {
     const coords = chunksAround(q, r, CHUNK_SIZE, CHUNK_MARGIN);
     const key = coords.map((c) => `${c.cx},${c.cy}`).join('|');
     if (!force && key === this.lastChunkKey) return;
-    this.lastChunkKey = key;
-    this.layer.sync(coords);
+    // Streamed chunks are built a few per frame; keep syncing until none are pending.
+    this.lastChunkKey = this.layer.sync(coords, force) ? '' : key;
   }
 
   private createSparkHud(): void {
