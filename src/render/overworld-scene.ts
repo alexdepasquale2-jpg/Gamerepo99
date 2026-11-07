@@ -73,8 +73,8 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.add
-      .text(8, 8, 'WASD/arrows or hold to walk · Enter near a town', {
-        fontFamily: 'monospace',
+      .text(8, 8, 'Hold to walk · find a town', {
+        fontFamily: 'Georgia, serif',
         fontSize: '12px',
         color: '#f2e9e4',
       })
@@ -82,8 +82,8 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(1_000_000);
 
     this.hint = this.add
-      .text(8, 68, `settlements: ${this.layout.settlements.length}`, {
-        fontFamily: 'monospace',
+      .text(8, 68, '', {
+        fontFamily: 'Georgia, serif',
         fontSize: '12px',
         color: '#8a7a68',
       })
@@ -93,7 +93,7 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
     // Touch: hold anywhere to walk toward the finger; tap the button to enter a nearby town.
     this.add
-      .text(this.scale.width - 8, 8, '[ Enter town ]', { fontFamily: 'monospace', fontSize: '16px', color: '#f2e9e4', backgroundColor: '#2a2420', padding: { x: 8, y: 6 } })
+      .text(this.scale.width - 8, 8, 'Enter town', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f4e6c8', backgroundColor: '#2a2420', padding: { x: 12, y: 6 } })
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(1_000_001)

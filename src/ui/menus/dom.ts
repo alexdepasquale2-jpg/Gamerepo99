@@ -5,13 +5,14 @@ export type MenuHandle = { el: HTMLElement; close: () => void; setNote: (text: s
 
 const STYLE = `
 .hf-menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,13,18,.82);z-index:10;font:16px/1.4 Georgia,serif;color:#f4e6c8}
-.hf-panel{min-width:320px;max-width:90vw;padding:20px 28px;background:#2a2420;border:2px solid #b89860;box-shadow:0 0 24px rgba(242,184,75,.25)}
+.hf-panel{min-width:min(320px,90vw);max-width:90vw;max-height:92vh;overflow-y:auto;box-sizing:border-box;padding:20px 28px;background:#2a2420;border:2px solid #b89860;box-shadow:0 0 24px rgba(242,184,75,.25)}
 .hf-panel h1{margin:0 0 12px;font-size:22px;color:#f2b84b;font-weight:normal}
-.hf-item{display:block;width:100%;text-align:left;margin:4px 0;padding:6px 10px;background:none;border:1px solid transparent;color:inherit;font:inherit;cursor:pointer}
+.hf-item{display:block;width:100%;text-align:left;margin:2px 0;padding:6px 10px;background:none;border:1px solid transparent;color:inherit;font:inherit;cursor:pointer}
 .hf-item[aria-selected=true]{border-color:#f2b84b;background:#3a3028}
 .hf-item[disabled]{opacity:.45;cursor:default}
 .hf-hint{display:block;font-size:13px;color:#a89068}
 .hf-note{min-height:1.4em;margin-top:10px;font-size:14px;color:#84b8b0}
+@media (max-height:420px){.hf-menu{font-size:15px}.hf-panel{padding:12px 20px}.hf-panel h1{font-size:18px;margin-bottom:6px}.hf-hint{font-size:12px}}
 `;
 
 function ensureStyle(): void {
