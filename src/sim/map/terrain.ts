@@ -16,10 +16,18 @@ function noise(seed: number, q: number, r: number, scale: number): number {
   const b = hash(seed, ix, iy + 1) * (1 - fx) + hash(seed, ix + 1, iy + 1) * fx;
   return a * (1 - fy) + b * fy;
 }
+/** Row (tile r) of the river centre line at column q. */
+export function riverRow(seed: number, q: number): number {
+  return Math.sin(q / 86 + seed * 0.001) * 34 + Math.sin(q / 31) * 7;
+}
+/** Seeded hash in [0,1) for terrain features such as fords. */
+export function terrainHash(seed: number, x: number, y: number): number {
+  return hash(seed, x, y);
+}
 export function biomeAt(seed: number, q: number, r: number): Biome {
   const wet = noise(seed ^ 0x19ab, q, r, 72);
   const elevation = noise(seed ^ 0x772f, q, r, 94) * 0.75 + noise(seed, q, r, 26) * 0.25;
-  const river = Math.sin(q / 86 + seed * 0.001) * 34 + Math.sin(q / 31) * 7;
+  const river = riverRow(seed, q);
   if (Math.abs(r - river) < 2.6 || wet < 0.23) return 'water';
   if (elevation > 0.64) return 'hills';
   if (wet > 0.53) return 'forest';

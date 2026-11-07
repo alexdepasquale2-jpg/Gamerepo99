@@ -6,6 +6,7 @@ import { advanceCaravanTravel } from '../../sim/caravans';
 import { deriveRng } from '../../sim/rng';
 import { pointOnRoad, type LayoutRoute } from '../../sim/map/world-layout';
 import { TILE_PX } from '../../sim/map/constants';
+import type { Navigator } from '../../sim/map/nav';
 import { tileFootWorld } from '../depth-sort';
 import { ensureGoodsTextures, texKey } from './node-textures';
 
@@ -23,8 +24,10 @@ export type LivingWorld = { update: (time: number, dt: number) => void; caravanP
 
 export function createLivingWorld(
   scene: Phaser.Scene, seed: number, towns: Town[], routes: LayoutRoute[],
-  getState: () => SimState | undefined, despair: () => Record<string, number>, stoppedId: () => string | undefined,
+  getState: () => SimState | undefined, despair: () => Record<string, number>, stoppedId: () => string | undefined, nav?: Navigator,
 ): LivingWorld {
+  // Wagons only ever rest on road tiles, i.e. land, bridge decks or fords.
+  const roadAt = (path: LayoutRoute['path'], f: number) => nav ? nav.roadPoint(path, f) : pointOnRoad(path, f);
   ensureGoodsTextures(scene);
   const pos = new Map(towns.map((t) => [t.id, tileFootWorld(t.q, t.r)]));
   const byRoute = new Map(routes.map((r) => [r.id, r]));
@@ -107,8 +110,8 @@ export function createLivingWorld(
         }
         // Fractional sim progress follows the actual curve; towns wait for dawn unloading.
         w.progress = f;
-        const p = pointOnRoad(road.path, w.progress);
-        const ahead = pointOnRoad(road.path, Math.max(0, Math.min(1, w.progress + (m.heading === 'outbound' ? 0.003 : -0.003))));
+        const p = roadAt(road.path, w.progress);
+        const ahead = roadAt(road.path, Math.max(0, Math.min(1, w.progress + (m.heading === 'outbound' ? 0.003 : -0.003))));
         const foot = tileFootWorld(p.q, p.r), lead = tileFootWorld(ahead.q, ahead.r);
         const dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy) || 1;
         w.wagon.setPosition(foot.x, foot.y).setDepth(foot.y).setFlipX(dx < 0);

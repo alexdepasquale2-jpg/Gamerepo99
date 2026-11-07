@@ -14,6 +14,7 @@ import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
 import { createTerrainAccess } from '../sim/map/terrain-access';
+import { createNavigator, type Navigator } from '../sim/map/nav';
 import { FEEL } from './feel';
 import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
@@ -38,6 +39,7 @@ export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
   private source!: TileSource;
   private terrain!: ReturnType<typeof createTerrainAccess>;
+  private nav!: Navigator;
   private layout!: WorldLayout;
   private layer!: ChunkLayer;
   private player!: Phaser.GameObjects.Sprite;
@@ -75,6 +77,7 @@ export class OverworldScene extends Phaser.Scene {
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed);
     this.terrain = createTerrainAccess(this.layout, seed);
+    this.nav = createNavigator(this.terrain);
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
     this.spawnPlayer();
@@ -85,9 +88,10 @@ export class OverworldScene extends Phaser.Scene {
       this.layout.settlements,
       (p) => this.openRing(p),
       (id) => this.chipsFor(id).length > 0,
+      this.nav,
     );
     this.life = createWorldLife(this, this.layout.settlements);
-    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }));
+    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav);
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
       this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined,
     );

@@ -19,6 +19,7 @@ import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
+import type { Navigator } from '../../sim/map/nav';
 
 type Pt = { x: number; y: number };
 const SCHED = schedJson as { phases: { until: number; place: 'home' | 'work' | 'gather' }[] };
@@ -43,7 +44,7 @@ export type OverworldGoods = {
 
 export function attachOverworldGoods(
   scene: Phaser.Scene, session: PlaySession, world: FabricWorld, layout: WorldLayout,
-  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt,
+  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt, nav?: Navigator,
 ): OverworldGoods {
   const seed = session.getSeed();
   const st = () => session.getState();
@@ -53,7 +54,7 @@ export function attachOverworldGoods(
   const mail = createCorrespondence(scene, st, () => inv.refresh());
   const memories = new Map<string, Phaser.GameObjects.Text>();
   const trader = createCaravanTrade(scene, st, () => inv.refresh());
-  const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId);
+  const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId, nav);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
   const boards = createNeedsBoards(scene, session, layout, new Map([...meta].map(([id, s]) => [id, s.name])), getPlayer);
   const map = createWorldMap(
@@ -78,6 +79,11 @@ export function attachOverworldGoods(
       const c = hearthOf(p.town.id, p.home);
       const a = (h % 628) / 100;
       return { x: c.x + Math.cos(a) * 34, y: c.y + Math.sin(a) * 18 };
+    }
+    // A few villagers forage past the town edge (fishing banks, wild nodes); pathing wades fords/bridges.
+    if (place === 'work' && h % 7 === 0) {
+      const far = nodes.outskirtSpots(p.town.id);
+      if (far.length) return far[h % far.length]!;
     }
     if (place === 'work' && h % 3 !== 0) {
       const spots = nodes.workSpots(p.town.id);

@@ -4,3 +4,4 @@
 - Any doctrine act or letter now creates state.legacy (delta log), so tickLegacyDawn runs in every such run.
 - guard_caravan accept/fulfil rows need a Lowmere `doctrine_voice`/`leader`; world-gen has none (leon_march missing).
 - ash_hoard needs coin in a stash; carried coin alone no longer counts.
+- Water rules: `createTerrainAccess` (src/sim/map/terrain-access.ts) is the one passability source (land, bridge decks, river fords). Villagers route via `createNavigator` (src/sim/map/nav.ts); wagons use `nav.roadPoint`. Baseline `npm test` had 35 unrelated failures on main before this work (worldgen geography commit a0694c7).

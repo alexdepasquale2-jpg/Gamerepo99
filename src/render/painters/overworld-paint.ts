@@ -1,4 +1,5 @@
 import { paintSettlement } from './settlement-art';
+import { FORD_BIOME, paintFordTile } from './ford-paint';
 import { BIOME_COLOR, type Biome } from '../../sim/map/terrain';
 /** Render-side painters for continuous overworld chunks. Presentation only. */
 
@@ -771,6 +772,7 @@ export function paintChunkContents(
   const terrain = host.add.graphics();
   terrain.setDepth(0.3);
   for (const tile of chunk.tiles) {
+    if (tile.biomeId === FORD_BIOME) { paintFordTile(terrain, tile.q, tile.r); continue; }
     const color = BIOME_COLOR[tile.biomeId as Biome];
     if (!color) continue;
     terrain.fillStyle(color, tile.biomeId === 'water' ? 0.94 : 0.36);

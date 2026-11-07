@@ -18,6 +18,8 @@ export type NodesLayer = {
   refresh: () => void;
   /** Nodes near a town, used as villager work spots. */
   workSpots: (townId: string) => Pt[];
+  /** Wild nodes just beyond a town's edge (foraging errands). */
+  outskirtSpots: (townId: string) => Pt[];
   update: (player: Pt, time: number) => void;
 };
 
@@ -69,6 +71,14 @@ export function createNodesLayer(
     nearest,
     refresh,
     workSpots: (townId) => views.filter((v) => v.node.townId === townId).map((v) => ({ x: v.pos.x + 14, y: v.pos.y + 4 })),
+    outskirtSpots(townId) {
+      const t = settlements.find((s) => s.id === townId);
+      if (!t) return [];
+      return views.filter((v) => {
+        const d = Math.hypot(v.node.q - t.q, v.node.r - t.r);
+        return !v.node.townId && d > 12 && d < 34;
+      }).map((v) => ({ x: v.pos.x + 14, y: v.pos.y + 4 }));
+    },
     gather(v) {
       const st = getState();
       if (!st) return null;
