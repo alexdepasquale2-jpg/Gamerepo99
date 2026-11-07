@@ -72,7 +72,7 @@
       {
         "name": "exportWorld -> importWorld on fresh state",
         "pass": true,
-        "detail": "v1 hash=77f26798"
+        "detail": "v1 hash=a7364cdc"
       },
       {
         "name": "grave + legend present after import",
@@ -82,7 +82,7 @@
       {
         "name": "same seed -> identical file",
         "pass": true,
-        "detail": "hash=77f26798"
+        "detail": "hash=a7364cdc"
       }
     ]
   },
@@ -166,7 +166,7 @@
     "ok": true,
     "heirPersonId": "clara_whitby",
     "heirSpark": 100,
-    "contentHash": "77f26798",
+    "contentHash": "a7364cdc",
     "version": 1,
     "imported": true,
     "importError": null,
