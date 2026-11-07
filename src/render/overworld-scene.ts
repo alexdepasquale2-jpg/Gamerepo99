@@ -39,6 +39,7 @@ export class OverworldScene extends Phaser.Scene {
   private sparkBar!: Phaser.GameObjects.Rectangle;
   private hint!: Phaser.GameObjects.Text;
   private lastChunkKey = '';
+  private uiTap = false;
 
   constructor() {
     super('overworld');
@@ -59,7 +60,7 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.add
-      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
+      .text(8, 8, 'WASD/arrows or hold to walk · Enter near a town', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#f2e9e4',
@@ -77,6 +78,19 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(1_000_000);
 
     this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
+    // Touch: hold anywhere to walk toward the finger; tap the button to enter a nearby town.
+    this.add
+      .text(this.scale.width - 8, 8, '[ Enter town ]', { fontFamily: 'monospace', fontSize: '16px', color: '#f2e9e4', backgroundColor: '#2a2420', padding: { x: 8, y: 6 } })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(1_000_001)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+        e.stopPropagation();
+        this.uiTap = true;
+        this.tryOpenMethods();
+      });
+    this.input.on('pointerup', () => (this.uiTap = false));
     this.syncChunks(true);
     this.syncSparkFromSession(false);
     const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
@@ -90,6 +104,14 @@ export class OverworldScene extends Phaser.Scene {
     if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
     if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
     if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
+    const ptr = this.input.activePointer;
+    if (dx === 0 && dy === 0 && ptr.isDown && !this.uiTap) {
+      const ox = ptr.worldX - this.player.x;
+      const oy = ptr.worldY - this.player.y;
+      const dead = TILE_PX / 2;
+      if (Math.abs(ox) > dead) dx = Math.sign(ox);
+      if (Math.abs(oy) > dead) dy = Math.sign(oy);
+    }
     if (dx !== 0 || dy !== 0) {
       const step = walkDelta(
         dx,
@@ -200,15 +222,9 @@ export class OverworldScene extends Phaser.Scene {
     const town = this.nearestTown();
     if (!town) return;
     this.hint.setText(`near ${town.id} — methods`);
-    const menu = this.registry.get('methodMenu') as
-      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
-      | undefined;
-    menu?.show(this.session.listActions(), (actionId) => {
-      this.session.act(actionId);
-      this.syncSparkFromSession(true);
-    });
     const hud = this.registry.get('hud') as { setTown?: (id: string) => void } | undefined;
     hud?.setTown?.(town.id);
+    this.scene.start('town', { townId: town.id });
   }
 
 
