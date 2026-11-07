@@ -87,7 +87,13 @@ export function resolveInteraction(
   p.flame01 = clamp(p.flame01 + dFlame, 0, 1);
   p.trust = clamp(p.trust + dTrust, 0, 1);
   p.bond += dBond;
-  p.spark = clamp(p.spark - def.baseStrain * sp.situationMulDefault + def.sparkGain, 0, sp.sparkMax);
+  let strainMul = sp.situationMulDefault;
+  let gainAdj = 0;
+  for (const t of def.tags ?? []) {
+    strainMul *= sp.strainMulByTag?.[t] ?? 1;
+    gainAdj += sp.sparkGainAdjustByTag?.[t] ?? 0;
+  }
+  p.spark = clamp(p.spark - def.baseStrain * strainMul + def.sparkGain + gainAdj, 0, sp.sparkMax);
 
   let ts = Math.abs(dFlame) * (w.flame01Abs ?? 0) + dBond * (w.bond ?? 0) + dPresence * (w.presenceDay ?? 0) + flat;
   if (def.meaning || def.tags?.includes('meaning')) ts += w.meaning ?? 0;

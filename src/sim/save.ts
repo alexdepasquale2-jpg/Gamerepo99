@@ -75,7 +75,7 @@ export function saveState(state: SimState): SaveBlob {
 export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marrow'): SimState {
   let state: TravelSimState;
   if (blob.sim) {
-    const world = generateWorld({ seed: blob.seed, includeAnchors: true });
+    const world = generateWorld({ seed: blob.seed, includeAnchors: true, peopleCount: 60 });
     state = {
       ...(clone(blob.sim) as unknown as TravelSimState),
       seed: blob.seed,

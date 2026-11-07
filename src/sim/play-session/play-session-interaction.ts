@@ -117,7 +117,7 @@ export function actInteraction(
     methodId,
     seed: s.seed,
     state: s,
-    features: { bakedDynamismLines: false },
+    features: { bakedDynamismLines: (data.player as { features?: { bakedDynamismLines?: boolean } }).features?.bakedDynamismLines ?? false },
   });
   pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
 
@@ -151,6 +151,14 @@ export function actInteraction(
     pushJuice(s, 'site.kindle', { personId, siteId: person.siteId, interactionId });
   }
 
+  s.flags.lastTouchedPersonId = personId;
+  const townFx = (rt.catalog.get(interactionId) as { town?: { despair?: number } } | undefined)?.town;
+  const tState = person.townId ? s.towns?.[person.townId] : undefined;
+  if (tState && townFx?.despair) tState.despair = Math.min(1, Math.max(0, tState.despair + townFx.despair));
+  if (person.townId) {
+    const lt = ((s.flags.lastTouchDayByTown ??= {}) as Record<string, number>);
+    lt[person.townId] = Number((s as { day?: number }).day ?? 0);
+  }
   const row = ((data.methods ?? []) as MethodRow[]).find((m) => m.id === methodId);
   if (row?.family === 'kind') s.flags.kindSuccessToday = true;
 

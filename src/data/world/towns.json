@@ -200,7 +200,7 @@
         "ore_iron": 0,
         "wool": 2
       },
-      "economyOptIn": false
+      "economyOptIn": true
     },
     {
       "id": "lowmere",
@@ -328,7 +328,7 @@
         "ore_iron": 0,
         "wool": 3
       },
-      "economyOptIn": false
+      "economyOptIn": true
     },
     {
       "id": "city_reach",
@@ -374,7 +374,7 @@
         "ore_iron": 15,
         "wool": 8
       },
-      "economyOptIn": false
+      "economyOptIn": true
     }
   ],
   "notes": "Variety gap-poles live in world/towns/gap-poles.json — Forge Task H merges via loadWorldTables."

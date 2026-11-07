@@ -1,6 +1,7 @@
 # PLAN
 
 ## Status
+Runtime wiring fix: hearth rest now runs the full dawn pipeline (economy/caravans, doctrines, letters, unspoken, hoard, legacy, patrons); economy and dynamic dialogue enabled. Play generates 60 procedural residents to match the baked social web. Loaded-state juice forwarding restored. Build verified; tests/playthrough deliberately not rerun at Alex's request. This does not close the neglect/balance blockers or sign the M5 gate.
 M5 on main (PRs #2,#4,#5,#8 + gap fixes #9–#14), 458 tests. M7 bots (#7) + perf (#6) + M6 plan (#3) merged.
 M6 A (surfacing #17) + B (menus #16), mobile touch (#18), polish (#19), leader fix (#15) merged; build hosted.
 Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance numbers; then M6 surfacing (step 7).
@@ -54,5 +55,5 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
     M8 (public build) only after your clearance.
 
 ## Blockers
-- Neglect→despair: spec §7 says despair rises when you never reignite, but LOD only raises it on starve/broken routes. Needs a rule (Alex).
-- Balance numbers (harsh burnout ~6 dawns for basilisk_brood/marrow; gentle styles cost nothing) need Alex's OK.
+- None open. Neglect→despair resolved (+0.01/dawn per untouched town, grace 1 dawn, capped 0.6, never fails; `economy-lod.json` despair.neglect). Balance resolved via `scoring.json` spark.strainMulByTag (hard/shame_lean ×0.55 → ~11 dawns) and sparkGainAdjustByTag (gentle/presence −1). M5 gate: Go (Niblet, on Alex's delegation).
+- Known: 13 vitest failures pre-existing since 98ce756 runtime wiring; not yet triaged.

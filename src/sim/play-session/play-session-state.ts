@@ -31,7 +31,7 @@ export interface PlayBoot {
 /** Fresh world + SimState for one play run (seed + archetype). */
 export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
   const data = loadData();
-  const world = generateWorld({ seed, includeAnchors: true });
+  const world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
   const routes = toTravelRoutes(world.routes ?? []);
   const player = assembleInhabitant(data, archetypeId);
   player.townId = pickTownId(player.townId, world);

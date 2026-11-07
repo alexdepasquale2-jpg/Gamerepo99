@@ -21,6 +21,7 @@ import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
 import { createPeopleLayer, pretty, type PeopleLayer, type Person } from './people-layer';
+import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
@@ -186,10 +187,10 @@ export class OverworldScene extends Phaser.Scene {
     return this.session
       .listActions()
       .filter((a) => a.id.endsWith('@' + id))
-      .slice(0, 6)
+      .slice(0, 14)
       .map((a) => {
         const m = a.id.slice(0, a.id.indexOf('@'));
-        return { id: a.id, label: VERB[m] ?? pretty(m), savage: a.family === 'savage' };
+        return { id: a.id, label: deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
       });
   }
 
