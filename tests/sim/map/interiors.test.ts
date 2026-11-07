@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   allBuildings, exitMat, interiorKindOf, interiorPlan, interiorWalkable, nearExit, nearestDoor,
-  interiorLine, occupantOf, reachableTiles, solidTiles, townBuildings, DOOR_REACH, type InteriorKind,
+  interiorLine, dayPartLabel, occupantOf, reachableTiles, solidTiles, townBuildings, DOOR_REACH, type InteriorKind,
 } from '../../../src/sim/map/interiors';
 import { TILE_PX } from '../../../src/sim/map/constants';
 import type { LayoutSettlement } from '../../../src/sim/map/world-layout';
@@ -140,5 +140,17 @@ describe('interior plans', () => {
       // Far from the door you cannot leave.
       expect(nearExit(plan, { x: exitMat(plan).x, y: 0 })).toBe(false);
     }
+  });
+});
+
+describe('day part label', () => {
+  it('names the time of day and wraps the clock', () => {
+    expect(dayPartLabel(0.05)).toBe('Dawn');
+    expect(dayPartLabel(0.3)).toBe('Morning');
+    expect(dayPartLabel(0.5)).toBe('Midday');
+    expect(dayPartLabel(0.6)).toBe('Afternoon');
+    expect(dayPartLabel(0.7)).toBe('Dusk');
+    expect(dayPartLabel(0.85)).toBe('Night');
+    expect(dayPartLabel(1.3)).toBe('Morning');
   });
 });

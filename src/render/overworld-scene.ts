@@ -132,6 +132,8 @@ export class OverworldScene extends Phaser.Scene {
         buildings: () => this.buildings.map((b) => ({ id: b.id, townId: b.townId, kind: b.kind, door: { ...b.door } })),
         enter: (spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }) => this.debugEnterInterior(spec),
         exit: () => this.room.leave(true),
+        standBesideResident: () => this.room.debugStandBesideResident(),
+        ringChips: () => (this.ring.isOpen() ? this.ringFor : null),
         state: () => this.room.state(),
       },
     };

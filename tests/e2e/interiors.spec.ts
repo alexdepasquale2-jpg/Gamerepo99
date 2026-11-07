@@ -15,6 +15,8 @@ type Hook = {
     state: () => { active: boolean; kind: string; occupantId: string | null; player: { col: number; row: number } } | null;
     residents: (buildingId: string) => string[];
     setHour: (p01: number) => void;
+    standBesideResident: () => boolean;
+    ringChips: () => string | null;
     whereabouts: () => { id: string; inside: string | null; visible: boolean }[];
   };
   scene: { player: { x: number; y: number } };
@@ -119,6 +121,16 @@ test('the world keeps running indoors and the satchel, map, letters and ring wor
   const c0 = await clock();
   await page.waitForTimeout(1500);
   expect(await clock()).toBeGreaterThan(c0); // day clock advances while inside
+  // E beside the resident opens the same action ring (deeds + a Chat chip); Esc closes it, staying in the room.
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.standBesideResident())).toBe(true);
+  await page.waitForTimeout(400);
+  await page.keyboard.press('e');
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.ringChips())).not.toBeNull();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.ringChips())).toBeNull();
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state())).not.toBeNull();
   // Satchel opens and closes with I; Esc closes it first and does NOT leave the room.
   await page.keyboard.press('i');
   await page.waitForTimeout(200);
