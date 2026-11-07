@@ -171,6 +171,14 @@ export class InteriorRoom {
     if (!r || (id && r.info.id !== id)) return null;
     return { id: r.info.id, x: r.sprite.x, y: r.sprite.y - 36 };
   }
+  /** QA hook: put the player right beside the seated resident (instant). */
+  debugStandBesideResident(): boolean {
+    const r = this.seated;
+    if (!r) return false;
+    this.player.setPosition(r.sprite.x - 6, r.sprite.y + 14);
+    this.playerShadow?.setPosition(this.player.x, this.player.y - 2);
+    return true;
+  }
   residentSprite(id: string): Phaser.GameObjects.Sprite | undefined { return this.seated?.info.id === id ? this.seated.sprite : undefined; }
   distanceToResident(): number {
     return this.seated ? Phaser.Math.Distance.Between(this.player.x, this.player.y, this.seated.sprite.x, this.seated.sprite.y) : Infinity;

@@ -22,6 +22,11 @@ const P: Record<string, [number, number, Painter]> = {
     g.fillStyle(0x5e4e44).fillEllipse(8, 8, 15, 8);
     g.fillStyle(0xc88a4a).fillRect(4, 6, 2, 2).fillRect(9, 5, 2, 2).fillRect(11, 8, 1, 1);
   }],
+  sheep_flock: [18, 12, (g) => {
+    g.fillStyle(0x3a3028).fillRect(3, 9, 1, 3).fillRect(7, 9, 1, 3).fillRect(11, 9, 1, 3);
+    g.fillStyle(0xeae4d4).fillEllipse(7, 6, 12, 8).fillEllipse(4, 5, 6, 6).fillEllipse(10, 5, 6, 6);
+    g.fillStyle(0x3a3028).fillRect(13, 4, 4, 4);
+  }],
   berry_bush: [16, 12, (g) => {
     g.fillStyle(0x2f6a34).fillEllipse(8, 7, 15, 10);
     g.fillStyle(0xb8324a).fillRect(4, 5, 2, 2).fillRect(9, 4, 2, 2).fillRect(11, 8, 2, 2).fillRect(6, 8, 2, 2);

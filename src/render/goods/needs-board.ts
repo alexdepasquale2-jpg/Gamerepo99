@@ -38,7 +38,7 @@ export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, lay
     if (page === 0) {
       lines.push('What our neighbours need', '');
       if (!needs.shortages.length) lines.push('The stores are holding. No supply shortage today.');
-      for (const n of needs.shortages) lines.push(`• ${n.missing} more: ${n.items.join(' / ')}.`);
+      for (const n of needs.shortages) lines.push(`• ${n.missing} more: ${n.items.join(' / ')}.${n.tradeable ? ' Sell it to a roadside trader bound here.' : ''}`);
       lines.push('', 'People who could use a hand');
       if (!needs.struggling.length) lines.push('No urgent personal appeals today.');
       for (const p of needs.struggling) lines.push(`• ${p.name ?? p.id}: ${(p.woundId ?? 'spirits low').replace(/_/g, ' ')}. Work alongside, listen or help.`);

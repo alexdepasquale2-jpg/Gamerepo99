@@ -104,6 +104,18 @@
       ]
     },
     {
+      "id": "wool",
+      "name": "Wool",
+      "icon": "wool",
+      "color": "#e8e0d0",
+      "price": 4,
+      "economyResourceId": "wool",
+      "tags": [
+        "warmth",
+        "trade"
+      ]
+    },
+    {
       "id": "cloth",
       "name": "Cloth",
       "icon": "cloth",
@@ -300,5 +312,15 @@
     "carryRewardCoin": 4,
     "shortageBelow": 4,
     "shortageDespairRelief": 0.04
+  },
+  "market": {
+    "spec": "Roadside traders deal in these goods (plus whatever their wagon carries). Prices scale with scarcity of the good in the town the wagon is bound for: sellFactor of base paid to you, buyFactor of base charged. Goods you sell ride in the wagon's hold and are unloaded into that town's stock, easing any shortage.",
+    "goods": [
+      "timber",
+      "ore",
+      "wool"
+    ],
+    "sellFactor": 0.8,
+    "buyFactor": 1.25
   }
 }

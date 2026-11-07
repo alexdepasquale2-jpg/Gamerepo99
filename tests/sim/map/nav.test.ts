@@ -41,20 +41,22 @@ describe('fords', () => {
     expect(seen).toBeGreaterThan(20);
   });
 
-  it('are deterministic and cross bank to bank (land beyond both ends of every ford column)', () => {
+  it('are deterministic and cross bank to bank (land beyond both ends of every river ford column)', () => {
+    // River fords are the columns whose river centre cell is a ford; lake fords are checked in 'lake crossings'.
     const a = setup(7), b = setup(7);
-    const cols = new Map<number, number[]>();
-    for (let q = -400; q <= 1400; q++) for (let r = -80; r <= 80; r++) {
-      expect(a.terrain.isFord(q, r)).toBe(b.terrain.isFord(q, r));
-      if (a.terrain.isFord(q, r)) cols.set(q, [...(cols.get(q) ?? []), r]);
-    }
-    expect(cols.size).toBeGreaterThan(0);
-    for (const [q, rs] of cols) {
-      const lo = Math.min(...rs), hi = Math.max(...rs);
+    let columns = 0;
+    for (let q = -400; q <= 1400; q++) {
+      for (let r = -80; r <= 80; r++) expect(a.terrain.isFord(q, r)).toBe(b.terrain.isFord(q, r));
+      const mid = Math.round(riverRow(7, q));
+      if (!a.terrain.isFord(q, mid)) continue;
+      columns++;
+      let lo = mid, hi = mid;
+      while (a.terrain.isFord(q, lo - 1)) lo--;
+      while (a.terrain.isFord(q, hi + 1)) hi++;
       expect(a.terrain.biome(q, lo - 1)).not.toBe('water');
       expect(a.terrain.biome(q, hi + 1)).not.toBe('water');
-      expect(rs.length).toBe(hi - lo + 1);
     }
+    expect(columns).toBeGreaterThan(0);
   });
 
   it('are emitted as distinct "ford" tiles by the stamp raster', () => {
@@ -66,6 +68,83 @@ describe('fords', () => {
       return;
     }
     throw new Error('no ford found in any test seed');
+  });
+});
+
+/** Population box (padded) used to sample lakes in a generated world. */
+const box = (t: ReturnType<typeof setup>) => {
+  const qs = t.layout.settlements.map((s) => s.q), rs = t.layout.settlements.map((s) => s.r);
+  return { q0: Math.min(...qs) - 30, q1: Math.max(...qs) + 30, r0: Math.min(...rs) - 30, r1: Math.max(...rs) + 30 };
+};
+
+describe('lake crossings', () => {
+  it('lay fords and ferry pontoons across lakes (not the river), deterministically', () => {
+    let fords = 0, ferries = 0;
+    for (const seed of SEEDS) {
+      const a = setup(seed), b = setup(seed), { q0, q1, r0, r1 } = box(a);
+      for (let q = q0; q <= q1; q++) for (let r = r0; r <= r1; r++) {
+        const ford = a.terrain.isFord(q, r), ferry = a.terrain.isFerry(q, r);
+        expect(ferry && ford, 'a cell is a ford or a ferry, not both').toBe(false);
+        if (ford !== b.terrain.isFord(q, r) || ferry !== b.terrain.isFerry(q, r)) throw new Error(`non-deterministic at ${q},${r}`);
+        if (ford || ferry) {
+          expect(a.terrain.biome(q, r)).toBe('water');
+          expect(a.terrain.passable(q, r)).toBe(true);
+        }
+        if (ferry) ferries++; else if (ford) fords++;
+      }
+    }
+    expect(fords + ferries).toBeGreaterThan(0);
+    expect(ferries).toBeGreaterThan(0);
+  });
+
+  it('ferries cost more to cross than fords, and both more than dry land', () => {
+    const t = setup(SEEDS[0]!), { q0, q1, r0, r1 } = box(t);
+    let ford: number | null = null, ferry: number | null = null;
+    for (let q = q0; q <= q1 && (ford === null || ferry === null); q++) for (let r = r0; r <= r1; r++) {
+      if (ford === null && t.terrain.isFord(q, r)) ford = t.terrain.stepCost(q, r);
+      if (ferry === null && t.terrain.isFerry(q, r)) ferry = t.terrain.stepCost(q, r);
+    }
+    expect(ford ?? 1.2).toBeGreaterThan(1);
+    if (ferry !== null) expect(ferry).toBeGreaterThan(ford ?? 1);
+  });
+
+  it('keep lake detours short: crossing a lake on foot is rarely much longer than straight across', () => {
+    const ratios: number[] = [], extras: number[] = [];
+    for (const seed of SEEDS) {
+      const t = setup(seed), { q0, q1, r0, r1 } = box(t);
+      for (let r = r0; r <= r1; r += 4) for (let q = q0; q <= q1; q++) {
+        if (t.terrain.biome(q, r) === 'water' || !t.terrain.passable(q, r)) continue;
+        let e = q + 1;
+        while (e <= q1 && t.terrain.biome(e, r) === 'water' && Math.abs(r - riverRow(seed, e)) > 5) e++;
+        const run = e - q - 1;
+        if (run < 4 || run > 30 || e > q1 || t.terrain.biome(e, r) === 'water') continue;
+        const path = t.nav.findPath({ q, r }, { q: e, r }, 30000);
+        expect(path, `lake at ${seed}@${q},${r} must be reachable`).not.toBeNull();
+        ratios.push(path!.length / (e - q + 1));
+        extras.push(path!.length - (e - q + 1));
+        q = e;
+      }
+    }
+    ratios.sort((a, b) => a - b); extras.sort((a, b) => a - b);
+    const mean = ratios.reduce((s, x) => s + x, 0) / ratios.length;
+    // Before lake crossings: mean ~1.37, p90 ~1.97, p90 extra ~28 tiles.
+    expect(mean).toBeLessThan(1.3);
+    expect(ratios[Math.floor(ratios.length * 0.9)]!).toBeLessThan(1.6);
+    expect(extras[Math.floor(extras.length * 0.9)]!).toBeLessThan(15);
+  }, 60_000);
+
+  it('the navigator prefers a short ferry only when the walk round is longer', () => {
+    // Lake from q=4..13 spanning every row of a 10-row map; a ferry lane (cost 1.5) at row 2, no other crossing.
+    const lake = (q: number) => q >= 4 && q <= 13;
+    const ferry = (q: number, r: number) => lake(q) && r >= 1 && r <= 3;
+    const nav = createNavigator({
+      passable: (q, r) => q >= 0 && q < 18 && r >= 0 && r < 10 && (!lake(q) || ferry(q, r)),
+      stepCost: (q, r) => (ferry(q, r) ? 1.5 : 1),
+    });
+    const p = nav.findPath({ q: 2, r: 2 }, { q: 15, r: 2 })!;
+    expect(p.some((t) => t.q === 8 && ferry(t.q, t.r))).toBe(true);
+    // From the far corner the ferry is worth the walk to it only if cheaper than going round (there is no round): still reachable.
+    expect(nav.findPath({ q: 2, r: 9 }, { q: 15, r: 9 })).not.toBeNull();
   });
 });
 

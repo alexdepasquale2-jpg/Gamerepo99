@@ -26,8 +26,9 @@ const DIRS: [number, number, number][] = [
 ];
 const MAX_NODES = 6000;
 
-export function createNavigator(terrain: Pick<TerrainAccess, 'passable'>, tilePx = TILE_PX): Navigator {
+export function createNavigator(terrain: Pick<TerrainAccess, 'passable'> & Partial<Pick<TerrainAccess, 'stepCost'>>, tilePx = TILE_PX): Navigator {
   const walkable = (q: number, r: number) => terrain.passable(q, r);
+  const weight = (q: number, r: number) => terrain.stepCost?.(q, r) ?? 1;
   const tileAt = (x: number, y: number): Tile => ({ q: Math.floor(x / tilePx), r: Math.floor((y - 2) / tilePx) });
   const walkableAt = (x: number, y: number) => [-5, 5].every((o) => { const t = tileAt(x + o, y); return walkable(t.q, t.r); });
   const centerOf = (q: number, r: number): Pt => ({ x: q * tilePx + tilePx / 2, y: r * tilePx + tilePx / 2 });
@@ -100,7 +101,7 @@ export function createNavigator(terrain: Pick<TerrainAccess, 'passable'>, tilePx
         if (closed.has(k) || !walkable(q, r)) continue;
         // No cutting a corner across water/impassable cells.
         if (dq !== 0 && dr !== 0 && (!walkable(cur.q + dq, cur.r) || !walkable(cur.q, cur.r + dr))) continue;
-        const g = cur.g + cost;
+        const g = cur.g + cost * weight(q, r);
         if (g >= (best.get(k) ?? Infinity)) continue;
         best.set(k, g);
         push({ q, r, g, f: g + h(q, r), parent: cur });
