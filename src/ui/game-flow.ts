@@ -125,5 +125,6 @@ export function runGameFlow(host: GameHost): void {
     if (session && !document.querySelector('.hf-menu')) pause();
   });
   document.body.appendChild(menuBtn);
+  setInterval(() => (menuBtn.style.display = session && !document.querySelector('.hf-menu') ? '' : 'none'), 300);
   title();
 }
