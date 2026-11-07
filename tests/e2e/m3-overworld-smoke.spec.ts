@@ -45,6 +45,7 @@ test.describe('M3 overworld smoke', () => {
 
     await page.goto('/');
     await page.locator('[data-id=new]').click(); // title menu first (M6)
+    await page.locator('[data-id=arch-marrow]').click(); // pick who you are
     await expect(page.locator('#game')).toBeVisible();
 
     const canvas = page.locator('#game canvas');

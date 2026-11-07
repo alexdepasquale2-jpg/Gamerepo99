@@ -97,6 +97,29 @@
           ]
         }
       ]
+    },
+    {
+      "id": "recovery_shared_bread",
+      "kind": "spark_recovery",
+      "trigger": "dawn",
+      "when": {
+        "interactionKindsYesterdayContains": [
+          "work_alongside"
+        ]
+      },
+      "effects": [
+        {
+          "id": "fx_shared_bread",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "tags": [
+            "recovery",
+            "row"
+          ]
+        }
+      ],
+      "notes": "Worked beside someone yesterday: the row was full again for a shift."
     }
   ]
 }

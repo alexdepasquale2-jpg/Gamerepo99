@@ -13,7 +13,8 @@
 
 import { recordActBond } from '../legacy/bonds';
 import type { DataTables } from '../load-data';
-import { refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
+import { actMuls, refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
+import { noteActToday } from '../embodiment';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
@@ -90,7 +91,8 @@ export function actInteraction(
     return;
   }
 
-  const res = resolveInteraction(rt, interactionId, personId);
+  // The inhabitant's body and habits bend every act: method modifiers, status traits, ember zone.
+  const res = resolveInteraction(rt, interactionId, personId, actMuls(s, methodId));
   // Compat: burn the draw legacy commitMethod spent on flame fuzz so seeded mark rolls stay identical.
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
@@ -105,6 +107,10 @@ export function actInteraction(
   person.flame = Math.round(ip.flame01 * FLAME_SCALE);
   person.trust = ip.trust;
   person.marks = marksList(ip.marks);
+
+  // Personal costs that bite when an act lands (e.g. ink integrity after a lie), then today's record for dusk/dawn hooks.
+  runHooks(s, 'on_method_resolve', { data, rng: s.rng, methodId, targetId: personId, targetWoundId: person.woundId });
+  noteActToday(s, methodId, rt.catalog.get(interactionId)?.kind);
 
   for (const { markId, stacks } of person.marks) {
     if (stacks <= (marksBefore[markId] ?? 0)) continue;

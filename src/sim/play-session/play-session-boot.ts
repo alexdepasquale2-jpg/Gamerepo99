@@ -17,11 +17,13 @@ export function interactionRuntimeFromPeople(
   people: Record<string, PersonState>,
   playerSpark: number,
   tables: InteractionTables,
+  /** First-impression trust per person (from the inhabitant's perception); defaults to COMPAT_TRUST_DEFAULT. */
+  trustOf?: (personId: string) => number,
 ): CompatRuntime {
   const seeds = Object.values(people).map((p) => ({
     id: p.id,
     flame01: Math.min(1, Math.max(0, p.flame / 100)),
-    trust: COMPAT_TRUST_DEFAULT,
+    trust: typeof p.trust === 'number' ? p.trust : (trustOf?.(p.id) ?? COMPAT_TRUST_DEFAULT),
     marks: {},
     touchScore: 0,
     presence: 0,

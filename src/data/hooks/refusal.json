@@ -40,6 +40,10 @@
         "basilisk_brood": [
           "We will not look at the small one that way.",
           "Our gaze is for equals. Turn aside."
+        ],
+        "ash_widow_bren": [
+          "Not a child. I fed half the row's children on one loaf. You don't shame what you fed.",
+          "Put it down. Small ones get bread, not that."
         ]
       },
       "lineVoiceFrom": "archetypeId",
@@ -135,6 +139,47 @@
       "lineVoiceFrom": "archetypeId",
       "effects": [],
       "tells": []
+    },
+    {
+      "id": "refusal_shame_grief",
+      "kind": "refusal",
+      "trigger": "on_method_commit",
+      "methodId": "shame",
+      "when": {
+        "targetWoundId": "grief"
+      },
+      "stillShowsInMenu": true,
+      "consumesAct": false,
+      "lines": {
+        "default": [
+          "They are grieving. Shame does not reach under grief; it only sits on top."
+        ],
+        "ash_widow_bren": [
+          "I buried a husband from that row. I will not put shame on top of grief.",
+          "Grief already has them by the collar. I won't pull too."
+        ]
+      },
+      "lineVoiceFrom": "archetypeId",
+      "effects": [
+        {
+          "id": "fx_refuse_coal_flicker",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "tell",
+            "coal_flicker",
+            "refusal"
+          ]
+        }
+      ],
+      "tells": [
+        {
+          "id": "tell_chest_coal_flicker",
+          "view": "coal_flicker",
+          "durationTicks": 3
+        }
+      ]
     }
   ]
 }

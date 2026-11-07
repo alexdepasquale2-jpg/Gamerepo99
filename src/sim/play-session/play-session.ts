@@ -24,7 +24,8 @@ import {
 } from '../travel/travel';
 import { tickPackets } from '../packets';
 import { regrowNodes } from '../goods/nodes';
-import { advanceToDawn } from '../scenario/scenario-advance';
+import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
+import { firstTrust } from '../embodiment';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
@@ -119,11 +120,13 @@ function createPlayModeSession(defaults: {
     routes = toTravelRoutes(world.routes ?? []);
     next.routes = routes;
     if (!world.settlements?.some((s) => s.id === next.player.townId)) next.player.townId = world.settlements?.[0]?.id;
+    // Saves from before homes were tracked: the hearth you load at is home.
+    next.player.homeTownId ??= next.player.townId;
     tickN = Math.max(0, next.day - 1);
     eventLog.length = 0;
     successionOpen.value = false;
     lastResolveVal = undefined;
-    interactionRt = interactionRuntimeFromPeople(next.people, next.player.spark, (next.data as DataTables).interactions);
+    interactionRt = interactionRuntimeFromPeople(next.people, next.player.spark, (next.data as DataTables).interactions, (id) => firstTrust(next, id));
   }
 
   const session: PlaySession = {
@@ -155,7 +158,14 @@ function createPlayModeSession(defaults: {
       if (!state) return;
       tickN += 1;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
-      // Rest is a real dawn, not just a calendar/packet increment.
+      // Rest is a real dusk then a real dawn: the evening's personal costs, then recovery and the world's day.
+      // A fire that goes out in the night burns out before dawn can rekindle it.
+      runDuskHooks(state);
+      if (maybeOpenSuccession(state, eventLog, successionOpen)) {
+        appendJuiceSince(beforeLen);
+        eventLog.push({ type: 'tick' });
+        return;
+      }
       advanceToDawn(state);
       tickPackets(state);
       regrowNodes(state);

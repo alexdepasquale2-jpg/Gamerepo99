@@ -5,6 +5,7 @@ import { createEventBus } from '../event-bus';
 import { generateWorld } from '../fabric/fabric-bake';
 import type { FabricWorld } from '../gen/world';
 import { assembleInhabitant } from '../inhabitant';
+import { firstTrust } from '../embodiment';
 import type { CompatRuntime } from '../interaction';
 import { loadData } from '../load-data';
 import { createRng } from '../rng';
@@ -51,8 +52,10 @@ export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
     biomeTerrainMuls: loadBiomeTerrainMuls(),
     sizeTravelMuls: loadSizeTravelMuls(),
   };
+  // Home hearth: the spark profile's home town when this world has it, else wherever the run starts.
+  if (!player.homeTownId || !world.settlements?.some((s) => s.id === player.homeTownId)) player.homeTownId = player.townId;
   bindWorldEconomy(state, world);
   installPlayReactions(state);
-  const interactionRt = interactionRuntimeFromPeople(state.people, player.spark, data.interactions);
+  const interactionRt = interactionRuntimeFromPeople(state.people, player.spark, data.interactions, (id) => firstTrust(state, id));
   return { world, routes, state, interactionRt };
 }

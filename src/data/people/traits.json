@@ -28,7 +28,10 @@
       "mode": "single",
       "bodySlots": 1,
       "activeBodiesMax": 1,
-      "sharedSpark": true
+      "sharedSpark": true,
+      "walkSpeedMul": 0.8,
+      "spriteScale": 1.5,
+      "blockedLine": "The door is a cub's door. You'd take the frame with you."
     },
     {
       "id": "body_human_standard",
@@ -51,7 +54,9 @@
       "mode": "single",
       "bodySlots": 1,
       "activeBodiesMax": 1,
-      "sharedSpark": true
+      "sharedSpark": true,
+      "walkSpeedMul": 1,
+      "spriteScale": 1
     },
     {
       "id": "body_basilisk_brood",
@@ -80,6 +85,13 @@
       "idleBodyProvides": [
         "eavesdrop_in_town"
       ],
+      "bodyNames": [
+        "Ash",
+        "Flint",
+        "Wick"
+      ],
+      "walkSpeedMul": 1.1,
+      "spriteScale": 0.7,
       "notes": "M2: activeBodiesMax=1 (swap control; idle eavesdrop). M3 raises to 2+ via data only."
     }
   ],
@@ -107,6 +119,21 @@
       "status": 0.25,
       "approachTicksBonus": 2,
       "gazeUneaseMul": 1.2
+    },
+    {
+      "id": "perc_mill_kin",
+      "fear": 0.05,
+      "trust": 0.4,
+      "status": 0.3,
+      "approachTicksBonus": 0,
+      "trustBonusByJob": {
+        "farmer": 0.15,
+        "miller": 0.15,
+        "baker": 0.15,
+        "weaver": 0.15,
+        "ropemaker": 0.15
+      },
+      "notes": "Bren worked the mill row: people in its trades greet her as one of their own."
     }
   ],
   "methodModifiers": [
@@ -190,6 +217,31 @@
           "sparkCostMul": 1.1
         }
       }
+    },
+    {
+      "id": "mods_bren",
+      "byMethod": {
+        "challenge": {
+          "powerMul": 1,
+          "sparkCostMul": 1
+        },
+        "shame": {
+          "powerMul": 0.85,
+          "sparkCostMul": 1.15
+        },
+        "inspire": {
+          "powerMul": 1.1,
+          "sparkCostMul": 1
+        },
+        "carry_burden": {
+          "powerMul": 1.2,
+          "sparkCostMul": 0.85
+        },
+        "lie": {
+          "powerMul": 0.9,
+          "sparkCostMul": 1.1
+        }
+      }
     }
   ],
   "sparkProfiles": [
@@ -235,6 +287,21 @@
       "recoveryHookIds": [
         "recovery_base_dawn",
         "recovery_brood_bask",
+        "recovery_witness_genuine"
+      ]
+    },
+    {
+      "id": "spark_bren_row",
+      "sparkMax": 100,
+      "sparkStart": 86,
+      "burnoutAt": 0,
+      "emberZoneBelow": 20,
+      "emberKindCostMul": 1.15,
+      "homeSiteId": "site_bakery",
+      "homeTownId": "ashford",
+      "recoveryHookIds": [
+        "recovery_base_dawn",
+        "recovery_shared_bread",
         "recovery_witness_genuine"
       ]
     }

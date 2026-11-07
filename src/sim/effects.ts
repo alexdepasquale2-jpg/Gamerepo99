@@ -14,6 +14,7 @@ export type EffectCtx = {
   targetId?: string;
   targetTags?: string[];
   targetAge?: number;
+  targetWoundId?: string;
   townDespair?: number;
   playerTraitTags?: string[];
   successor?: { sparkStart?: number };

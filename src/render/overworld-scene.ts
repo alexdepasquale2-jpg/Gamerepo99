@@ -33,6 +33,8 @@ import { attachSparkFx } from './spark-fx';
 import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 import { getWalkMul, setWalkMul } from '../dev/dev-flags';
+import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
+import { blockedDoorLine, canEnterBuilding, eavesdropReports, walkSpeedMul } from '../sim/embodiment';
 import { featuresIn } from '../sim/map/ladder/features';
 
 const CHUNK_MARGIN = 1;
@@ -70,6 +72,7 @@ export class OverworldScene extends Phaser.Scene {
   private resting = false;
   private moving = false;
   private goods!: OverworldGoods;
+  private body!: InhabitantBody;
   private buildings: Building[] = [];
   private doorPrompt!: Phaser.GameObjects.Text;
   private inside: Building | null = null;
@@ -92,6 +95,22 @@ export class OverworldScene extends Phaser.Scene {
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
     this.spawnPlayer();
+    this.body = attachInhabitantBody({
+      scene: this,
+      session: this.session,
+      player: () => this.player,
+      townSpot: (townId, slot) => {
+        const t = this.layout.settlements.find((x) => x.id === townId);
+        if (!t) return null;
+        const f = tileFootWorld(t.q + 2 + slot, t.r + 2);
+        return { x: f.x, y: f.y };
+      },
+      moveTo: (townId) => this.moveToTown(townId),
+      say: (text) => this.say(text),
+    });
+    if (this.session.getState()?.player.bodies?.length) {
+      this.time.delayedCall(8000, () => this.say('B: leave a sibling in this town, call them back, or become one elsewhere.'));
+    }
     this.ring = createActionRing(this);
     this.people = createPeopleLayer(
       this,
@@ -210,6 +229,7 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-G', () => { const st = this.session.getState(); if (!this.room.active || !st) return; this.say(lightLantern(st, this.room.state()!.buildingId)); this.room.paintLantern(); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
+    this.input.keyboard?.on('keydown-B', () => { if (!this.resting && !this.room.active) this.body.openMenu(); });
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
@@ -248,7 +268,7 @@ export class OverworldScene extends Phaser.Scene {
         dx,
         dy,
         delta,
-        FEEL.overworld.walkTilesPerSec * getWalkMul(),
+        FEEL.overworld.walkTilesPerSec * getWalkMul() * this.bodyWalkMul(),
         TILE_PX,
       );
       // Substeps prevent tunnelling during a slow frame; slide along banks.
@@ -314,6 +334,7 @@ export class OverworldScene extends Phaser.Scene {
 
   private tickLife(delta: number): void {
     const t = this.time.now;
+    this.body.update();
     this.people.update(t, delta, this.player);
     this.goods.update(t, delta, this.player);
     this.life.update(t, delta, this.player, this.moving);
@@ -393,7 +414,12 @@ export class OverworldScene extends Phaser.Scene {
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);
-    if (door) return this.enterBuilding(door);
+    if (door) {
+      const me = this.session.getState()?.player;
+      // Some bodies don't fit every door (an ogre and a cottage): the body's traits decide, not its name.
+      if (me && !canEnterBuilding(me, door.kind)) return this.say(blockedDoorLine(me));
+      return this.enterBuilding(door);
+    }
     if (p) return this.openRing(p);
     const got = this.goods.gatherNear(this.player);
     if (got) return this.say(got);
@@ -544,6 +570,10 @@ export class OverworldScene extends Phaser.Scene {
           this.resting = false;
           playSfx('dawn');
           this.say(`Dawn. Day ${this.session.snapshot().day}.`);
+          // Siblings waiting in other towns report what they overheard in the night.
+          const st = this.session.getState();
+          const heard = st ? eavesdropReports(st) : [];
+          heard.forEach((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
         });
       });
     });
@@ -575,10 +605,31 @@ export class OverworldScene extends Phaser.Scene {
     }
     const frame = this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7') ? '7' : undefined;
     this.player = this.add.sprite(foot.x, foot.y, HERO_TEX, frame);
-    this.player.setScale(FEEL.worldScale.artScale);
+    // Size and tint come from the inhabitant's body traits (an ogre looms, a basilisk sibling is small).
+    const look = bodyLook(this.session);
+    this.player.setScale(FEEL.worldScale.artScale * look.scale);
+    if (look.tint !== undefined) this.player.setTint(look.tint);
+    this.playerShadow?.setScale(FEEL.worldScale.artScale * 0.7 * look.scale, FEEL.worldScale.artScale * 0.5 * look.scale);
     applySpriteSort(this.player);
     if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down');
     this.followPlayer();
+  }
+
+  private bodyWalkMul(): number {
+    const me = this.session.getState()?.player;
+    return me ? walkSpeedMul(me) : 1;
+  }
+
+  /** Put the player at a town's hearth side (used when the brood switches to a sibling elsewhere). */
+  private moveToTown(townId: string): void {
+    const t = this.layout.settlements.find((x) => x.id === townId);
+    if (!t) return;
+    const foot = tileFootWorld(t.q, t.r + 1);
+    this.player.setPosition(foot.x, foot.y);
+    applySpriteSort(this.player);
+    this.playerShadow?.setPosition(foot.x, foot.y - 2).setDepth(foot.y - 0.5);
+    this.cameras.main.centerOn(foot.x, foot.y);
+    this.syncChunks(true);
   }
 
   private followPlayer(): void {

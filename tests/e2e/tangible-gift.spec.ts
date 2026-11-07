@@ -16,6 +16,7 @@ test('gift handoff shows the item between player and villager', async ({ page })
   fs.mkdirSync(OUT, { recursive: true });
   await page.goto('/');
   await page.locator('[data-id=new]').click();
+  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
   const res = await page.evaluate(() => {
     const s = (window as unknown as { __hearth: { scene: Scene } }).__hearth.scene;

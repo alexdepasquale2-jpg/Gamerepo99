@@ -72,7 +72,8 @@
       ],
       "startingTownId": "ashford",
       "defaultProofId": "proof_ogre_toy",
-      "burnoutVignette": "Marrow sits in the den. The coal goes dark. The hill goes quiet."
+      "burnoutVignette": "Marrow sits in the den. The coal goes dark. The hill goes quiet.",
+      "tint": "#b8c49a"
     },
     {
       "id": "ivy_quill",
@@ -135,7 +136,40 @@
       "startingTownId": "ashford",
       "defaultProofId": "proof_sketch",
       "burnoutVignette": "Three small statues where the Brood used to bask. The eyes do not move.",
+      "tint": "#9fd4b0",
       "embodimentNotes": "activeBodiesMax=1 in traits for M2; multi-town idle eavesdrop via idleBodyProvides."
+    },
+    {
+      "id": "ash_widow_bren",
+      "name": "Bren",
+      "title": "Ash-Widow of the Mill Row",
+      "speciesTags": [
+        "human",
+        "millworker"
+      ],
+      "blurb": "The mill was a colony of shifts and shared bread. Bren is the one from the row who kept walking.",
+      "m2Playable": true,
+      "generatorWeight": 10,
+      "embodimentTraitId": "body_human_standard",
+      "perceptionTraitId": "perc_mill_kin",
+      "methodModifierId": "mods_bren",
+      "sparkProfileId": "spark_bren_row",
+      "personalCostHookIds": [
+        "cost_empty_row"
+      ],
+      "refusalHookIds": [
+        "refusal_shame_child",
+        "refusal_shame_grief"
+      ],
+      "legacyHookIds": [
+        "legacy_ember_standard",
+        "legacy_reputation_echo",
+        "legacy_rumor_packet"
+      ],
+      "startingTownId": "ashford",
+      "defaultProofId": "proof_warm_loaf",
+      "burnoutVignette": "Bren sits on the mill step with two cups. Nobody comes to drink the second.",
+      "tint": "#e0c8a8"
     }
   ],
   "status": "LOCKED",
