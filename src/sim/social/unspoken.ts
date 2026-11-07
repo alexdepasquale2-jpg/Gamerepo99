@@ -138,6 +138,8 @@ export type ComeToPassCtx = {
   graph?: SocialGraph;
   centrality?: CentralityTable;
   townDespair?: (townId: string) => number;
+  /** Display name for a person id; absent/undefined falls back to a neutral phrase (never the raw id). */
+  nameOf?: (id: string) => string | undefined;
   /** Test stub: replaces the derived rng's float. */
   roll?: () => number;
 };
@@ -171,7 +173,7 @@ function fillSlots(text: string, inst: UnspokenInstance, carrierId: string, ctx:
   const carrierTown = Object.keys(towns).sort().find((t) => towns[t].includes(carrierId));
   const kinds = ctx.graph?.edgesBetween(inst.sourcePersonId, carrierId).map((e) => e.kind) ?? [];
   const slots: Record<string, string> = {
-    carrier: carrierId,
+    carrier: ctx.nameOf?.(carrierId) ?? 'a neighbour',
     kinLabel: kinds.includes('kin') ? KIN_LABELS.kin : 'a friend',
     otherTown: inst.placeTownId && inst.placeTownId !== carrierTown ? inst.placeTownId : 'the next town over',
   };
@@ -234,7 +236,7 @@ export function witnessOutcome(st: UnspokenState, t: UnspokenTables, classId: st
 
 // ── SimState glue ──────────────────────────────────────────────────────────
 
-type UnspokenData = { unspoken?: UnspokenTables; socialWeb?: SocialWebTable; socialCentrality?: CentralityTable };
+type UnspokenData = { peopleById?: Record<string, { name?: unknown }>; unspoken?: UnspokenTables; socialWeb?: SocialWebTable; socialCentrality?: CentralityTable };
 const graphCache = new WeakMap<SocialWebTable, SocialGraph>();
 
 function graphOf(d: UnspokenData): SocialGraph | undefined {
@@ -260,6 +262,10 @@ function ctxFor(state: SimState, d: UnspokenData): ComeToPassCtx {
     graph: graphOf(d),
     centrality: d.socialCentrality,
     townDespair: (id) => state.towns?.[id]?.despair ?? 0,
+    nameOf: (id) => {
+      const n = d.peopleById?.[id]?.name;
+      return typeof n === 'string' && n ? n : undefined;
+    },
   };
 }
 

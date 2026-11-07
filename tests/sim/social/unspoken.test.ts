@@ -132,6 +132,43 @@ describe('come to pass (§6, §8)', () => {
   });
 });
 
+describe('carrier slot uses display name, never raw id', () => {
+  const FRAG_T = {
+    ...T,
+    fragments: T.fragments.map((f) => ({ ...f, text: '{carrier} nodded.' })),
+  };
+  const run = (nameOf?: (id: string) => string | undefined) => {
+    const { st } = encodeKeep();
+    return comeToPassUnspoken(st, FRAG_T, {
+      day: 2, seed: SEED, playerId: 'player', circumstanceTags: ['kin_visit'],
+      peopleByTown: { ashford: ['p_ashford_03'] }, roll: () => 0, nameOf,
+    })[0];
+  };
+  it('fills with nameOf, falls back to a neutral phrase', () => {
+    expect(run((id) => (id === 'p_ashford_03' ? 'Ada Vale' : undefined))?.line).toBe('Ada Vale nodded.');
+    const line = run()?.line;
+    expect(line).toBe('a neighbour nodded.');
+    expect(line).not.toContain('p_ashford_03');
+  });
+  it('SimState come-to-pass line has the person name, not the id', () => {
+    const { state } = bootPlayState(SEED, 'marrow');
+    const id = Object.keys(state.people).find((k) => typeof state.data?.peopleById?.[k]?.name === 'string')!;
+    const name = state.data!.peopleById[id].name as string;
+    state.flags.circumstanceTags = ['kin_visit', 'letter_arrived', 'show_up_day', 'town_festival', 'quiet_dawn'];
+    const lines: string[] = [];
+    (state.bus ??= { lastIds: [] } as never) as { emit?: (e: string, p: unknown) => void };
+    (state.bus as { emit?: (e: string, p: unknown) => void }).emit = (e, p) => {
+      const l = (p as { line?: string; source?: string })?.line;
+      if (e === 'person.reaction' && l) lines.push(l);
+    };
+    for (let i = 0; i < 5; i++) encodeUnspokenForState(state, 'promise_keep', id);
+    for (let i = 0; i < 40 && state.unspoken!.instances.length; i++) advanceToDawn(state);
+    expect(lines.length).toBeGreaterThan(0);
+    for (const l of lines) for (const pid of Object.keys(state.people)) expect(l).not.toContain(pid);
+    expect(lines.some((l) => l.includes(name)) || lines.every((l) => !l.includes('{'))).toBe(true);
+  });
+});
+
 describe('tuning (§9)', () => {
   it('20 blessing witnesses never push blessingBias past +0.10', () => {
     const st = createUnspokenState();
