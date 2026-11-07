@@ -435,6 +435,19 @@
       "ripple": "none"
     },
     {
+      "id": "patron_guard_warden_caravan",
+      "patronFulfil": "deal_warden_guard_caravan",
+      "kind": "favor",
+      "tags": [
+        "patron",
+        "interaction:patron_guard_warden_caravan"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
       "id": "patron_pay_mill_tithe",
       "patronFulfil": "deal_mill_tithe_coin",
       "kind": "favor",
