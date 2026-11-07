@@ -1,3 +1,4 @@
+import type { UnspokenState } from '../social/unspoken-types';
 import type { FabricWorld } from '../gen/world-types';
 /** Play session public types (soft-cap extract from play-session). */
 
@@ -15,6 +16,8 @@ export type PlaySnapshot = {
   fingerprint: string;
   reignitedCount: number;
   hollowCount: number;
+  /** Social graph 06: Blessings and Burdens state (deep copy). */
+  unspoken?: UnspokenState;
 };
 export type PlayMetrics = {
   firstChoiceAtTick?: number;

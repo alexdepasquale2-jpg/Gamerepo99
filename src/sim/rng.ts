@@ -26,3 +26,13 @@ export function createRng(seed: number): Rng {
 
   return { next, int, nextInt: int };
 }
+
+/** Derive an independent stream from a seed + labels (FNV-1a over the parts). Pure. */
+export function deriveRng(seed: number, ...parts: Array<string | number>): Rng {
+  let h = (0x811c9dc5 ^ (seed >>> 0)) >>> 0;
+  for (const ch of parts.join('|')) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return createRng(h);
+}

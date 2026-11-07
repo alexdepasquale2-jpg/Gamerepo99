@@ -1,3 +1,5 @@
+import type { UnspokenState } from './social/unspoken-types';
+
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
 
 export type SaveBlob = {
@@ -5,6 +7,8 @@ export type SaveBlob = {
   seed: number;
   tick: number;
   npcs: Array<{ id: string; x: number; y: number }>;
+  /** Social graph 06: Blessings and Burdens instances + tuning. */
+  unspoken?: UnspokenState;
 };
 
 export function serializeSave(blob: SaveBlob): string {

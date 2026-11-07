@@ -1,3 +1,4 @@
+import type { UnspokenState } from '../social/unspoken-types';
 /** Runtime sim shapes assembled from data + tick state. */
 
 import type {
@@ -81,4 +82,6 @@ export type SimState = {
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
+  /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */
+  unspoken?: UnspokenState;
 };

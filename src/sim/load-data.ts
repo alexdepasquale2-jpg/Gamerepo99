@@ -34,6 +34,12 @@ import type {
 } from './economy/economy-lod-types';
 import socialWebJson from '../data/people/social-web.json';
 import socialCentralityJson from '../data/people/social-centrality.json';
+import unspokenClassesJson from '../data/people/unspoken/classes.json';
+import unspokenBlessingsJson from '../data/people/unspoken/outcomes-blessings.json';
+import unspokenBurdensJson from '../data/people/unspoken/outcomes-burdens.json';
+import unspokenTuningJson from '../data/people/unspoken/tuning.json';
+import unspokenFragmentsJson from '../data/dialogue/fragments/unspoken/come-to-pass.json';
+import type { UnspokenTables } from './social/unspoken-types';
 import socialPropagationJson from '../data/people/social-propagation.json';
 import { normalizeSocialEdge } from './social/social-graph';
 import {
@@ -142,6 +148,8 @@ export type DataTables = {
   socialCentrality: CentralityTable;
   /** Social graph 05: falloff / maxHops / epsilon. */
   socialPropagation: SocialPropagation;
+  /** Social graph 06: Blessings and Burdens classes/outcomes/tuning/fragments. */
+  unspoken: UnspokenTables;
 };
 
 function loadSocialWeb(): SocialWebTable {
@@ -260,5 +268,11 @@ export function loadData(): DataTables {
     socialWeb: loadSocialWeb(),
     socialCentrality: socialCentralityJson as unknown as CentralityTable,
     socialPropagation: loadSocialPropagation(),
+    unspoken: {
+      classes: unspokenClassesJson.classes,
+      outcomes: [...unspokenBlessingsJson.outcomes, ...unspokenBurdensJson.outcomes],
+      tuning: unspokenTuningJson,
+      fragments: unspokenFragmentsJson.fragments,
+    } as unknown as UnspokenTables,
   };
 }

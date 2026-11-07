@@ -120,5 +120,6 @@ export function buildPlaySnapshot(opts: {
     fingerprint: `${world?.fingerprint ?? 'unbooted'}-t${tickN}`,
     reignitedCount,
     hollowCount,
+    unspoken: state?.unspoken ? structuredClone(state.unspoken) : undefined,
   };
 }

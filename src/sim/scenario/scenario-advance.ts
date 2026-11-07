@@ -1,6 +1,7 @@
 /** Advance play clocks (dusk/dawn/day/ticks) and fire dusk personal-cost hooks. */
 
 import { tickEconomyLod } from '../economy/economy-lod';
+import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
@@ -80,6 +81,7 @@ export function advanceToDawn(state: SimState): void {
     runHooks(state, 'dawn', { data, rng });
   }
   tickEconomyLod(state);
+  tickUnspokenDawn(state);
   clampPlayerSpark(state);
 }
 
