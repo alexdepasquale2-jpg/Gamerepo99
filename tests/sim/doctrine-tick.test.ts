@@ -160,6 +160,18 @@ describe('act_become_voice (actor gating)', () => {
     expect(s.towns![d[id]!.townId]!.standing).toBeCloseTo(0.05);
     expect(s.bus?.lastIds).toContain('doctrine.voice');
   });
+  it('standing applies in towns without economy rows (e.g. brine_hitch)', () => {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = 'doctrine_brine_tithe';
+    expect(s.towns?.brine_hitch).toBeUndefined();
+    const pid = Object.keys(s.people).sort()[0]!;
+    s.people[pid]!.townId = d[id]!.townId;
+    s.player.statusTraits = ['civic_voice'];
+    expect(applyDoctrineAct(s, 'act_become_voice', pid)).toBe(id);
+    expect(s.towns!.brine_hitch!.standing).toBeCloseTo(0.05);
+    expect(s.towns!.brine_hitch!.economyOptIn).toBe(false);
+  });
 });
 
 describe('doctrine act target gating', () => {

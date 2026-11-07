@@ -151,8 +151,9 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
   const d = all[id]!;
   for (const e of act.effects ?? []) {
     if (e.target === 'town.standing' && e.op === 'add') {
-      const town = state.towns?.[townId];
-      if (town) town.standing = clamp01((town.standing ?? 0) + e.value);
+      // Towns without economy rows get an inert entry (opt-out, empty stock) so standing still lands.
+      const town = ((state.towns ??= {})[townId] ??= { id: townId, economyOptIn: false, stock: {}, despair: 0 });
+      town.standing = clamp01((town.standing ?? 0) + e.value);
       continue;
     }
     const m = e.target.startsWith('doctrine.') ? e.target.slice(9) : '';
