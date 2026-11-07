@@ -53,6 +53,12 @@ function matchClause(
       const despair = Number(ctx.townDespair ?? state.flags.townDespair ?? 0);
       return despair > Number(expected);
     }
+    case 'notorietyAbove':
+      return Number(state.hoard?.notoriety ?? state.flags.notoriety ?? 0) > Number(expected);
+    case 'standUpPeopleInTownAtLeast': {
+      const byTown = (state.flags.standUpByTown ?? {}) as Record<string, string[]>;
+      return Object.values(byTown).some((ids) => new Set(ids).size >= Number(expected));
+    }
     default:
       if (Object.prototype.hasOwnProperty.call(state.flags, key) || typeof expected === 'boolean') {
         return flagEq(state, key, expected);
@@ -82,7 +88,8 @@ function resolveHook(state: SimState, hookId: string, ctx: HookCtx): HookDef | u
 
 /** Run all player hooks whose trigger matches and when{} passes. */
 export function runHooks(state: SimState, trigger: string, ctx: HookCtx): void {
-  for (const hookId of state.player.hookIds) {
+  const universal = [...ctx.data.hooksById.values()].filter((h) => h.universal).map((h) => h.id);
+  for (const hookId of new Set([...state.player.hookIds, ...universal])) {
     const hook = resolveHook(state, hookId, ctx);
     if (!hook) continue;
     if (hook.trigger !== trigger) continue;

@@ -88,3 +88,23 @@ describe('applyEffect', () => {
     expect(state.people.p1?.marks?.map((m) => m.markId)).toEqual(['grown']);
   });
 });
+
+describe('scaleBy', () => {
+  const fx = (scaleBy: string): Effect => ({ id: 'fx_s', target: 'player.spark', op: 'add', value: -10, scaleBy }) as Effect;
+  it('scales value by notoriety at 0, mid, 1', () => {
+    for (const [n, want] of [[0, 50], [0.5, 45], [1, 40]] as const) {
+      const s = makeState();
+      s.flags.notoriety = n;
+      applyEffect(s, fx('player.notoriety'), { data, rng });
+      expect(s.player.spark).toBeCloseTo(want);
+    }
+  });
+  it('scales by town despair', () => {
+    const s = makeState();
+    applyEffect(s, fx('town.despair'), { data, rng, townDespair: 0.25 });
+    expect(s.player.spark).toBeCloseTo(47.5);
+  });
+  it('unknown scaleBy throws', () => {
+    expect(() => applyEffect(makeState(), fx('nope'), { data, rng })).toThrow(/scaleBy/);
+  });
+});

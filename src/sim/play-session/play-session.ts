@@ -7,7 +7,11 @@ import {
   type InspectSession,
 } from '../fabric/world-dump';
 import type { CompatRuntime } from '../interaction';
-import { buildPlaySnapshot } from './play-session-boot';
+import { generateWorld } from '../fabric/fabric-bake';
+import { loadData, type DataTables } from '../load-data';
+import { exportWorld } from '../legacy/world-file';
+import { loadState, saveState } from '../save';
+import { buildPlaySnapshot, interactionRuntimeFromPeople } from './play-session-boot';
 import { actMethod, listMethodActions } from './play-session-act';
 import { bootPlayState } from './play-session-state';
 import {
@@ -17,6 +21,7 @@ import {
   type TravelSimState,
 } from '../travel/travel';
 import { tickPackets } from '../packets';
+import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
   lockedSuccessionUi,
@@ -49,6 +54,7 @@ function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
     siteId: p.siteId,
     siteKind: p.siteKind ?? siteKindFromSiteId(p.siteId),
     anchor: p.anchor,
+    townId: p.townId,
     marks: p.marks?.map((m) => ({ ...m })),
   };
 }
@@ -69,6 +75,7 @@ function createPlayModeSession(defaults: {
   const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
   let lastResolveVal: PlayLastResolve | undefined;
   let interactionRt: CompatRuntime | undefined;
+  const juiceHandlers = new Set<(id: string, payload: unknown) => void>();
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
@@ -81,10 +88,29 @@ function createPlayModeSession(defaults: {
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
     ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId));
+    const bus = state.bus as { emit?: (e: string, p: unknown) => void };
+    const inner = bus.emit;
+    bus.emit = (e, p) => {
+      inner?.(e, p);
+      for (const h of [...juiceHandlers]) h(e, p);
+    };
   }
 
   function appendJuiceSince(beforeLen: number): void {
     for (const type of state?.bus?.lastIds?.slice(beforeLen) ?? []) eventLog.push({ type });
+  }
+
+  /** Load/import path: swap in a whole SimState and rebuild what lives outside it. */
+  function adopt(next: TravelSimState): void {
+    state = next;
+    seed = next.seed;
+    world = generateWorld({ seed, includeAnchors: true });
+    routes = next.routes ?? [];
+    tickN = Math.max(0, next.day - 1);
+    eventLog.length = 0;
+    successionOpen.value = false;
+    lastResolveVal = undefined;
+    interactionRt = interactionRuntimeFromPeople(next.people, next.player.spark, (next.data as DataTables).interactions);
   }
 
   const session: PlaySession = {
@@ -141,7 +167,26 @@ function createPlayModeSession(defaults: {
     getSeed: () => seed,
     listPeople: () => Object.values(state?.people ?? {}).map(toPersonView),
     metrics: () => ({ ...metrics }),
+    onJuice(handler) {
+      juiceHandlers.add(handler);
+      return () => void juiceHandlers.delete(handler);
+    },
+    townDespair: () =>
+      Object.fromEntries(Object.entries(state?.towns ?? {}).map(([id, t]) => [id, t.despair])),
+    successionOffer: () => (state && successionOpen.value ? offerSuccession(state) : null),
+    chooseSuccession(choice) {
+      if (!state) return { ok: false, reason: 'not_open' };
+      const res = choice === 'continue' ? carryItOn(state) : letItRest(state);
+      if (res.ok) successionOpen.value = false;
+      return res;
+    },
     lastResolve: () => (lastResolveVal ? { ...lastResolveVal } : undefined),
+    saveBlob: () => (state ? saveState(state) : null),
+    loadBlob(blob) {
+      adopt(loadState(blob, (state?.data as DataTables | undefined) ?? loadData()) as TravelSimState);
+    },
+    worldFile: (opts) => (state ? exportWorld(state, opts) : null),
+    adoptState: (st) => adopt(st as TravelSimState),
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

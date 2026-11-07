@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "ambientDawnChance": 0.45,
   "templates": [
     {
       "id": "tpl_proof_cousin",

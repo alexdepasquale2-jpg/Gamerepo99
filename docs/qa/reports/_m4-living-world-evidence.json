@@ -1,101 +1,154 @@
 {
-  "generatedAt": "2026-11-06T15:52:44.916Z",
+  "generatedAt": "2026-11-07T02:39:09.556Z",
   "kind": "m4-living-world-evidence",
-  "status": "STUB",
-  "prep": true,
-  "hold": true,
+  "status": "OK",
+  "seed": 42,
+  "dawns": 15,
   "notes": [
-    "PREP STUB — living-world gate remains HOLD until Forge lists LOD+caravans+doctrine+letters + green validate/test/build.",
-    "Do not treat this JSON as a go-time verdict. Full metrics + determinism double-run fill in later.",
-    "Verdict file docs/qa/reports/m4-living-world.md is intentionally NOT written by this stub."
+    "Verdict file docs/qa/reports/m4-living-world.md is intentionally NOT written; Go/No-go is the team's call."
   ],
   "modules": {
     "lod": {
       "status": "OK",
       "path": "src/sim/economy/economy-lod.ts",
       "present": true,
-      "notes": [
-        "packet-01 LOD in tree; light sample only (prep stub)"
+      "checks": [
+        {
+          "name": "stock moves or deliver/starve emitted",
+          "pass": true,
+          "detail": "stockChanged=true deliver=91 starve=0"
+        },
+        {
+          "name": "per-dawn despair delta <= 0.05 (incl. doctrine collapse pulse)",
+          "pass": true,
+          "detail": "max=0.0000"
+        },
+        {
+          "name": "opt-out towns inert (no stock.starve)",
+          "pass": true,
+          "detail": "optedIn=[lowmere,city_reach] optOut=[marrow_den,ashford] starve=0 despairMoved=false"
+        }
       ]
     },
     "caravans": {
-      "status": "API_PENDING",
+      "status": "OK",
       "path": "src/sim/caravans.ts",
-      "present": false,
-      "notes": [
-        "caravans not in tree yet — await Forge; soft-skip (prep stub)"
+      "present": true,
+      "checks": [
+        {
+          "name": ">=1 route.caravan within 15 dawns",
+          "pass": true,
+          "detail": "route.caravan=10"
+        },
+        {
+          "name": "a caravan arrives and delivers stock",
+          "pass": true,
+          "detail": "route deliveries=91"
+        }
       ]
     },
     "doctrine": {
-      "status": "API_PENDING",
+      "status": "OK",
       "path": "src/sim/doctrine-tick.ts",
-      "present": false,
-      "notes": [
-        "doctrine-tick not in tree yet — await Forge; soft-skip (prep stub)"
+      "present": true,
+      "checks": [
+        {
+          "name": "applyDoctrineAct raises exposure + doctrine.exposed",
+          "pass": true,
+          "detail": "act=doctrine_mill_bread exposed=1"
+        },
+        {
+          "name": "forced exposed lie collapses once, juice, +0.05 despair",
+          "pass": true,
+          "detail": "collapsed=doctrine_mill_bread second=0 despair+0.05"
+        },
+        {
+          "name": "cascade finite (second tick does not re-collapse)",
+          "pass": true,
+          "detail": "survivors=5"
+        },
+        {
+          "name": "doctrine tick spark-neutral",
+          "pass": true,
+          "detail": "spark unchanged=true"
+        },
+        {
+          "name": "collapse emits relapse_pressure packet to a kin town",
+          "pass": true,
+          "detail": "packets=1"
+        },
+        {
+          "name": "challenger swaps on dawn 3 only",
+          "pass": true,
+          "detail": "swappedAfter=false,false,true"
+        },
+        {
+          "name": "city collapse shocks village perceivedDelivery -0.1",
+          "pass": true,
+          "detail": "delta=-0.1"
+        },
+        {
+          "name": "deterministic double-run",
+          "pass": true,
+          "detail": "deep-equal"
+        }
       ]
     },
     "letters": {
-      "status": "API_PENDING",
+      "status": "OK",
       "path": "src/sim/letters-scale.ts",
-      "present": false,
-      "notes": [
-        "letters-scale not in tree yet — await Forge; soft-skip (prep stub)"
+      "present": true,
+      "checks": [
+        {
+          "name": ">=3 letter.deliver/rumor.spread over 15 dawns",
+          "pass": true,
+          "detail": "total=6 (letter=6 rumor=0)"
+        },
+        {
+          "name": "per-dawn cap <= 5",
+          "pass": true,
+          "detail": "max/dawn=1"
+        }
+      ]
+    },
+    "unspoken": {
+      "status": "OK",
+      "path": "src/sim/social/unspoken.ts",
+      "present": true,
+      "checks": [
+        {
+          "name": "promise_keep encodes an instance",
+          "pass": true,
+          "detail": "classes=unspoken_kept_promise_warmth"
+        },
+        {
+          "name": "decays or comes to pass over dawns",
+          "pass": true,
+          "detail": "consumed=0 weight 0.55->0.1945"
+        },
+        {
+          "name": "deterministic double-run",
+          "pass": true,
+          "detail": "deep-equal"
+        }
       ]
     }
   },
-  "lod": {
-    "attempted": true,
-    "seed": 42,
-    "dawns": 3,
-    "notes": [
-      "prep stub: short dawn sample only; full 10–20 dawn + determinism double-run at go-time",
-      "LOD available; advanced 3 dawn(s) seed=42"
-    ],
-    "histogram": {},
-    "towns": {
-      "marrow_den": {
-        "economyOptIn": false,
-        "despair": 0.05,
-        "stock": {}
-      },
-      "ashford": {
-        "economyOptIn": false,
-        "despair": 0.15,
-        "stock": {
-          "food_grain": 12,
-          "timber": 6,
-          "fuel_cord": 4,
-          "ore_iron": 0,
-          "wool": 2
-        }
-      },
-      "lowmere": {
-        "economyOptIn": false,
-        "despair": 0.15,
-        "stock": {
-          "food_grain": 8,
-          "timber": 4,
-          "fuel_cord": 3,
-          "ore_iron": 0,
-          "wool": 3
-        }
-      },
-      "city_reach": {
-        "economyOptIn": false,
-        "despair": 0.15,
-        "stock": {
-          "food_grain": 20,
-          "timber": 10,
-          "fuel_cord": 5,
-          "ore_iron": 15,
-          "wool": 8
-        }
-      }
-    }
+  "histogram": {
+    "caravan.carter": 19,
+    "caravan.ferry": 14,
+    "caravan.guild": 8,
+    "doctrine.swap": 6,
+    "letter.deliver": 6,
+    "route.caravan": 10,
+    "stock.deliver": 91
   },
+  "despairMaxDelta": 0,
+  "gaps": [],
   "determinism": {
-    "attempted": false,
-    "note": "full at go-time"
+    "pass": true,
+    "fingerprintA": "b79ee2290efbcf35",
+    "fingerprintB": "b79ee2290efbcf35"
   },
   "ok": true
 }

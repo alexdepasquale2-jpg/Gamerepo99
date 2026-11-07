@@ -87,7 +87,8 @@
       "spawn": "npc_stash_raid_goal",
       "channels": [
         "rumor"
-      ]
+      ],
+      "raidBonus": 0.15
     },
     {
       "id": "att_tax_collector",
@@ -97,6 +98,9 @@
       "channels": [
         "rumor",
         "letter"
+      ],
+      "effects": [
+        { "id": "fx_tax_collector", "target": "player.perception.trust", "op": "add", "value": -0.05, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -107,6 +111,9 @@
       "channels": [
         "kin",
         "rumor"
+      ],
+      "effects": [
+        { "id": "fx_spy", "target": "player.perception.trust", "op": "add", "value": -0.04, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -116,6 +123,9 @@
       "spawn": "patron_obligation_tick",
       "channels": [
         "letter"
+      ],
+      "effects": [
+        { "id": "fx_patron_demand", "target": "player.spark", "op": "add", "value": -1, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -126,6 +136,9 @@
       "channels": [
         "kin",
         "ripple"
+      ],
+      "effects": [
+        { "id": "fx_betrayal", "target": "player.spark", "op": "add", "value": -2, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -136,6 +149,9 @@
       "channels": [
         "ripple",
         "rumor"
+      ],
+      "effects": [
+        { "id": "fx_copycat", "target": "player.perception.trust", "op": "add", "value": 0.03, "scaleBy": "player.notoriety" }
       ]
     }
   ],
@@ -146,5 +162,37 @@
       "hoard_legacy"
     ],
     "endingId": "ash_hoard"
-  }
+  },
+  "fade": 0.01,
+  "despair": {
+    "dampenAbove": 0.6,
+    "collapseAbove": 0.9,
+    "mul": 0.5
+  },
+  "attractorRollScale": 0.25,
+  "roadWeightScale": 40,
+  "leverage": {
+    "discount": 0.3,
+    "tagsAny": [
+      "hard",
+      "defend"
+    ]
+  },
+  "triggers": [
+    {
+      "event": "coin_spend",
+      "gainId": "gain_flash_spend"
+    },
+    {
+      "event": "refusal",
+      "gainId": "gain_refuse_tax",
+      "attractorId": "att_tax_collector"
+    },
+    {
+      "event": "stash_theft",
+      "gainId": "gain_public_theft_defense",
+      "minGuards": 1,
+      "playerInTown": true
+    }
+  ]
 }

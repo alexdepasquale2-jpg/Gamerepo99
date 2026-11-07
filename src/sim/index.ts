@@ -1,12 +1,13 @@
 export { createRng } from './rng';
 export type { Rng } from './rng';
+export { deriveRng } from './rng';
 export { createEventBus } from './event-bus';
 export type { EventBus, EventHandler, Unsubscribe } from './event-bus';
 export { createWorld } from './world';
 export type { World } from './world';
 export { tick } from './tick';
 export type { Npc, Tile, WorldConfig } from './types';
-export { serializeSave, parseSave } from './save';
+export { serializeSave, parseSave, saveState, loadState } from './save';
 export type { SaveBlob } from './save';
 
 /** Fabric public surface (also via ./fabric.ts). */
@@ -62,7 +63,12 @@ export {
   shortestPath,
   walkCascade,
   weaveSocialWeb,
+  createUnspokenState,
+  encodeUnspokenForState,
+  tickUnspokenDawn,
+  witnessOutcome,
 } from './social';
+export type { UnspokenInstance, UnspokenState, UnspokenTables } from './social';
 export type {
   CascadeHit,
   CascadePayload,
@@ -129,3 +135,10 @@ export type {
   FacilityRenderView,
   TileRenderView,
 } from './map/types';
+export { tickCaravans, loadCaravanSchedules } from './caravans';
+export type { CaravanMobile, CaravanScheduleRow, CaravanHeading } from './caravans-types';
+export { tickHoardDawn, addNotoriety, detectEnding, applyStashAct, rollAttractors, ensureHoard } from './hoard';
+export type { HoardState, StashRuntime } from './hoard';
+export { forceSpark } from './succession';
+export { pickHeir, carryItOn, letItRest, offerSuccession, exportWorld, importWorld, buildImprint, assembleFromImprint } from './legacy';
+export type { HearthWorldFile, ProtagonistImprint, WorldDelta } from './legacy';

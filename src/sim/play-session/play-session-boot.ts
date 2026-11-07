@@ -5,6 +5,7 @@ import type { DataTables } from '../load-data';
 import { siteKindFromSiteId } from '../scenario/scenario-resolve';
 import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
+import { deriveRng } from '../rng';
 import type { PersonState, SimState } from '../types/runtime';
 import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
 
@@ -51,14 +52,49 @@ export function assignSettlementTowns(
   }
 }
 
-export function peopleFromWorld(world: FabricWorld, data: DataTables): Record<string, PersonState> {
+/** Deterministic generated names; kin-edge components share a family name. Own rng streams only. */
+function assignNames(out: Record<string, PersonState>, world: FabricWorld, data: DataTables, seed: number): void {
+  const { given, family } = data.names;
+  if (!given?.length || !family?.length) return;
+  const parent: Record<string, string> = {};
+  const find = (x: string): string => {
+    while ((parent[x] ?? x) !== x) x = parent[x]!;
+    return x;
+  };
+  for (const e of world.kinEdges ?? []) {
+    if (e.kind !== 'kin' || !out[e.from] || !out[e.to]) continue;
+    const a = find(e.from);
+    const b = find(e.to);
+    if (a !== b) (a < b ? (parent[b] = a) : (parent[a] = b));
+  }
+  for (const p of Object.values(out)) {
+    if (p.name) continue;
+    const g = given[deriveRng(seed, p.id, 'name').int(0, given.length)]!;
+    const f = family[deriveRng(seed, find(p.id), 'family').int(0, family.length)]!;
+    p.name = `${g} ${f}`;
+  }
+}
+
+export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0): Record<string, PersonState> {
   const out: Record<string, PersonState> = {};
-  for (const draft of world.people) {
+  // Authored doctrine leaders are always seeded, even if world gen did not draft them.
+  const doctrineRows = ((data as { doctrines?: { doctrines?: { leaderPersonId?: string | null }[] } }).doctrines?.doctrines ?? []);
+  const drafts: { id: string; anchor?: boolean }[] = [...world.people];
+  const have = new Set(drafts.map((d) => d.id));
+  for (const d of doctrineRows) {
+    const id = d.leaderPersonId;
+    if (id && !have.has(id) && data.peopleById[id]) {
+      have.add(id);
+      drafts.push({ id, anchor: true });
+    }
+  }
+  for (const draft of drafts) {
     const row = data.peopleById[draft.id];
     const start = Number(row?.flameStart ?? 20);
     const siteId = typeof row?.siteId === 'string' ? row.siteId : undefined;
     out[draft.id] = {
       id: draft.id,
+      name: typeof row?.name === 'string' && row.name ? row.name : undefined,
       flame: start,
       flameStart: start,
       townId: typeof row?.townId === 'string' ? row.townId : undefined,
@@ -72,6 +108,7 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables): Record<st
     };
   }
   assignSettlementTowns(out, world);
+  assignNames(out, world, data, seed);
   return out;
 }
 
@@ -120,5 +157,6 @@ export function buildPlaySnapshot(opts: {
     fingerprint: `${world?.fingerprint ?? 'unbooted'}-t${tickN}`,
     reignitedCount,
     hollowCount,
+    unspoken: state?.unspoken ? structuredClone(state.unspoken) : undefined,
   };
 }

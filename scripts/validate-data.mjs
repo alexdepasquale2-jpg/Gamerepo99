@@ -18,6 +18,7 @@ import { validateDoctrines } from './validate/doctrines.mjs';
 import { validateWilderness } from './validate/wilderness.mjs';
 import { validateRoadContent } from './validate/road-content.mjs';
 import { validateHoarder } from './validate/hoarder.mjs';
+import { validateLegacyWorld } from './validate/legacy-world.mjs';
 import { validateScenarios } from './validate/scenarios.mjs';
 import { validateDynamism } from './validate/dynamism.mjs';
 import { validateFabricContent } from './validate/fabric-content.mjs';
@@ -25,6 +26,7 @@ import { validateInteractions } from './validate/interactions.mjs';
 import { validateEconomyLod } from './validate/economy-lod.mjs';
 import { validateSocialGraph } from './validate/social-graph.mjs';
 import { validateUnspoken } from './validate/unspoken.mjs';
+import { validateNames } from './validate/lines.mjs';
 
 const { errors, warnings, req, ids } = createBag();
 const data = loadAll(errors);
@@ -48,10 +50,12 @@ validateLinksEventsProofs(data, { req, people, towns, archetypes, wounds, marks,
 validateTimeRipples(data, { req, marks });
 validateLines(data, { req, people, methods, marks });
 validateKinshipLetters(data, { req, people, links });
+validateNames(data, { req });
 validateDoctrines(data, { req, towns, people, methods, hooks });
 validateWilderness(data, { req, ids, towns, links, people, hooks });
 validateRoadContent(data, { req, ids, people, towns });
 validateHoarder(data, { req, ids, towns, hooks });
+validateLegacyWorld(data, { req, ids, hooks, methods });
 validateEconomyLod(data, { req, ids, towns });
 validateSocialGraph(data, { req, people });
 validateUnspoken(data, { req, ids, marks });

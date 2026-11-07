@@ -11,10 +11,17 @@
  *  juice     person.reaction, person.reignite, site.kindle
  */
 
+import { recordActBond } from '../legacy/bonds';
 import type { DataTables } from '../load-data';
 import { refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
+import { encodeUnspokenForState } from '../social/unspoken';
+import { applyDoctrineAct } from '../doctrine-tick';
+import { fireNotorietyEvent } from '../hoard/events';
+import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
+import { applyPatronInteraction } from '../patrons';
+import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
@@ -78,6 +85,7 @@ export function actInteraction(
   const refusal = refuseMethod(s, personId, methodId);
   if (refusal) {
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: refusal.line });
+    fireNotorietyEvent(s, 'refusal');
     finish({ kind: 'refused', flameDelta: 0, sparkCost: sparkBefore - s.player.spark, personId, methodId });
     return;
   }
@@ -87,6 +95,10 @@ export function actInteraction(
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
   if (rolled) ip.marks[rolled] = (ip.marks[rolled] ?? 0) + 1;
+
+  // Leverage edge: notoriety forgives some strain on hard/defiant acts.
+  const strain = sparkBefore - ip.spark;
+  if (strain > 0) ip.spark += Math.round(strain * leverageDiscount(s, rt.catalog.get(interactionId)?.tags));
 
   // Sync out.
   s.player.spark = ip.spark;
@@ -110,6 +122,28 @@ export function actInteraction(
   pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
+  encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
+  const def0 = rt.catalog.get(interactionId);
+  if (def0?.coinGain) {
+    s.player.coin = (s.player.coin ?? 0) + def0.coinGain;
+    notePeakCoin(s);
+  }
+  if (def0?.stashAct) applyStashAct(s, def0.stashAct);
+  if (res.reignited) ensureHoard(s).reigniteCount += 1;
+  recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited, marksChanged: person.marks.some((m) => m.stacks !== (marksBefore[m.markId] ?? 0)) });
+  applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);
+  const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
+  for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
+  if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {
+    const byTown = ((s.flags.standUpByTown ??= {}) as Record<string, string[]>);
+    const ids = (byTown[person.townId] ??= []);
+    if (!ids.includes(personId)) ids.push(personId);
+    const traitsBefore = [...s.player.statusTraits];
+    runHooks(s, 'on_interaction', { data, rng: s.rng, targetId: personId });
+    for (const id of s.player.statusTraits) {
+      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, interactionId });
+    }
+  }
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.
   const def = rt.catalog.get(interactionId);
   const helpedAtSite = def?.ripple === 'help' && person.flame > flameBefore && !!person.siteId;

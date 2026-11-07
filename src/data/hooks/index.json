@@ -5,6 +5,7 @@
     "spark-recovery.json",
     "personal-cost.json",
     "refusal.json",
-    "legacy.json"
+    "legacy.json",
+    "civic.json"
   ]
 }

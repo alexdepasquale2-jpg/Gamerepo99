@@ -1,3 +1,9 @@
+import type { LettersState } from '../letters-scale';
+import type { UnspokenState } from '../social/unspoken-types';
+import type { CaravanMobile } from '../caravans-types';
+import type { HoardState } from '../hoard/state';
+import type { LegacyState } from '../legacy/types';
+import type { DoctrineState } from '../doctrine-tick';
 /** Runtime sim shapes assembled from data + tick state. */
 
 import type {
@@ -27,6 +33,8 @@ export type Inhabitant = {
   perception?: Record<string, unknown>;
   methodMods?: Record<string, unknown>;
   sparkMax?: number;
+  /** Hoarder meter (M5): earned via interactions, stashed via stash acts. */
+  coin?: number;
   townId?: string;
   x?: number;
   y?: number;
@@ -34,6 +42,8 @@ export type Inhabitant = {
 
 export type PersonState = {
   id: string;
+  /** Display name (authored, or deterministically generated from names.json). */
+  name?: string;
   flame: number;
   flameStart?: number;
   marks?: { markId: string; stacks: number }[];
@@ -56,6 +66,9 @@ export type PacketState = {
   kind?: string;
   fromTownId?: string;
   toTownId?: string;
+  relapseMulAdd?: number;
+  /** notoriety_rumor: diluted heat copy (kinDilution). */
+  heat?: number;
 };
 
 export type SimState = {
@@ -81,4 +94,20 @@ export type SimState = {
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
+  /** M4 packet-02: live caravan mobiles. */
+  caravans?: CaravanMobile[];
+  /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
+  routeBreakJuiced?: Record<string, boolean>;
+  /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */
+  unspoken?: UnspokenState;
+  /** M4 Task C: runtime doctrine meters (seeded lazily from doctrines.json). */
+  doctrines?: Record<string, DoctrineState>;
+  /** M4 Task D: queued/in-flight letters and rumors. */
+  letters?: LettersState;
+  /** M5 Task A: notoriety, stashes, peak coin, reignite count (saveable). */
+  hoard?: HoardState;
+  /** M5 Task C: bond ledger, graves, legends, lineage, delta log (saveable). */
+  legacy?: LegacyState;
+  /** M5 Task B: patron deals by deal id (saveable). */
+  patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
 };

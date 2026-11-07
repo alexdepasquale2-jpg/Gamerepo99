@@ -2,24 +2,34 @@
 
 import Phaser from 'phaser';
 import {
+  createEventBus,
   createPlaySession,
   createStampRasterSource,
   layoutWorld,
   type PlaySession,
   type TileSource,
+  forceSpark,
 } from '../sim';
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
 import { FEEL } from './feel';
+import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
 import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
+import { createPeopleLayer, pretty, type PeopleLayer, type Person } from './people-layer';
+import { createActionRing, type ActionRing, type Chip } from './action-ring';
+import { createWorldLife, type WorldLife } from './world-life';
+import { attachSparkFx } from './spark-fx';
 
 const CHUNK_MARGIN = 1;
-const NEAR_TOWN_PX = TILE_PX * 2.5;
+const VERB: Record<string, string> = {
+  inspire: 'Inspire', carry_burden: 'Carry burden', challenge: 'Challenge', shame: 'Shame',
+  lie: 'Lie', show_up: 'Show up', listen: 'Listen',
+};
 
 export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
@@ -39,6 +49,14 @@ export class OverworldScene extends Phaser.Scene {
   private sparkBar!: Phaser.GameObjects.Rectangle;
   private hint!: Phaser.GameObjects.Text;
   private lastChunkKey = '';
+  private uiTap = false;
+  private people!: PeopleLayer;
+  private ring!: ActionRing;
+  private life!: WorldLife;
+  private bus = createEventBus();
+  private ringFor: string | null = null;
+  private resting = false;
+  private moving = false;
 
   constructor() {
     super('overworld');
@@ -54,29 +72,56 @@ export class OverworldScene extends Phaser.Scene {
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements);
     this.spawnPlayer();
+    this.ring = createActionRing(this);
+    this.people = createPeopleLayer(
+      this,
+      this.session,
+      this.layout.settlements,
+      (p) => this.openRing(p),
+      (id) => this.chipsFor(id).length > 0,
+    );
+    this.life = createWorldLife(this, this.layout.settlements);
+    const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
+      this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined,
+    );
+    attachSparkFx(this, this.bus, { getPlayerPos: () => ({ x: this.player.x, y: this.player.y - 20 }) });
+    // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
+    (window as unknown as { __hearth?: unknown }).__hearth = {
+      session: this.session,
+      scene: this,
+      surface,
+      towns: this.layout.settlements.map((t) => t.id),
+      burnOut: () => {
+        forceSpark(this.session, 0);
+        this.session.tick();
+      },
+    };
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
-    this.add
-      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#f2e9e4',
-      })
-      .setScrollFactor(0)
-      .setDepth(1_000_000);
-
     this.hint = this.add
-      .text(8, 68, `settlements: ${this.layout.settlements.length}`, {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#8a7a68',
-      })
+      .text(8, 28, 'Hold to walk · walk up to someone and tap them', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
+    this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
 
-    this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
+    const interact = (): void => this.interact();
+    this.input.keyboard?.on('keydown-E', interact);
+    this.input.keyboard?.on('keydown-ENTER', interact);
+    this.input.keyboard?.on('keydown-ESC', () => this.closeRing());
+    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX'].forEach((k, i) =>
+      this.input.keyboard?.on(`keydown-${k}`, () => this.ring.pickIndex(i)),
+    );
+    // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
+    this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
+      if (over.length > 0 || this.resting) this.uiTap = true;
+      else if (this.ring.isOpen()) {
+        this.closeRing();
+        this.uiTap = true;
+      }
+    });
+    this.input.on('pointerup', () => (this.uiTap = false));
     this.syncChunks(true);
     this.syncSparkFromSession(false);
     const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
@@ -90,6 +135,15 @@ export class OverworldScene extends Phaser.Scene {
     if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
     if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
     if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
+    const ptr = this.input.activePointer;
+    if (this.resting) return;
+    if (dx === 0 && dy === 0 && ptr.isDown && !this.uiTap) {
+      const ox = ptr.worldX - this.player.x;
+      const oy = ptr.worldY - this.player.y;
+      const dead = TILE_PX / 2;
+      if (Math.abs(ox) > dead) dx = Math.sign(ox);
+      if (Math.abs(oy) > dead) dy = Math.sign(oy);
+    }
     if (dx !== 0 || dy !== 0) {
       const step = walkDelta(
         dx,
@@ -109,7 +163,121 @@ export class OverworldScene extends Phaser.Scene {
     } else if (this.player.anims?.currentAnim?.key?.startsWith('hero-walk')) {
       this.player.play('hero-idle-down', true);
     }
+    this.moving = dx !== 0 || dy !== 0;
     this.syncChunks(false);
+    this.tickLife(delta);
+  }
+
+  private tickLife(delta: number): void {
+    const t = this.time.now;
+    this.people.update(t, delta, this.player);
+    this.life.update(t, delta, this.player, this.moving);
+    const hearth = this.life.nearestHearth(this.player);
+    this.life.setPrompt(!!hearth && !this.ring.isOpen() && !this.resting, hearth?.pos);
+    const near = this.ring.isOpen() ? null : this.people.nearest(this.player);
+    this.people.setPrompt(near);
+    if (this.ringFor && this.moving) {
+      const p = this.people.byId.get(this.ringFor);
+      if (!p || Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y) > 90) this.closeRing();
+    }
+  }
+
+  private chipsFor(id: string): Chip[] {
+    return this.session
+      .listActions()
+      .filter((a) => a.id.endsWith('@' + id))
+      .slice(0, 6)
+      .map((a) => {
+        const m = a.id.slice(0, a.id.indexOf('@'));
+        return { id: a.id, label: VERB[m] ?? pretty(m), savage: a.family === 'savage' };
+      });
+  }
+
+  private openRing(p: Person): void {
+    if (this.resting) return;
+    const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y);
+    if (d > 110) {
+      this.say('Too far. Walk closer.');
+      return;
+    }
+    const chips = this.chipsFor(p.id);
+    if (!chips.length) return;
+    this.ringFor = p.id;
+    this.people.freeze(p.id);
+    this.people.setPrompt(null);
+    const h = this.people.headOf(p.id);
+    this.ring.open({ x: h.x, y: h.y - 6 }, chips, (c) => this.commit(p, c));
+  }
+
+  private closeRing(): void {
+    this.ring.close();
+    this.ringFor = null;
+    this.people.freeze(null);
+  }
+
+  private say(text: string): void {
+    this.hint.setText(text).setAlpha(1);
+    this.time.delayedCall(2200, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 600 }));
+  }
+
+  private interact(): void {
+    if (this.resting) return;
+    if (this.ring.isOpen()) return;
+    const p = this.people.nearest(this.player);
+    if (p) return this.openRing(p);
+    if (this.life.nearestHearth(this.player)) this.rest();
+  }
+
+  private commit(p: Person, c: Chip): void {
+    const before = this.session.snapshot().spark;
+    let juiced = 0;
+    const off = this.session.onJuice(() => juiced++);
+    this.session.act(c.id);
+    off();
+    const after = this.session.snapshot().spark;
+    const r = this.session.lastResolve();
+    this.closeRing();
+    const spent = Math.max(0, (before - after) / 100);
+    const h = this.people.headOf(p.id);
+    this.bus.emit('vfx.spark_spent', { x: h.x, y: h.y + 10, amount01: spent > 0 ? spent : 0.12 });
+    this.syncSparkFromSession(true);
+    this.tweens.add({ targets: p.sprite, y: p.sprite.y - 5, duration: 110, yoyo: true });
+    if (juiced === 0) {
+      const who = pretty(p.id).split(' ')[0];
+      const line =
+        r?.kind === 'refused'
+          ? `${who} turns away.`
+          : (r?.flameDelta ?? 0) > 0
+            ? `${who} stands a little straighter.`
+            : (r?.flameDelta ?? 0) < 0
+              ? `${who} goes quiet.`
+              : `${who} nods.`;
+      const t = this.add
+        .text(h.x, h.y - 4, line, { fontFamily: 'monospace', fontSize: '10px', color: '#f2e9e4', backgroundColor: '#1b1612', padding: { x: 4, y: 2 } })
+        .setOrigin(0.5, 1)
+        .setDepth(999_100);
+      this.tweens.add({ targets: t, y: t.y - 10, alpha: 0, delay: 1800, duration: 700, onComplete: () => t.destroy() });
+    }
+  }
+
+  private rest(): void {
+    this.resting = true;
+    this.closeRing();
+    const cam = this.cameras.main;
+    cam.fadeOut(700, 8, 8, 20);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.session.tick();
+      this.life.dawn();
+      (this.registry.get('autosave') as (() => void) | undefined)?.();
+      this.syncSparkFromSession(false);
+      this.time.delayedCall(350, () => {
+        cam.fadeIn(900, 8, 8, 20);
+        cam.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => {
+          this.resting = false;
+          this.say(`Dawn. Day ${this.session.snapshot().day}.`);
+        });
+      });
+    });
   }
 
   private bootSession(): void {
@@ -196,41 +364,11 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
-  private tryOpenMethods(): void {
-    const town = this.nearestTown();
-    if (!town) return;
-    this.hint.setText(`near ${town.id} — methods`);
-    const menu = this.registry.get('methodMenu') as
-      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
-      | undefined;
-    menu?.show(this.session.listActions(), (actionId) => {
-      this.session.act(actionId);
-      this.syncSparkFromSession(true);
-    });
-    const hud = this.registry.get('hud') as { setTown?: (id: string) => void } | undefined;
-    hud?.setTown?.(town.id);
-  }
-
-
   private playHeroWalk(dx: number, dy: number): void {
     const { key, flipX } = heroWalkAnim(dx, dy);
     this.player.setFlipX(flipX);
     if (this.anims.exists(key) && this.player.anims.currentAnim?.key !== key) {
       this.player.play(key, true);
     }
-  }
-
-  private nearestTown(): { id: string; q: number; r: number } | null {
-    let best: { id: string; q: number; r: number } | null = null;
-    let bestD = Infinity;
-    for (const t of this.layout.settlements) {
-      const foot = tileFootWorld(t.q, t.r);
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, foot.x, foot.y);
-      if (d < bestD) {
-        bestD = d;
-        best = t;
-      }
-    }
-    return bestD <= NEAR_TOWN_PX ? best : null;
   }
 }

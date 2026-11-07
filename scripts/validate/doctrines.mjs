@@ -9,12 +9,23 @@ export function validateDoctrines(data, ctx) {
   for (const d of doctrines) {
     req(towns.has(d.townId), `doctrine ${d.id}: town missing`);
     if (d.leaderPersonId) req(people.has(d.leaderPersonId), `doctrine ${d.id}: leader missing`);
+    if (d.leaderPersonId) {
+      const row = (data['people.json']?.people || []).find((x) => x.id === d.leaderPersonId);
+      req(row?.townId === d.townId, `doctrine ${d.id}: leader ${d.leaderPersonId} must live in ${d.townId}`);
+      req((row?.tags || []).some((t) => t === 'leader' || t === 'doctrine_voice'), `doctrine ${d.id}: leader ${d.leaderPersonId} needs leader/doctrine_voice tag`);
+    }
     req(Array.isArray(d.goals) && d.goals.length >= 1, `doctrine ${d.id}: goals`);
     const s = d.start || {};
     for (const k of ['realDelivery', 'perceivedDelivery', 'propaganda', 'control', 'exposure', 'legitimacy']) {
       req(typeof s[k] === 'number', `doctrine ${d.id}: start.${k}`);
     }
   }
+  const rules = data['doctrines.json']?.rules || {};
+  for (const k of ['margin', 'dawns', 'suppressControl', 'suppressExposure']) {
+    req(typeof rules.challenger?.[k] === 'number', `doctrines rules.challenger.${k}`);
+  }
+  for (const k of ['relapseMulBase', 'shockPerceived']) req(typeof rules.collapse?.[k] === 'number', `doctrines rules.collapse.${k}`);
+  req(towns.has(rules.collapse?.shockSourceTownId), 'doctrines rules.collapse.shockSourceTownId town missing');
   const acts = data['doctrines.json']?.acts || [];
   req(acts.length >= 3, 'doctrine acts need expose/carry/voice');
   for (const a of acts) {

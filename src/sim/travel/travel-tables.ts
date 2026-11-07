@@ -31,13 +31,14 @@ export function loadEncounterTables(): EncounterTable[] {
     const entries: EncounterTable['entries'] = [];
     for (const e of row.entries) {
       if (!e || typeof e !== 'object') continue;
-      const er = e as { id?: string; weight?: number; blurb?: string; prism?: string };
+      const er = e as { id?: string; weight?: number; blurb?: string; prism?: string; attractorId?: string };
       if (typeof er.id !== 'string') continue;
       entries.push({
         id: er.id,
         weight: typeof er.weight === 'number' ? er.weight : 1,
         blurb: typeof er.blurb === 'string' ? er.blurb : undefined,
         prism: typeof er.prism === 'string' ? er.prism : undefined,
+        attractorId: typeof er.attractorId === 'string' ? er.attractorId : undefined,
       });
     }
     out.push({ id: row.id, entries });

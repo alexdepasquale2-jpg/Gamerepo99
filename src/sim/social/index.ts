@@ -14,6 +14,25 @@ export type { Neighbor, SocialGraph } from './social-graph';
 export { getCentrality, isInfluential, pickRumorNext, preferInfluential } from './centrality';
 export { weaveSocialWeb } from './worldgen-weave';
 export type { WeaveOpts, WeaveResult } from './worldgen-weave';
+export {
+  comeToPassUnspoken,
+  createUnspokenState,
+  decayUnspoken,
+  encodeUnspoken,
+  encodeUnspokenForState,
+  tickUnspokenDawn,
+  witnessOutcome,
+} from './unspoken';
+export type { ComeToPassCtx, EncodeCtx } from './unspoken';
+export type {
+  BlessingsBurdensTuning,
+  ComeToPassOutcome,
+  ComeToPassResult,
+  UnspokenClass,
+  UnspokenInstance,
+  UnspokenState,
+  UnspokenTables,
+} from './unspoken-types';
 export { DEFAULT_SOCIAL_PROPAGATION, SOCIAL_EDGE_KINDS } from './social-types';
 export type {
   CascadeHit,

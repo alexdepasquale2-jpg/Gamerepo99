@@ -1,6 +1,12 @@
 /** Advance play clocks (dusk/dawn/day/ticks) and fire dusk personal-cost hooks. */
 
+import { tickDoctrines } from '../doctrine-tick';
+import { tickLetters } from '../letters-scale';
+import { tickHoardDawn } from '../hoard';
+import { tickLegacyDawn } from '../legacy/npc';
+import { tickPatronDawn } from '../patrons';
 import { tickEconomyLod } from '../economy/economy-lod';
+import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
@@ -80,6 +86,12 @@ export function advanceToDawn(state: SimState): void {
     runHooks(state, 'dawn', { data, rng });
   }
   tickEconomyLod(state);
+  if (state.towns) tickDoctrines(state);
+  tickLetters(state);
+  tickUnspokenDawn(state);
+  tickHoardDawn(state);
+  tickLegacyDawn(state);
+  tickPatronDawn(state);
   clampPlayerSpark(state);
 }
 

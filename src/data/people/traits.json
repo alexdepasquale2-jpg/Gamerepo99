@@ -241,6 +241,16 @@
   ],
   "statusTraits": [
     {
+      "id": "civic_voice",
+      "name": "Civic Voice",
+      "description": "You stood up in front of the whole street, three times, and nobody put you down. Now when you open your mouth, they quiet down and listen.",
+      "tags": [
+        "civic_voice",
+        "earned",
+        "behaviour"
+      ]
+    },
+    {
       "id": "inherited_dependence",
       "name": "Inherited Dependence",
       "description": "You were chosen because someone needed you to keep burning for them. Early days pull toward Carry; Inspire is harder until you stand on your own fire.",
