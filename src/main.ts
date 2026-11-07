@@ -3,6 +3,8 @@ import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
+import { createSuccessionScreen } from './ui/succession-screen';
+import type { PlaySession } from './sim';
 
 const hud = createHud();
 hud.setStatus('booting overworld');
@@ -31,3 +33,12 @@ const game = new Phaser.Game({
 game.registry.set('methodMenu', methodMenu);
 game.registry.set('hud', hud);
 hud.setStatus('overworld');
+
+// Succession overlay: polls the registry session (set by the overworld scene) and shows the locked screen when open.
+let succession: ReturnType<typeof createSuccessionScreen> | undefined;
+setInterval(() => {
+  const session = game.registry.get('playSession') as PlaySession | undefined;
+  if (!session) return;
+  succession ??= createSuccessionScreen(session);
+  succession.refresh();
+}, 250);

@@ -7,11 +7,13 @@ import {
   layoutWorld,
   type PlaySession,
   type TileSource,
+  forceSpark,
 } from '../sim';
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
 import { FEEL } from './feel';
+import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
 import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
@@ -54,6 +56,17 @@ export class OverworldScene extends Phaser.Scene {
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements);
     this.spawnPlayer();
+    const surface = attachSurface(this, this.session, this.layout.settlements);
+    // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
+    (window as unknown as { __hearth?: unknown }).__hearth = {
+      session: this.session,
+      surface,
+      towns: this.layout.settlements.map((t) => t.id),
+      burnOut: () => {
+        forceSpark(this.session, 0);
+        this.session.tick();
+      },
+    };
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;

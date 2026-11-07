@@ -17,6 +17,7 @@ import {
   type TravelSimState,
 } from '../travel/travel';
 import { tickPackets } from '../packets';
+import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
   lockedSuccessionUi,
@@ -49,6 +50,7 @@ function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
     siteId: p.siteId,
     siteKind: p.siteKind ?? siteKindFromSiteId(p.siteId),
     anchor: p.anchor,
+    townId: p.townId,
     marks: p.marks?.map((m) => ({ ...m })),
   };
 }
@@ -69,6 +71,7 @@ function createPlayModeSession(defaults: {
   const metrics: { firstChoiceAtTick?: number; firstConsequenceAtTick?: number } = {};
   let lastResolveVal: PlayLastResolve | undefined;
   let interactionRt: CompatRuntime | undefined;
+  const juiceHandlers = new Set<(id: string, payload: unknown) => void>();
 
   function boot(nextSeed: number, nextArchetype: string): void {
     seed = nextSeed;
@@ -81,6 +84,12 @@ function createPlayModeSession(defaults: {
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
     ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId));
+    const bus = state.bus as { emit?: (e: string, p: unknown) => void };
+    const inner = bus.emit;
+    bus.emit = (e, p) => {
+      inner?.(e, p);
+      for (const h of [...juiceHandlers]) h(e, p);
+    };
   }
 
   function appendJuiceSince(beforeLen: number): void {
@@ -141,6 +150,19 @@ function createPlayModeSession(defaults: {
     getSeed: () => seed,
     listPeople: () => Object.values(state?.people ?? {}).map(toPersonView),
     metrics: () => ({ ...metrics }),
+    onJuice(handler) {
+      juiceHandlers.add(handler);
+      return () => void juiceHandlers.delete(handler);
+    },
+    townDespair: () =>
+      Object.fromEntries(Object.entries(state?.towns ?? {}).map(([id, t]) => [id, t.despair])),
+    successionOffer: () => (state && successionOpen.value ? offerSuccession(state) : null),
+    chooseSuccession(choice) {
+      if (!state) return { ok: false, reason: 'not_open' };
+      const res = choice === 'continue' ? carryItOn(state) : letItRest(state);
+      if (res.ok) successionOpen.value = false;
+      return res;
+    },
     lastResolve: () => (lastResolveVal ? { ...lastResolveVal } : undefined),
   };
   attachSuccessionHandle(session, {

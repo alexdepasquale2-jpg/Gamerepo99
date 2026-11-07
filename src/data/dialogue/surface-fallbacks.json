@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "note": "Fallback people-lines for juice events whose payload carries no line. Short, in-voice, never shaming.",
+  "lines": {
+    "unspoken": ["Something's different. I can't say what.", "I keep thinking about it."],
+    "letter": ["A letter came. I read it twice.", "Someone remembered me, it seems."],
+    "rumor": ["Did you hear? They're saying things again.", "Word's travelling. Warm word, for once."],
+    "doctrine_voice": ["The way things are done here, that's the way.", "We don't ask. We never did."],
+    "doctrine_exposed": ["Funny. It sounded truer yesterday.", "Somebody's been asking questions."],
+    "doctrine_suppressed": ["Best keep that one quiet now.", "The old words are heavier today."],
+    "doctrine_swap": ["New words in the square. Same hungry faces.", "They changed the song again."],
+    "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
+    "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
+    "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+  }
+}

@@ -46,6 +46,14 @@ export type PlaySession = {
   listPeople(): ScenarioPersonView[];
   metrics(): PlayMetrics;
   lastResolve(): PlayLastResolve | undefined;
+  /** Presentation read: subscribe to every juice event (id + payload). Returns unsubscribe. */
+  onJuice(handler: (id: string, payload: unknown) => void): () => void;
+  /** Presentation read: per-town despair 0..1 (copy). */
+  townDespair(): Record<string, number>;
+  /** Succession screen data; null while the run is not at a succession offer. */
+  successionOffer(): import('../legacy/flow').SuccessionOffer | null;
+  /** Succession buttons: delegate to legacy carryItOn / letItRest. */
+  chooseSuccession(choice: 'continue' | 'quit'): import('../legacy/flow').SuccessionResult;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
