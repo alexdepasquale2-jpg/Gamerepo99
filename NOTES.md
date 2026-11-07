@@ -13,3 +13,5 @@
 - Ladder terrain: `biomeAt` reads `ladderFor(seed)`; floor coords. Maps use `coarseBiomeAt` (L1), never per-tile over the whole world.
 - Chunk props are owned by the chunk (destroyed on unmount); `paintProp` returns its objects.
 - Anything placed per N tiles across the world bbox grows 40x with WORLD_SCALE; scale N or make it lazy per chunk (resource nodes were 90k sprites).
+- Wilderness dressing: `features.json` + `ladder/features.ts` (farms, outcrops, streams; anchor cells, pure per seed) and `ladder/dress.ts` (per chunk: features to props/tiles, build sites, woods edge, life). Feature resources (ore, fish, sheep) come through `wildNodesIn`. Tiles: 'stream' (wadeable, cosmetic), 'road_track' (drawn by the road ribbon). Chunk props are captured from the display list so painters need not return objects.
+- Seen in playtest, not fixed: faint straight lines at chunk edges (likely the stretched per-chunk grass fill image in paintChunkGrassFill).

@@ -4,7 +4,7 @@ import { advanceCaravanTravel, tickCaravans } from '../../../src/sim/caravans';
 import { PHASE_DAYS } from '../../../src/sim/caravan-visit';
 import { aboard, offers, quote, scarcity, tradeGood, wagonDestination } from '../../../src/sim/goods/caravan-trade';
 import { ITEMS, addItem } from '../../../src/sim/goods/inventory';
-import { NODES, gatherNode, nodeKind, placeNodes } from '../../../src/sim/goods/nodes';
+import { NODES, gatherNode, nodeKind, placeNodes, wildNodesIn } from '../../../src/sim/goods/nodes';
 import { townNeeds } from '../../../src/sim/goods/town-needs';
 import { loadState, saveState } from '../../../src/sim/save';
 import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
@@ -57,7 +57,9 @@ describe('market goods', () => {
     gatherNode(state, { id: 's#1', kindId: 'sheep_flock', q: 0, r: 0 });
     expect(state.inventory.wool).toBeGreaterThan(0);
     // The placement table actually puts sheep in the world.
-    const nodes = placeNodes(7, [{ id: 'a', q: 50, r: 50 }, { id: 'b', q: 120, r: 80 }], []);
+    const towns = [{ id: 'a', q: 50, r: 50 }, { id: 'b', q: 120, r: 80 }];
+    // Wild nodes are collapsed on observation; look at the whole populated area.
+    const nodes = [...placeNodes(7, towns, []), ...wildNodesIn(7, towns, 0, 0, 200, 140)];
     expect(nodes.some((n) => n.kindId === 'sheep_flock')).toBe(true);
     expect(NODES.kinds.every((k) => k.yields.every((y) => y.min >= 0))).toBe(true);
   });

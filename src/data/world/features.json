@@ -1,0 +1,11 @@
+{
+  "_doc": "Structured wilderness, generated per anchor cell (lazy, seeded). Farms: farmhouse + fenced field + pasture sheep + track to the road. Outcrops: rock clusters (hills mostly) with an ore/rock node. Streams: 1-tile wadeable water lines with reeds and fishing spots. Build sites: unfinished frames near roads. Woods: dense trees inside forest, broken edge with undergrowth spilling out. Life: meadow flowers, bushes, stumps.",
+  "anchorTiles": 24,
+  "townClearTiles": 44,
+  "farm": { "chance": 0.22, "biomes": ["fields", "meadow"], "fieldW": [6, 11], "fieldH": [4, 7], "sheep": [1, 3], "trackMaxTiles": 70 },
+  "outcrop": { "chanceHills": 0.55, "chanceOther": 0.05, "rocks": [4, 10], "radius": 3.2 },
+  "stream": { "cellTiles": 64, "chance": 0.35, "length": [50, 160], "fishEvery": 28, "reeds": 0.3 },
+  "site": { "chance": 0.08, "maxRoadTiles": 22 },
+  "woods": { "step": 2, "interior": 0.62, "edge": 0.35, "undergrowth": 0.4, "spill": 0.22, "edgeTiles": 2 },
+  "life": { "step": 3, "meadow": 0.07, "fields": 0.04, "hills": 0.06 }
+}

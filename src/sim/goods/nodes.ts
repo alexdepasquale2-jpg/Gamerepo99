@@ -3,6 +3,7 @@
 import nodesJson from '../../data/world/resource-nodes.json';
 import { deriveRng } from '../rng';
 import { biomeAt } from '../map/terrain';
+import { featuresIn, FEATURES } from '../map/ladder/features';
 import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
@@ -80,6 +81,18 @@ export function wildNodesIn(seed: number, settlements: Place[], q0: number, r0: 
     if (q < q0 || q >= q1 || r < r0 || r >= r1) continue;
     if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
     out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
+  }
+  // Features carry their own resources: ore at outcrops, fish along streams, sheep on farms.
+  const inside = (p: { q: number; r: number }) => p.q >= q0 && p.q < q1 && p.r >= r0 && p.r < r1;
+  for (const f of featuresIn(seed, settlements, q0, r0, q1, r1)) {
+    if (f.kind === 'outcrop') {
+      const p = { q: f.center.q + 1, r: f.center.r + 2 };
+      if (inside(p)) out.push({ id: `${f.id}#ore`, kindId: f.hills ? 'ore_vein' : 'rock', ...p });
+    } else if (f.kind === 'stream') {
+      f.cells.forEach((c, i) => { const p = { q: c.q + 1, r: c.r }; if (i % FEATURES.stream.fishEvery === 10 && inside(p)) out.push({ id: `${f.id}#fish${i}`, kindId: 'fishing_spot', ...p }); });
+    } else {
+      f.sheep.forEach((p, i) => { if (inside(p)) out.push({ id: `${f.id}#sheep${i}`, kindId: 'sheep_flock', ...p }); });
+    }
   }
   return out;
 }

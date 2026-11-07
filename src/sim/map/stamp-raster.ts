@@ -22,6 +22,7 @@ import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
 import { terrainMode } from './terrain';
 import { scatterProps, type ScatterCtx } from './ladder/scatter';
+import { dressChunk, type DressCtx } from './ladder/dress';
 import { chunkEdits, type TileEdits } from './tile-edits';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
@@ -128,6 +129,17 @@ export function createStampRasterSource(
       return best;
     },
   };
+  const dressCtx: DressCtx = {
+    biome: terrain.biome,
+    isRoad: scatterCtx.isRoad,
+    townDistance: scatterCtx.townDistance,
+    towns: layout.settlements,
+    nearestRoad: (q, r, cap) => {
+      let best = cap, at: { q: number; r: number } | null = null;
+      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) { best = d; at = c; } }
+      return at;
+    },
+  };
   const fp = fingerprintHex([
     String(seed >>> 0),
     terrainMode(),
@@ -188,7 +200,11 @@ export function createStampRasterSource(
 
       const edited = chunkEdits(edits?.(), cx, cy);
       if (edited) for (const t of tiles) { const b = edited[`${t.q},${t.r}`]; if (b) t.biomeId = b; }
-      if (terrainMode() === 'ladder') chunkProps.push(...scatterProps(seed, tq0, tr0, CHUNK_SIZE, scatterCtx));
+      if (terrainMode() === 'ladder') {
+        const dressed = dressChunk(seed, tq0, tr0, CHUNK_SIZE, dressCtx);
+        for (const t of tiles) { const b = dressed.tiles.get(`${t.q},${t.r}`); if (b && t.biomeId !== 'road' && t.biomeId !== 'water') t.biomeId = b; }
+        chunkProps.push(...scatterProps(seed, tq0, tr0, CHUNK_SIZE, scatterCtx), ...dressed.props);
+      }
       return { cx, cy, tiles, props: chunkProps };
     },
   };
