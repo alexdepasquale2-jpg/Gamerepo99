@@ -94,7 +94,9 @@ describe('Carry it on', () => {
 describe('Let it rest and no heir', () => {
   it('rest ends the run without shame and hoard state adds ash_hoard', () => {
     const { state } = bootPlayState(7, 'marrow');
-    ensureHoard(state).peakCoin = 40;
+    const h = ensureHoard(state);
+    h.peakCoin = 40;
+    h.stash.s1 = { siteId: 's1', coin: 40, goods: {}, guardsHired: 0 };
     burnOut(state);
     const offer = offerSuccession(state);
     expect(offer.canContinue).toBe(false);

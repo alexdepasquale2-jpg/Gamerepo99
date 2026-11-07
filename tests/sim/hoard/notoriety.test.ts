@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
 import { attractorRoadBonus, addNotoriety, ensureHoard, leverageDiscount, rollAttractors, tickNotorietyDawn } from '../../../src/sim/hoard';
 import { ensureStash } from '../../../src/sim/hoard/state';
+import { tickHoardDawn, applyAttractorEffects } from '../../../src/sim/hoard';
 import { startTravel } from '../../../src/sim/travel/travel';
 
 const boot = (seed = 5) => bootPlayState(seed, 'marrow').state;
@@ -103,5 +104,39 @@ describe('notoriety', () => {
       expect(readFileSync(`src/sim/hoard/${f}.ts`, 'utf8')).not.toMatch(/archetypeId\s*===/);
       expect(readFileSync(`src/sim/hoard/${f}.ts`, 'utf8')).not.toMatch(/Math\.random/);
     }
+  });
+
+  it('each authored attractor effect applies deterministically, scaled by notoriety', () => {
+    const run = (id: string, n: number) => {
+      const s = boot();
+      ensureHoard(s).notoriety = n;
+      const before = { spark: s.player.spark, trust: s.player.perception?.trust ?? 0 };
+      applyAttractorEffects(s, id);
+      return { spark: s.player.spark - before.spark, trust: (s.player.perception?.trust ?? 0) - before.trust };
+    };
+    const rows = (boot().data as any).notoriety.attractors.filter((a: any) => a.effects?.length);
+    expect(rows.length).toBeGreaterThanOrEqual(5);
+    for (const a of rows) {
+      const e = a.effects[0];
+      const key = e.target === 'player.spark' ? 'spark' : 'trust';
+      expect(run(a.id, 0)[key as 'spark']).toBe(0);
+      expect(run(a.id, 1)[key as 'spark']).toBeCloseTo(e.value);
+      expect(run(a.id, 0.5)[key as 'spark']).toBeCloseTo(e.value * 0.5);
+      expect(run(a.id, 0.5)).toEqual(run(a.id, 0.5));
+    }
+  });
+
+  it('dawn applies fired attractor effects (same seed -> same state)', () => {
+    const go = () => {
+      const s = boot();
+      ensureHoard(s).notoriety = 1;
+      for (let d = 1; d < 60; d++) {
+        s.day = d;
+        tickHoardDawn(s);
+      }
+      return [s.player.spark, s.player.perception?.trust ?? 0];
+    };
+    expect(go()).toEqual(go());
+    expect(go()).not.toEqual([boot().player.spark, 0]);
   });
 });

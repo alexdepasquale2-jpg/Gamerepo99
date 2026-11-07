@@ -99,6 +99,11 @@
       "meter": "realDelivery",
       "add": 0.08
     },
+    "guard_caravan": {
+      "on": "fulfil",
+      "meter": "realDelivery",
+      "add": 0.06
+    },
     "deny_reignite": {
       "on": "accept",
       "meter": "propaganda",
