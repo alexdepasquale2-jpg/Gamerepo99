@@ -25,6 +25,8 @@ export function hash(s: string): number {
 }
 
 const TINTS = [0xffffff, 0xf2b8a0, 0xa8d4c8, 0xe6c86e, 0xb8a0e0, 0xd89a82, 0x9ec27a, 0xe0a0b8];
+/** Stable villager tint — shared with interiors so an occupant looks the same indoors. */
+export const tintOf = (id: string): number => TINTS[hash(id) % TINTS.length]!;
 const LABEL_NEAR = 84;
 export const TALK_NEAR = 52;
 
