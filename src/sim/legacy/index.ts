@@ -1,5 +1,5 @@
 export * from './types';
-export { ensureLegacy, legacyTable, CURRENT_WORLD_VERSION } from './state';
+export { ensureLegacy, legacyTable, pushDelta, CURRENT_WORLD_VERSION } from './state';
 export { recordActBond } from './bonds';
 export { pickHeir, scoreBonds } from './heir';
 export type { HeirPick } from './heir';

@@ -6,7 +6,7 @@ import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { assembleFromImprint } from './imprint';
-import { ensureLegacy, fill, legacyTable } from './state';
+import { ensureLegacy, fill, legacyTable, pushDelta } from './state';
 import type { Grave, ProtagonistImprint } from './types';
 
 const FLAME_MAX = 100;
@@ -69,6 +69,7 @@ export function tickLegacyNpcs(state: SimState): void {
       if (!methodId) break;
       const target = state.people[targets[rng.int(0, targets.length)]!]!;
       target.flame = Math.max(0, Math.min(FLAME_MAX, target.flame + (deltas[methodId] ?? lod.defaultFlameDelta)));
+      pushDelta(state, { t: 'reignite', personId: target.id, methodId, marks: (target.marks ?? []).filter((m) => m.stacks > 0).map((m) => `${m.markId}:${m.stacks}`).sort(), flame: target.flame, day: state.day });
       pushJuice(state, 'legend.act', { personId: id, targetId: target.id, methodId });
     }
   }
@@ -98,8 +99,23 @@ export function tickInheritedDependence(state: SimState): boolean {
   return true;
 }
 
+/** Log route condition/broken changes since the last dawn (baseline = authored rows). */
+export function recordRouteDeltas(state: SimState): void {
+  const routes = state.economyRoutes;
+  if (!routes?.length) return;
+  const lg = ensureLegacy(state);
+  const seen = (lg.routeSeen ??= Object.fromEntries(((state.data as DataTables | undefined)?.economyRoutes ?? []).map((r) => [r.id, { broken: r.broken, condition: r.condition }])));
+  for (const r of routes) {
+    const prev = seen[r.id];
+    if (prev && prev.broken === r.broken && prev.condition === r.condition) continue;
+    seen[r.id] = { broken: r.broken, condition: r.condition };
+    pushDelta(state, { t: 'route', routeId: r.id, broken: r.broken, condition: r.condition, day: state.day });
+  }
+}
+
 export function tickLegacyDawn(state: SimState): void {
   if (!state.legacy) return;
+  recordRouteDeltas(state);
   tickLegacyNpcs(state);
   tickInheritedDependence(state);
 }

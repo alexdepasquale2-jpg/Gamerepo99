@@ -2,7 +2,7 @@
 
 import { bootPlayState } from '../play-session/play-session-state';
 import type { SimState } from '../types/runtime';
-import { applyDeltas, contentHash, digestOf, isKnownDelta, reduceDeltas, stateDigest } from './delta-log';
+import { applyDeltas, contentHash, digestOf, isKnownDelta, reduceDeltas, sanitizeDeltas, sanitizeImprint, stateDigest } from './delta-log';
 import { placeLegend } from './npc';
 import { CURRENT_WORLD_VERSION, ensureLegacy, legacyTable } from './state';
 import type { HearthWorldFile, WorldDelta } from './types';
@@ -51,13 +51,15 @@ export function importWorld(raw: unknown): { state: SimState; legends: string[] 
   const missing = file.contentPackIds.filter((p) => !known.has(p));
   if (missing.length) return { error: `Missing content pack: ${missing.join(', ')}.` };
   if (contentHash(file.seed, file.contentPackIds, file.deltas) !== file.contentHash) return { error: 'World file hash mismatch (edited or corrupt).' };
-  const deltas: WorldDelta[] = [];
+  const rawDeltas: WorldDelta[] = [];
   for (const d of file.deltas) {
-    if (isKnownDelta(d)) deltas.push(d);
+    if (isKnownDelta(d)) rawDeltas.push(d);
     else if (!file.compatible) return { error: `Unknown delta kind "${String((d as { t?: unknown })?.t)}"; this world file is not marked compatible.` };
   }
 
   const { state } = bootPlayState(file.seed, legacyTable().defaultImportArchetypeId) as { state: SimState };
+  const deltas = sanitizeDeltas(state, rawDeltas);
+  const imprint = sanitizeImprint(state, file.imprint);
   applyDeltas(state, deltas);
   const expected = reduceDeltas(deltas);
   if (file.worldDigest !== undefined && (file.worldDigest !== digestOf(expected) || stateDigest(state, expected) !== digestOf(expected))) {
@@ -65,7 +67,7 @@ export function importWorld(raw: unknown): { state: SimState; legends: string[] 
   }
   const lg = ensureLegacy(state);
   lg.deltas = deltas.at(-1)?.t === 'day' ? deltas.slice(0, -1) : deltas;
-  lg.lastImprint = file.imprint;
-  const legends = file.imprint ? placeLegend(state, file.imprint) : [];
+  lg.lastImprint = imprint;
+  const legends = imprint ? placeLegend(state, imprint) : [];
   return { state, legends };
 }

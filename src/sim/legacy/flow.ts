@@ -14,7 +14,7 @@ import type { SimState } from '../types/runtime';
 import { pickHeir, type HeirPick } from './heir';
 import { buildImprint, legacyNpcId } from './imprint';
 import { placeGrave } from './npc';
-import { ensureLegacy, legacyTable } from './state';
+import { ensureLegacy, legacyTable, pushDelta } from './state';
 import type { ProtagonistImprint } from './types';
 
 export type SuccessionOffer = { ui: SuccessionUi; canContinue: boolean; heir: HeirPick | null; note?: string };
@@ -36,7 +36,7 @@ function recordEnd(state: SimState, imprint: ProtagonistImprint, ending: 'carry'
   lg.lineage.push({ imprint, ending, heirPersonId });
   lg.lastImprint = imprint;
   const g = { personId: legacyNpcId(imprint), name: imprint.displayName, townId: imprint.homeTownId, epitaphId: legacyTable().graveEpitaphId, day: state.day };
-  lg.deltas.push({ t: 'grave', ...g });
+  pushDelta(state, { t: 'grave', ...g });
   placeGrave(state, g);
 }
 

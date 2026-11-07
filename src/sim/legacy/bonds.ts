@@ -1,7 +1,7 @@
 /** Bond ledger: counts succession.bondAccumulators events per person during a life. Data-driven map. */
 
 import type { SimState } from '../types/runtime';
-import { ensureLegacy, legacyTable } from './state';
+import { ensureLegacy, legacyTable, pushDelta } from './state';
 
 export type ActBond = {
   personId: string;
@@ -9,6 +9,7 @@ export type ActBond = {
   interactionId?: string;
   flameBefore: number;
   reignited: boolean;
+  marksChanged?: boolean;
 };
 
 const marksOf = (state: SimState, personId: string): string[] =>
@@ -40,7 +41,7 @@ export function recordActBond(state: SimState, a: ActBond): void {
     if (person.townId && !lg.growthTowns.includes(person.townId)) lg.growthTowns.push(person.townId);
     lg.choices.push({ day: state.day, kind: 'reignite', summary: `${a.methodId}@${a.personId}` });
   }
-  if (flameUp || flameDown || a.reignited) {
-    lg.deltas.push({ t: 'reignite', personId: a.personId, methodId: a.methodId, marks: marksOf(state, a.personId), flame: person.flame, day: state.day });
+  if (flameUp || flameDown || a.reignited || a.marksChanged) {
+    pushDelta(state, { t: 'reignite', personId: a.personId, methodId: a.methodId, marks: marksOf(state, a.personId), flame: person.flame, day: state.day });
   }
 }
