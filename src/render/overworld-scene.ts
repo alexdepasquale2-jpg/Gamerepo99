@@ -13,6 +13,7 @@ import {
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
+import { createTerrainAccess } from '../sim/map/terrain-access';
 import { FEEL } from './feel';
 import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
@@ -36,6 +37,7 @@ const VERB: Record<string, string> = {
 export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
   private source!: TileSource;
+  private terrain!: ReturnType<typeof createTerrainAccess>;
   private layout!: WorldLayout;
   private layer!: ChunkLayer;
   private player!: Phaser.GameObjects.Sprite;
@@ -72,8 +74,9 @@ export class OverworldScene extends Phaser.Scene {
     if (!world) throw new Error('overworld requires booted world');
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed);
+    this.terrain = createTerrainAccess(this.layout, seed);
 
-    this.layer = createChunkLayer(this, this.source, this.layout.settlements);
+    this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
     this.spawnPlayer();
     this.ring = createActionRing(this);
     this.people = createPeopleLayer(
@@ -105,7 +108,7 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.hint = this.add
-      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I/Tab: satchel · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
+      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I: satchel · F: use · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
     this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
@@ -113,7 +116,7 @@ export class OverworldScene extends Phaser.Scene {
     const interact = (): void => this.interact();
     this.input.keyboard?.on('keydown-E', interact);
     this.input.keyboard?.on('keydown-ENTER', interact);
-    this.input.keyboard?.on('keydown-ESC', () => this.closeRing());
+    this.input.keyboard?.on('keydown-ESC', () => { this.closeRing(); this.goods.closeOverlays(); });
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
       this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
     );
@@ -121,6 +124,8 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-I', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
+    this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(); if (line) this.say(line); this.syncSparkFromSession(true); });
+    this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
@@ -161,8 +166,13 @@ export class OverworldScene extends Phaser.Scene {
         FEEL.overworld.walkTilesPerSec,
         TILE_PX,
       );
-      this.player.x += step.dx;
-      this.player.y += step.dy;
+      // Substeps prevent tunnelling during a slow frame; slide along banks.
+      const n = Math.max(1, Math.ceil(Math.hypot(step.dx, step.dy) / 6));
+      const safe = (x: number, y: number) => [-5, 5].every((off) => this.terrain.passable(Math.floor((x + off) / TILE_PX), Math.floor((y - 2) / TILE_PX)));
+      for (let i = 0; i < n; i++) {
+        if (safe(this.player.x + step.dx / n, this.player.y)) this.player.x += step.dx / n;
+        if (safe(this.player.x, this.player.y + step.dy / n)) this.player.y += step.dy / n;
+      }
       applySpriteSort(this.player);
       if (this.playerShadow) {
         this.playerShadow.setPosition(this.player.x, this.player.y - 2);
@@ -238,8 +248,10 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private interact(): void {
-    if (this.resting) return;
+    if (this.resting || this.goods.overlayOpen()) return;
     if (this.ring.isOpen()) return;
+    if (this.goods.readBoard(this.player)) return;
+    if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     if (p) return this.openRing(p);
     const got = this.goods.gatherNear(this.player);

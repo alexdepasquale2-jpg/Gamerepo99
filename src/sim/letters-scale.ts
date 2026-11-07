@@ -5,6 +5,8 @@
  * so Blessings and Burdens can come to pass. Deterministic: deriveRng, sorted iteration.
  */
 
+import { encodeUnspokenForState } from './social/unspoken';
+import { removeItem } from './goods/inventory';
 import type { DataTables } from './load-data';
 import { pushDelta } from './legacy/state';
 import { pushJuice } from './packets';
@@ -22,6 +24,8 @@ export type LetterPacket = {
   fromPersonId: string;
   toPersonId: string;
   packetType: string;
+  title?: string;
+  body?: string;
 };
 
 type Flight = LetterPacket & { kind: 'letter' | 'rumor'; days: number; fromTownId: string; toTownId: string };
@@ -33,6 +37,7 @@ export type LettersState = {
   seq: number;
   seenGrowth: number;
   seenHollow: number;
+  correspondence?: { id: string; toPersonId: string; body: string; status: 'travelling' | 'delivered' | 'lost' }[];
 };
 
 type Template = { id: string; packetType: string; edgeKind: string | null; title: string; body: string };
@@ -80,7 +85,7 @@ function edgesOf(state: SimState, web?: SocialWebTable): SocialEdge[] {
 }
 
 function townOf(state: SimState, id: string): string | undefined {
-  return state.people[id]?.townId;
+  return id === state.player.id ? state.player.townId : state.people[id]?.townId;
 }
 
 function routeDays(state: SimState, a: string, b: string): number {
@@ -174,6 +179,7 @@ function markStacks(state: SimState, markId: string): number {
 }
 
 function render(tpl: Template | undefined, state: SimState, f: Flight): { title?: string; body?: string } {
+  if (f.body) return { title: f.title, body: f.body };
   if (!tpl) return {};
   const name = (id: string) => (state.people[id] as { name?: string } | undefined)?.name ?? id;
   const sub: Record<string, string> = { fromName: name(f.fromPersonId), toName: name(f.toPersonId), fromTown: f.fromTownId };
@@ -194,7 +200,17 @@ export function tickLetters(state: SimState): string[] {
     }
     // Long roads thin letters: survival falls off per day travelled beyond the first.
     const total = routeDays(state, f.fromTownId, f.toTownId);
-    if (deriveRng(state.seed, 'letter-thin', f.id).next() >= Math.pow(t.falloff, Math.max(0, total - 1))) continue;
+    const note = ls.correspondence?.find((n) => n.id === f.id);
+    if (deriveRng(state.seed, 'letter-thin', f.id).next() >= Math.pow(t.falloff, Math.max(0, total - 1))) {
+      if (note) note.status = 'lost';
+      continue;
+    }
+    if (note) {
+      note.status = 'delivered';
+      const p = state.people[f.toPersonId];
+      if (p) p.trust = Math.min(1, (p.trust ?? 0) + 0.03);
+      encodeUnspokenForState(state, 'show_up', f.toPersonId, { tags: ['letter_arrived', 'kin'] });
+    }
     delivered.push(f.id);
     const payload = { letterId: f.id, templateId: f.templateId, packetType: f.packetType, fromPersonId: f.fromPersonId, toPersonId: f.toPersonId, ...render(t.templates.find((x) => x.id === f.templateId), state, f) };
     pushJuice(state, f.kind === 'rumor' ? 'rumor.spread' : 'letter.deliver', payload);
@@ -210,4 +226,18 @@ export function tickLetters(state: SimState): string[] {
   ls.seenHollow = hollow;
   rollCrossTownLetters(state, deriveRng(state.seed, 'letters', state.day), opts);
   return delivered;
+}
+
+/** Player stationery uses the same flight, distance and delivery machinery as NPC mail. */
+export function sendPlayerLetter(state: SimState, toPersonId: string, body: string): string {
+  const to = state.people[toPersonId];
+  const text = body.trim().slice(0, 500);
+  if (!to?.townId || to.townId === state.player.townId) return 'Choose someone in another town.';
+  if (!text) return 'Write a few words first.';
+  if (!removeItem(state, 'letter')) return 'You need a sheet of stationery (Letter).';
+  const ls = ensureLetters(state);
+  const f = launch(state, ls, { kind: 'letter', templateId: 'player_letter', packetType: 'proof_packet', fromPersonId: state.player.id, toPersonId, title: 'A letter from the road', body: text });
+  if (!f) return 'There is no route for this letter.';
+  (ls.correspondence ??= []).push({ id: f.id, toPersonId, body: text, status: 'travelling' });
+  return `Sent to ${to.name ?? to.id}. ${f.days} dawns by road; long journeys can lose letters.`;
 }

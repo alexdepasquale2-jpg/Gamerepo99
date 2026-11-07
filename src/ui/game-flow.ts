@@ -110,6 +110,7 @@ export function runGameFlow(host: GameHost): void {
   }
 
   window.addEventListener('keydown', (e) => {
+    if (document.body.dataset.hfLocalOverlay === 'true') return;
     if (e.key === 'Escape' && session && !document.querySelector('.hf-menu')) pause();
   });
   // Touch: a small always-on menu button (phones have no Esc key).

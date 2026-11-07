@@ -9,7 +9,7 @@ const SLOT = 30;
 const HOTBAR = 8;
 const font = { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 };
 
-export type InventoryUi = { toggle: () => void; isOpen: () => boolean; refresh: () => void; select: (i: number) => void };
+export type InventoryUi = { toggle: () => void; isOpen: () => boolean; refresh: () => void; select: (i: number) => void; selectedItem: () => string | undefined; close: () => void };
 
 const hex = (c: string): number => parseInt(c.replace('#', ''), 16);
 
@@ -21,7 +21,13 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
   let selected = 0;
 
   const drawSlot = (c: Phaser.GameObjects.Container, x: number, y: number, stack?: { item: { name: string; color: string; icon: string }; qty: number }, sel = false): void => {
-    c.add(scene.add.rectangle(x, y, SLOT - 2, SLOT - 2, 0x2a2018, 0.92).setStrokeStyle(2, sel ? 0xf2b84b : 0x6a5a40).setOrigin(0));
+    const bg = scene.add.rectangle(x, y, SLOT - 2, SLOT - 2, 0x2a2018, 0.92).setStrokeStyle(2, sel ? 0xf2b84b : 0x6a5a40).setOrigin(0);
+    bg.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      const stacks = getState() ? listStacks(getState()!) : [];
+      const i = stacks.findIndex((s) => s.item.name === stack?.item.name);
+      if (i >= 0) { selected = i; refresh(); }
+    });
+    c.add(bg);
     if (!stack) return;
     const cx = x + SLOT / 2 - 1;
     const cy = y + SLOT / 2 - 3;
@@ -53,9 +59,9 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     const py = H / 2 - ph / 2 - 20;
     panel.add(scene.add.rectangle(px, py, pw, ph, 0x1b1612, 0.95).setStrokeStyle(2, 0xa8743e).setOrigin(0));
     panel.add(scene.add.text(px + 12, py + 8, 'Satchel', { ...font, fontSize: '13px', color: '#f2b84b' }));
-    stacks.forEach((s, i) => drawSlot(panel, px + 12 + (i % cols) * SLOT, py + 30 + Math.floor(i / cols) * SLOT, s));
+    stacks.forEach((s, i) => drawSlot(panel, px + 12 + (i % cols) * SLOT, py + 30 + Math.floor(i / cols) * SLOT, s, selected === i));
     const cargo = st?.cargo ?? [];
-    const note = cargo.length ? `Carrying: ${cargo.map((c) => `${c.qty} ${c.itemId} → ${c.toTownId}`).join('; ')}` : 'Gather (E at nodes), work, trade, carry, give.';
+    const note = cargo.length ? `Carrying: ${cargo.map((c) => `${c.qty} ${c.itemId} → ${c.toTownId}`).join('; ')}` : 'Click item · F: use/eat/place · L: letters';
     panel.add(scene.add.text(px + 12, py + ph - 30, note, { ...font, wordWrap: { width: pw - 24 } }));
   };
 
@@ -67,6 +73,8 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     },
     isOpen: () => panel.visible,
     refresh,
+    selectedItem: () => { const s = getState(); return s ? listStacks(s)[selected]?.item.id : undefined; },
+    close: () => panel.setVisible(false),
     select(i) {
       selected = Phaser.Math.Clamp(i, 0, HOTBAR - 1);
       refresh();

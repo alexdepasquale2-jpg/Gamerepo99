@@ -2,6 +2,7 @@
 
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
+import { advanceCaravanTravel } from '../../sim/caravans';
 import { deriveRng } from '../../sim/rng';
 import { pointOnRoad, type LayoutRoute } from '../../sim/map/world-layout';
 import { TILE_PX } from '../../sim/map/constants';
@@ -13,16 +14,16 @@ type Pt = { x: number; y: number };
 const DAY_MS = 120_000;
 const STOCK_OK = 4;
 
-type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image };
+type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text };
 type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: number };
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
 
-export type LivingWorld = { update: (time: number, dt: number) => void; caravanPositions: () => Pt[]; refresh: () => void };
+export type LivingWorld = { update: (time: number, dt: number) => void; caravanPositions: () => Pt[]; refresh: () => void; nearestCaravan: (p: Pt) => string | undefined };
 
 export function createLivingWorld(
   scene: Phaser.Scene, seed: number, towns: Town[], routes: LayoutRoute[],
-  getState: () => SimState | undefined, despair: () => Record<string, number>,
+  getState: () => SimState | undefined, despair: () => Record<string, number>, stoppedId: () => string | undefined,
 ): LivingWorld {
   ensureGoodsTextures(scene);
   const pos = new Map(towns.map((t) => [t.id, tileFootWorld(t.q, t.r)]));
@@ -84,11 +85,14 @@ export function createLivingWorld(
   let since = 0;
   return {
     refresh,
+    nearestCaravan(p) { return [...wagons.entries()].find(([, w]) => Math.hypot(w.wagon.x - p.x, w.wagon.y - p.y) < 65)?.[0]; },
     caravanPositions: () => [...wagons.values()].map((w) => ({ x: w.wagon.x, y: w.wagon.y })),
     update(time, dt) {
-      const mobiles = getState()?.caravans ?? [];
+      const state = getState();
+      if (state) advanceCaravanTravel(state, Math.min(dt, 100) / DAY_MS, stoppedId());
+      const mobiles = state?.caravans ?? [];
       const liveIds = new Set(mobiles.map((m) => m.id));
-      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); wagons.delete(id); }
+      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); w.label.destroy(); wagons.delete(id); }
       for (const m of mobiles) {
         const road = byRoute.get(m.routeId);
         if (!road) continue;
@@ -97,16 +101,18 @@ export function createLivingWorld(
         if (!w) {
           w = { progress: f,
             wagon: scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2),
-            ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2) };
+            ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2),
+            label: scene.add.text(0, 0, 'Trader · E', { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 1) };
           wagons.set(m.id, w);
         }
-        // Dawn is authoritative; ease only presentation along the actual curve.
-        w.progress += (f - w.progress) * Math.min(1, dt / 350);
+        // Fractional sim progress follows the actual curve; towns wait for dawn unloading.
+        w.progress = f;
         const p = pointOnRoad(road.path, w.progress);
         const ahead = pointOnRoad(road.path, Math.max(0, Math.min(1, w.progress + (m.heading === 'outbound' ? 0.003 : -0.003))));
         const foot = tileFootWorld(p.q, p.r), lead = tileFootWorld(ahead.q, ahead.r);
         const dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy) || 1;
         w.wagon.setPosition(foot.x, foot.y).setDepth(foot.y).setFlipX(dx < 0);
+        w.label.setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
         w.ox.setPosition(foot.x + dx / length * 26, foot.y + dy / length * 26).setDepth(foot.y + dy / length * 26).setFlipX(dx < 0);
       }
       for (const c of critters) {

@@ -25,4 +25,7 @@ export type CaravanMobile = {
   cargoResourceId: string;
   qty: number;
   dawnSpawned: number;
+  /** Fractional travel already applied before the next dawn. */
+  travelCredit?: number;
+  coin?: number;
 };
