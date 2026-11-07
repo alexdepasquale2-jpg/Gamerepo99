@@ -124,7 +124,7 @@ function createPlayModeSession(defaults: {
     start(opts) {
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
-    listActions: () => (state ? listMethodActions(state) : []),
+    listActions: () => (state ? listMethodActions(state, interactionRt as CompatRuntime | undefined) : []),
     act(actionId) {
       if (!state) {
         eventLog.push({ type: 'act', methodId: actionId });

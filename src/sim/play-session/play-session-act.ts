@@ -15,6 +15,24 @@ import { patronHostMethod } from '../patrons';
 import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
+import deedsJson from '../../data/systems/interactions/deeds.json';
+
+type DeedRow = { id: string; label: string; hostMethod: string; requiresPendingPromise?: boolean; requiresOtherPerson?: boolean; savage?: boolean };
+export const DEEDS: readonly DeedRow[] = (deedsJson as { deeds: DeedRow[] }).deeds;
+const DEED_BY_ID = new Map(DEEDS.map((d) => [d.id, d]));
+export const deedLabel = (id: string): string | undefined => DEED_BY_ID.get(id)?.label;
+
+function deedAllowed(state: SimState, d: DeedRow, personId: string, rt?: CompatRuntime): boolean {
+  if (d.requiresPendingPromise) {
+    const p = rt?.people.get(personId) as { promises?: { status: string }[] } | undefined;
+    if (!p?.promises?.some((x) => x.status === 'pending')) return false;
+  }
+  if (d.requiresOtherPerson) {
+    const other = state.flags?.lastTouchedPersonId as string | undefined;
+    if (!other || other === personId || !state.people[other]) return false;
+  }
+  return true;
+}
 
 type PlayAction = { id: string; family?: string };
 type PlayEvent = { type: string; methodId?: string };
@@ -30,13 +48,20 @@ export function installPlayReactions(state: SimState): void {
   installFabricReactionSelector(state);
 }
 
-export function listMethodActions(state: SimState): PlayAction[] {
+export function listMethodActions(state: SimState, rt?: CompatRuntime): PlayAction[] {
   const methods = ((state.data as DataTables | undefined)?.methods ?? []) as MethodRow[];
   const personIds = Object.keys(state.people);
   const out: PlayAction[] = [];
   for (const personId of personIds) {
     for (const m of methods) {
       out.push({ id: `${m.id}@${personId}`, family: m.family });
+    }
+    if (rt) {
+      for (const d of DEEDS) {
+        if (rt.catalog.has(d.id) && deedAllowed(state, d, personId, rt)) {
+          out.push({ id: `${d.id}@${personId}`, family: d.savage ? 'savage' : 'deed' });
+        }
+      }
     }
   }
   out.push({ id: 'advance:dawn', family: 'rest' });
@@ -115,6 +140,22 @@ export function actMethod(
   const direct = compat?.catalog.get(parsed.methodId);
   const stash = direct?.stashAct ? actDefs(state).find((a) => a.id === direct.stashAct) : undefined;
   const patron = direct?.patronAccept || direct?.patronFulfil ? patronHostMethod(state) : undefined;
+  const deed = direct ? DEED_BY_ID.get(parsed.methodId) : undefined;
+  if (deed && !deedAllowed(state, deed, parsed.personId, compat)) {
+    eventLog.push({ type: 'act', methodId: actionId });
+    return;
+  }
+  if (deed?.requiresOtherPerson && compat) {
+    const other = state.flags.lastTouchedPersonId as string;
+    (state.kinEdges ??= []).push({ from: parsed.personId, to: other, kind: 'introduced' });
+    const op = compat.people.get(other) as { bond?: number } | undefined;
+    const intro = (direct as { introduce?: unknown } | undefined)?.introduce as { otherBondDelta?: number } | undefined;
+    if (op && typeof op.bond === 'number') op.bond += intro?.otherBondDelta ?? 0;
+  }
+  if (deed) {
+    actInteraction(state, compat!, { ...parsed, methodId: deed.hostMethod, interactionId: deed.id }, eventLog, extras);
+    return;
+  }
   const interactionId = stash || patron ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
   if (!compat || !interactionId || !compat.people.has(parsed.personId) || !state.people?.[parsed.personId]) {
     eventLog.push({ type: 'act', methodId: actionId });

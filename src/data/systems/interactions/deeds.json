@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags.",
+  "deeds": [
+    {
+      "id": "favor_do",
+      "label": "Do a favor",
+      "hostMethod": "carry_burden"
+    },
+    {
+      "id": "work_alongside",
+      "label": "Work alongside (mend, harvest)",
+      "hostMethod": "carry_burden"
+    },
+    {
+      "id": "gift_give",
+      "label": "Give a gift",
+      "hostMethod": "inspire"
+    },
+    {
+      "id": "trade_fair",
+      "label": "Trade fairly",
+      "hostMethod": "carry_burden"
+    },
+    {
+      "id": "carry_goods",
+      "label": "Carry goods for them",
+      "hostMethod": "carry_burden"
+    },
+    {
+      "id": "promise_make",
+      "label": "Make a promise",
+      "hostMethod": "inspire"
+    },
+    {
+      "id": "promise_keep",
+      "label": "Keep your promise",
+      "hostMethod": "inspire",
+      "requiresPendingPromise": true
+    },
+    {
+      "id": "promise_break",
+      "label": "Break your promise",
+      "hostMethod": "lie",
+      "requiresPendingPromise": true,
+      "savage": true
+    },
+    {
+      "id": "stand_up",
+      "label": "Stand up for them",
+      "hostMethod": "challenge"
+    },
+    {
+      "id": "introduce",
+      "label": "Introduce to someone you met",
+      "hostMethod": "inspire",
+      "requiresOtherPerson": true
+    }
+  ]
+}

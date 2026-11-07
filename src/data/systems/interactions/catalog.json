@@ -141,6 +141,27 @@
       "coinGain": 12
     },
     {
+      "id": "carry_goods",
+      "kind": "errand",
+      "tags": [
+        "favor",
+        "errand",
+        "carry",
+        "interaction:carry_goods"
+      ],
+      "baseStrain": 2,
+      "sparkGain": 2,
+      "touch": {
+        "flame01": 0.05
+      },
+      "bondDelta": 1,
+      "ripple": "help",
+      "coinGain": 12,
+      "town": {
+        "despair": -0.01
+      }
+    },
+    {
       "id": "trade_fair",
       "kind": "trade",
       "tags": [
