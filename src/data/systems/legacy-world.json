@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "format": "hearthfall.world",
+  "contentPackIds": ["core@1"],
+  "defaultImportArchetypeId": "marrow",
+  "ui": {
+    "screenCopy": "Your fire went out. Someone remembers it.",
+    "continue": "Carry it on",
+    "quit": "Let it rest",
+    "noHeirNote": "No one is close enough to carry it. Let it rest."
+  },
+  "heirArchetypeByWound": {
+    "apathy": "ivy_quill",
+    "grief": "ivy_quill",
+    "fear": "basilisk_brood",
+    "exhaustion": "marrow",
+    "disillusionment": "ivy_quill",
+    "shame_wound": "marrow"
+  },
+  "heirArchetypeFallbacks": ["marrow", "ivy_quill", "basilisk_brood"],
+  "bondEventMap": [
+    { "when": "reignited", "event": "genuine_growth_applied" },
+    { "when": "flameUp", "methodIds": ["carry_burden", "inspire"], "event": "kind_method_success" },
+    { "when": "flameUp", "methodIds": ["carry_burden"], "event": "carry_completed" },
+    { "when": "flameUp", "methodIds": ["carry_burden"], "event": "dependence_stack", "repeatAfter": 2 },
+    { "when": "flameUp", "methodIds": ["inspire"], "event": "inspire_with_proof" }
+  ],
+  "dependenceEvents": ["dependence_stack"],
+  "dependenceShareMin": 0.25,
+  "rumorOutcomeId": "legacy_memory",
+  "tendencyHooks": {
+    "minTendency": 0.5,
+    "byMethod": {
+      "shame": ["refusal_shame_child"],
+      "challenge": ["refusal_burn_ledger"]
+    }
+  },
+  "npcLod": {
+    "actsPerDawn": 1,
+    "maxNpcs": 3,
+    "defaultFlameDelta": 2,
+    "methodFlameDelta": { "carry_burden": 4, "inspire": 5, "challenge": 3, "shame": -4, "lie": -2 }
+  },
+  "graveEpitaphId": "epi_remembered",
+  "legendLines": [
+    "{legacyName} lit a fire here once. People still talk about it.",
+    "They say {legacyName} never really left; the warmth did not."
+  ],
+  "graveLines": ["A stone for {legacyName}. Someone keeps it swept."],
+  "inspectLines": ["{legacyName} used to stop by. You can tell who remembers."]
+}
