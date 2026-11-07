@@ -116,6 +116,7 @@ export function maybeOpenSuccession(
   eventLog: PlayEvent[],
   alreadyOpen: { value: boolean },
 ): boolean {
+  if (alreadyOpen.value && state.flags.successionOpen === false) alreadyOpen.value = false; // heir carried on
   if (alreadyOpen.value) return true;
   const data = state.data as DataTables | undefined;
   if (state.player.spark > emberZoneBelowFor(state.player, data)) return false;
