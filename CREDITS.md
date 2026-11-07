@@ -35,6 +35,8 @@ Unless marked **imported**, assets are **shortlisted, not yet imported** into th
 
 ## Audio (later juice)
 
+Shipped audio is **procedural**: `src/render/sfx.ts` synthesizes all cues (reignite, letter, dawn, despair) with WebAudio; no audio files are bundled. N toggles mute. Rows below remain unused shortlist.
+
 | Asset | Author | License | URL | Status |
 |-------|--------|---------|-----|--------|
 | Fireplace Fire Crackling | RyanKingArt | CC0 | https://freesound.org/people/RyanKingArt/sounds/717579/ | shortlisted, not yet imported |

@@ -1,5 +1,6 @@
 /** Continuous chunked 2.5D overworld — stamp TileSource + foot-Y depth. */
 
+import { playSfx, toggleSfxMute } from './sfx';
 import Phaser from 'phaser';
 import {
   createEventBus,
@@ -166,6 +167,7 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
     this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
+    this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
@@ -497,6 +499,7 @@ export class OverworldScene extends Phaser.Scene {
         cam.fadeIn(900, 8, 8, 20);
         cam.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => {
           this.resting = false;
+          playSfx('dawn');
           this.say(`Dawn. Day ${this.session.snapshot().day}.`);
         });
       });

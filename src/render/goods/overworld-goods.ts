@@ -16,6 +16,7 @@ import { useItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
+import { playSfx } from '../sfx';
 import { unreadReplies } from '../../sim/letter-replies';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
@@ -102,6 +103,7 @@ export function attachOverworldGoods(
     return null;
   });
 
+  let lastUnread = 0;
   scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
   return {
     update(time, dt, player) {
@@ -110,6 +112,8 @@ export function attachOverworldGoods(
       living.update(time, dt);
       map.update(time);
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
+      if (unread > lastUnread) playSfx('letter');
+      lastUnread = unread;
       badge.setVisible(unread > 0 && !mail.isOpen()).setText(`✉ ${unread} unread ${unread === 1 ? 'reply' : 'replies'} · L`);
       for (const townId of Object.keys(st()?.hearthKeepsakes ?? {})) if (!memories.has(townId)) {
         const p = hearthOf(townId, { x: 0, y: 0 });

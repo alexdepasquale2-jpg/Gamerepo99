@@ -3,6 +3,7 @@ import type { EventBus } from '../../sim';
 import { FEEL, feelHitStopMs } from '../feel';
 import { playBurnout } from './burnout';
 import { playReignite } from './reignite';
+import { playSfx } from '../sfx';
 import { playRefusal } from './refusal';
 import {
   ensureSparkTextures,
@@ -56,9 +57,10 @@ export function attachSparkFx(
         scene.time.now + feelHitStopMs(FEEL.reignite.hitStopMs),
       );
       playReignite(scene, p);
+      playSfx('reignite');
     }),
     bus.on<RefusalPayload>('vfx.refusal', (p) => playRefusal(scene, p)),
-    bus.on<BurnoutPayload>('vfx.burnout', (p) => playBurnout(scene, p)),
+    bus.on<BurnoutPayload>('vfx.burnout', (p) => { playBurnout(scene, p); playSfx('despair'); }),
   ];
 
   const originalUpdate = scene.update.bind(scene);
