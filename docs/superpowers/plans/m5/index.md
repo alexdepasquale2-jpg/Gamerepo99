@@ -58,3 +58,11 @@ New `scripts/m5-depth-evidence.mts`, modelled on `scripts/m4-living-world-eviden
 1. Hoarder spec §8 stages stash/notoriety/patron data+dawn ticks in **M4**; M4 plan deferred them to M5. Data files exist (`m4Required: true` in stash-sites); no sim consumes them. This plan implements the ticks in M5.
 2. `2026-11-05-last-spark-m5-outline.md` (REPLAN note) describes M5 as polish/showcase and remaps that to M6/M8; DESIGN.md §M5 = Depth. This plan follows DESIGN.md.
 3. Async spec §6 puts import/export UI in M5; assignment puts all UI in M6. Plan ships file I/O functions only.
+
+## Decisions (Alex, 2026-11-07)
+
+1. Patrons: accept the town-scale patrons for M5; kingdom-scale data can come later.
+2. Patron → doctrine: paying the tithe raises `realDelivery`; `deny_reignite` raises `propaganda`.
+3. Death: out of scope for M5; burnout is the only ending of a life.
+4. Hoard: `visibleWealth = min(1, totalStashCoin / capacity)`; `hoardLegacyCoinMin` uses the authored value in `notoriety.json` (or `legacy_hoard_imprint`'s threshold if that is the only one).
+5. Heir: zero eligible bonds → only "Let it rest" is offered.
