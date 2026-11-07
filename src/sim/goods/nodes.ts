@@ -3,6 +3,7 @@
 import nodesJson from '../../data/world/resource-nodes.json';
 import { deriveRng } from '../rng';
 import { biomeAt } from '../map/terrain';
+import { WORLD_SCALE } from '../map/constants';
 import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
@@ -60,9 +61,11 @@ export function placeNodes(seed: number, settlements: Place[], routes: { from: s
   if (settlements.length) {
     const q0 = Math.min(...settlements.map((s) => s.q)) - 30, q1 = Math.max(...settlements.map((s) => s.q)) + 30;
     const r0 = Math.min(...settlements.map((s) => s.r)) - 30, r1 = Math.max(...settlements.map((s) => s.r)) + 30;
-    for (let x = Math.floor(q0 / 9); x <= Math.ceil(q1 / 9); x++) for (let y = Math.floor(r0 / 9); y <= Math.ceil(r1 / 9); y++) {
+    // Cell grows with the world so the node count (one sprite each, scanned per frame) stays as before.
+    const C = Math.round(9 * WORLD_SCALE);
+    for (let x = Math.floor(q0 / C); x <= Math.ceil(q1 / C); x++) for (let y = Math.floor(r0 / C); y <= Math.ceil(r1 / C); y++) {
       const rng = deriveRng(seed, 'biome-nodes', x, y);
-      const q = x * 9 + rng.int(1, 8), r = y * 9 + rng.int(1, 8);
+      const q = x * C + rng.int(1, C - 1), r = y * C + rng.int(1, C - 1);
       if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
       out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
     }

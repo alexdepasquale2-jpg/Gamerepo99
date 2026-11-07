@@ -12,3 +12,4 @@
 - World scale: placement runs at base scale then stretches (`placeSettlementsBase`), so road topology and days stay identical; never scale inside the placement search (near-ties flip).
 - Ladder terrain: `biomeAt` reads `ladderFor(seed)`; floor coords. Maps use `coarseBiomeAt` (L1), never per-tile over the whole world.
 - Chunk props are owned by the chunk (destroyed on unmount); `paintProp` returns its objects.
+- Anything placed per N tiles across the world bbox grows 40x with WORLD_SCALE; scale N or make it lazy per chunk (resource nodes were 90k sprites).
