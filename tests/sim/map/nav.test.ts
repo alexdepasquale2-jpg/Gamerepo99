@@ -20,7 +20,7 @@ const findFord = (t: ReturnType<typeof setup>, seed: number) => {
   const qs = t.layout.settlements.map((s) => s.q), rs = t.layout.settlements.map((s) => s.r);
   const inside = (q: number, r: number) => q > Math.min(...qs) - 38 && q < Math.max(...qs) + 38 && r > Math.min(...rs) - 38 && r < Math.max(...rs) + 38;
   for (let q = Math.min(...qs) - 38; q <= Math.max(...qs) + 38; q++) {
-    for (let r = Math.round(riverRow(seed, q)) - 12; r <= Math.round(riverRow(seed, q)) + 12; r++) if (inside(q, r) && t.terrain.isFord(q, r)) return { q, r };
+    for (let r = Math.round(riverRow(seed, q)) - 3; r <= Math.round(riverRow(seed, q)) + 3; r++) if (inside(q, r) && t.terrain.isFord(q, r)) return { q, r }; // river fords only (lake lanes sit >= 4.5 tiles off the river)
   }
   return null;
 };
@@ -81,8 +81,9 @@ describe('lake crossings', () => {
   it('lay fords and ferry pontoons across lakes (not the river), deterministically', () => {
     let fords = 0, ferries = 0;
     for (const seed of SEEDS) {
-      const a = setup(seed), b = setup(seed), { q0, q1, r0, r1 } = box(a);
-      for (let q = q0; q <= q1; q++) for (let r = r0; r <= r1; r++) {
+      const a = setup(seed), b = setup(seed);
+      // The 40x world is too big to sweep cell by cell; look at a window around each settlement.
+      for (const s of a.layout.settlements) for (let q = s.q - 150; q <= s.q + 150; q++) for (let r = s.r - 150; r <= s.r + 150; r++) {
         const ford = a.terrain.isFord(q, r), ferry = a.terrain.isFerry(q, r);
         expect(ferry && ford, 'a cell is a ford or a ferry, not both').toBe(false);
         if (ford !== b.terrain.isFord(q, r) || ferry !== b.terrain.isFerry(q, r)) throw new Error(`non-deterministic at ${q},${r}`);

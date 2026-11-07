@@ -9,7 +9,7 @@
   "fordStepCost": 1.15,
   "ferryStepCost": 1.5,
   "minRun": 3,
-  "maxPerSlot": 4,
+  "maxPerSlot": 5,
   "minGap": 9,
   "lineStep": 3
 }
