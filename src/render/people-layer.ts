@@ -7,6 +7,8 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
 import type { Navigator } from '../sim/map/nav';
+import type { Building } from '../sim/map/interiors';
+import { DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS, scheduledBuilding } from '../sim/map/residency';
 
 type Settlement = { id: string; q: number; r: number };
 
@@ -42,6 +44,11 @@ export type Person = {
   bob: number;
   /** Remaining waypoints toward `target`; routed over land, bridges and fords only. */
   path?: { x: number; y: number }[];
+  /** The room they are standing in right now. While set they are not drawn, not talkable, and not outdoors. */
+  inside: Building | null;
+  /** Building they are walking to because the schedule says it is time to go in. */
+  entering: string | null;
+  enteringMs: number;
 };
 
 export type PeopleLayer = {
@@ -56,6 +63,12 @@ export type PeopleLayer = {
   freeze: (id: string | null) => void;
   /** Daily schedule: where a person should be now (null = home). */
   setSchedule: (fn: (p: Person) => { x: number; y: number } | null) => void;
+  /** Day clock (0..1) and each villager's building; together they decide who is indoors. */
+  setResidency: (clock: () => number, homes: Map<string, Building>) => void;
+  /** Snap everyone to where the schedule says they are (indoors people vanish, others emerge) - for load/dawn. */
+  settle: () => void;
+  /** Ids of the villagers actually inside this building right now. */
+  insideOf: (buildingId: string) => string[];
 };
 
 export function createPeopleLayer(
@@ -92,7 +105,7 @@ export function createPeopleLayer(
       .setOrigin(0.5, 1)
       .setDepth(998_000)
       .setAlpha(0);
-    const person: Person = { id: p.id, town, sprite, shadow, label, home, target: { ...home }, nextPick: (h % 4000) + 500, bob: (h % 628) / 100 };
+    const person: Person = { id: p.id, town, sprite, shadow, label, home, target: { ...home }, nextPick: (h % 4000) + 500, bob: (h % 628) / 100, inside: null, entering: null, enteringMs: 0 };
     sprite.on('pointerdown', () => onTap(person));
     people.push(person);
     byId.set(p.id, person);
@@ -106,6 +119,36 @@ export function createPeopleLayer(
   let promptFor: Person | null = null;
   let frozen: string | null = null;
   let schedule: (p: Person) => { x: number; y: number } | null = () => null;
+  let clock: (() => number) | null = null;
+  let homes = new Map<string, Building>();
+  const wantInside = (p: Person): Building | null => (clock ? scheduledBuilding(p.id, homes, clock()) : null);
+  const doorStep = (b: Building) => ({ x: b.door.x, y: b.door.y + 12 });
+  const setHidden = (p: Person, hidden: boolean): void => {
+    p.sprite.setVisible(!hidden);
+    p.shadow?.setVisible(!hidden);
+    p.label.setVisible(!hidden);
+    if (p.sprite.input) p.sprite.input.enabled = !hidden;
+  };
+  const goIn = (p: Person, b: Building): void => {
+    p.inside = b;
+    p.entering = null;
+    p.path = [];
+    p.sprite.setPosition(doorStep(b).x, doorStep(b).y);
+    setHidden(p, true);
+  };
+  const comeOut = (p: Person): void => {
+    const b = p.inside;
+    p.inside = null;
+    p.entering = null;
+    if (b) {
+      const d = doorStep(b);
+      p.sprite.setPosition(d.x, d.y);
+      p.target = { ...d };
+    }
+    p.path = [];
+    p.nextPick = 0;
+    setHidden(p, false);
+  };
   const headOf = (id: string) => {
     const s = byId.get(id)?.sprite;
     return s ? { x: s.x, y: s.y - 36 } : { x: 0, y: 0 };
@@ -117,13 +160,26 @@ export function createPeopleLayer(
     headOf,
     freeze: (id) => (frozen = id),
     setSchedule: (fn) => (schedule = fn),
+    setResidency(c, h) {
+      clock = c;
+      homes = h;
+      for (const p of people) { const w = wantInside(p); if (w && !p.inside) goIn(p, w); }
+    },
+    settle() {
+      for (const p of people) {
+        const w = wantInside(p);
+        if (w && p.inside?.id !== w.id) goIn(p, w);
+        else if (!w && p.inside) comeOut(p);
+      }
+    },
+    insideOf: (buildingId) => people.filter((p) => p.inside?.id === buildingId).map((p) => p.id),
     setPrompt: (p) => (promptFor = p),
     nearest(player) {
       let best: Person | null = null;
       let bd = TALK_NEAR;
       for (const p of people) {
         const d = Phaser.Math.Distance.Between(player.x, player.y, p.sprite.x, p.sprite.y);
-        if (d < bd && hasActions(p.id)) {
+        if (!p.inside && d < bd && hasActions(p.id)) {
           bd = d;
           best = p;
         }
@@ -135,13 +191,23 @@ export function createPeopleLayer(
         const s = p.sprite;
         let moving = false;
         if (frozen !== p.id) {
+          // Indoors <-> outdoors is decided by the schedule and is exclusive: one place at a time.
+          const want = wantInside(p);
+          if (p.inside && want?.id !== p.inside.id) comeOut(p);
+          if (p.inside) continue;
+          if (want) {
+            if (p.entering !== want.id) { p.entering = want.id; p.enteringMs = 0; p.nextPick = 0; }
+            p.enteringMs += dt;
+            const dd = doorStep(want);
+            if (Math.hypot(dd.x - s.x, dd.y - s.y) <= DOOR_ARRIVE_PX || p.enteringMs > DOOR_GIVE_UP_MS) { goIn(p, want); continue; }
+          } else p.entering = null;
           p.nextPick -= dt;
           if (p.nextPick <= 0) {
             const r = hash(p.id + Math.floor(time / 1000));
             const wander = TILE_PX * 1.1;
-            const c = schedule(p) ?? p.home;
+            const c = want ? doorStep(want) : schedule(p) ?? p.home;
             p.target =
-              r % 3 === 0
+              want || r % 3 === 0
                 ? { ...c }
                 : { x: c.x + ((r % 200) / 100 - 1) * wander, y: c.y + (((r >> 8) % 200) / 100 - 1) * wander * 0.6 };
             p.nextPick = 2500 + (r % 5000);
@@ -162,7 +228,7 @@ export function createPeopleLayer(
           const d = Math.hypot(dx, dy);
           const rest = Math.hypot(p.target.x - s.x, p.target.y - s.y);
           if (d > 2) {
-            const step = Math.min(d, ((rest > TILE_PX * 3 ? 34 : 14) * dt) / 1000);
+            const step = Math.min(d, (((p.entering ? 52 : rest > TILE_PX * 3 ? 34 : 14)) * dt) / 1000);
             const nx = s.x + (dx / d) * step, ny = s.y + (dy / d) * step;
             if (nav && !nav.walkableAt(nx, ny)) {
               // Hard guard: never step onto water (off bridge/ford); abandon this walk.

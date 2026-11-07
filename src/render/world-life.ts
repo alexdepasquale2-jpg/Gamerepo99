@@ -19,6 +19,8 @@ export type WorldLife = {
   dawn: () => void;
   /** Day clock 0..1 (0 dawn). */
   phase: () => number;
+  /** Jump the day clock (QA / tests). */
+  setPhase: (p01: number) => void;
   setPrompt: (on: boolean, pos?: Pt) => void;
 };
 
@@ -113,6 +115,7 @@ export function createWorldLife(scene: Phaser.Scene, settlements: Settlement[]):
   return {
     dawn: () => (clock = DAY_MS * 0.06),
     phase: () => clock / DAY_MS,
+    setPhase: (p01) => (clock = (((p01 % 1) + 1) % 1) * DAY_MS),
     setPrompt(on, pos) {
       prompt.setVisible(on);
       if (on && pos) prompt.setPosition(pos.x, pos.y - 26 - Math.abs(Math.sin(scene.time.now / 300)) * 3);

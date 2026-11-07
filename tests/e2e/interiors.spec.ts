@@ -13,6 +13,9 @@ type Hook = {
     enter: (spec?: unknown) => { id: string; kind: string } | null;
     exit: () => void;
     state: () => { active: boolean; kind: string; occupantId: string | null; player: { col: number; row: number } } | null;
+    residents: (buildingId: string) => string[];
+    setHour: (p01: number) => void;
+    whereabouts: () => { id: string; inside: string | null; visible: boolean }[];
   };
   scene: { player: { x: number; y: number } };
 };
@@ -75,5 +78,32 @@ test('E at a door enters; E at the exit mat leaves', async ({ page }) => {
   expect(await page.locator('.hf-menu').count()).toBe(0);
   const pos = await page.evaluate(() => { const p = (window as unknown as { __hearth: Hook }).__hearth.scene.player; return { x: p.x, y: p.y }; });
   expect(Math.hypot(pos.x - b.door.x, pos.y - b.door.y)).toBeLessThan(40);
+  expect(errors).toEqual([]);
+});
+
+test('residents follow the day: indoors means not outdoors, and rooms show who is home', async ({ page }) => {
+  const errors = await boot(page);
+  const house = await hook(page, (h) => h.interior.buildings().find((x) => x.kind === 'house')!);
+  // Night: the resident is home, hidden outdoors, and present in the room.
+  await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.setHour(0.9));
+  let who = await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.residents(id), house.id);
+  expect(who.length).toBe(1);
+  const night = await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.whereabouts());
+  for (const w of night) expect(w.inside !== null, `${w.id} indoors xor visible`).toBe(!w.visible);
+  const placed = await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.enter(id), house.id);
+  expect(placed).not.toBeNull();
+  await page.waitForTimeout(700);
+  expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).toBe(who[0]);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(900);
+  // Midday: house residents are out working, visible outdoors, and the room is empty.
+  await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.setHour(0.3));
+  who = await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.residents(id), house.id);
+  expect(who).toEqual([]);
+  const day = await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.whereabouts());
+  for (const w of day) expect(w.inside !== null, `${w.id} indoors xor visible`).toBe(!w.visible);
+  await page.evaluate((id) => (window as unknown as { __hearth: Hook }).__hearth.interior.enter(id), house.id);
+  await page.waitForTimeout(700);
+  expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).toBeNull();
   expect(errors).toEqual([]);
 });
