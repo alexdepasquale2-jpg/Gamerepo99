@@ -105,4 +105,6 @@ export type SimState = {
   letters?: LettersState;
   /** M5 Task A: notoriety, stashes, peak coin, reignite count (saveable). */
   hoard?: HoardState;
+  /** M5 Task B: patron deals by deal id (saveable). */
+  patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
 };

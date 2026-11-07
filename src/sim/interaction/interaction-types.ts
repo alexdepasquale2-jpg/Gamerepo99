@@ -27,6 +27,9 @@ export interface InteractionDef {
   doctrineAct?: string | string[];
   /** Optional stash-sites.json act id (stash_hide|stash_guard_hire|stash_withdraw). */
   stashAct?: string;
+  /** Optional patrons.json deal id accepted / fulfilled through this interaction (M5 Task B). */
+  patronAccept?: string;
+  patronFulfil?: string;
   /** Optional coin earned (a meter, never spent as a button). */
   coinGain?: number;
   requires?: { promisePending?: boolean };
