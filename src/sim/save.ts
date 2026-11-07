@@ -116,3 +116,25 @@ export function parseSave(raw: string): SaveBlob | null {
     return null;
   }
 }
+
+export type SaveCheck = { ok: true; blob: SaveBlob } | { ok: false; error: string };
+
+/** Friendly validation: rejects non-objects and unknown versions; v1 optional fields stay optional. */
+export function validateSave(raw: unknown): SaveCheck {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return { ok: false, error: 'That save could not be read.' };
+  const b = raw as Record<string, unknown>;
+  if (typeof b.version !== 'number') return { ok: false, error: 'That save has no version and cannot be read.' };
+  if (b.version > SAVE_VERSION) return { ok: false, error: `That save is from a newer version (${b.version}) than this game understands.` };
+  if (b.version !== 1 && b.version !== 2) return { ok: false, error: 'That save has an unknown version.' };
+  if (typeof b.seed !== 'number' || typeof b.tick !== 'number') return { ok: false, error: 'That save is missing its world.' };
+  if (b.version === 2 && (typeof b.sim !== 'object' || b.sim === null)) return { ok: false, error: 'That save is missing its world state.' };
+  return { ok: true, blob: { ...(b as unknown as SaveBlob), npcs: Array.isArray(b.npcs) ? (b.npcs as SaveBlob['npcs']) : [] } };
+}
+
+export function parseAndValidateSave(raw: string): SaveCheck {
+  try {
+    return validateSave(JSON.parse(raw));
+  } catch {
+    return { ok: false, error: 'That save could not be read.' };
+  }
+}
