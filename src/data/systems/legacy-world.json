@@ -3,6 +3,7 @@
   "format": "hearthfall.world",
   "contentPackIds": ["core@1"],
   "defaultImportArchetypeId": "marrow",
+  "deltaLogCap": 400,
   "ui": {
     "screenCopy": "Your fire went out. Someone remembers it.",
     "continue": "Carry it on",

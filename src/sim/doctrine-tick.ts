@@ -6,6 +6,7 @@
  */
 
 import type { DataTables } from './load-data';
+import { pushDelta } from './legacy/state';
 import { findCrossTownKin, pushJuice } from './packets';
 import type { SimState } from './types/runtime';
 import type { DoctrineSupplyHook } from './economy/economy-lod-types';
@@ -29,6 +30,12 @@ const CASCADE_EXPOSURE = 0.05;
 const STEAL = 0.02;
 
 const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
+
+/** Log a doctrine's absolute meters (and collapse) for the world-file delta log. */
+function logDoctrine(state: SimState, d: DoctrineState): void {
+  const { realDelivery, perceivedDelivery, propaganda, control, exposure, legitimacy } = d;
+  pushDelta(state, { t: 'doctrine', townId: d.townId, doctrineId: d.id, day: state.day, patch: { realDelivery, perceivedDelivery, propaganda, control, exposure, legitimacy, ...(d.collapsed ? { collapsed: 1 } : {}) } });
+}
 
 /** formulas.legitimacy */
 export function legitimacyOf(m: Pick<DoctrineMeters, 'perceivedDelivery' | 'control'>): number {
@@ -167,6 +174,7 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
       (d as unknown as Record<string, number>)[m] = clamp01((d as unknown as Record<string, number>)[m]! + e.value);
     }
   }
+  logDoctrine(state, d);
   if (act.effects?.some((e) => e.target === 'doctrine.exposure')) {
     pushJuice(state, 'doctrine.exposed', { doctrineId: id, townId, personId, exposure: d.exposure });
   }
@@ -219,6 +227,7 @@ export function tickDoctrines(state: SimState): { collapsed: string[]; competed:
       pushJuice(state, 'doctrine.collapse', { doctrineId: id, townId: d.townId });
     }
   }
+  for (const c of newlyCollapsed) logDoctrine(state, c);
   for (const c of newlyCollapsed) collapseRipples(state, c, all, ids);
   challengerSwaps(state, all, ids);
   // Cascade: each collapse nudges linked surviving doctrines' exposure once.
