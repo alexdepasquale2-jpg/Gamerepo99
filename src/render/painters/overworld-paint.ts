@@ -874,6 +874,17 @@ export function paintChunkContents(
     if (ribbon) container.add(ribbon);
   }
 
+  // Broad timber decks over water: same cells used by collision, including joins.
+  const bridges = host.add.graphics();
+  for (const t of chunk.tiles.filter((t) => t.biomeId === 'road_bridge')) {
+    const x = (t.q - 1) * TILE_PX, y = (t.r - 1) * TILE_PX;
+    bridges.fillStyle(0x473122).fillRect(x, y, TILE_PX * 3, TILE_PX * 3);
+    for (let row = 0; row < 12; row++) {
+      bridges.fillStyle(row % 2 ? 0xa57548 : 0xb88954).fillRect(x + 2, y + row * TILE_PX / 4 + 1, TILE_PX * 3 - 4, TILE_PX / 4 - 2);
+    }
+    bridges.lineStyle(3, 0x573d2a).strokeRect(x + 1, y + 1, TILE_PX * 3 - 2, TILE_PX * 3 - 2);
+  }
+  container.add(bridges);
   return container;
 }
 

@@ -19,7 +19,7 @@ import type {
   TileRenderView,
 } from './types';
 import { layoutWorld, type WorldLayout } from './world-layout';
-import { biomeAt } from './terrain';
+import { createTerrainAccess } from './terrain-access';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
@@ -54,7 +54,7 @@ function layoutBBox(layout: WorldLayout): {
   };
 }
 
-function buildRoads(layout: WorldLayout): SparseRoad {
+export function buildRoads(layout: WorldLayout): SparseRoad {
   const byId = new Map(layout.settlements.map((s) => [s.id, s]));
   const roads: SparseRoad = new Map();
   for (const route of layout.routes) {
@@ -109,6 +109,7 @@ export function createStampRasterSource(
 ): TileSource {
   const layout = layoutWorld(world, seed);
   const roads = buildRoads(layout);
+  const terrain = createTerrainAccess(layout, seed, roads);
   const props = buildProps(roads, seed);
   const bbox = layoutBBox(layout);
   const fp = fingerprintHex([
@@ -149,12 +150,12 @@ export function createStampRasterSource(
         for (let q = qLo; q < qHi; q++) {
           const key = cellKey(q, r);
           if (roads.has(key)) {
-            tiles.push({ q, r, biomeId: 'road', warmth: 0.55 });
+            tiles.push({ q, r, biomeId: terrain.isBridge(q, r) ? 'road_bridge' : 'road', warmth: 0.55 });
           } else {
             tiles.push({
               q,
               r,
-              biomeId: biomeAt(seed, q, r),
+              biomeId: terrain.biome(q, r),
               warmth: 0.35,
             });
           }

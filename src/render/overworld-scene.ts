@@ -13,6 +13,7 @@ import {
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
+import { createTerrainAccess } from '../sim/map/terrain-access';
 import { FEEL } from './feel';
 import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
@@ -36,6 +37,7 @@ const VERB: Record<string, string> = {
 export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
   private source!: TileSource;
+  private terrain!: ReturnType<typeof createTerrainAccess>;
   private layout!: WorldLayout;
   private layer!: ChunkLayer;
   private player!: Phaser.GameObjects.Sprite;
@@ -72,6 +74,7 @@ export class OverworldScene extends Phaser.Scene {
     if (!world) throw new Error('overworld requires booted world');
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed);
+    this.terrain = createTerrainAccess(this.layout, seed);
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements);
     this.spawnPlayer();
@@ -161,8 +164,13 @@ export class OverworldScene extends Phaser.Scene {
         FEEL.overworld.walkTilesPerSec,
         TILE_PX,
       );
-      this.player.x += step.dx;
-      this.player.y += step.dy;
+      // Substeps prevent tunnelling during a slow frame; slide along banks.
+      const n = Math.max(1, Math.ceil(Math.hypot(step.dx, step.dy) / 6));
+      const safe = (x: number, y: number) => [-5, 5].every((off) => this.terrain.passable(Math.floor((x + off) / TILE_PX), Math.floor((y - 2) / TILE_PX)));
+      for (let i = 0; i < n; i++) {
+        if (safe(this.player.x + step.dx / n, this.player.y)) this.player.x += step.dx / n;
+        if (safe(this.player.x, this.player.y + step.dy / n)) this.player.y += step.dy / n;
+      }
       applySpriteSort(this.player);
       if (this.playerShadow) {
         this.playerShadow.setPosition(this.player.x, this.player.y - 2);
