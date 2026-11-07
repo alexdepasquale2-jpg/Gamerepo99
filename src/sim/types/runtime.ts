@@ -21,7 +21,18 @@ export type EmbodimentState = {
   footprint?: unknown;
   moveTicksPerTile?: number;
   mode?: string;
+  /** Overworld walk speed multiplier (1 = human pace). */
+  walkSpeedMul?: number;
+  /** Overworld sprite scale relative to a human body. */
+  spriteScale?: number;
+  /** Said when a door's entrance is blocked for this body. */
+  blockedLine?: string;
+  /** Names for each body when mode is multi (bodySlots of them). */
+  bodyNames?: string[];
 };
+
+/** One body of a multi-body inhabitant. `at` is 'with_you' (moves with the player) or the town it waits in. */
+export type BodyState = { id: string; name: string; at: string };
 
 export type Inhabitant = {
   id: string;
@@ -38,6 +49,12 @@ export type Inhabitant = {
   townId?: string;
   x?: number;
   y?: number;
+  /** Where this inhabitant's home hearth is (spark profile home town, else the start town). */
+  homeTownId?: string;
+  /** Multi-body inhabitants only: every body and where it is. */
+  bodies?: BodyState[];
+  /** Multi-body inhabitants only: the body the player controls. */
+  activeBodyId?: string;
 };
 
 export type PersonState = {

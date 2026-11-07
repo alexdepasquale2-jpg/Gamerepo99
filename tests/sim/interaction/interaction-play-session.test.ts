@@ -10,7 +10,7 @@ function playSession(seed = 42): PlaySession {
 }
 
 describe('play-session interaction compat (default on)', () => {
-  it('inspire@<person> resolves talk_gentle: interaction event + spark net -1 (strain 1, gain 1, gentle tag -1)', () => {
+  it('inspire@<person> resolves talk_gentle: interaction event + spark net -1 (strain 1, gain 1, gentle tag -1) scaled by Marrow inspire cost x1.05', () => {
     const s = playSession();
     const personId = s.listPeople()[0]!.id;
     const sparkBefore = s.snapshot().spark;
@@ -22,7 +22,8 @@ describe('play-session interaction compat (default on)', () => {
     // Legacy methods.sparkCost path must not run.
     expect(events.some((e) => e.type === 'spark.spend')).toBe(false);
     expect(events.some((e) => e.methodId === 'inspire')).toBe(false);
-    expect(s.snapshot().spark).toBe(sparkBefore - 1);
+    // Strain 1 x Marrow's inspire sparkCostMul 1.05, gain 1, gentle tag -1.
+    expect(s.snapshot().spark).toBeCloseTo(sparkBefore - 1.05, 9);
   });
 
   it('advance:/travel:/approach@ still route outside compat', () => {
@@ -56,7 +57,7 @@ describe('play-session interaction compat (default on)', () => {
     s.act('challenge@harold_finch');
     const r = s.lastResolve()!;
     expect(r).toMatchObject({ kind: 'resolved', personId: 'harold_finch', methodId: 'challenge' });
-    expect(r.flameDelta).toBe(8); // stand_up touch.flame01 0.08
+    expect(r.flameDelta).toBe(9); // stand_up touch.flame01 0.08 x Marrow challenge powerMul 1.1 = 8.8
     expect(r.sparkCost).toBe(2); // stand_up strain 4 - gain 2
     const after = s.listPeople().find((p) => p.id === 'harold_finch')!;
     expect(after.marks).toEqual(r.marks);

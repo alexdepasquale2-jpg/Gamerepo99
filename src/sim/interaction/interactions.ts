@@ -43,8 +43,11 @@ export function resolveInteraction(
   rt: InteractionRuntime,
   interactionId: string,
   personId: string,
-  _args?: Record<string, unknown>,
+  /** Optional act multipliers from the inhabitant (powerMul scales flame change, strainMul scales spark cost). */
+  args?: Record<string, unknown>,
 ): InteractionResult {
+  const powerMul = typeof args?.powerMul === 'number' ? args.powerMul : 1;
+  const actStrainMul = typeof args?.strainMul === 'number' ? args.strainMul : 1;
   const def = rt.catalog.get(interactionId);
   if (!def) throw new Error(`unknown interaction: ${interactionId}`);
   const p = rt.people.get(personId);
@@ -84,6 +87,7 @@ export function resolveInteraction(
   }
 
   const dBond = def.bondDelta ?? 0;
+  dFlame *= powerMul;
   p.flame01 = clamp(p.flame01 + dFlame, 0, 1);
   p.trust = clamp(p.trust + dTrust, 0, 1);
   p.bond += dBond;
@@ -93,7 +97,7 @@ export function resolveInteraction(
     strainMul *= sp.strainMulByTag?.[t] ?? 1;
     gainAdj += sp.sparkGainAdjustByTag?.[t] ?? 0;
   }
-  p.spark = clamp(p.spark - def.baseStrain * strainMul + def.sparkGain + gainAdj, 0, sp.sparkMax);
+  p.spark = clamp(p.spark - def.baseStrain * strainMul * actStrainMul + def.sparkGain + gainAdj, 0, sp.sparkMax);
 
   let ts = Math.abs(dFlame) * (w.flame01Abs ?? 0) + dBond * (w.bond ?? 0) + dPresence * (w.presenceDay ?? 0) + flat;
   if (def.meaning || def.tags?.includes('meaning')) ts += w.meaning ?? 0;

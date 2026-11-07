@@ -23,6 +23,7 @@ declare global {
 async function boot(page: Page): Promise<void> {
   await page.goto('/');
   await page.locator('[data-id=new]').click();
+  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!window.__hearth, null, { timeout: 20_000 });
 }

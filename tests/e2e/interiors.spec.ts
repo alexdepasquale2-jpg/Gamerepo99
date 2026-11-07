@@ -25,12 +25,13 @@ type Hook = {
 const hook = <T,>(page: Page, fn: (h: Hook) => T): Promise<T> =>
   page.evaluate((src) => (new Function('h', `return (${src})(h)`))((window as unknown as { __hearth: Hook }).__hearth), fn.toString());
 
-async function boot(page: Page): Promise<string[]> {
+async function boot(page: Page, archetypeId = 'marrow'): Promise<string[]> {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await page.goto('/');
   await page.locator('[data-id=new]').click();
+  await page.locator(`[data-id=arch-${archetypeId}]`).click(); // pick who you are
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
   return errors;
@@ -60,7 +61,7 @@ test('enter and leave houses, shop and inn', async ({ page }) => {
 });
 
 test('E at a door enters; E at the exit mat leaves', async ({ page }) => {
-  const errors = await boot(page);
+  const errors = await boot(page, 'ivy_quill'); // a human body fits a cottage door
   const b = await hook(page, (h) => h.interior.buildings().find((x) => x.kind === 'house')!);
   await page.evaluate((door) => {
     const p = (window as unknown as { __hearth: Hook }).__hearth.scene.player;
@@ -180,5 +181,19 @@ test('G lights the lantern in a room', async ({ page }) => {
   await page.keyboard.press('g');
   await page.waitForTimeout(300);
   await page.locator('#game canvas').screenshot({ path: path.join(OUT, 'lantern-lit.png') });
+  expect(errors).toEqual([]);
+});
+
+test('the ogre is too big for a cottage door and stays outside', async ({ page }) => {
+  const errors = await boot(page, 'marrow');
+  const b = await hook(page, (h) => h.interior.buildings().find((x) => x.kind === 'house')!);
+  await page.evaluate((door) => {
+    const p = (window as unknown as { __hearth: Hook }).__hearth.scene.player;
+    p.x = door.x; p.y = door.y + 14;
+  }, b.door);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('e');
+  await page.waitForTimeout(900);
+  expect(await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state())).toBeNull();
   expect(errors).toEqual([]);
 });

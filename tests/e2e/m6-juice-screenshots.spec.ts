@@ -8,7 +8,10 @@ test('capture reignite + despair', async ({ page }) => {
   fs.mkdirSync(OUT, { recursive: true });
   await page.goto('/');
   const nw = page.locator('[data-id=new]');
-  if (await nw.count()) await nw.click();
+  if (await nw.count()) {
+    await nw.click();
+    await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+  }
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as any).__hearth, null, { timeout: 20_000 });
   await page.waitForTimeout(1500);

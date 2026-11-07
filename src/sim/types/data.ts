@@ -49,4 +49,6 @@ export type ArchetypeDef = {
   startingTownId: string;
   defaultProofId?: string;
   burnoutVignette?: string;
+  /** Hex tint for the inhabitant's overworld sprite. */
+  tint?: string;
 };

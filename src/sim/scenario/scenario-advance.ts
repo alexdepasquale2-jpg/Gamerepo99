@@ -15,6 +15,7 @@ import { tickBorders } from '../economy/borders';
 import { tickPolity } from '../economy/polity';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
+import { rollDayFlags, setBodyFlags } from '../embodiment';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
 import type { Rng } from '../rng';
@@ -65,12 +66,16 @@ export function clampPlayerSpark(state: SimState): void {
   if (state.player.spark > max) state.player.spark = max;
 }
 
-/** Advance one dusk beat: personal-cost hooks + optional spark.spend juice. */
-export function advanceToDusk(state: SimState): void {
+/**
+ * The evening's personal costs (loneliness, brood strain, an empty row…) without advancing the calendar.
+ * Returns false when the state has no data/rng to run hooks with.
+ */
+export function runDuskHooks(state: SimState): boolean {
   state.flags.noBurningAdjacent = !anyBurningAdjacent(state);
+  setBodyFlags(state);
   const data = state.data as DataTables | undefined;
   const rng = state.rng as Rng | undefined;
-  if (!data || !rng) return;
+  if (!data || !rng) return false;
   const sparkBefore = state.player.spark;
   runHooks(state, 'dusk', { data, rng });
   if (state.player.spark < sparkBefore) {
@@ -79,6 +84,12 @@ export function advanceToDusk(state: SimState): void {
       reason: 'dusk',
     });
   }
+  return true;
+}
+
+/** Advance one dusk beat: personal-cost hooks + optional spark.spend juice. */
+export function advanceToDusk(state: SimState): void {
+  if (!runDuskHooks(state)) return;
   state.day += 1;
   state.flags.kindSuccessToday = false;
 }
@@ -87,6 +98,7 @@ export function advanceToDusk(state: SimState): void {
 export function advanceToDawn(state: SimState): void {
   state.day += 1;
   state.flags.kindSuccessToday = false;
+  rollDayFlags(state);
   const data = state.data as DataTables | undefined;
   const rng = state.rng as Rng | undefined;
   if (data && rng) {
