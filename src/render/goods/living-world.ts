@@ -3,6 +3,7 @@
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
 import { deriveRng } from '../../sim/rng';
+import { pointOnRoad, type LayoutRoute } from '../../sim/map/world-layout';
 import { TILE_PX } from '../../sim/map/constants';
 import { tileFootWorld } from '../depth-sort';
 import { ensureGoodsTextures, texKey } from './node-textures';
@@ -12,7 +13,7 @@ type Pt = { x: number; y: number };
 const DAY_MS = 120_000;
 const STOCK_OK = 4;
 
-type Wagon = { routeIdx: number; phase: number; speed: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image };
+type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image };
 type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: number };
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
@@ -20,12 +21,12 @@ type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter 
 export type LivingWorld = { update: (time: number, dt: number) => void; caravanPositions: () => Pt[]; refresh: () => void };
 
 export function createLivingWorld(
-  scene: Phaser.Scene, seed: number, towns: Town[], routes: { from: string; to: string }[],
+  scene: Phaser.Scene, seed: number, towns: Town[], routes: LayoutRoute[],
   getState: () => SimState | undefined, despair: () => Record<string, number>,
 ): LivingWorld {
   ensureGoodsTextures(scene);
   const pos = new Map(towns.map((t) => [t.id, tileFootWorld(t.q, t.r)]));
-  const legs = routes.map((r) => [pos.get(r.from), pos.get(r.to)] as const).filter((l): l is readonly [Pt, Pt] => !!l[0] && !!l[1]);
+  const byRoute = new Map(routes.map((r) => [r.id, r]));
 
   // Ground fill: grass tufts + flowers scattered around towns and roads (static, seeded).
   const fill = deriveRng(seed, 'ground-fill');
@@ -37,16 +38,13 @@ export function createLivingWorld(
     }
   };
   for (const p of pos.values()) scatter(p, 40, TILE_PX * 22);
-  for (const [a, b] of legs) for (let f = 0.1; f < 1; f += 0.1) scatter({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }, 6, TILE_PX * 10);
+  for (const r of routes) for (let f = 0.1; f < 1; f += 0.1) {
+    const p = pointOnRoad(r.path, f);
+    scatter(tileFootWorld(p.q, p.r), 6, TILE_PX * 10);
+  }
 
-  const wagons: Wagon[] = [];
-  legs.forEach((_, i) => {
-    const r = deriveRng(seed, 'wagon', i);
-    const ox = scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2);
-    const wagon = scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2);
-    wagons.push({ routeIdx: i, phase: r.next(), speed: 0.6 + r.next() * 0.6, wagon, ox });
-  });
-
+  // Only show real economy mobiles, never a phantom wagon per edge.
+  const wagons = new Map<string, Wagon>();
   const critters: Critter[] = [];
   const cr = deriveRng(seed, 'critters');
   for (const p of pos.values()) {
@@ -86,17 +84,30 @@ export function createLivingWorld(
   let since = 0;
   return {
     refresh,
-    caravanPositions: () => wagons.map((w) => ({ x: w.wagon.x, y: w.wagon.y })),
+    caravanPositions: () => [...wagons.values()].map((w) => ({ x: w.wagon.x, y: w.wagon.y })),
     update(time, dt) {
-      for (const w of wagons) {
-        const [a, b] = legs[w.routeIdx]!;
-        const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-        w.phase = (w.phase + (dt * w.speed * 22) / 1000 / (len * 2)) % 1;
-        const f = w.phase < 0.5 ? w.phase * 2 : 2 - w.phase * 2;
-        const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f;
-        const dir = (w.phase < 0.5 ? 1 : -1) * Math.sign(b.x - a.x || 1);
-        w.wagon.setPosition(x, y).setDepth(y).setFlipX(dir < 0);
-        w.ox.setPosition(x + dir * 26, y).setDepth(y).setFlipX(dir < 0);
+      const mobiles = getState()?.caravans ?? [];
+      const liveIds = new Set(mobiles.map((m) => m.id));
+      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); wagons.delete(id); }
+      for (const m of mobiles) {
+        const road = byRoute.get(m.routeId);
+        if (!road) continue;
+        const f = m.heading === 'outbound' ? m.progress01 : 1 - m.progress01;
+        let w = wagons.get(m.id);
+        if (!w) {
+          w = { progress: f,
+            wagon: scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2),
+            ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2) };
+          wagons.set(m.id, w);
+        }
+        // Dawn is authoritative; ease only presentation along the actual curve.
+        w.progress += (f - w.progress) * Math.min(1, dt / 350);
+        const p = pointOnRoad(road.path, w.progress);
+        const ahead = pointOnRoad(road.path, Math.max(0, Math.min(1, w.progress + (m.heading === 'outbound' ? 0.003 : -0.003))));
+        const foot = tileFootWorld(p.q, p.r), lead = tileFootWorld(ahead.q, ahead.r);
+        const dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy) || 1;
+        w.wagon.setPosition(foot.x, foot.y).setDepth(foot.y).setFlipX(dx < 0);
+        w.ox.setPosition(foot.x + dx / length * 26, foot.y + dy / length * 26).setDepth(foot.y + dy / length * 26).setFlipX(dx < 0);
       }
       for (const c of critters) {
         const t = time / 1000 + c.seed;

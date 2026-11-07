@@ -3,6 +3,7 @@
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
 import { gatherNode, nodeCharges, placeNodes, type WorldNode } from '../../sim/goods/nodes';
+import type { MapPoint } from '../../sim/map/world-layout';
 import { tileFootWorld } from '../depth-sort';
 import { ensureGoodsTextures, texKey } from './node-textures';
 
@@ -25,7 +26,7 @@ export function createNodesLayer(
   getState: () => SimState | undefined,
   seed: number,
   settlements: { id: string; q: number; r: number }[],
-  routes: { from: string; to: string }[],
+  routes: { from: string; to: string; path?: MapPoint[] }[],
 ): NodesLayer {
   ensureGoodsTextures(scene);
   const nodes = placeNodes(seed, settlements, routes);

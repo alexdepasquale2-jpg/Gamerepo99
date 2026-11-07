@@ -46,7 +46,7 @@ export function assignSettlementTowns(
   if (settlements.length === 0) return;
   let i = 0;
   for (const p of Object.values(people)) {
-    if (p.townId) continue;
+    if (p.townId && settlements.includes(p.townId)) continue;
     p.townId = settlements[i % settlements.length]!;
     i += 1;
   }

@@ -1,3 +1,5 @@
+import { bindWorldEconomy } from './play-world-economy';
+import { toTravelRoutes } from '../travel/travel';
 /** Play + inspect session factory. Play boots generateWorld into SimState. */
 
 import type { FabricWorld } from '../gen/world';
@@ -113,7 +115,10 @@ function createPlayModeSession(defaults: {
     connectJuice();
     seed = next.seed;
     world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
-    routes = next.routes ?? [];
+    bindWorldEconomy(next, world);
+    routes = toTravelRoutes(world.routes ?? []);
+    next.routes = routes;
+    if (!world.settlements?.some((s) => s.id === next.player.townId)) next.player.townId = world.settlements?.[0]?.id;
     tickN = Math.max(0, next.day - 1);
     eventLog.length = 0;
     successionOpen.value = false;
