@@ -1,0 +1,51 @@
+diff --git a/src/sim/dyn/line-select.ts b/src/sim/dyn/line-select.ts
+index 8d49bc7..e5ebb1f 100644
+--- a/src/sim/dyn/line-select.ts
++++ b/src/sim/dyn/line-select.ts
+@@ -114,11 +114,10 @@ function fixedFromCandidates(cands: Frag[], ctx: ReactionPickCtx): ReactionLineR
+   const preferred =
+     cands.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
+     cands.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
++    cands.find((f) => (f.tags ?? []).includes('verbatim_mirror')) ??
+     cands[0];
+   if (preferred?.text) return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
+-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> }).people;
+-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
+-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
++  return { lineId: `${ctx.personId}.${ctx.methodId}`, text: '', source: 'fallback' };
+ }
+ 
+ function trustOf(ctx: ReactionPickCtx): number {
+diff --git a/src/sim/method-reactions.ts b/src/sim/method-reactions.ts
+index 96cb132..4d5ba11 100644
+--- a/src/sim/method-reactions.ts
++++ b/src/sim/method-reactions.ts
+@@ -31,10 +31,24 @@ export type ReactionLineResult = {
+ export type ReactionLineSelector = (ctx: ReactionPickCtx) => ReactionLineResult;
+ 
+ export function pickFixedReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
+-  const people = (ctx.state.data.lines as { people?: Record<string, { methods?: Record<string, string> }> })
+-    .people;
+-  const text = people?.[ctx.personId]?.methods?.[ctx.methodId] ?? '';
+-  return { lineId: `${ctx.personId}.${ctx.methodId}`, text, source: text ? 'fixed' : 'fallback' };
++  const personTag = `person:${ctx.personId}`;
++  const methodTag = `method:${ctx.methodId}`;
++  const frags = ctx.state.data.lineFragments?.fragments ?? [];
++  const alone = frags.filter((f) => {
++    const tags = f.tags ?? [];
++    const aloneSlot =
++      f.slot === 'alone' || tags.includes('slot:alone') || (!f.slot && !tags.some((t) => t.startsWith('slot:')));
++    return aloneSlot && tags.includes(personTag) && tags.includes(methodTag);
++  });
++  const preferred =
++    alone.find((f) => (f.tags ?? []).includes('authored_anchor')) ??
++    alone.find((f) => (f.tags ?? []).includes('fallback_mirror')) ??
++    alone.find((f) => (f.tags ?? []).includes('verbatim_mirror')) ??
++    alone[0];
++  if (preferred?.text) {
++    return { lineId: preferred.id, text: preferred.text, source: 'fixed' };
++  }
++  return { lineId: `${ctx.personId}.${ctx.methodId}`, text: '', source: 'fallback' };
+ }
+ 
+ /** Set per-state selector; null resets to pickFixedReactionLine. No cross-state leaks. */

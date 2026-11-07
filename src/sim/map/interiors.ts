@@ -218,3 +218,15 @@ export function interiorLine(kind: InteriorKind, despair01: number, visit: numbe
   return pool[((visit % pool.length) + pool.length) % pool.length]!;
 }
 export const EMPTY_ROOM_LINE: string = lines.empty;
+
+/** Plain-words time of day for the room HUD (matches the sky stops: night is ~0.76-0.92). */
+export function dayPartLabel(day01: number): string {
+  const t = ((day01 % 1) + 1) % 1;
+  if (t < 0.12) return 'Dawn';
+  if (t < 0.45) return 'Morning';
+  if (t < 0.55) return 'Midday';
+  if (t < 0.68) return 'Afternoon';
+  if (t < 0.76) return 'Dusk';
+  if (t < 0.92) return 'Night';
+  return 'Dawn';
+}
