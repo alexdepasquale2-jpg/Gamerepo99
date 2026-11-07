@@ -117,7 +117,7 @@ export function actInteraction(
     methodId,
     seed: s.seed,
     state: s,
-    features: { bakedDynamismLines: false },
+    features: { bakedDynamismLines: (data.player as { features?: { bakedDynamismLines?: boolean } }).features?.bakedDynamismLines ?? false },
   });
   pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
 

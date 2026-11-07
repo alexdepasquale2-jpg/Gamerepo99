@@ -24,6 +24,6 @@
   "designStatus": "LOCKED",
   "successionUiRef": "archetypes.json succession.ui",
   "features": {
-    "bakedDynamismLines": false
+    "bakedDynamismLines": true
   }
 }

@@ -21,6 +21,7 @@ import {
   type TravelSimState,
 } from '../travel/travel';
 import { tickPackets } from '../packets';
+import { advanceToDawn } from '../scenario/scenario-advance';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
@@ -88,7 +89,12 @@ function createPlayModeSession(defaults: {
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
     ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId));
-    const bus = state.bus as { emit?: (e: string, p: unknown) => void };
+    connectJuice();
+  }
+
+  // Loaded/imported states have a fresh bus too; presentation must follow it.
+  function connectJuice(): void {
+    const bus = state!.bus as { emit?: (e: string, p: unknown) => void };
     const inner = bus.emit;
     bus.emit = (e, p) => {
       inner?.(e, p);
@@ -103,8 +109,9 @@ function createPlayModeSession(defaults: {
   /** Load/import path: swap in a whole SimState and rebuild what lives outside it. */
   function adopt(next: TravelSimState): void {
     state = next;
+    connectJuice();
     seed = next.seed;
-    world = generateWorld({ seed, includeAnchors: true });
+    world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
     routes = next.routes ?? [];
     tickN = Math.max(0, next.day - 1);
     eventLog.length = 0;
@@ -141,8 +148,9 @@ function createPlayModeSession(defaults: {
     tick() {
       if (!state) return;
       tickN += 1;
-      state.day += 1;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
+      // Rest is a real dawn, not just a calendar/packet increment.
+      advanceToDawn(state);
       tickPackets(state);
       appendJuiceSince(beforeLen);
       maybeOpenSuccession(state, eventLog, successionOpen);
