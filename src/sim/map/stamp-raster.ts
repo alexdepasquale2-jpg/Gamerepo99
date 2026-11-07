@@ -22,6 +22,7 @@ import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
 import { terrainMode } from './terrain';
 import { scatterProps, type ScatterCtx } from './ladder/scatter';
+import { chunkEdits, type TileEdits } from './tile-edits';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
@@ -108,6 +109,8 @@ function buildProps(
 export function createStampRasterSource(
   world: FabricWorld,
   seed: number,
+  /** Live per-chunk tile edits (from SimState), applied over generated tiles. */
+  edits?: () => TileEdits | undefined,
 ): TileSource {
   const layout = layoutWorld(world, seed);
   const roads = buildRoads(layout);
@@ -183,6 +186,8 @@ export function createStampRasterSource(
           p.position.y < tr1,
       );
 
+      const edited = chunkEdits(edits?.(), cx, cy);
+      if (edited) for (const t of tiles) { const b = edited[`${t.q},${t.r}`]; if (b) t.biomeId = b; }
       if (terrainMode() === 'ladder') chunkProps.push(...scatterProps(seed, tq0, tr0, CHUNK_SIZE, scatterCtx));
       return { cx, cy, tiles, props: chunkProps };
     },

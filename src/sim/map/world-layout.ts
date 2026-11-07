@@ -17,7 +17,8 @@ export const settlementKind = (s: { gap01: number }): SettlementKind =>
 
 /** Best-candidate clustered placement. Cities seed regions, towns orbit cities,
  * villages orbit towns. Maximise separation with a bounded deterministic search. */
-export function placeSettlements(raw: SettlementGen[], seed: number): LayoutSettlement[] {
+/** Settlements at the original (pre-WORLD_SCALE) scale; used by save migration. */
+export function placeSettlementsBase(raw: SettlementGen[], seed: number): LayoutSettlement[] {
   const rank = { city: 0, town: 1, village: 2 };
   const ordered = raw.slice().sort((a, b) => rank[settlementKind(a)] - rank[settlementKind(b)] || a.id.localeCompare(b.id));
   const placed: LayoutSettlement[] = [];
@@ -46,9 +47,13 @@ export function placeSettlements(raw: SettlementGen[], seed: number): LayoutSett
     }
     placed.push({ id: s.id, kind, ...best });
   }
-  // Placed at the original scale, then stretched, so the layout is exactly proportional.
   // Keep input order stable: it controls existing player spawning and social allocation.
-  return raw.map((s) => placed.find((p) => p.id === s.id)!).map((p) => ({ ...p, q: Math.round(p.q * S), r: Math.round(p.r * S) }));
+  return raw.map((s) => placed.find((p) => p.id === s.id)!);
+}
+
+/** Placed at the original scale, then stretched, so the layout is exactly proportional. */
+export function placeSettlements(raw: SettlementGen[], seed: number): LayoutSettlement[] {
+  return placeSettlementsBase(raw, seed).map((p) => ({ ...p, q: Math.round(p.q * S), r: Math.round(p.r * S) }));
 }
 
 /** Shared small-amplitude curve, sampled in tiles; endpoints are exact. */

@@ -33,7 +33,7 @@ describe('save round trip', () => {
     expect(Object.keys(st.patronDeals ?? {}).length).toBeGreaterThan(0);
 
     const blob = parseSave(serializeSave(saveState(st)))!;
-    expect(blob.version).toBe(2);
+    expect(blob.version).toBe(3);
     expect(JSON.parse(JSON.stringify(blob))).toEqual(blob);
     const loaded = loadState(blob, loadData());
     // Facilities, caravan schedules and hooks derive from the generated world rather than the

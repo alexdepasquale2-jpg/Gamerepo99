@@ -117,6 +117,8 @@ export type SimState = {
   /** Items the player set down in the world (px coords). */
   groundItems?: { id: string; itemId: string; x: number; y: number; instId?: string }[];
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
+  /** Per-chunk tile edits ("cx,cy" -> "q,r" -> biomeId); generated tiles are never saved. */
+  tileEdits?: import('../map/tile-edits').TileEdits;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */

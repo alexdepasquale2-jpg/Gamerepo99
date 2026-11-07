@@ -84,7 +84,7 @@ export class OverworldScene extends Phaser.Scene {
     const seed = this.session.getSeed();
     if (!world) throw new Error('overworld requires booted world');
     this.layout = layoutWorld(world, seed);
-    this.source = createStampRasterSource(world, seed);
+    this.source = createStampRasterSource(world, seed, () => this.session.getState()?.tileEdits);
     this.terrain = createTerrainAccess(this.layout, seed);
     this.nav = createNavigator(this.terrain);
 
