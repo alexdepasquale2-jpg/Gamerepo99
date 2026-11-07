@@ -4,17 +4,15 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { createPlaySession, tickEconomyLod, type PlaySession } from '../../../src/sim';
-import { ensureEconomyState } from '../../../src/sim/economy';
 import { loadData } from '../../../src/sim/load-data';
-import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
+import { bootAuthoredEconomy } from './authored-economy';
 import { advanceToDawn } from '../../../src/sim/scenario/scenario-advance';
 import type { SimState } from '../../../src/sim/types/runtime';
 
 const SEED = 42;
 
 function bootState(seed = SEED): SimState {
-  const { state } = bootPlayState(seed, 'marrow');
-  ensureEconomyState(state);
+  const state = bootAuthoredEconomy(seed);
   state.economyHooks = undefined; // isolate LOD from caravans (packet-02 registers the hook at boot)
   return state;
 }
@@ -74,7 +72,9 @@ describe('tickEconomyLod (M4 packet-01)', () => {
     // mill 3*1.0 + camp timber 2*0.8 / fuel 1*0.8; condition 1.0; receiveShare 0.5; grain spoils 2%.
     expect(lowmere.stock.food_grain).toBeCloseTo((food0 + 1.5) * 0.98, 6);
     expect(lowmere.stock.timber).toBeCloseTo(timber0 + 0.8, 6);
-    expect(lowmere.despair).toBe(despair0);
+    // Fed and connected: only the untouched-town neglect drift (economy-lod.json despair.neglect) applies.
+    const neglect = loadData().economyLod.despair.neglect!.onNeglect;
+    expect(lowmere.despair).toBeCloseTo(despair0 + neglect, 9);
     expect(juiceSince(state, juiceBefore)).toContain('stock.deliver');
 
     for (let i = 0; i < 4; i++) advanceToDawn(state);

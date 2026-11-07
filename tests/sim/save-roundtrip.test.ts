@@ -6,6 +6,7 @@ import { ensureHoard } from '../../src/sim/hoard';
 import { ensureStash } from '../../src/sim/hoard/state';
 import { acceptDeal } from '../../src/sim/patrons';
 import { loadData } from '../../src/sim/load-data';
+import { bindWorldEconomy } from '../../src/sim/play-session/play-world-economy';
 import { loadState, parseSave, saveState, serializeSave } from '../../src/sim/save';
 import type { SimState } from '../../src/sim/types/runtime';
 
@@ -35,6 +36,9 @@ describe('save round trip', () => {
     expect(blob.version).toBe(2);
     expect(JSON.parse(JSON.stringify(blob))).toEqual(blob);
     const loaded = loadState(blob, loadData());
+    // Facilities, caravan schedules and hooks derive from the generated world rather than the
+    // save; the session's adopt() rebinds them after loadState, and so does this round trip.
+    bindWorldEconomy(loaded, b.world);
     expect(view(loaded)).toEqual(view(st));
 
     for (let i = 0; i < 10; i++) {

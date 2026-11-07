@@ -250,12 +250,15 @@ describe('doctrine rules from data (challenger, relapse, city shock)', () => {
     s.people[pa!]!.townId = from;
     if (s.people[pb!]!.townId === from) s.people[pb!]!.townId = 'elsewhere';
     s.kinEdges = [{ from: pa!, to: pb!, kind: 'kin' }];
+    // Isolate collapse from propaganda competition: which doctrine towns are route-linked
+    // depends on the generated geography, and a linked rival would steal 0.02 perceived.
+    s.economyRoutes = [];
     Object.assign(d[id]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.8, control: 0 });
     tickDoctrines(s);
     const pkt = s.packets.find((p) => p.kind === 'relapse_pressure');
     expect(pkt?.fromTownId).toBe(from);
     expect(pkt?.toTownId).toBe(s.people[pb!]!.townId);
-    expect(pkt?.relapseMulAdd).toBeCloseTo(0.1 + 0.82);
+    expect(pkt?.relapseMulAdd).toBeCloseTo(0.1 + 0.8); // relapseMulBase + |perceived − real|
     expect(s.bus?.lastIds).toContain('packet.emit');
   });
 

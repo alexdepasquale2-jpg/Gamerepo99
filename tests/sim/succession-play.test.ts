@@ -11,7 +11,8 @@ describe('succession stub on burnout', () => {
     const play = s as PlaySession;
     play.start();
     forceSpark(play, 0);
-    play.tick();
+    // tick() is a real dawn that recovers spark; a spark-neutral act re-checks succession instead.
+    play.act(`approach@${play.listPeople()[0]!.id}`);
     expect(play.snapshot().burnedOut).toBe(true);
     expect(play.events().some((e) => e.type === 'succession.open')).toBe(true);
     const ui = getSuccessionUi(play);

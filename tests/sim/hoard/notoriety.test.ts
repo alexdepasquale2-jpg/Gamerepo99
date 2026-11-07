@@ -97,7 +97,7 @@ describe('notoriety', () => {
     };
     expect(thieves(0)).toBe(0);
     expect(thieves(1)).toBeGreaterThan(0);
-  });
+  }, 60_000); // 80 full world boots (~180ms each) exceed the 5s default
 
   it('src/sim never branches on archetypeId in hoard code', () => {
     for (const f of ['state', 'stash', 'notoriety', 'neglect', 'index']) {
@@ -107,14 +107,17 @@ describe('notoriety', () => {
   });
 
   it('each authored attractor effect applies deterministically, scaled by notoriety', () => {
+    // One world boot (~180ms) shared by every run; each run measures a delta from reset spark/trust.
+    const s = boot();
     const run = (id: string, n: number) => {
-      const s = boot();
+      s.player.spark = 50;
+      if (s.player.perception) s.player.perception.trust = 0.5;
       ensureHoard(s).notoriety = n;
       const before = { spark: s.player.spark, trust: s.player.perception?.trust ?? 0 };
       applyAttractorEffects(s, id);
       return { spark: s.player.spark - before.spark, trust: (s.player.perception?.trust ?? 0) - before.trust };
     };
-    const rows = (boot().data as any).notoriety.attractors.filter((a: any) => a.effects?.length);
+    const rows = (s.data as any).notoriety.attractors.filter((a: any) => a.effects?.length);
     expect(rows.length).toBeGreaterThanOrEqual(5);
     for (const a of rows) {
       const e = a.effects[0];

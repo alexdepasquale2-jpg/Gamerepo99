@@ -86,9 +86,16 @@ export function createInteractionSim(doc) {
     next.interactionCount += 1;
     next.kindsUsed.add(def.kind);
 
-    const strain = def.baseStrain * situationMul();
+    // Mirrors resolveInteraction: tag-driven strain multipliers and gain adjustments (scoring.spark).
+    let strainMul = situationMul();
+    let gainAdj = 0;
+    for (const t of def.tags || []) {
+      strainMul *= sparkCfg.strainMulByTag?.[t] ?? 1;
+      gainAdj += sparkCfg.sparkGainAdjustByTag?.[t] ?? 0;
+    }
+    const strain = def.baseStrain * strainMul;
     next.spark = clamp(
-      next.spark - strain + (def.sparkGain || 0),
+      next.spark - strain + (def.sparkGain || 0) + gainAdj,
       0,
       sparkCfg.sparkMax,
     );

@@ -167,22 +167,22 @@ describe('economy lengthen (M3 burnout fix)', () => {
 
   it('succession opens at emberZoneBelow (≤20), not only at hard zero', () => {
     const play = playSession(3, 'ivy_quill');
+    const person = play.listPeople()[0]!;
     forceSpark(play, 20);
-    play.act('advance:day'); // triggers maybeOpenSuccession via act path without spending spark… day advances + may regen
-    // Use a no-op-ish path: force again then tick (tick calls maybeOpenSuccession)
-    forceSpark(play, 20);
-    play.tick();
+    // tick() is a real dawn (recovers spark), so use a spark-neutral act, which re-checks succession.
+    play.act(`approach@${person.id}`);
+    expect(play.snapshot().spark).toBeLessThanOrEqual(20);
     expect(play.snapshot().burnedOut).toBe(true);
     expect(play.events().some((e) => e.type === 'succession.open')).toBe(true);
   });
 
   it('succession opens promptly on the act that drops spark into ember zone', () => {
     const play = playSession(3, 'ivy_quill');
-    forceSpark(play, 21);
+    forceSpark(play, 20.2);
     const shame = play.listActions().find((a) => a.id.startsWith('shame@'));
     expect(shame).toBeDefined();
-    play.act(shame!.id); // talk_hard_shame net −1 → spark 20 ≤ 20
-    expect(play.snapshot().spark).toBeLessThan(21);
+    play.act(shame!.id); // talk_hard_shame: strain 1 × 0.55 × 0.55 (hard, shame_lean) ≈ −0.30 → 19.9 ≤ 20
+    expect(play.snapshot().spark).toBeLessThan(20.2);
     expect(play.snapshot().spark).toBeLessThanOrEqual(20);
     expect(play.snapshot().burnedOut).toBe(true);
     expect(play.events().some((e) => e.type === 'succession.open')).toBe(true);

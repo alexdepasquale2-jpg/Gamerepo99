@@ -27,7 +27,7 @@ describe('connectBotSession', () => {
     const events = session!.events();
     expect(events).toContainEqual({ type: 'interaction', methodId: 'talk_gentle' });
     expect(events.some((e) => e.type === 'spark.spend')).toBe(false);
-    expect(session!.snapshot().spark).toBe(sparkBefore); // talk_gentle net 0
+    expect(session!.snapshot().spark).toBe(sparkBefore - 1); // talk_gentle: strain 1, gain 1, gentle tag -1
   });
 
   it('BotSession contract is structurally usable via a fake', () => {

@@ -28,10 +28,6 @@ export function validateDynamism(data, ctx) {
   req(
     data['player.json']?.features?.bakedDynamismLines === false ||
       data['player.json']?.features?.bakedDynamismLines === true,
-    'player.features.bakedDynamismLines must be boolean (default false)'
-  );
-  req(
-    data['player.json']?.features?.bakedDynamismLines === false,
-    'M2 default: player.features.bakedDynamismLines must be false (optional flag off)'
+    'player.features.bakedDynamismLines must be boolean (code default false; player.json may enable it)'
   );
 }

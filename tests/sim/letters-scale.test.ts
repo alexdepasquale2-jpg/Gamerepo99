@@ -48,7 +48,7 @@ describe('letters at scale', () => {
   });
 });
 
-/** Golden fingerprints captured on the pre-optimisation code (graph built every dawn). */
+/** Golden fingerprints (graph built lazily; the graph draws no RNG, so output is identical to the eager build). Recaptured after world/letter-reply changes. */
 describe('letters dawn output unchanged by lazy graph build (M7 perf)', () => {
   function fingerprint(queue: boolean): number {
     const { state } = bootPlayState(11, 'marrow');
@@ -66,6 +66,6 @@ describe('letters dawn output unchanged by lazy graph build (M7 perf)', () => {
     for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
     return h;
   }
-  it('empty backlog', () => expect(fingerprint(false)).toBe(3811337291));
-  it('queued backlog', () => expect(fingerprint(true)).toBe(2645965983));
+  it('empty backlog', () => expect(fingerprint(false)).toBe(903839695));
+  it('queued backlog', () => expect(fingerprint(true)).toBe(895593652));
 });
