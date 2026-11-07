@@ -63,6 +63,31 @@ export const doctrineSupplyHook: DoctrineSupplyHook = (state, { townId, deltaRea
   }
 };
 
+type ActRow = { id: string; effects?: { target: string; op: string; value: number }[] };
+
+/** Apply a doctrines.json act (by id) to the doctrine held in the target person's town. */
+export function applyDoctrineAct(state: SimState, actId: string, personId: string): string | undefined {
+  const act = ((state.data as DataTables | undefined)?.doctrines as { acts?: ActRow[] } | undefined)?.acts?.find(
+    (a) => a.id === actId,
+  );
+  const townId = state.people[personId]?.townId;
+  if (!act || !townId) return undefined;
+  const all = ensureDoctrines(state);
+  const id = Object.keys(all).sort().find((k) => all[k]!.townId === townId && !all[k]!.collapsed);
+  if (!id) return undefined;
+  const d = all[id]!;
+  for (const e of act.effects ?? []) {
+    const m = e.target.startsWith('doctrine.') ? e.target.slice(9) : '';
+    if (e.op === 'add' && m in d && typeof (d as Record<string, unknown>)[m] === 'number') {
+      (d as unknown as Record<string, number>)[m] = clamp01((d as unknown as Record<string, number>)[m]! + e.value);
+    }
+  }
+  if (act.effects?.some((e) => e.target === 'doctrine.exposure')) {
+    pushJuice(state, 'doctrine.exposed', { doctrineId: id, townId, personId, exposure: d.exposure });
+  }
+  return id;
+}
+
 function linked(state: SimState, a: string, b: string): boolean {
   return (state.economyRoutes ?? []).some(
     (r) =>

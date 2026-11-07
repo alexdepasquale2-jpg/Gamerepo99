@@ -23,6 +23,8 @@ export interface InteractionDef {
   marksAdd?: Record<string, number>;
   ripple?: string;
   tags?: string[];
+  /** Optional doctrines.json act id applied to the target's town doctrine. */
+  doctrineAct?: string;
   requires?: { promisePending?: boolean };
   promise?: { op: 'make' | 'keep' | 'break'; idFrom?: string };
   presenceDelta?: number;

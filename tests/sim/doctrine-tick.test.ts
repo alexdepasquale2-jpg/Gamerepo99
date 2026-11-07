@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyCollapse,
+  applyDoctrineAct,
   doctrineSupplyHook,
   ensureDoctrines,
   legitimacyOf,
@@ -103,5 +104,32 @@ describe('doctrineSupplyHook', () => {
 
   it('is registered by bootPlayState', () => {
     expect(boot().economyHooks?.doctrine).toBe(doctrineSupplyHook);
+  });
+});
+
+describe('doctrine player acts', () => {
+  it('expose act raises exposure of the target town doctrine, juices, and feeds collapse', () => {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = Object.keys(d).sort()[0]!;
+    const pid = Object.keys(s.people).sort()[0]!;
+    s.people[pid]!.townId = d[id]!.townId;
+    Object.assign(d[id]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.2, control: 0 });
+    expect(applyDoctrineAct(s, 'act_expose_lie', pid)).toBe(id);
+    expect(d[id]!.exposure).toBeCloseTo(0.45);
+    expect(s.bus?.lastIds).toContain('doctrine.exposed');
+    expect(tickDoctrines(s).collapsed).toContain(id);
+  });
+
+  it('carry act raises real and perceived delivery; unknown act is inert', () => {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = Object.keys(d).sort()[0]!;
+    const pid = Object.keys(s.people).sort()[0]!;
+    s.people[pid]!.townId = d[id]!.townId;
+    const r = d[id]!.realDelivery;
+    applyDoctrineAct(s, 'act_carry_promise', pid);
+    expect(d[id]!.realDelivery).toBeCloseTo(Math.min(1, r + 0.08));
+    expect(applyDoctrineAct(s, 'nope', pid)).toBeUndefined();
   });
 });

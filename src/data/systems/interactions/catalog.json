@@ -62,6 +62,7 @@
     },
     {
       "id": "talk_hard_shame",
+      "doctrineAct": "act_expose_lie",
       "kind": "conversation",
       "tags": [
         "talk",
@@ -214,6 +215,7 @@
     },
     {
       "id": "promise_keep",
+      "doctrineAct": "act_carry_promise",
       "kind": "promise",
       "tags": [
         "promise",

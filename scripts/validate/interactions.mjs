@@ -272,6 +272,10 @@ export function validateInteractions(data, ctx) {
     req(typeof it.baseStrain === 'number', `interaction ${it.id}: baseStrain`);
     req(typeof it.sparkGain === 'number', `interaction ${it.id}: sparkGain`);
     req(Array.isArray(it.tags), `interaction ${it.id}: tags`);
+    if (it.doctrineAct !== undefined) {
+      const acts = (data['doctrines.json']?.acts || []).map((a) => a.id);
+      req(acts.includes(it.doctrineAct), `interaction ${it.id}: unknown doctrineAct ${it.doctrineAct}`);
+    }
     // no archetypeId branching keys
     req(it.archetypeId === undefined, `interaction ${it.id}: archetypeId forbidden`);
     for (const m of it.touch?.marksAdd || []) {
