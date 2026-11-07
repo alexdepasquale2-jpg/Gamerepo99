@@ -1,4 +1,5 @@
 import type { HoardState } from './hoard/state';
+import type { LegacyState, ProtagonistImprint } from './legacy/types';
 import type { UnspokenState } from './social/unspoken-types';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
@@ -13,6 +14,9 @@ export type SaveBlob = {
   /** Hoarder path: carried coin + hoard state (notoriety, stashes, peakCoin, reigniteCount). */
   coin?: number;
   hoard?: HoardState;
+  /** Legacy: reserved protagonist imprint + bond/grave/lineage state (M5 Task C). */
+  imprint?: ProtagonistImprint | null;
+  legacy?: LegacyState;
 };
 
 export function serializeSave(blob: SaveBlob): string {

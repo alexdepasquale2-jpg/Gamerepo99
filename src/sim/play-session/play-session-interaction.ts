@@ -11,6 +11,7 @@
  *  juice     person.reaction, person.reignite, site.kindle
  */
 
+import { recordActBond } from '../legacy/bonds';
 import type { DataTables } from '../load-data';
 import { refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
@@ -126,6 +127,7 @@ export function actInteraction(
   }
   if (def0?.stashAct) applyStashAct(s, def0.stashAct);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
+  recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited });
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
   for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
   if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {

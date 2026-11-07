@@ -3,6 +3,7 @@
 import { tickDoctrines } from '../doctrine-tick';
 import { tickLetters } from '../letters-scale';
 import { tickHoardDawn } from '../hoard';
+import { tickLegacyDawn } from '../legacy/npc';
 import { tickEconomyLod } from '../economy/economy-lod';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
@@ -88,6 +89,7 @@ export function advanceToDawn(state: SimState): void {
   tickLetters(state);
   tickUnspokenDawn(state);
   tickHoardDawn(state);
+  tickLegacyDawn(state);
   clampPlayerSpark(state);
 }
 
