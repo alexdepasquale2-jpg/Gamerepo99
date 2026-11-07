@@ -108,7 +108,7 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.hint = this.add
-      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I/Tab: satchel · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
+      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I: satchel · F: use · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
     this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
@@ -124,6 +124,8 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-I', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
+    this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(); if (line) this.say(line); this.syncSparkFromSession(true); });
+    this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;

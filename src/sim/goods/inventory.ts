@@ -6,6 +6,7 @@ import type { SimState } from '../types/runtime';
 export type ItemRow = {
   id: string; name: string; icon: string; color: string; price: number;
   economyResourceId?: string; tags: string[];
+  use?: { spark?: number; hearthMemory?: boolean; correspondence?: boolean };
 };
 type AffinityRule = { personMatch: string; itemTag: string; weight: number };
 export type ItemsTable = {

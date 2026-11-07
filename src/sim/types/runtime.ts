@@ -98,6 +98,7 @@ export type SimState = {
   caravans?: CaravanMobile[];
   /** Player inventory: itemId -> qty (persisted in saves). */
   inventory?: Record<string, number>;
+  hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */

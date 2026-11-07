@@ -13,6 +13,9 @@ import { hash } from '../people-layer';
 import { createNodesLayer } from './nodes-layer';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
+import { useItem } from '../../sim/goods/item-use';
+import { ITEM_BY_ID } from '../../sim/goods/inventory';
+import { createCorrespondence } from './correspondence-ui';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
 
@@ -26,6 +29,8 @@ export type OverworldGoods = {
   gatherNear: (player: Pt) => string | null;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string) => { ok: boolean; line?: string };
+  useSelected: () => string | null;
+  letters: () => void;
   meetCaravan: (player: Pt) => boolean;
   closeOverlays: () => void;
   toggleInventory: () => void;
@@ -43,6 +48,8 @@ export function attachOverworldGoods(
   const nodes = createNodesLayer(scene, st, seed, layout.settlements, layout.routes);
   const despair = () => session.townDespair();
   const inv = createInventoryUi(scene, st);
+  const mail = createCorrespondence(scene, st, () => inv.refresh());
+  const memories = new Map<string, Phaser.GameObjects.Text>();
   const trader = createCaravanTrade(scene, st, () => inv.refresh());
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
@@ -81,6 +88,10 @@ export function attachOverworldGoods(
       nodes.update(player, time);
       living.update(time, dt);
       map.update(time);
+      for (const townId of Object.keys(st()?.hearthKeepsakes ?? {})) if (!memories.has(townId)) {
+        const p = hearthOf(townId, { x: 0, y: 0 });
+        memories.set(townId, scene.add.text(p.x + 20, p.y - 24, '◆', { color: '#f2b84b', fontSize: '16px', stroke: '#503c25', strokeThickness: 2 }).setDepth(p.y + 1));
+      }
     },
     onDawn() {
       nodes.refresh();
@@ -102,15 +113,23 @@ export function attachOverworldGoods(
       living.refresh();
       return r ? { ok: r.ok, line: r.line } : { ok: true };
     },
+    useSelected() {
+      const s = st(), id = inv.selectedItem();
+      if (!s || !id) return 'Select an item in your satchel.';
+      if (ITEM_BY_ID.get(id)?.use?.correspondence) { mail.open(); return null; }
+      const message = useItem(s, id, life.nearestHearth(getPlayer())?.town.id);
+      inv.refresh(); return message;
+    },
+    letters: () => mail.open(),
     meetCaravan(player) {
       const id = living.nearestCaravan(player);
       if (!id) return false;
       trader.open(id); return true;
     },
-    closeOverlays: () => trader.close(),
+    closeOverlays: () => { trader.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
     toggleInventory: () => inv.toggle(),
     toggleMap: () => map.toggle(),
     selectSlot: (i) => inv.select(i),
-    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen(),
+    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen(),
   };
 }
