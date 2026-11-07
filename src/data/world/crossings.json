@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "spec": "Lake crossings (rivers keep their own fords). Each slotTiles x slotTiles square holds up to maxPerSlot crossings (at least minGap tiles apart): 'width'-wide lanes laid across the shortest bank-to-bank water runs (>= minRun) found on candidate lines every lineStep tiles (east-west and north-south, seeded offset). Runs up to fordMaxRun are fords (wade); longer runs up to ferryMaxRun get a ferry pontoon. stepCost is the navigator's per-tile weight so people only take a slow ferry when the walk round the lake is longer.",
+  "slotTiles": 32,
+  "chance": 0.92,
+  "width": 3,
+  "fordMaxRun": 12,
+  "ferryMaxRun": 34,
+  "fordStepCost": 1.15,
+  "ferryStepCost": 1.5,
+  "minRun": 3,
+  "maxPerSlot": 4,
+  "minGap": 9,
+  "lineStep": 3
+}

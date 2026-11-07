@@ -13,3 +13,4 @@
 - Ladder terrain: `biomeAt` reads `ladderFor(seed)`; floor coords. Maps use `coarseBiomeAt` (L1), never per-tile over the whole world.
 - Chunk props are owned by the chunk (destroyed on unmount); `paintProp` returns its objects.
 - Anything placed per N tiles across the world bbox grows 40x with WORLD_SCALE; scale N or make it lazy per chunk (resource nodes were 90k sprites).
+- Lake crossings (src/sim/map/terrain-access.ts, data/world/crossings.json): lakes (non-river water) get fords (run<=fordMaxRun) and ferry pontoon lanes (<=ferryMaxRun); `isFerry`, stepCost weights (ford 1.15, ferry 1.5) feed the A* in nav.ts. Raster biomeId 'ferry', art in render/painters/ferry-paint.ts. A ferry is a fixed pontoon lane you walk (no moving boat). `npx vite-node scripts/lake-detour.mts` measures walk-vs-straight detours (before: mean 1.37, p90 1.97; after: 1.15 / 1.28).
