@@ -66,12 +66,17 @@ export function attachSurface(
     return { x: foot.x + ((h % 5) - 2) * 18, y: foot.y - TILE_PX * 1.6 - (h % 3) * 14 };
   };
 
+  const art = scene.children.list.filter((o) => o.getData('settlementTown')) as Phaser.GameObjects.Image[];
   let sincePoll = 0;
   scene.events.on('update', (_t: number, dt: number) => {
     sincePoll += dt;
     if (sincePoll > 250) {
       sincePoll = 0;
       retint();
+      for (const img of art) {
+        const sat = anims.get(img.getData('settlementTown') as string)?.value ?? 1;
+        img.setTexture(`${img.getData('settlementPalette')}-${Math.min(4, Math.round((1 - sat) / 0.2))}`);
+      }
     }
     queue.tick(dt);
     const radius = FEEL.tint.townRadiusTiles * TILE_PX;

@@ -1,3 +1,4 @@
+import { paintSettlement } from './settlement-art';
 import { BIOME_COLOR, type Biome } from '../../sim/map/terrain';
 /** Render-side painters for continuous overworld chunks. Presentation only. */
 
@@ -744,99 +745,9 @@ function paintScatterOne(
 }
 
 export function paintTownMarker(
-  host: PaintHost,
-  container: Phaser.GameObjects.Container | null,
-  town: { id: string; q: number; r: number },
-): void {
-  const foot = tileFootWorld(town.q, town.r);
-
-  // Single seamless settlement stamp (inn + walkway + house) — no join seam
-  addSoftShadow(host, container, foot.x + TILE_PX, foot.y, 2.4);
-  if (host.textures.exists(SETTLEMENT_TEX)) {
-    const img = host.add.image(foot.x + TILE_PX * 0.8, foot.y, SETTLEMENT_TEX);
-    applySpriteSort(img);
-    img.setDisplaySize(TILE_PX * 6.4, TILE_PX * 3.8);
-    container?.add(img);
-  } else if (
-    host.textures.exists('sheet-buildings') &&
-    host.textures.get('sheet-buildings').has('inn')
-  ) {
-    const img = host.add.image(foot.x, foot.y, 'sheet-buildings', 'inn');
-    applySpriteSort(img);
-    img.setDisplaySize(TILE_PX * 4.2, TILE_PX * 4.0);
-    container?.add(img);
-  }
-
-  // Town-palette CC0 oaks/pines in clusters west/east — footprints clear of building stamp
-  const exQ = FEEL.worldScale.treeExcludeQ;
-  const exR = FEEL.worldScale.treeExcludeR;
-  for (const [dq, dr, v] of [
-    [-4.2, 0.3, 0],
-    [-5.0, -0.5, 1],
-    [-4.6, -1.1, 0],
-    [-5.4, 0.6, 2],
-    [-3.8, -1.4, 1],
-    [6.2, 0.3, 1],
-    [7.0, -0.4, 0],
-    [6.6, -1.0, 2],
-    [7.6, 0.2, 0],
-    [7.2, -1.2, 1],
-  ] as const) {
-    // Exclusion AABB around settlement origin (inn+house stamp)
-    if (Math.abs(dq - 0.8) < exQ && Math.abs(dr) < exR) continue;
-    paintTree(host, container, town.q + dq, town.r + dr, v);
-  }
-
-  // Crates at porch (upper terrace) — larger via worldScale
-  paintCrate(host, container, town.q + 0.15, town.r + 0.45);
-  paintCrate(host, container, town.q + 1.2, town.r + 0.4);
-  paintCrate(host, container, town.q + 2.25, town.r + 0.45);
-
-  paintFenceAlongRoad(host, container, town.q + 0.5, town.r, 8);
-
-  // Small wheat patch south of roadside fence (procedural stalks, not veggie icons)
-  paintRoadsideCrops(host, container, town);
-
-  // Sparse irregular accent trees (not a grid) — left + lower meadow
-  for (const [dq, dr, v] of [
-    [-7.6, 0.4, 2],
-    [-8.8, 9.2, 0],
-    [8.2, 12.5, 2],
-  ] as const) {
-    if (Math.abs(dq - 0.8) < exQ && Math.abs(dr) < exR) continue;
-    const absR = town.r + dr;
-    const cliffR = town.r + 4;
-    if (absR >= cliffR - 0.3 && absR < cliffR + FEEL.worldScale.cliffClearTiles) continue;
-    if (v === 2) paintBush(host, container, town.q + dq, absR);
-    else paintTree(host, container, town.q + dq, absR, v);
-  }
-
-  // Scatter props + jittered poisson meadow clusters (empty grass mixed in)
-  paintScatterProps(host, container, town);
-  paintMeadowFillRing(host, container, town);
-
-  // Meadow south of cliff (r+4); paintSpacedVillagers also enforces cliffClearTiles
-  // Boot camera: place on upper meadow (south of stamp, north of cliff at r+4) — on-screen & clear of face
-  paintSpacedVillagers(host, container, town, [
-    [-4.2, 2.2, '1', true],
-    [8.4, 2.3, '7', false],
-    [-5.2, 3.0, '4', false],
-    [9.2, 3.1, '7', true],
-  ]);
-
-  const labelY = foot.y - TILE_PX * 4.2 - 12;
-  const label = host.add
-    .text(foot.x + TILE_PX * 1.2, labelY, town.id.replace(/_/g, ' '), {
-      fontFamily: 'monospace',
-      fontSize: '11px',
-      color: '#f2e9e4',
-      backgroundColor: '#00000099',
-      padding: { x: 4, y: 2 },
-    })
-    .setOrigin(0.5, 1)
-    .setDepth(foot.y + 30);
-  container?.add(label);
-}
+  host: PaintHost, container: Phaser.GameObjects.Container | null,
+  town: import('../../sim/map/world-layout').LayoutSettlement & { name?: string },
+): void { paintSettlement(host, town, container); }
 
 export function paintChunkContents(
   host: PaintHost,

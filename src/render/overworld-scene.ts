@@ -76,7 +76,7 @@ export class OverworldScene extends Phaser.Scene {
     this.source = createStampRasterSource(world, seed);
     this.terrain = createTerrainAccess(this.layout, seed);
 
-    this.layer = createChunkLayer(this, this.source, this.layout.settlements);
+    this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name }))); 
     this.spawnPlayer();
     this.ring = createActionRing(this);
     this.people = createPeopleLayer(
