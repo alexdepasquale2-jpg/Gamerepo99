@@ -3,7 +3,7 @@
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
-import { ITEMS, ITEM_BY_ID, addItem, bestGift, hasItem, itemName, listStacks, removeItem } from './inventory';
+import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 
 export type DeedGoodsResult = { ok: boolean; line: string };
 const GOODS_DEEDS = new Set(['gift_give', 'trade_fair', 'carry_goods', 'work_alongside']);
@@ -46,8 +46,9 @@ export function deliverToTown(state: SimState, townId: string, itemId: string, q
   return true;
 }
 
-function gift(state: SimState, personId: string): DeedGoodsResult {
-  const g = bestGift(state, personId);
+function gift(state: SimState, personId: string, selected?: string): DeedGoodsResult {
+  const chosen = selected && selected !== 'coin' && hasItem(state, selected) ? selected : undefined;
+  const g = chosen ? { itemId: chosen, affinity: giftAffinity(state, personId, chosen) } : bestGift(state, personId);
   if (!g) return { ok: false, line: 'You have nothing to give. Gather something first.' };
   removeItem(state, g.itemId);
   const relief = deliverToTown(state, townOf(state, personId), g.itemId, 1, personId);
@@ -55,12 +56,12 @@ function gift(state: SimState, personId: string): DeedGoodsResult {
   return { ok: true, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}` };
 }
 
-function trade(state: SimState, personId: string): DeedGoodsResult {
+function trade(state: SimState, personId: string, selected?: string): DeedGoodsResult {
   const townId = townOf(state, personId);
   const goods = listStacks(state).filter((s) => s.item.id !== 'coin' && s.item.economyResourceId);
   if (goods.length) {
     goods.sort((a, b) => priceAt(state, townId, b.item.id) - priceAt(state, townId, a.item.id));
-    const it = goods[0]!.item;
+    const it = goods.find((g) => g.item.id === selected)?.item ?? goods[0]!.item;
     const coin = Math.round(priceAt(state, townId, it.id) * ITEMS.deeds.tradeMarkup);
     removeItem(state, it.id);
     addItem(state, 'coin', coin);
@@ -80,8 +81,9 @@ function carry(state: SimState, personId: string): DeedGoodsResult {
   const due = cargo.findIndex((c) => c.toTownId === here && c.fromPersonId !== personId);
   if (due >= 0) {
     const c = cargo[due]!;
+    if (!hasItem(state, c.itemId, c.qty)) return { ok: false, line: `You need all ${c.qty} ${itemName(c.itemId)} to deliver this cargo.` };
     cargo.splice(due, 1);
-    removeItem(state, c.itemId, Math.min(c.qty, state.inventory?.[c.itemId] ?? 0));
+    removeItem(state, c.itemId, c.qty);
     addItem(state, 'coin', ITEMS.deeds.carryRewardCoin);
     const relief = deliverToTown(state, here, c.itemId, c.qty, personId);
     return { ok: true, line: `Delivered ${c.qty} ${itemName(c.itemId)} from ${first(c.fromPersonId)}.${relief ? ' It eases the shortage.' : ''}` };
@@ -110,9 +112,9 @@ function work(state: SimState, personId: string): DeedGoodsResult {
 }
 
 /** Run the item side of a goods deed. ok=false means the deed should not resolve. */
-export function applyDeedGoods(state: SimState, deedId: string, personId: string): DeedGoodsResult | null {
-  if (deedId === 'gift_give') return gift(state, personId);
-  if (deedId === 'trade_fair') return trade(state, personId);
+export function applyDeedGoods(state: SimState, deedId: string, personId: string, selected?: string): DeedGoodsResult | null {
+  if (deedId === 'gift_give') return gift(state, personId, selected);
+  if (deedId === 'trade_fair') return trade(state, personId, selected);
   if (deedId === 'carry_goods') return carry(state, personId);
   if (deedId === 'work_alongside') return work(state, personId);
   return null;

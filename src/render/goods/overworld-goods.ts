@@ -15,6 +15,7 @@ import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
 import { useItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
+import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
@@ -31,6 +32,7 @@ export type OverworldGoods = {
   beforeDeed: (methodId: string, personId: string) => { ok: boolean; line?: string };
   useSelected: () => string | null;
   letters: () => void;
+  readBoard: (player: Pt) => boolean;
   meetCaravan: (player: Pt) => boolean;
   closeOverlays: () => void;
   toggleInventory: () => void;
@@ -53,6 +55,7 @@ export function attachOverworldGoods(
   const trader = createCaravanTrade(scene, st, () => inv.refresh());
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
+  const boards = createNeedsBoards(scene, session, layout, new Map([...meta].map(([id, s]) => [id, s.name])), getPlayer);
   const map = createWorldMap(
     scene,
     layout.settlements.map((t) => ({ ...t, name: meta.get(t.id)?.name ?? t.id, size: meta.get(t.id)?.politySize ?? 60 })),
@@ -108,7 +111,7 @@ export function attachOverworldGoods(
     beforeDeed(methodId, personId) {
       const s = st();
       if (!s || !isGoodsDeed(methodId)) return { ok: true };
-      const r = applyDeedGoods(s, methodId, personId);
+      const r = applyDeedGoods(s, methodId, personId, inv.selectedItem());
       inv.refresh();
       living.refresh();
       return r ? { ok: r.ok, line: r.line } : { ok: true };
@@ -121,15 +124,16 @@ export function attachOverworldGoods(
       inv.refresh(); return message;
     },
     letters: () => mail.open(),
+    readBoard: (player) => boards.interact(player),
     meetCaravan(player) {
       const id = living.nearestCaravan(player);
       if (!id) return false;
       trader.open(id); return true;
     },
-    closeOverlays: () => { trader.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
+    closeOverlays: () => { trader.close(); boards.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
     toggleInventory: () => inv.toggle(),
     toggleMap: () => map.toggle(),
     selectSlot: (i) => inv.select(i),
-    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen(),
+    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen(),
   };
 }

@@ -250,6 +250,7 @@ export class OverworldScene extends Phaser.Scene {
   private interact(): void {
     if (this.resting || this.goods.overlayOpen()) return;
     if (this.ring.isOpen()) return;
+    if (this.goods.readBoard(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     if (p) return this.openRing(p);
