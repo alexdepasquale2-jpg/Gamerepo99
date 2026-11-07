@@ -2,6 +2,7 @@
 
 ## Status
 M5 on main (PRs #2,#4,#5,#8 + gap fixes #9–#14), 458 tests. M7 bots (#7) + perf (#6) + M6 plan (#3) merged.
+M6 A (surfacing #17) + B (menus #16), mobile touch (#18), polish (#19), leader fix (#15) merged; build hosted.
 Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance numbers; then M6 surfacing (step 7).
 
 ## Next 5 steps (one per session, gate: `npm run validate && npm test && npm run build`)
@@ -35,7 +36,7 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
    Merge A → B → C, resolving overlaps in `doctrine-tick.ts`, `save.ts`, `types/runtime.ts`.
    Add `scripts/m5-depth-evidence.mts` (like M4's); gate doc + verdict. Done when: M5 on main, evidence `gaps: []`.
 
-7. **M6 plan + player-facing surfacing (Prism).** Plan doc first. Then show what the sim already emits:
+7. ~~**M6 plan + player-facing surfacing (Prism).**~~ DONE (#16, #17). Plan doc first. Then show what the sim already emits:
    reaction lines (Blessings and Burdens, letters, doctrine), despair desaturation per town, succession screen
    ("Your fire went out. Someone remembers it." / Carry it on / Let it rest), save/load menu using `SaveBlob`.
    Done when: a played 10-dawn session shows each M4/M5 event to the player through people, no popups.
