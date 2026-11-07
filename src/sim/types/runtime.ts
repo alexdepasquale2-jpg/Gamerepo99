@@ -92,6 +92,8 @@ export type SimState = {
   towns?: Record<string, TownEconomyState>;
   /** Village economy: per-town goods, daily need and shortage (see sim/economy/village-economy). */
   villageEconomy?: import('../economy/village-economy').VillageEconomy;
+  /** Village logistics: shortage requests and carts on the road (see sim/economy/logistics). */
+  logistics?: import('../economy/logistics').Logistics;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */

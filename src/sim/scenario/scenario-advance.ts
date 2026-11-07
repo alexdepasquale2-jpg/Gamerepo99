@@ -7,6 +7,7 @@ import { tickLegacyDawn } from '../legacy/npc';
 import { tickPatronDawn } from '../patrons';
 import { tickEconomyLod } from '../economy/economy-lod';
 import { tickVillageEconomy } from '../economy/village-economy';
+import { tickLogistics } from '../economy/logistics';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
@@ -88,6 +89,7 @@ export function advanceToDawn(state: SimState): void {
   }
   tickEconomyLod(state);
   tickVillageEconomy(state);
+  tickLogistics(state);
   if (state.towns) tickDoctrines(state);
   tickLetters(state);
   tickUnspokenDawn(state);
