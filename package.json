@@ -17,6 +17,7 @@
     "verify:m1": "npm test && npm run build && npm run test:e2e:m1",
     "validate": "node scripts/validate-data.mjs",
     "bake:social": "vite-node scripts/bake-social-web.ts",
+    "perf:dawn": "vite-node scripts/perf-dawn.mts",
     "test:bots": "vitest run tests/bots"
   },
   "dependencies": {
