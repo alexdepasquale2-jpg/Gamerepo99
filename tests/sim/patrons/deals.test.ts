@@ -117,3 +117,29 @@ describe('patron deals', () => {
     expect(ensureDoctrines(b.state).doctrine_mill_bread!.exposure).toBeGreaterThan(d.exposureAtAccept);
   });
 });
+
+describe('guard_caravan deal', () => {
+  const run = () => {
+    const b = bootPlayState(7, 'marrow');
+    b.state.player.townId = 'lowmere';
+    // The authored Lowmere voice is not in the generated world; tag the first Lowmere resident as the voice.
+    const v = Object.keys(b.state.people).sort().find((id) => b.state.people[id]!.townId === 'lowmere')!;
+    b.state.people[v]!.tags = ['doctrine_voice', 'leader'];
+    const go = (id: string) => actMethod(b.state, `${id}@${v}`, [], undefined, { interactionCompat: b.interactionRt });
+    ensureHoard(b.state).notoriety = 0.5;
+    const doc = ensureDoctrines(b.state).doctrine_strand_crossings!;
+    const real = doc.realDelivery;
+    go('patron_accept_warden_guard');
+    const status0 = b.state.patronDeals!.deal_warden_guard_caravan!.status;
+    const n0 = b.state.hoard!.notoriety;
+    go('patron_guard_warden_caravan');
+    return { status0, status: b.state.patronDeals!.deal_warden_guard_caravan!.status, dReal: doc.realDelivery - real, n0, n: b.state.hoard!.notoriety };
+  };
+  it('fulfil interaction completes the deal and shifts meters deterministically', () => {
+    const r = run();
+    expect(r.status0).toBe('active');
+    expect(r.status).toBe('fulfilled');
+    expect(r.dReal).toBeCloseTo(0.06);
+    expect(run()).toEqual(r);
+  });
+});
