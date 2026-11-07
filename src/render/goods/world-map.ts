@@ -1,0 +1,99 @@
+/** World map (M) + corner minimap: towns sized by polity, roads, player, caravans, despair tint. */
+
+import Phaser from 'phaser';
+import { TILE_PX } from '../../sim/map/constants';
+import { tileFootWorld } from '../depth-sort';
+
+type Town = { id: string; q: number; r: number; name: string; size: number };
+type Pt = { x: number; y: number };
+export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number> };
+export type WorldMap = { toggle: () => void; isOpen: () => boolean; update: (time: number) => void };
+
+const D = 1_000_200;
+const font = { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 };
+
+/** 0 despair -> warm gold, 1 -> ashen grey-blue. */
+export function despairColor(d: number): number {
+  const c = Phaser.Display.Color.Interpolate.ColorWithColor(
+    Phaser.Display.Color.ValueToColor(0xf2b84b), Phaser.Display.Color.ValueToColor(0x5a6070), 100, Phaser.Math.Clamp(d, 0, 1) * 100,
+  );
+  return Phaser.Display.Color.GetColor(c.r, c.g, c.b);
+}
+
+const sizeClass = (s: number): { label: string; rad: number } =>
+  s >= 150 ? { label: 'city', rad: 7 } : s >= 80 ? { label: 'town', rad: 5 } : { label: 'village', rad: 3.5 };
+
+export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: { from: string; to: string }[], feed: MapFeed): WorldMap {
+  const W = scene.scale.width;
+  const H = scene.scale.height;
+  const pos = new Map(towns.map((t) => [t.id, tileFootWorld(t.q, t.r)]));
+  const xs = [...pos.values()].map((p) => p.x);
+  const ys = [...pos.values()].map((p) => p.y);
+  const pad = TILE_PX * 12;
+  const bx = Math.min(...xs) - pad, by = Math.min(...ys) - pad;
+  const bw = Math.max(...xs) - bx + pad, bh = Math.max(...ys) - by + pad;
+
+  const draw = (g: Phaser.GameObjects.Graphics, ox: number, oy: number, w: number, h: number, big: boolean): ((p: Pt) => Pt) => {
+    const s = Math.min(w / bw, h / bh);
+    const tx = (p: Pt): Pt => ({ x: ox + (p.x - bx) * s + (w - bw * s) / 2, y: oy + (p.y - by) * s + (h - bh * s) / 2 });
+    g.clear();
+    g.fillStyle(0x2a3a24, 0.92).fillRect(ox, oy, w, h).lineStyle(2, 0xa8743e).strokeRect(ox, oy, w, h);
+    g.lineStyle(big ? 2 : 1, 0xc8a878, 0.8);
+    for (const r of routes) {
+      const a = pos.get(r.from), b = pos.get(r.to);
+      if (!a || !b) continue;
+      const A = tx(a), B = tx(b);
+      g.lineBetween(A.x, A.y, B.x, B.y);
+    }
+    const desp = feed.despair();
+    for (const t of towns) {
+      const p = tx(pos.get(t.id)!);
+      const { rad } = sizeClass(t.size);
+      g.fillStyle(despairColor(desp[t.id] ?? 0)).fillCircle(p.x, p.y, big ? rad : Math.max(2, rad * 0.5));
+      g.lineStyle(1, 0x1b1612).strokeCircle(p.x, p.y, big ? rad : Math.max(2, rad * 0.5));
+    }
+    g.fillStyle(0xe8dcc0);
+    for (const c of feed.caravans()) {
+      const p = tx(c);
+      g.fillRect(p.x - (big ? 2 : 1), p.y - (big ? 2 : 1), big ? 4 : 2, big ? 4 : 2);
+    }
+    const pl = tx(feed.player());
+    g.fillStyle(0xff4a3a).fillCircle(pl.x, pl.y, big ? 4 : 2.5).lineStyle(1, 0xffffff).strokeCircle(pl.x, pl.y, big ? 4 : 2.5);
+    return tx;
+  };
+
+  const mini = scene.add.graphics().setScrollFactor(0).setDepth(D);
+  const MW = 120, MH = 84;
+  const big = scene.add.graphics().setScrollFactor(0).setDepth(D + 5).setVisible(false);
+  const labels = scene.add.container(0, 0).setScrollFactor(0).setDepth(D + 6).setVisible(false);
+  let last = -1e9;
+
+  const drawBig = (): void => {
+    const tx = draw(big, 30, 30, W - 60, H - 60, true);
+    labels.removeAll(true);
+    labels.add(scene.add.text(W / 2, 36, 'The Known World  (M to close)', { ...font, fontSize: '13px', color: '#f2b84b' }).setOrigin(0.5, 0));
+    const desp = feed.despair();
+    for (const t of towns) {
+      const p = tx(pos.get(t.id)!);
+      const d = desp[t.id] ?? 0;
+      labels.add(scene.add.text(p.x, p.y + 6, `${t.name} · ${sizeClass(t.size).label}${d > 0.4 ? ' (despairing)' : ''}`, font).setOrigin(0.5, 0));
+    }
+    labels.add(scene.add.text(40, H - 46, 'gold = kindled · grey = despairing · red = you · pale = caravans', font));
+  };
+
+  return {
+    toggle() {
+      big.setVisible(!big.visible);
+      labels.setVisible(big.visible);
+      mini.setVisible(!big.visible);
+      if (big.visible) drawBig();
+    },
+    isOpen: () => big.visible,
+    update(time) {
+      if (time - last < 250) return;
+      last = time;
+      if (big.visible) drawBig();
+      else draw(mini, W - MW - 8, 8, MW, MH, false);
+    },
+  };
+}

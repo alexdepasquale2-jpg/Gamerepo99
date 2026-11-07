@@ -25,6 +25,7 @@ import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
+import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 
 const CHUNK_MARGIN = 1;
 const VERB: Record<string, string> = {
@@ -58,6 +59,7 @@ export class OverworldScene extends Phaser.Scene {
   private ringFor: string | null = null;
   private resting = false;
   private moving = false;
+  private goods!: OverworldGoods;
 
   constructor() {
     super('overworld');
@@ -82,6 +84,7 @@ export class OverworldScene extends Phaser.Scene {
       (id) => this.chipsFor(id).length > 0,
     );
     this.life = createWorldLife(this, this.layout.settlements);
+    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }));
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
       this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined,
     );
@@ -102,7 +105,7 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.hint = this.add
-      .text(8, 28, 'Hold to walk · walk up to someone and tap them', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
+      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I/Tab: satchel · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
     this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
@@ -111,9 +114,13 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-E', interact);
     this.input.keyboard?.on('keydown-ENTER', interact);
     this.input.keyboard?.on('keydown-ESC', () => this.closeRing());
-    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX'].forEach((k, i) =>
-      this.input.keyboard?.on(`keydown-${k}`, () => this.ring.pickIndex(i)),
+    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
+      this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
     );
+    this.input.keyboard?.addCapture('TAB');
+    this.input.keyboard?.on('keydown-I', () => this.goods.toggleInventory());
+    this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
+    this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
@@ -172,6 +179,7 @@ export class OverworldScene extends Phaser.Scene {
   private tickLife(delta: number): void {
     const t = this.time.now;
     this.people.update(t, delta, this.player);
+    this.goods.update(t, delta, this.player);
     this.life.update(t, delta, this.player, this.moving);
     const hearth = this.life.nearestHearth(this.player);
     this.life.setPrompt(!!hearth && !this.ring.isOpen() && !this.resting, hearth?.pos);
@@ -226,10 +234,19 @@ export class OverworldScene extends Phaser.Scene {
     if (this.ring.isOpen()) return;
     const p = this.people.nearest(this.player);
     if (p) return this.openRing(p);
+    const got = this.goods.gatherNear(this.player);
+    if (got) return this.say(got);
     if (this.life.nearestHearth(this.player)) this.rest();
   }
 
   private commit(p: Person, c: Chip): void {
+    const pre = this.goods.beforeDeed(c.id.slice(0, c.id.indexOf('@')), p.id);
+    if (!pre.ok) {
+      this.closeRing();
+      this.say(pre.line ?? 'Not now.');
+      return;
+    }
+    if (pre.line) this.say(pre.line);
     const before = this.session.snapshot().spark;
     let juiced = 0;
     const off = this.session.onJuice(() => juiced++);
@@ -269,6 +286,7 @@ export class OverworldScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
       this.life.dawn();
+      this.goods.onDawn();
       (this.registry.get('autosave') as (() => void) | undefined)?.();
       this.syncSparkFromSession(false);
       this.time.delayedCall(350, () => {
