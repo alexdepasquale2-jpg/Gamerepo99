@@ -5,6 +5,7 @@
  * so Blessings and Burdens can come to pass. Deterministic: deriveRng, sorted iteration.
  */
 
+import { retireLetter, sealLetter } from './goods/instances';
 import { encodeUnspokenForState } from './social/unspoken';
 import { removeItem } from './goods/inventory';
 import { beginReply, tickReplies, COURIER_SURVIVAL_PER_DAY, type LetterReply } from './letter-replies';
@@ -215,10 +216,12 @@ export function tickLetters(state: SimState): string[] {
     const survive = Math.pow(f.roadDays !== undefined ? COURIER_SURVIVAL_PER_DAY : t.falloff, Math.max(0, total - 1));
     if (deriveRng(state.seed, 'letter-thin', f.id).next() >= survive) {
       if (note) note.status = 'lost';
+      retireLetter(state, f.id);
       continue;
     }
     if (note) {
       note.status = 'delivered';
+      retireLetter(state, f.id);
       const p = state.people[f.toPersonId];
       if (p) p.trust = Math.min(1, (p.trust ?? 0) + 0.03);
       encodeUnspokenForState(state, 'show_up', f.toPersonId, { tags: ['letter_arrived', 'kin'] });
@@ -253,5 +256,6 @@ export function sendPlayerLetter(state: SimState, toPersonId: string, body: stri
   const f = launch(state, ls, { kind: 'letter', templateId: 'player_letter', packetType: 'proof_packet', fromPersonId: state.player.id, toPersonId, title: 'A letter from the road', body: text }, road ?? undefined);
   if (!f) return 'There is no route for this letter.';
   (ls.correspondence ??= []).push({ id: f.id, toPersonId, body: text, status: 'travelling', sentDay: state.day });
+  sealLetter(state, f.id, toPersonId);
   return `Sent to ${to.name ?? to.id}. ${f.days} dawns by road; long journeys can lose letters. A reply may find its way back.`;
 }

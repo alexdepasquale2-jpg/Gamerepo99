@@ -30,6 +30,7 @@ import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
+import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 
 const CHUNK_MARGIN = 1;
@@ -102,6 +103,7 @@ export class OverworldScene extends Phaser.Scene {
     this.life = createWorldLife(this, this.layout.settlements);
     this.room = new InteriorRoom(this, {
       residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: pretty(id).split(' ')[0]!, tint: tintOf(id) })),
+      lanternLit: (id) => !!this.session.getState() && lanternLit(this.session.getState()!, id),
       phase: () => this.life.phase(),
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
     });
@@ -166,6 +168,7 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
     this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true); });
+    this.input.keyboard?.on('keydown-G', () => { const st = this.session.getState(); if (!this.room.active || !st) return; this.say(lightLantern(st, this.room.state()!.buildingId)); this.room.paintLantern(); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.

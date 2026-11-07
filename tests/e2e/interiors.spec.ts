@@ -157,3 +157,16 @@ test('a resident leaves the room when the day moves on, while you are inside', a
   expect((await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.state()))?.occupantId).toBeNull();
   expect(errors).toEqual([]);
 });
+
+test('G lights the lantern in a room', async ({ page }) => {
+  fs.mkdirSync(OUT, { recursive: true });
+  const errors = await boot(page);
+  const placed = await page.evaluate(() => (window as unknown as { __hearth: Hook }).__hearth.interior.enter('house'));
+  expect(placed).toBeTruthy();
+  await page.waitForTimeout(700);
+  await page.locator('#game canvas').screenshot({ path: path.join(OUT, 'lantern-unlit.png') });
+  await page.keyboard.press('g');
+  await page.waitForTimeout(300);
+  await page.locator('#game canvas').screenshot({ path: path.join(OUT, 'lantern-lit.png') });
+  expect(errors).toEqual([]);
+});

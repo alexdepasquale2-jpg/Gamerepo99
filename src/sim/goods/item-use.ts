@@ -57,3 +57,11 @@ export function pickUpItem(state: SimState, groundId: string): boolean {
   if (inst) inst.heldBy = 'player';
   return true;
 }
+
+export const lanternLit = (state: SimState, buildingId: string): boolean => !!(state.flags.lanternLit as Record<string, boolean> | undefined)?.[buildingId];
+/** Light (or snuff) the lantern in a room; the lit flag lives in state.flags so it saves. */
+export function lightLantern(state: SimState, buildingId: string): string {
+  const lit = (state.flags.lanternLit ??= {}) as Record<string, boolean>;
+  lit[buildingId] = !lit[buildingId];
+  return lit[buildingId] ? 'You light the lantern. The room warms.' : 'You snuff the lantern.';
+}

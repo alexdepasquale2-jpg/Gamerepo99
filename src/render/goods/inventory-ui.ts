@@ -2,6 +2,7 @@
 
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
+import { sealedLetters } from '../../sim/goods/instances';
 import { listStacks } from '../../sim/goods/inventory';
 
 const D = 1_000_100;
@@ -54,7 +55,7 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
       }
     }).on('pointerover', () => {
       if (!stack || held) return;
-      tip.setText(`${stack.item.name} x${stack.qty}`).setPosition(x + SLOT / 2, y - 4).setOrigin(0.5, 1).setVisible(true);
+      tip.setText(`${stack.item.name} x${stack.qty}${letterNote(stack.item.id)}`).setPosition(x + SLOT / 2, y - 4).setOrigin(0.5, 1).setVisible(true);
     }).on('pointerout', () => tip.setVisible(false));
     c.add(bg);
     if (!stack) return;
@@ -68,6 +69,15 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     else if (stack.item.icon === 'herb') c.add(scene.add.triangle(cx, cy, 0, 10, 5, 0, 10, 10, col));
     else c.add(scene.add.rectangle(cx, cy, 12, 12, col).setStrokeStyle(1, 0x1b1612));
     c.add(scene.add.text(x + SLOT - 4, y + SLOT - 3, String(stack.qty), font).setOrigin(1, 1));
+    const sealed = stack.item.id === 'letter' ? letterNote('letter') : '';
+    if (sealed) c.add(scene.add.text(x + 2, y + 2, '✉', font));
+  };
+
+  /** Sealed letters in the post, shown on the letter slot with their recipient. */
+  const letterNote = (itemId: string): string => {
+    const st = getState();
+    const sealed = st && itemId === 'letter' ? sealedLetters(st) : [];
+    return sealed.length ? `\nSealed to ${sealed.map((l) => st!.people[l.to ?? '']?.name ?? l.to).join(', ')}` : '';
   };
 
   const refresh = (): void => {

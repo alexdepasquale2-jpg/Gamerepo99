@@ -7,6 +7,8 @@ export type ItemInstance = {
   id: string; itemId: string; madeBy: string; townId: string; dawn: number;
   /** 'player' or a person id once given away. */
   heldBy: string;
+  /** Sealed letters: recipient and the flight carrying it. */
+  to?: string; flightId?: string;
 };
 
 export function mintInstance(state: SimState, itemId: string, madeBy: string, townId: string): ItemInstance {
@@ -37,5 +39,19 @@ export const instancesHeldBy = (state: SimState, personId: string): ItemInstance
 export function consumeInstance(state: SimState, itemId: string): void {
   const list = state.itemInstances;
   const k = list?.findIndex((i) => i.itemId === itemId && i.heldBy === 'player') ?? -1;
+  if (k >= 0) list!.splice(k, 1);
+}
+
+/** A written letter becomes an object in the post until it is delivered or lost. */
+export function sealLetter(state: SimState, flightId: string, toPersonId: string): ItemInstance {
+  const inst = mintInstance(state, 'letter', state.player.id, state.player.townId ?? '');
+  inst.heldBy = 'post'; inst.to = toPersonId; inst.flightId = flightId;
+  return inst;
+}
+export const sealedLetters = (state: SimState): ItemInstance[] =>
+  (state.itemInstances ?? []).filter((i) => i.itemId === 'letter' && i.heldBy === 'post');
+export function retireLetter(state: SimState, flightId: string): void {
+  const list = state.itemInstances;
+  const k = list?.findIndex((i) => i.flightId === flightId) ?? -1;
   if (k >= 0) list!.splice(k, 1);
 }

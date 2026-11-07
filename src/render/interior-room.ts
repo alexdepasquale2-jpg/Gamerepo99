@@ -37,6 +37,8 @@ export type RoomResident = { id: string; name: string; tint: number };
 export type RoomHooks = {
   /** Who is in this building right now (live; polled every frame so people can arrive and leave). */
   residents: (buildingId: string) => RoomResident[];
+  /** Is this building's lantern lit (state flag)? */
+  lanternLit: (buildingId: string) => boolean;
   /** Day clock 0..1. */
   phase: () => number;
   /** Fully closed (fade done): put the world back. */
@@ -86,6 +88,7 @@ export class InteriorRoom {
   private light!: Phaser.GameObjects.Rectangle;
   private prompt!: Phaser.GameObjects.Text;
   private bubble!: Phaser.GameObjects.Text;
+  private lantern?: { glow: Phaser.GameObjects.Arc; shade: Phaser.GameObjects.Graphics; x: number; y: number };
   private flames: { obj: Phaser.GameObjects.Ellipse | Phaser.GameObjects.Arc; base: number }[] = [];
   private owned: Phaser.GameObjects.GameObject[] = [];
   private leaving = false;
@@ -123,6 +126,7 @@ export class InteriorRoom {
     this.leaving = false;
     this.visits = 0;
     this.flames = [];
+    this.lantern = undefined;
     this.owned = [];
     this.seated = null;
     this.born = this.time.now;
@@ -328,8 +332,11 @@ export class InteriorRoom {
       case 'lantern': {
         // standing lamp: base, pole, glowing shade
         rect(T / 2 - 5, T - 6, 10, 4, 0x4a3a2c); rect(T / 2 - 1, 10, 2, T - 14, 0x4a3a2c);
-        rect(T / 2 - 6, 2, 12, 10, 0xe9d4a2); rect(T / 2 - 6, 2, 12, 2, 0xc4a06c); rect(T / 2 - 4, 6, 8, 4, 0xffe9a8);
+        rect(T / 2 - 6, 2, 12, 10, 0xe9d4a2); rect(T / 2 - 6, 2, 12, 2, 0xc4a06c);
+        const shade = this.add.graphics().setDepth(g.depth + 0.01);
         const c = this.add.circle(x + T / 2, y + 8, 24, 0xffd877, 0.16).setBlendMode(Phaser.BlendModes.ADD).setDepth(901_000);
+        this.lantern = { glow: c, shade, x: x + T / 2 - 4, y: y + 6 };
+        this.paintLantern();
         this.flames.push({ obj: c, base: 0.16 });
         break;
       }
@@ -345,6 +352,14 @@ export class InteriorRoom {
         break;
       }
     }
+  }
+
+  /** Lit lanterns show the warm core and glow; unlit ones go dark. Driven by the saved flag. */
+  paintLantern(): void {
+    const l = this.lantern; if (!l) return;
+    const lit = this.hooks.lanternLit(this.d.buildingId);
+    l.glow.setVisible(lit);
+    l.shade.clear().fillStyle(lit ? 0xffe9a8 : 0x7a6a50, 1).fillRect(l.x, l.y, 8, 4);
   }
 
   private hasFrame(): boolean {
