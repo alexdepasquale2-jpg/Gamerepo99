@@ -1,0 +1,181 @@
+{
+  "kind": "m5-depth-evidence",
+  "status": "FAIL",
+  "seed": 7,
+  "dawns": 30,
+  "tasks": {
+    "A hoarder / notoriety": [
+      {
+        "name": "30-dawn hoarder run (0 reignites) ends with ash_hoard",
+        "pass": true,
+        "detail": "ending=ash_hoard peakCoin=60 reignites=0"
+      },
+      {
+        "name": "run is not a loss",
+        "pass": true,
+        "detail": "ended=null lost=false"
+      },
+      {
+        "name": "Let it rest is a warm ending",
+        "pass": true,
+        "detail": "ok=true ended=rest"
+      },
+      {
+        "name": "notoriety raises encounter weights and rolls",
+        "pass": true,
+        "detail": "low={\"bonus\":{\"att_thief\":0},\"rolls\":0} high={\"bonus\":{\"att_thief\":43.2},\"rolls\":22}"
+      },
+      {
+        "name": "neglect raises despair, never fails",
+        "pass": false,
+        "detail": "totalTownDespair 0.5->0.5"
+      },
+      {
+        "name": "deterministic double-run",
+        "pass": true,
+        "detail": "same seed twice"
+      }
+    ],
+    "B patrons": [
+      {
+        "name": "patron deal opens at notoriety 0.5",
+        "pass": true,
+        "detail": "open=deal_mill_tithe_coin,deal_mill_deny_reignite"
+      },
+      {
+        "name": "deal accepted via interaction",
+        "pass": true,
+        "detail": "deals={\"deal_mill_deny_reignite\":{\"dealId\":\"deal_mill_deny_reignite\",\"patronId\":\"patron_mill_trust\",\"acceptedDay\":1,\"dueDay\":6,\"status\":\"betrayed\",\"reigniteAtAccept\":0,\"exposureAtAccept\":0}}"
+      },
+      {
+        "name": "notoriety shifts",
+        "pass": true,
+        "detail": "delta=0.2782"
+      },
+      {
+        "name": "doctrine meters shift",
+        "pass": true,
+        "detail": "{\"propaganda\":0.08,\"perceived\":-0.06,\"real\":0,\"exposure\":0,\"legitimacy\":-0.0395}"
+      },
+      {
+        "name": "same seed twice -> equal",
+        "pass": true,
+        "detail": "deep-equal"
+      }
+    ],
+    "C legacy": [
+      {
+        "name": "burnout -> Carry it on yields an heir",
+        "pass": true,
+        "detail": "heir=clara_whitby heirSpark=100"
+      },
+      {
+        "name": "exportWorld -> importWorld on fresh state",
+        "pass": true,
+        "detail": "v1 hash=24200402"
+      },
+      {
+        "name": "grave + legend present after import",
+        "pass": true,
+        "detail": "graves=1 npcs=1 legends=2"
+      },
+      {
+        "name": "same seed -> identical file",
+        "pass": true,
+        "detail": "hash=24200402"
+      }
+    ]
+  },
+  "gaps": [
+    "A hoarder / notoriety: neglect raises despair, never fails [totalTownDespair 0.5->0.5]"
+  ],
+  "notorietyTrace": [
+    0.16,
+    0.1584,
+    0.1568,
+    0.1552,
+    0.1537,
+    0.1522,
+    0.1206,
+    0.0894,
+    0.0585,
+    0.028,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "patron": {
+    "voice": "ruth_calder",
+    "open": [
+      "deal_mill_tithe_coin",
+      "deal_mill_deny_reignite"
+    ],
+    "deals": {
+      "deal_mill_deny_reignite": {
+        "dealId": "deal_mill_deny_reignite",
+        "patronId": "patron_mill_trust",
+        "acceptedDay": 1,
+        "dueDay": 6,
+        "status": "betrayed",
+        "reigniteAtAccept": 0,
+        "exposureAtAccept": 0
+      }
+    },
+    "notoDelta": 0.2782,
+    "doctrineDelta": {
+      "propaganda": 0.08,
+      "perceived": -0.06,
+      "real": 0,
+      "exposure": 0,
+      "legitimacy": -0.0395
+    }
+  },
+  "encounters": {
+    "low": {
+      "bonus": {
+        "att_thief": 0
+      },
+      "rolls": 0
+    },
+    "high": {
+      "bonus": {
+        "att_thief": 43.2
+      },
+      "rolls": 22
+    }
+  },
+  "legacy": {
+    "ok": true,
+    "heirPersonId": "clara_whitby",
+    "heirSpark": 100,
+    "contentHash": "24200402",
+    "version": 1,
+    "imported": true,
+    "importError": null,
+    "graves": 1,
+    "npcs": 1,
+    "legends": [
+      "Marrow lit a fire here once. People still talk about it.",
+      "They say Marrow never really left; the warmth did not."
+    ]
+  },
+  "ok": false
+}
