@@ -7,7 +7,7 @@ import { TILE_PX } from '../../sim/map/constants';
 import { tileFootWorld } from '../depth-sort';
 type Pt = { x: number; y: number };
 export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, layout: WorldLayout, names: Map<string, string>, getPlayer: () => Pt) {
-  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_140).setVisible(false);
+  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_400).setVisible(false);
   const font = { fontFamily: 'monospace', fontSize: '12px', color: '#efdfb9', wordWrap: { width: 400 } };
   const spots = layout.settlements.map((t) => {
     const p = tileFootWorld(t.q - 3.5, t.r + 3.2);

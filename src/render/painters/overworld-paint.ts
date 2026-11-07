@@ -785,15 +785,17 @@ export function paintChunkContents(
     if (ribbon) container.add(ribbon);
   }
 
-  // Broad timber decks over water: same cells used by collision, including joins.
+  // Joined plank decks, with rails only at the outside edges (not every tile).
   const bridges = host.add.graphics();
-  for (const t of chunk.tiles.filter((t) => t.biomeId === 'road_bridge')) {
-    const x = (t.q - 1) * TILE_PX, y = (t.r - 1) * TILE_PX;
-    bridges.fillStyle(0x473122).fillRect(x, y, TILE_PX * 3, TILE_PX * 3);
-    for (let row = 0; row < 12; row++) {
-      bridges.fillStyle(row % 2 ? 0xa57548 : 0xb88954).fillRect(x + 2, y + row * TILE_PX / 4 + 1, TILE_PX * 3 - 4, TILE_PX / 4 - 2);
-    }
-    bridges.lineStyle(3, 0x573d2a).strokeRect(x + 1, y + 1, TILE_PX * 3 - 2, TILE_PX * 3 - 2);
+  const deck = new Set(chunk.tiles.filter((t) => t.biomeId === 'road_bridge' || t.biomeId === 'bridge_deck').map((t) => `${t.q},${t.r}`));
+  for (const key of deck) {
+    const [q, r] = key.split(',').map(Number) as [number, number];
+    const x = q * TILE_PX, y = r * TILE_PX;
+    bridges.fillStyle(0x473122).fillRect(x, y, TILE_PX, TILE_PX);
+    for (let row = 0; row < 4; row++) bridges.fillStyle(row % 2 ? 0xa57548 : 0xb88954).fillRect(x, y + row * 8 + 1, TILE_PX, 6);
+    bridges.lineStyle(3, 0x65442b);
+    if (!deck.has(`${q - 1},${r}`) && q > baseQ) bridges.lineBetween(x + 1, y, x + 1, y + TILE_PX);
+    if (!deck.has(`${q + 1},${r}`) && q < baseQ + CHUNK_SIZE - 1) bridges.lineBetween(x + TILE_PX - 1, y, x + TILE_PX - 1, y + TILE_PX);
   }
   container.add(bridges);
   return container;

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
 import { caravanItem, tradeCaravan } from '../../sim/goods/caravan-trade';
 export function createCaravanTrade(scene: Phaser.Scene, getState: () => SimState | undefined, changed: () => void) {
-  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_150).setVisible(false);
+  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_410).setVisible(false);
   let id: string | undefined;
   let message = '';
   const draw = () => {

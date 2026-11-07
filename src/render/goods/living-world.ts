@@ -14,7 +14,7 @@ type Pt = { x: number; y: number };
 const DAY_MS = 120_000;
 const STOCK_OK = 4;
 
-type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image };
+type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text };
 type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: number };
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
@@ -92,7 +92,7 @@ export function createLivingWorld(
       if (state) advanceCaravanTravel(state, Math.min(dt, 100) / DAY_MS, stoppedId());
       const mobiles = state?.caravans ?? [];
       const liveIds = new Set(mobiles.map((m) => m.id));
-      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); wagons.delete(id); }
+      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); w.label.destroy(); wagons.delete(id); }
       for (const m of mobiles) {
         const road = byRoute.get(m.routeId);
         if (!road) continue;
@@ -101,7 +101,8 @@ export function createLivingWorld(
         if (!w) {
           w = { progress: f,
             wagon: scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2),
-            ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2) };
+            ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2),
+            label: scene.add.text(0, 0, 'Trader · E', { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 1) };
           wagons.set(m.id, w);
         }
         // Fractional sim progress follows the actual curve; towns wait for dawn unloading.
@@ -111,6 +112,7 @@ export function createLivingWorld(
         const foot = tileFootWorld(p.q, p.r), lead = tileFootWorld(ahead.q, ahead.r);
         const dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy) || 1;
         w.wagon.setPosition(foot.x, foot.y).setDepth(foot.y).setFlipX(dx < 0);
+        w.label.setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
         w.ox.setPosition(foot.x + dx / length * 26, foot.y + dy / length * 26).setDepth(foot.y + dy / length * 26).setFlipX(dx < 0);
       }
       for (const c of critters) {

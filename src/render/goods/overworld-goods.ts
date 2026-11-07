@@ -86,8 +86,10 @@ export function attachOverworldGoods(
     return null;
   });
 
+  scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
   return {
     update(time, dt, player) {
+      document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
       living.update(time, dt);
       map.update(time);

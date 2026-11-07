@@ -17,7 +17,9 @@ export function createCorrespondence(scene: Phaser.Scene, getState: () => SimSta
     read.style.cssText = 'max-height:160px;overflow:auto;white-space:pre-wrap;padding:10px;background:#17130f;';
     const flight = ls.flight.slice(-5).map((f) => {
       const tpl = templates.templates.find((t) => t.id === f.templateId);
-      return `${state.people[f.toPersonId]?.name ?? f.toPersonId} · ${f.days} dawns away\n${f.body ?? tpl?.body ?? 'A rumour on the road.'}`;
+      const vars: Record<string, string> = { fromName: state.people[f.fromPersonId]?.name ?? f.fromPersonId, toName: state.people[f.toPersonId]?.name ?? f.toPersonId, fromTown: f.fromTownId };
+      const body = (f.body ?? tpl?.body ?? 'A rumour on the road.').replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? key);
+      return `${state.people[f.toPersonId]?.name ?? f.toPersonId} · ${f.days} dawns away\n${body}`;
     });
     read.textContent = [...notes.slice(-8).map((n) => `To ${state.people[n.toPersonId]?.name ?? n.toPersonId} · ${n.status}\n${n.body}`), ...flight].join('\n\n') || 'No letters yet. A Letter in your satchel is a sheet of stationery.';
     dialog.append(read);
