@@ -263,7 +263,7 @@ function ctxFor(state: SimState, d: UnspokenData): ComeToPassCtx {
     centrality: d.socialCentrality,
     townDespair: (id) => state.towns?.[id]?.despair ?? 0,
     nameOf: (id) => {
-      const n = d.peopleById?.[id]?.name;
+      const n = state.people?.[id]?.name ?? d.peopleById?.[id]?.name;
       return typeof n === 'string' && n ? n : undefined;
     },
   };

@@ -38,6 +38,8 @@ export type Inhabitant = {
 
 export type PersonState = {
   id: string;
+  /** Display name (authored, or deterministically generated from names.json). */
+  name?: string;
   flame: number;
   flameStart?: number;
   marks?: { markId: string; stacks: number }[];

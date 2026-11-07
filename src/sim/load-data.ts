@@ -17,6 +17,7 @@ import eventsJson from '../data/systems/events.json';
 import proofsJson from '../data/people/proofs.json';
 import timeJson from '../data/systems/time.json';
 import ripplesJson from '../data/systems/ripples.json';
+import namesJson from '../data/people/names.json';
 import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
@@ -113,6 +114,7 @@ export type DataTables = {
   reigniteThreshold: number;
   people: unknown[];
   /** Indexed people rows (id → row). */
+  names: { given: string[]; family: string[] };
   peopleById: Record<string, { id: string; authored?: boolean; anchor?: boolean; woundId?: string; flameStart?: number; tags?: string[]; [k: string]: unknown }>;
   towns: unknown[];
   links: unknown[];
@@ -247,6 +249,7 @@ export function loadData(): DataTables {
     ripples: ripplesJson,
     lines: { deprecated: true, replaces: 'line-fragments' },
     kinship: kinshipJson,
+    names: namesJson as DataTables['names'],
     letters: lettersJson,
     doctrines: doctrinesJson,
     lineFragments: loadLineFragmentsTable(),

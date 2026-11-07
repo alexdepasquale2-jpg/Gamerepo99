@@ -40,7 +40,7 @@ export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
     day: 1,
     seed,
     player,
-    people: peopleFromWorld(world, data),
+    people: peopleFromWorld(world, data, seed),
     flags: {},
     packets: [],
     bus: { lastIds: [], ...bus },
