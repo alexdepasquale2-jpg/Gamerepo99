@@ -366,13 +366,10 @@ function paintWildProp(host: PaintHost, prop: FacilityRenderView, foot: { x: num
       return true;
     }
     case 'critter': {
-      const entry = lookupAsset(`fauna.${prop.state}`);
-      const tex = entry ? sheetTextureKey(entry.sheet) : '';
-      const fr = entry ? String(entry.frame) : '';
-      const body = host.textures.exists(tex) && host.textures.get(tex).has(fr)
-        ? host.add.image(x, y, tex, fr).setOrigin(0.5, 1)
-        : host.add.ellipse(x, y - 5, 12, 9, prop.state === 'fox' ? 0xc0602a : prop.state === 'deer' ? 0x9a6a3a : 0xcfc6b0);
-      applySpriteSort(body);
+      // Drawn from shapes: the fauna sheet holds clusters of tiny critters per cell, not one animal.
+      const body = critterShape(host, prop.state);
+      body.setPosition(x, y);
+      body.setDepth(y);
       // Wander: drift to a nearby point and back, pausing, forever (removed with the chunk).
       const seedish = (prop.position.x * 31 + prop.position.y * 17) % 97;
       const fly = prop.state === 'bird';
@@ -386,6 +383,39 @@ function paintWildProp(host: PaintHost, prop: FacilityRenderView, foot: { x: num
     }
     default: return false;
   }
+}
+
+/** A small animal (origin at its feet) built from shapes, as one container. */
+function critterShape(host: PaintHost, kind: string): Phaser.GameObjects.Container {
+  const parts: Phaser.GameObjects.GameObject[] = [];
+  const add = <T extends Phaser.GameObjects.GameObject>(o: T): T => { parts.push(o); return o; };
+  add(host.add.ellipse(0, -1, kind === 'deer' ? 22 : kind === 'bird' ? 6 : 12, 5, 0x000000, 0.18));
+  if (kind === 'deer') {
+    for (const lx of [-7, -3, 4, 8]) add(host.add.rectangle(lx, -5, 2, 9, 0x6b4a2e));
+    add(host.add.ellipse(0, -12, 22, 10, 0x9a6a3a));
+    add(host.add.rectangle(9, -18, 4, 9, 0x9a6a3a));
+    add(host.add.ellipse(12, -23, 8, 6, 0x9a6a3a));
+    add(host.add.rectangle(11, -28, 1, 5, 0x5a3d22)); add(host.add.rectangle(14, -28, 1, 5, 0x5a3d22));
+    add(host.add.ellipse(-11, -14, 4, 4, 0xf0e6d0));
+  } else if (kind === 'fox') {
+    add(host.add.ellipse(-9, -6, 10, 5, 0xc0602a)); add(host.add.ellipse(-13, -6, 3, 3, 0xf0e6d0));
+    add(host.add.rectangle(-3, -2, 2, 4, 0x3a2418)); add(host.add.rectangle(4, -2, 2, 4, 0x3a2418));
+    add(host.add.ellipse(0, -7, 14, 7, 0xc8662c));
+    add(host.add.ellipse(7, -10, 7, 6, 0xc8662c)); add(host.add.ellipse(9, -9, 3, 2, 0xf0e6d0));
+    add(host.add.triangle(5, -14, 0, 4, 2, 0, 4, 4, 0x8a3e1a));
+  } else if (kind === 'bird') {
+    add(host.add.ellipse(0, -10, 7, 5, 0x5a4a3a));
+    const wing = add(host.add.triangle(0, -12, 0, 3, 4, 0, 8, 3, 0x3e3328));
+    const flap = tweensOf(host)?.add({ targets: wing, scaleY: -1, duration: 140, yoyo: true, repeat: -1 });
+    if (flap) wing.once('destroy', () => flap.remove());
+    add(host.add.rectangle(4, -10, 2, 1, 0xe0a030));
+  } else {
+    add(host.add.ellipse(0, -5, 11, 8, 0xb0a28a)); add(host.add.ellipse(-5, -5, 3, 3, 0xf4efe4));
+    add(host.add.ellipse(5, -8, 6, 5, 0xb0a28a));
+    add(host.add.rectangle(4, -13, 2, 6, 0xa08f76)); add(host.add.rectangle(7, -13, 2, 6, 0xa08f76));
+  }
+  const c = host.add.container(0, 0, parts);
+  return c;
 }
 
 function tweensOf(host: PaintHost): Phaser.Tweens.TweenManager | undefined {
