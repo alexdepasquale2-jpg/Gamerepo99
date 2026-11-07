@@ -20,6 +20,7 @@ import type {
 } from './types';
 import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
+import { terrainMode } from './terrain';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
@@ -114,7 +115,7 @@ export function createStampRasterSource(
   const bbox = layoutBBox(layout);
   const fp = fingerprintHex([
     String(seed >>> 0),
-    'stamp',
+    terrainMode(),
     String(CHUNK_SIZE),
     String(SPINE_SPACING),
     String(WALK_MINUTES_SPINE),
@@ -125,7 +126,7 @@ export function createStampRasterSource(
   ]);
 
   return {
-    kind: 'stamp',
+    kind: terrainMode() === 'ladder' ? 'native' : 'stamp',
     chunkSize: CHUNK_SIZE,
     fingerprint: () => fp,
     getChunk(coord: ChunkCoord): ChunkTiles {

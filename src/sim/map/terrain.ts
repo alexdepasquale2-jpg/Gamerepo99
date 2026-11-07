@@ -34,6 +34,17 @@ export function areaBiomeAt(seed: number, q: number, r: number): Biome {
   return elevation < 0.39 ? 'fields' : 'meadow';
 }
 export const isRiverAt = (seed: number, q: number, r: number): boolean => Math.abs(r - riverRow(seed, q)) < 2.6;
+/** 'noise' = continuous noise per tile; 'ladder' = refined from the L0 grid (see ladder/). */
+export type TerrainMode = 'noise' | 'ladder';
+let mode: TerrainMode = 'noise';
+let ladderArea: ((seed: number, q: number, r: number) => Biome) | null = null;
+export const terrainMode = (): TerrainMode => mode;
+/** Set once at boot (before any terrain query); ladder/ registers its area function. */
+export function setTerrainMode(next: TerrainMode, area?: (seed: number, q: number, r: number) => Biome): void {
+  mode = next;
+  if (area) ladderArea = area;
+}
 export function biomeAt(seed: number, q: number, r: number): Biome {
-  return isRiverAt(seed, q, r) ? 'water' : areaBiomeAt(seed, q, r);
+  if (isRiverAt(seed, q, r)) return 'water';
+  return mode === 'ladder' && ladderArea ? ladderArea(seed, q, r) : areaBiomeAt(seed, q, r);
 }
