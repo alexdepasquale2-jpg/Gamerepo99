@@ -38,6 +38,16 @@ export function validateHoarder(data, ctx) {
       if (e.attractorId) req(attractorIds.has(e.attractorId), `road entry ${e.id}: unknown attractor ${e.attractorId}`);
     }
   }
+  const gainIds = new Set([...(noto?.gains || []), ...(noto?.losses || [])].map((g) => g.id));
+  for (const g of ['gain_flash_spend', 'gain_refuse_tax', 'gain_public_theft_defense']) {
+    req((noto?.triggers || []).some((t) => t.gainId === g), `notoriety.triggers must wire ${g}`);
+  }
+  for (const t of noto?.triggers || []) {
+    req(typeof t.event === 'string' && gainIds.has(t.gainId), `notoriety trigger ${t.event}: unknown gain ${t.gainId}`);
+    if (t.attractorId) req(attractorIds.has(t.attractorId), `notoriety trigger ${t.event}: unknown attractor ${t.attractorId}`);
+  }
+  req((noto?.attractors || []).some((a) => typeof a.raidBonus === 'number'), 'one attractor needs numeric raidBonus (raid goal)');
+  req(typeof stashActs.find((a) => a.id === 'stash_guard_hire')?.upkeepPerDay === 'number', 'stash_guard_hire.upkeepPerDay number required');
   const actIds = new Set(stashActs.map((a) => a.id));
   for (const it of data['interactions.json']?.interactions || []) {
     if (it.stashAct !== undefined) req(actIds.has(it.stashAct), `interaction ${it.id}: unknown stashAct ${it.stashAct}`);

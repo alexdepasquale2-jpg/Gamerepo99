@@ -4,6 +4,7 @@ import { enqueueLetter } from '../letters-scale';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { fireNotorietyEvent, noteCoinSpend, raidBonus } from './events';
 import { addNotoriety, despairMul } from './notoriety';
 import {
   actDefs, ensureHoard, ensureStash, notePeakCoin, notorietyTable, siteDefs, totalGoods,
@@ -37,6 +38,7 @@ export function applyStashAct(state: SimState, actId: string): boolean {
     if (s.guardsHired >= def.guardSlots || carried < (act.coinCost ?? 0)) return false;
     state.player.coin = carried - (act.coinCost ?? 0);
     s.guardsHired += 1;
+    noteCoinSpend(state, act.coinCost ?? 0);
   } else if (actId === 'stash_withdraw') {
     if (s.coin <= 0) return false;
     state.player.coin = carried + s.coin;
@@ -66,7 +68,7 @@ export function tickStashDawn(state: SimState): { lost: string[]; stolen: string
     }
     if (s.coin + totalGoods(s) <= 0) continue;
     const rng = deriveRng(state.seed, 'stash', state.day, d.id);
-    const p = theftP(d, h.notoriety, s.guardsHired) * despairMul(state, d.townId);
+    const p = (theftP(d, h.notoriety, s.guardsHired) + raidBonus(state, d.id)) * despairMul(state, d.townId);
     if (rng.next() >= p) continue;
     const frac = (0.1 + 0.3 * rng.next()) * (1 - d.hideDifficulty * 0.5);
     const taken = Math.floor(s.coin * frac);
@@ -74,9 +76,12 @@ export function tickStashDawn(state: SimState): { lost: string[]; stolen: string
     for (const g of Object.keys(s.goods)) s.goods[g] = s.goods[g]! - Math.floor(s.goods[g]! * frac);
     s.lastTheftDay = state.day;
     out.stolen.push(d.id);
-    const witness = Object.keys(state.people).sort().find((id) => state.people[id]!.townId === d.townId);
+    const raider = h.raiders?.[d.id];
+    if (raider && h.raiders) delete h.raiders[d.id];
+    const witness = raider ?? Object.keys(state.people).sort().find((id) => state.people[id]!.townId === d.townId);
     if (witness) enqueueLetter(state, { kind: 'rumor', fromPersonId: witness, outcomeId: 'stash_theft' });
     pushJuice(state, 'stash.theft', { siteId: d.id, townId: d.townId, coin: taken });
+    fireNotorietyEvent(state, 'stash_theft', { guards: s.guardsHired, townId: d.townId });
   }
   return out;
 }

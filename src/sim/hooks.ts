@@ -53,6 +53,8 @@ function matchClause(
       const despair = Number(ctx.townDespair ?? state.flags.townDespair ?? 0);
       return despair > Number(expected);
     }
+    case 'notorietyAbove':
+      return Number(state.hoard?.notoriety ?? state.flags.notoriety ?? 0) > Number(expected);
     case 'standUpPeopleInTownAtLeast': {
       const byTown = (state.flags.standUpByTown ?? {}) as Record<string, string[]>;
       return Object.values(byTown).some((ids) => new Set(ids).size >= Number(expected));

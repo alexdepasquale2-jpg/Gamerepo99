@@ -87,7 +87,8 @@
       "spawn": "npc_stash_raid_goal",
       "channels": [
         "rumor"
-      ]
+      ],
+      "raidBonus": 0.15
     },
     {
       "id": "att_tax_collector",
@@ -161,5 +162,22 @@
       "hard",
       "defend"
     ]
-  }
+  },
+  "triggers": [
+    {
+      "event": "coin_spend",
+      "gainId": "gain_flash_spend"
+    },
+    {
+      "event": "refusal",
+      "gainId": "gain_refuse_tax",
+      "attractorId": "att_tax_collector"
+    },
+    {
+      "event": "stash_theft",
+      "gainId": "gain_public_theft_defense",
+      "minGuards": 1,
+      "playerInTown": true
+    }
+  ]
 }
