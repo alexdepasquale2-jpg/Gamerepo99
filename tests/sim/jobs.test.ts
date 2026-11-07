@@ -13,3 +13,9 @@ describe('jobs', () => {
     expect(new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((p) => jobOf(s, p).id)).size).toBeGreaterThan(2);
   });
 });
+
+describe('job recipes', () => {
+  it('use only known items', () => {
+    for (const j of JOBS) for (const r of j.recipes) for (const id of [...Object.keys(r.in ?? {}), ...Object.keys(r.out)]) expect(ITEM_BY_ID.has(id), `${j.id}:${id}`).toBe(true);
+  });
+});

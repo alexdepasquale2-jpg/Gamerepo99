@@ -90,6 +90,8 @@ export type SimState = {
   kinEdges?: { from: string; to: string; kind?: string }[];
   /** M4 dawn economy LOD: per-town stock/despair (seeded lazily from towns.json). */
   towns?: Record<string, TownEconomyState>;
+  /** Village economy: per-town goods, daily need and shortage (see sim/economy/village-economy). */
+  villageEconomy?: import('../economy/village-economy').VillageEconomy;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */

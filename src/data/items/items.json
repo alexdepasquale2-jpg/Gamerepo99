@@ -163,6 +163,83 @@
       "tags": [
         "coin"
       ]
+    },
+    {
+      "id": "grain",
+      "name": "Grain",
+      "icon": "food",
+      "color": "#d8c36a",
+      "price": 2,
+      "tags": [
+        "food",
+        "raw"
+      ]
+    },
+    {
+      "id": "flour",
+      "name": "Flour",
+      "icon": "food",
+      "color": "#efe6d0",
+      "price": 3,
+      "tags": [
+        "food",
+        "raw"
+      ]
+    },
+    {
+      "id": "flax",
+      "name": "Flax",
+      "icon": "herb",
+      "color": "#8fae8a",
+      "price": 2,
+      "tags": [
+        "raw",
+        "trade"
+      ]
+    },
+    {
+      "id": "clay",
+      "name": "Clay",
+      "icon": "stone",
+      "color": "#b0724a",
+      "price": 2,
+      "tags": [
+        "raw",
+        "build"
+      ]
+    },
+    {
+      "id": "rope",
+      "name": "Rope",
+      "icon": "tool",
+      "color": "#b59a6a",
+      "price": 4,
+      "tags": [
+        "craft",
+        "work"
+      ]
+    },
+    {
+      "id": "nails",
+      "name": "Nails",
+      "icon": "tool",
+      "color": "#7d838a",
+      "price": 3,
+      "tags": [
+        "craft",
+        "build"
+      ]
+    },
+    {
+      "id": "pots",
+      "name": "Pots",
+      "icon": "stone",
+      "color": "#c4694a",
+      "price": 5,
+      "tags": [
+        "craft",
+        "comfort"
+      ]
     }
   ],
   "startingInventory": {

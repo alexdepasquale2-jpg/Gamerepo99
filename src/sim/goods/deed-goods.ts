@@ -3,6 +3,7 @@
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
+import { scarcity as localScarcity, supplyTown } from '../economy/village-economy';
 import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
@@ -28,6 +29,8 @@ function townStock(state: SimState, townId: string): Record<string, number> | un
 export function priceAt(state: SimState, townId: string, itemId: string): number {
   const item = ITEM_BY_ID.get(itemId);
   if (!item) return 0;
+  const local = localScarcity(state, townId, itemId);
+  if (local > 0) return Math.max(1, Math.round(item.price * (1 + local)));
   const res = item.economyResourceId;
   const stock = res ? townStock(state, townId)?.[res] : undefined;
   const below = ITEMS.deeds.shortageBelow;
@@ -37,6 +40,7 @@ export function priceAt(state: SimState, townId: string, itemId: string): number
 
 /** Bringing a good the town lacks: stock up, despair eases, a Blessing settles in. */
 export function deliverToTown(state: SimState, townId: string, itemId: string, qty: number, personId: string): boolean {
+  supplyTown(state, townId, itemId, qty);
   const res = ITEM_BY_ID.get(itemId)?.economyResourceId;
   const town = state.towns?.[townId];
   if (!res || !town) return false;

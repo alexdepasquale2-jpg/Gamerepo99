@@ -1,3 +1,4 @@
+export { tickVillageEconomy, supplyTown, scarcity, townNeeds } from './village-economy';
 export { tickEconomyLod, ensureEconomyState } from './economy-lod';
 export type {
   CaravanDawnHook,

@@ -4,7 +4,8 @@ import jobsJson from '../../data/items/jobs.json';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 
-export type Job = { id: string; name: string; yield: { itemId: string; qty: number; chance?: number }[] };
+export type Recipe = { in?: Record<string, number>; out: Record<string, number>; chance?: number };
+export type Job = { id: string; name: string; yield: { itemId: string; qty: number; chance?: number }[]; recipes: Recipe[] };
 export const JOBS = (jobsJson as { jobs: Job[] }).jobs;
 
 export function jobOf(state: SimState, personId: string): Job {

@@ -6,6 +6,7 @@ import { tickHoardDawn } from '../hoard';
 import { tickLegacyDawn } from '../legacy/npc';
 import { tickPatronDawn } from '../patrons';
 import { tickEconomyLod } from '../economy/economy-lod';
+import { tickVillageEconomy } from '../economy/village-economy';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
@@ -86,6 +87,7 @@ export function advanceToDawn(state: SimState): void {
     runHooks(state, 'dawn', { data, rng });
   }
   tickEconomyLod(state);
+  tickVillageEconomy(state);
   if (state.towns) tickDoctrines(state);
   tickLetters(state);
   tickUnspokenDawn(state);

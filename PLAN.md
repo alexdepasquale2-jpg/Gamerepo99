@@ -61,7 +61,7 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
 ## Economy sim roadmap (one phase per session; each phase deterministic, saved, tested; features stay light and NPC-driven first)
 
 1. ~~**Named jobs + work yields.**~~ DONE. `data/items/jobs.json`, `sim/goods/jobs.ts`; a person's job derives from seed; work_alongside yields their job's goods.
-2. **Supply/demand core.** Per-town production from job holders, consumption per household, price from stock vs need (extends `priceAt`/needs board). Inputs and tools: processors consume items (flour->bread, ore+wood->tools). Add grain, flax, flour, rope, nails, pots.
+2. ~~**Supply/demand core.**~~ DONE. `sim/economy/village-economy.ts`: per-town goods ledger; dawn production and processing by job recipes (`jobs.json`), household food and wear demand, shortage recorded (`townNeeds`), price rises when cover < 3 days (`priceAt`), player gifts/sales feed the ledger. New items: grain, flour, flax, clay, rope, nails, pots; jobs: miller, ropemaker, potter. Not yet wired: shortage->despair, needs-board display, tools gating gathers.
 3. **Logistics.** Carts/couriers move surplus between towns along routes; shortage posts a request; roads have capacity and danger; caravans and stash theft already exist.
 4. **Ambitions + build plans.** A person picks an ambition (build farm/mill/smithy/house/chapel), then plans: site (free tiles), claim (land claim record), bill of materials, labor. Persisted `plans` table; steps tick at dawn; player can be asked to help (a request on the needs board).
 5. **Hiring + companies.** Plan owners hire idle jobholders (wages in coin); a company = owner + building + workers + ledger. Light: companies exist and produce, no player UI beyond gifts/work.
