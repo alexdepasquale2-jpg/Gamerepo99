@@ -1,8 +1,8 @@
-# M4 living-world gate checklist (DRAFT — not gated yet)
+# M4 living-world gate checklist (GO)
 
 **Authority:** Alex via Niblet — Probe is the quality gate.  
 **Rubric:** `docs/qa/QUALITY_GATE.md` — green unit/build tests are **necessary, not sufficient**. M4 adds a conceptual **living-world** row to the milestone map (*does the world move when the player isn't looking?*).  
-**Status:** **DRAFT / not gated yet** — checklist only. No gate run, no verdict. Prep only until the Forge go-trigger below.  
+**Status:** **GO** @ `61ff35f` — Alex, 2026-11-07. Verdict: `docs/qa/reports/m4-living-world.md`.  
 **HOLD:** Do **not** run the living-world gate until Forge → Probe lists **all four** modules (LOD, caravans, doctrine, letters) **and** cites `npm run validate && npm test && npm run build` green on that tip.  
 **Inputs:** `docs/superpowers/plans/m4/index.md` (Approach **B** chosen: dawn LOD + schedule tables + formula ticks) · task files `task-a-economy-lod.md` … `task-d-letters-rumors.md` · `packet-01.md` (authoritative for Task A / LOD paths) · `docs/superpowers/specs/2026-11-05-last-spark-m4-design.md` (living-world sections only).
 
@@ -16,11 +16,11 @@
 
 Gate **only** after a Forge → Probe ping that lists all of:
 
-1. **LOD** — `src/sim/economy/economy-lod.ts` (`tickEconomyLod`; types in `src/sim/economy/economy-lod-types.ts`) dawn stock/despair wired (Task A / **packet-01**), headless. _(SHA: `______`)_
-2. **Caravans** — `src/sim/caravans.ts` schedule spawn/move from `caravan-schedules.json` (Task B), headless. _(SHA: `______`)_
-3. **Doctrine** — `src/sim/doctrine-tick.ts` competition + collapse cascade (Task C), headless. _(SHA: `______`)_
-4. **Letters/rumors** — `src/sim/letters-scale.ts` batch letters/rumors (Task D), headless. _(SHA: `______`)_
-5. Forge cites `npm run validate && npm test && npm run build` green on that tip. _(cite: `______`)_
+1. **LOD** — `src/sim/economy/economy-lod.ts` (`tickEconomyLod`; types in `src/sim/economy/economy-lod-types.ts`) dawn stock/despair wired (Task A / **packet-01**), headless. _(code under test SHA: `131b68f`; headless evidence OK, see `_m4-living-world-evidence.json`)_
+2. **Caravans** — `src/sim/caravans.ts` schedule spawn/move from `caravan-schedules.json` (Task B), headless. _(code under test SHA: `131b68f`; headless evidence OK, see `_m4-living-world-evidence.json`)_
+3. **Doctrine** — `src/sim/doctrine-tick.ts` competition + collapse cascade (Task C), headless. _(code under test SHA: `131b68f`; headless evidence OK, see `_m4-living-world-evidence.json`)_
+4. **Letters/rumors** — `src/sim/letters-scale.ts` batch letters/rumors (Task D), headless. _(code under test SHA: `131b68f`; headless evidence OK, see `_m4-living-world-evidence.json`)_
+5. Forge cites `npm run validate && npm test && npm run build` green on that tip. _(cite: validate+370 tests+build green at `131b68f`, run by Probe)_
 
 Ignore partial pings (e.g. LOD only). Phaser/render is **not** part of acceptance. SHA blanks fill at Forge ping time only.
 
@@ -33,7 +33,7 @@ Ignore partial pings (e.g. LOD only). Phaser/render is **not** part of acceptanc
 | Tip SHA | `git rev-parse --short HEAD` + `git log -1 --oneline` | Record exact SHA; tip ≥ `c7c36ed`; leave Forge/Loom dirt alone |
 | Data present | `src/data/economy/{dawn-stock,economy-lod}.json`, `world/caravan-schedules.json`, `systems/doctrines.json`, `dialogue/letters.json` | Tables load; `npm run validate` green |
 | Modules exist | `src/sim/economy/economy-lod.ts` (+ `economy-lod-types.ts`), `src/sim/caravans.ts`, `src/sim/doctrine-tick.ts`, `src/sim/letters-scale.ts` | All four present; wired into `advanceToDawn` / `tick` / travel day loop |
-| Unit test files exist | `tests/sim/economy/economy-lod.test.ts`, `tests/sim/caravans.test.ts`, `tests/sim/doctrine-tick.test.ts`, `tests/sim/letters-scale.test.ts` | All four present (LOD suite landed with packet-01; B/C/D land with their modules) |
+| Unit test files exist | `tests/sim/economy/economy-lod.test.ts`, `tests/sim/economy/caravans.test.ts`, `tests/sim/doctrine-tick.test.ts`, `tests/sim/letters-scale.test.ts` | All four present (LOD suite landed with packet-01; B/C/D land with their modules) |
 | No archetype branching | `grep -rn "archetypeId ===" src/sim/` | **0 hits** |
 | Public API unchanged | `createPlaySession({ mode:'play', seed, archetypeId })` → `PlaySession` | Same surface as the M4 index HEAD API lock; bots still boot |
 | M3 interaction evidence | `npx vite-node scripts/m3-interaction-evidence.mts --mode all` | Exit 0; `packetEmit`, `refusalCoalFlicker` true; `sparkSpendCount` 0 |
@@ -55,7 +55,7 @@ npx vite-node scripts/m3-interaction-evidence.mts --mode all
 # → docs/qa/reports/_m3-interaction-evidence.json
 
 # 3) M4 living-world unit suites (plan-accurate paths; B/C/D files land with Forge modules)
-npx vitest run tests/sim/economy tests/sim/caravans.test.ts \
+npx vitest run tests/sim/economy tests/sim/economy/caravans.test.ts \
   tests/sim/doctrine-tick.test.ts tests/sim/letters-scale.test.ts
 
 # 4) M4 living-world headless evidence (10+ dawns seed 42; determinism double-run)
@@ -81,10 +81,10 @@ npm run build
 | Module | Gate follows (canonical) | Older index / task-a flat path | In tree now? |
 |--------|--------------------------|--------------------------------|--------------|
 | LOD | **packet-01:** `src/sim/economy/economy-lod.ts`, test `tests/sim/economy/economy-lod.test.ts`, run `npx vitest run tests/sim/economy` | `src/sim/economy-lod.ts` / `tests/sim/economy-lod.test.ts` | **Yes** (packet-01 landed; flat paths not used) |
-| Caravans | **task-b:** `src/sim/caravans.ts`, `tests/sim/caravans.test.ts` | — | **No** (await Forge) |
-| Doctrine | **task-c:** `src/sim/doctrine-tick.ts`, `tests/sim/doctrine-tick.test.ts` | — | **No** (await Forge) |
-| Letters | **task-d:** `src/sim/letters-scale.ts`, `tests/sim/letters-scale.test.ts` | — | **No** (await Forge) |
-| Evidence | `scripts/m4-living-world-evidence.mts` → `docs/qa/reports/_m4-living-world-evidence.json` | (plans unnamed; locked here to mirror M3) | **Yes (prep stub)** |
+| Caravans | **task-b:** `src/sim/caravans.ts`, `tests/sim/economy/caravans.test.ts` | — | **Yes** |
+| Doctrine | **task-c:** `src/sim/doctrine-tick.ts`, `tests/sim/doctrine-tick.test.ts` | — | **Yes** |
+| Letters | **task-d:** `src/sim/letters-scale.ts`, `tests/sim/letters-scale.test.ts` | — | **Yes** |
+| Evidence | `scripts/m4-living-world-evidence.mts` → `docs/qa/reports/_m4-living-world-evidence.json` | (plans unnamed; locked here to mirror M3) | **Yes** |
 
 task-b's "modify `src/sim/economy-lod.ts`" should be read as the nested packet-01 module under `src/sim/economy/`. Gate does **not** require the older flat LOD paths.
 
@@ -127,9 +127,11 @@ task-b's "modify `src/sim/economy-lod.ts`" should be read as the nested packet-0
 
 ---
 
-## Verdict outputs (placeholder — not written yet)
+## Verdict outputs
 
-No verdict exists yet. At go-time Probe writes `docs/qa/reports/m4-living-world.md`, updates the Probe row in `docs/SCHEDULE.xlsx`, and reports to Niblet + Forge (priority: false). **This file does not contain a SHIP verdict.** Status remains DRAFT until the go-trigger fires and Probe runs the gate.
+**GO @ `61ff35f`** (Alex, 2026-11-07) — see `docs/qa/reports/m4-living-world.md`. Original instructions below kept for reference.
+
+~~No verdict exists yet.~~ At go-time Probe writes `docs/qa/reports/m4-living-world.md`, updates the Probe row in `docs/SCHEDULE.xlsx`, and reports to Niblet + Forge (priority: false). **This file does not contain a SHIP verdict.** Status remains DRAFT until the go-trigger fires and Probe runs the gate.
 
 ---
 

@@ -4,7 +4,7 @@ export function validateHooks(data, { req, ids }) {
   const hooks = ids(data['hooks.json']?.hooks);
   const hookById = Object.fromEntries((data['hooks.json']?.hooks || []).map((h) => [h.id, h]));
   const methods = ids(data['methods.json']?.methods);
-  const knownHookKinds = new Set(['spark_recovery', 'personal_cost', 'refusal', 'legacy']);
+  const knownHookKinds = new Set(['spark_recovery', 'personal_cost', 'refusal', 'legacy', 'civic']);
   for (const h of data['hooks.json']?.hooks || []) {
     req(knownHookKinds.has(h.kind), `hooks ${h.id}: unknown kind ${h.kind}`);
     if (h.kind === 'refusal') {

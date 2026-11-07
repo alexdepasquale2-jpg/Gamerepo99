@@ -1,6 +1,8 @@
 /** Load and index locked JSON tables from src/data. Pure: no Phaser/DOM/Math.random. */
 
 import type { ArchetypeDef, HookDef } from './types/data';
+import { loadCaravanSchedules } from './caravans';
+import type { CaravanScheduleRow } from './caravans-types';
 
 import archetypesJson from '../data/people/archetypes.json';
 import traitsJson from '../data/people/traits.json';
@@ -15,6 +17,7 @@ import eventsJson from '../data/systems/events.json';
 import proofsJson from '../data/people/proofs.json';
 import timeJson from '../data/systems/time.json';
 import ripplesJson from '../data/systems/ripples.json';
+import namesJson from '../data/people/names.json';
 import kinshipJson from '../data/people/kinship.json';
 import lettersJson from '../data/dialogue/letters.json';
 import doctrinesJson from '../data/systems/doctrines.json';
@@ -34,6 +37,12 @@ import type {
 } from './economy/economy-lod-types';
 import socialWebJson from '../data/people/social-web.json';
 import socialCentralityJson from '../data/people/social-centrality.json';
+import unspokenClassesJson from '../data/people/unspoken/classes.json';
+import unspokenBlessingsJson from '../data/people/unspoken/outcomes-blessings.json';
+import unspokenBurdensJson from '../data/people/unspoken/outcomes-burdens.json';
+import unspokenTuningJson from '../data/people/unspoken/tuning.json';
+import unspokenFragmentsJson from '../data/dialogue/fragments/unspoken/come-to-pass.json';
+import type { UnspokenTables } from './social/unspoken-types';
 import socialPropagationJson from '../data/people/social-propagation.json';
 import { normalizeSocialEdge } from './social/social-graph';
 import {
@@ -50,6 +59,7 @@ import hooksSparkRecovery from '../data/hooks/spark-recovery.json';
 import hooksPersonalCost from '../data/hooks/personal-cost.json';
 import hooksRefusal from '../data/hooks/refusal.json';
 import hooksLegacy from '../data/hooks/legacy.json';
+import hooksCivic from '../data/hooks/civic.json';
 
 export type TraitsTables = {
   embodiment: unknown[];
@@ -105,6 +115,7 @@ export type DataTables = {
   reigniteThreshold: number;
   people: unknown[];
   /** Indexed people rows (id → row). */
+  names: { given: string[]; family: string[] };
   peopleById: Record<string, { id: string; authored?: boolean; anchor?: boolean; woundId?: string; flameStart?: number; tags?: string[]; [k: string]: unknown }>;
   towns: unknown[];
   links: unknown[];
@@ -136,12 +147,16 @@ export type DataTables = {
   economyResources: EconomyResourceRow[];
   /** world/routes.json rows (LOD flow; condition/broken/receiveShare). */
   economyRoutes: EconomyRouteState[];
+  /** world/caravan-schedules.json rows (maxConcurrent defaulted to 2). */
+  caravanSchedules: CaravanScheduleRow[];
   /** Social graph 05: prebaked web for default seed (legacy kinds mapped at load). */
   socialWeb: SocialWebTable;
   /** Social graph 05: prebaked centrality (read-only). */
   socialCentrality: CentralityTable;
   /** Social graph 05: falloff / maxHops / epsilon. */
   socialPropagation: SocialPropagation;
+  /** Social graph 06: Blessings and Burdens classes/outcomes/tuning/fragments. */
+  unspoken: UnspokenTables;
 };
 
 function loadSocialWeb(): SocialWebTable {
@@ -170,6 +185,7 @@ const HOOK_PARTS = [
   hooksPersonalCost,
   hooksRefusal,
   hooksLegacy,
+  hooksCivic,
 ] as Array<{ hooks?: HookDef[] }>;
 
 function collectHooks(): HookDef[] {
@@ -235,6 +251,7 @@ export function loadData(): DataTables {
     ripples: ripplesJson,
     lines: { deprecated: true, replaces: 'line-fragments' },
     kinship: kinshipJson,
+    names: namesJson as DataTables['names'],
     letters: lettersJson,
     doctrines: doctrinesJson,
     lineFragments: loadLineFragmentsTable(),
@@ -251,14 +268,22 @@ export function loadData(): DataTables {
       id: r.id,
       fromTownId: r.fromTownId,
       toTownId: r.toTownId,
+      days: typeof r.days === 'number' ? r.days : 1,
       condition: typeof r.condition === 'number' ? r.condition : 1,
       broken: r.broken === true,
       extractive: r.extractive === true,
       receiveShare: r.receiveShare as unknown as Record<string, number> | undefined,
       facilityIds: [...(r.facilityIds ?? [])],
     })),
+    caravanSchedules: loadCaravanSchedules(),
     socialWeb: loadSocialWeb(),
     socialCentrality: socialCentralityJson as unknown as CentralityTable,
     socialPropagation: loadSocialPropagation(),
+    unspoken: {
+      classes: unspokenClassesJson.classes,
+      outcomes: [...unspokenBlessingsJson.outcomes, ...unspokenBurdensJson.outcomes],
+      tuning: unspokenTuningJson,
+      fragments: unspokenFragmentsJson.fragments,
+    } as unknown as UnspokenTables,
   };
 }

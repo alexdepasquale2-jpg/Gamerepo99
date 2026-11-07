@@ -45,6 +45,7 @@
     },
     {
       "id": "talk_hard",
+      "doctrineAct": ["act_expose_lie", "act_become_voice"],
       "kind": "conversation",
       "tags": [
         "talk",
@@ -62,6 +63,7 @@
     },
     {
       "id": "talk_hard_shame",
+      "doctrineAct": "act_expose_lie",
       "kind": "conversation",
       "tags": [
         "talk",
@@ -214,6 +216,7 @@
     },
     {
       "id": "promise_keep",
+      "doctrineAct": "act_carry_promise",
       "kind": "promise",
       "tags": [
         "promise",
@@ -323,6 +326,7 @@
     },
     {
       "id": "stand_up",
+      "doctrineAct": "act_become_voice",
       "kind": "stand_up",
       "tags": [
         "stand_up",

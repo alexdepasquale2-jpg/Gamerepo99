@@ -21,6 +21,8 @@ export type HookDef = {
   id: string;
   kind: string;
   trigger: string;
+  /** Runs for every player regardless of archetype hookIds. */
+  universal?: boolean;
   when?: HookWhen;
   effects?: Effect[];
   methodId?: string;

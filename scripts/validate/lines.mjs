@@ -75,3 +75,13 @@ export function validateLines(data, ctx) {
   // lines.json retired — fragments-only mode
   console.log('MIGRATION lines→fragments: lines.json absent — fragments-only mode');
 }
+
+export function validateNames(data, { req }) {
+  const n = data['names.json'];
+  req(n && Array.isArray(n.given) && n.given.length >= 40, 'names.json: need >=40 given names');
+  req(n && Array.isArray(n.family) && n.family.length >= 30, 'names.json: need >=30 family names');
+  for (const k of ['given', 'family']) {
+    const a = n?.[k] || [];
+    req(new Set(a).size === a.length && a.every((s) => typeof s === 'string' && s.trim()), `names.json ${k}: unique non-empty strings`);
+  }
+}

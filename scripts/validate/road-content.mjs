@@ -97,5 +97,6 @@ export function validateRoadContent(data, ctx) {
     req(typeof s.periodDays === 'number' && s.periodDays >= 1, `caravan ${s.id} periodDays`);
     req(typeof s.qty === 'number' && s.qty >= 1, `caravan ${s.id} qty`);
     req(LEANS.has(s.lean) || s.lean === 'mixed', `caravan ${s.id} lean`);
+    req(s.maxConcurrent === undefined || (Number.isInteger(s.maxConcurrent) && s.maxConcurrent >= 1), `caravan ${s.id} maxConcurrent`);
   }
 }

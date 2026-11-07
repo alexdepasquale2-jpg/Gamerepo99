@@ -15,6 +15,9 @@ import type { DataTables } from '../load-data';
 import { refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
+import { encodeUnspokenForState } from '../social/unspoken';
+import { applyDoctrineAct } from '../doctrine-tick';
+import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
@@ -110,6 +113,19 @@ export function actInteraction(
   pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
+  encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
+  const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
+  for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
+  if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {
+    const byTown = ((s.flags.standUpByTown ??= {}) as Record<string, string[]>);
+    const ids = (byTown[person.townId] ??= []);
+    if (!ids.includes(personId)) ids.push(personId);
+    const traitsBefore = [...s.player.statusTraits];
+    runHooks(s, 'on_interaction', { data, rng: s.rng, targetId: personId });
+    for (const id of s.player.statusTraits) {
+      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, interactionId });
+    }
+  }
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.
   const def = rt.catalog.get(interactionId);
   const helpedAtSite = def?.ripple === 'help' && person.flame > flameBefore && !!person.siteId;

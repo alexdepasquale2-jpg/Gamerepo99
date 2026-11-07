@@ -1,5 +1,6 @@
 export { createRng } from './rng';
 export type { Rng } from './rng';
+export { deriveRng } from './rng';
 export { createEventBus } from './event-bus';
 export type { EventBus, EventHandler, Unsubscribe } from './event-bus';
 export { createWorld } from './world';
@@ -62,7 +63,12 @@ export {
   shortestPath,
   walkCascade,
   weaveSocialWeb,
+  createUnspokenState,
+  encodeUnspokenForState,
+  tickUnspokenDawn,
+  witnessOutcome,
 } from './social';
+export type { UnspokenInstance, UnspokenState, UnspokenTables } from './social';
 export type {
   CascadeHit,
   CascadePayload,
@@ -129,3 +135,5 @@ export type {
   FacilityRenderView,
   TileRenderView,
 } from './map/types';
+export { tickCaravans, loadCaravanSchedules } from './caravans';
+export type { CaravanMobile, CaravanScheduleRow, CaravanHeading } from './caravans-types';

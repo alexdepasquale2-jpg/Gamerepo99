@@ -1,3 +1,7 @@
+import type { LettersState } from '../letters-scale';
+import type { UnspokenState } from '../social/unspoken-types';
+import type { CaravanMobile } from '../caravans-types';
+import type { DoctrineState } from '../doctrine-tick';
 /** Runtime sim shapes assembled from data + tick state. */
 
 import type {
@@ -34,6 +38,8 @@ export type Inhabitant = {
 
 export type PersonState = {
   id: string;
+  /** Display name (authored, or deterministically generated from names.json). */
+  name?: string;
   flame: number;
   flameStart?: number;
   marks?: { markId: string; stacks: number }[];
@@ -56,6 +62,7 @@ export type PacketState = {
   kind?: string;
   fromTownId?: string;
   toTownId?: string;
+  relapseMulAdd?: number;
 };
 
 export type SimState = {
@@ -81,4 +88,14 @@ export type SimState = {
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
+  /** M4 packet-02: live caravan mobiles. */
+  caravans?: CaravanMobile[];
+  /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
+  routeBreakJuiced?: Record<string, boolean>;
+  /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */
+  unspoken?: UnspokenState;
+  /** M4 Task C: runtime doctrine meters (seeded lazily from doctrines.json). */
+  doctrines?: Record<string, DoctrineState>;
+  /** M4 Task D: queued/in-flight letters and rumors. */
+  letters?: LettersState;
 };
