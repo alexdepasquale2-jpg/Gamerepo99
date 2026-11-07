@@ -11,6 +11,7 @@ import {
 import type { PlayLastResolve } from './play-session-types';
 import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
 import { actDefs } from '../hoard';
+import { patronHostMethod } from '../patrons';
 import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
@@ -113,10 +114,11 @@ export function actMethod(
   // A catalog interaction id carrying a stashAct is playable directly (hosted by the act's first method).
   const direct = compat?.catalog.get(parsed.methodId);
   const stash = direct?.stashAct ? actDefs(state).find((a) => a.id === direct.stashAct) : undefined;
-  const interactionId = stash ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
+  const patron = direct?.patronAccept || direct?.patronFulfil ? patronHostMethod(state) : undefined;
+  const interactionId = stash || patron ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
   if (!compat || !interactionId || !compat.people.has(parsed.personId) || !state.people?.[parsed.personId]) {
     eventLog.push({ type: 'act', methodId: actionId });
     return;
   }
-  actInteraction(state, compat, { ...parsed, methodId: stash?.methodIds[0] ?? parsed.methodId, interactionId }, eventLog, extras);
+  actInteraction(state, compat, { ...parsed, methodId: stash?.methodIds[0] ?? patron ?? parsed.methodId, interactionId }, eventLog, extras);
 }

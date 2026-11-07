@@ -81,5 +81,28 @@
         }
       ]
     }
-  ]
+  ],
+  "rules": {
+    "voiceTagsAny": [
+      "doctrine_voice",
+      "leader"
+    ],
+    "hostMethodId": "inspire",
+    "betrayalDailyScale": 0.15,
+    "lowLegitimacyMul": 1.5,
+    "sourMul": 2,
+    "maxLettersPerDawn": 2
+  },
+  "obligationEffects": {
+    "tithe": {
+      "on": "fulfil",
+      "meter": "realDelivery",
+      "add": 0.08
+    },
+    "deny_reignite": {
+      "on": "accept",
+      "meter": "propaganda",
+      "add": 0.08
+    }
+  }
 }

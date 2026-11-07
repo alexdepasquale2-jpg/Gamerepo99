@@ -52,4 +52,17 @@ export function validateHoarder(data, ctx) {
     req(towns.has(p.homeTownId), `patron ${p.id}: homeTown missing`);
     req(Array.isArray(p.deals) && p.deals.length >= 1, `patron ${p.id}: deals`);
   }
+  const pr = data['patrons.json']?.rules;
+  req(Array.isArray(pr?.voiceTagsAny) && typeof pr?.hostMethodId === 'string', 'patrons.rules voiceTagsAny/hostMethodId required');
+  for (const k of ['betrayalDailyScale', 'lowLegitimacyMul', 'sourMul', 'maxLettersPerDawn']) req(typeof pr?.[k] === 'number', `patrons.rules.${k} number required`);
+  const dealIds = new Set(patrons.flatMap((p) => (p.deals || []).map((d) => d.id)));
+  const kinds = new Set(patrons.flatMap((p) => (p.deals || []).map((d) => d.obligation.kind)));
+  for (const [k, e] of Object.entries(data['patrons.json']?.obligationEffects || {})) {
+    req(kinds.has(k), `patrons.obligationEffects: unknown kind ${k}`);
+    req(['accept', 'fulfil'].includes(e.on) && typeof e.add === 'number', `patrons.obligationEffects.${k}: on/add`);
+    req(['realDelivery', 'perceivedDelivery', 'propaganda', 'control', 'exposure'].includes(e.meter), `patrons.obligationEffects.${k}: meter`);
+  }
+  for (const it of data['interactions.json']?.interactions || []) {
+    for (const f of ['patronAccept', 'patronFulfil']) if (it[f] !== undefined) req(dealIds.has(it[f]), `interaction ${it.id}: unknown ${f} ${it[f]}`);
+  }
 }

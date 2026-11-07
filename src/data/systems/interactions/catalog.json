@@ -394,6 +394,58 @@
       "sparkGain": 0,
       "touch": {},
       "ripple": "none"
+    },
+    {
+      "id": "patron_accept_mill_tithe",
+      "patronAccept": "deal_mill_tithe_coin",
+      "kind": "favor",
+      "tags": [
+        "patron",
+        "interaction:patron_accept_mill_tithe"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "patron_accept_mill_deny",
+      "patronAccept": "deal_mill_deny_reignite",
+      "kind": "favor",
+      "tags": [
+        "patron",
+        "interaction:patron_accept_mill_deny"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "patron_accept_warden_guard",
+      "patronAccept": "deal_warden_guard_caravan",
+      "kind": "favor",
+      "tags": [
+        "patron",
+        "interaction:patron_accept_warden_guard"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "patron_pay_mill_tithe",
+      "patronFulfil": "deal_mill_tithe_coin",
+      "kind": "favor",
+      "tags": [
+        "patron",
+        "interaction:patron_pay_mill_tithe"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
     }
   ],
   "choiceSets": [
