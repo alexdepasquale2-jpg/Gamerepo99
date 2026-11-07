@@ -12,6 +12,7 @@ import { tickBuildPlans } from '../economy/build-plans';
 import { tickCompanies } from '../economy/companies';
 import { tickHouseholds } from '../economy/households';
 import { tickBorders } from '../economy/borders';
+import { tickPolity } from '../economy/polity';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
 import type { DataTables } from '../load-data';
@@ -97,6 +98,7 @@ export function advanceToDawn(state: SimState): void {
   tickCompanies(state);
   tickHouseholds(state);
   tickBorders(state);
+  tickPolity(state);
   tickLogistics(state);
   if (state.towns) tickDoctrines(state);
   tickLetters(state);

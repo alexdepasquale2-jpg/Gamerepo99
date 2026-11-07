@@ -10,6 +10,7 @@ import namesJson from '../../data/people/names.json';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { purseOf } from './companies';
+import { birthMul } from './polity';
 import { scarcity } from './village-economy';
 
 export const KIN = {
@@ -116,7 +117,7 @@ export function tickHouseholds(state: SimState): void {
     const sec = security(state, h);
     if (sec < KIN.birthSecurity) continue;
     const rng = deriveRng(state.seed, 'birth', state.day, h.id);
-    if (rng.next() >= KIN.birthChance) continue;
+    if (rng.next() >= KIN.birthChance * birthMul(state, h.townId)) continue;
     const warm = warmth(state, h) >= KIN.warmFlame && sec >= KIN.giftedSecurity;
     const gifted = rng.next() < (warm ? KIN.giftedChanceWarm : KIN.giftedChanceBase);
     const id = `kid${k.next++}`;

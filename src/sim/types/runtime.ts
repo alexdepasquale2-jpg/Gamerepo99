@@ -102,6 +102,8 @@ export type SimState = {
   kin?: import('../economy/households').KinState;
   /** Town borders (tension) and claim disputes (see sim/economy/borders). */
   borders?: import('../economy/borders').Borders;
+  /** Diplomacy, wars, technology and creeds, run by towns (see sim/economy/polity). */
+  polity?: import('../economy/polity').Polity;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */

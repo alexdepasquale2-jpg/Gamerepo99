@@ -1,3 +1,4 @@
+export { tickPolity, atWar, treatyOf, techsOf, creedOf, polityMul, strength } from './polity';
 export { tickBorders, claimRect, estateOf, townReach, tension, bordersOf } from './borders';
 export { tickHouseholds, householdOf, householdsIn, heirOf, inheritFrom, sexOf } from './households';
 export { tickCompanies, companiesIn, companyOf, purseOf, workJobId } from './companies';

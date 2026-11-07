@@ -7,6 +7,7 @@
 import { COURIER_SURVIVAL_PER_DAY } from '../letter-replies';
 import { planRoad, positionOnLegs, type RoadLeg, type RoadPosition } from '../road-journey';
 import { deriveRng } from '../rng';
+import { atWar, pairKey, safeRoads } from './polity';
 import type { SimState } from '../types/runtime';
 import { COVER_DAYS, HOUSEHOLD, supplyTown } from './village-economy';
 
@@ -28,7 +29,8 @@ export const LOGISTICS = {
 
 export type CartRequest = { id: string; townId: string; itemId: string; qty: number; postedDay: number; status: 'open' | 'filled' | 'lapsed'; cartId?: string };
 export type Cart = { id: string; itemId: string; qty: number; fromTownId: string; toTownId: string; legs: RoadLeg[]; roadDays: number; daysLeft: number; requestId: string };
-export type Logistics = { requests: CartRequest[]; carts: Cart[]; next: number; lost: number; delivered: number };
+/** `flow`: units delivered between town pairs since the last dawn tick of the polity layer. */
+export type Logistics = { requests: CartRequest[]; carts: Cart[]; next: number; lost: number; delivered: number; flow?: Record<string, number> };
 
 const logOf = (state: SimState): Logistics => (state.logistics ??= { requests: [], carts: [], next: 1, lost: 0, delivered: 0 });
 
@@ -65,7 +67,8 @@ export function tickLogistics(state: SimState): void {
     cart.daysLeft -= 1;
     const req = log.requests.find((r) => r.id === cart.requestId);
     const broken = cart.legs.some((l) => (state.economyRoutes ?? []).find((r) => r.id === l.routeId)?.broken);
-    if (rng('cart-road', cart.id).next() >= (broken ? COURIER_SURVIVAL_PER_DAY ** 2 : COURIER_SURVIVAL_PER_DAY)) {
+    const hazard = atWar(state, cart.fromTownId, cart.toTownId) ? 3 : broken ? 2 : safeRoads(state, cart.fromTownId, cart.toTownId) ? 0.5 : 1;
+    if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** hazard) {
       log.carts.splice(log.carts.indexOf(cart), 1);
       log.lost += 1;
       if (req) delete req.cartId; // goods lost; the request stays open
@@ -75,6 +78,8 @@ export function tickLogistics(state: SimState): void {
       log.carts.splice(log.carts.indexOf(cart), 1);
       supplyTown(state, cart.toTownId, cart.itemId, cart.qty);
       log.delivered += cart.qty;
+      const k = pairKey(cart.fromTownId, cart.toTownId);
+      (log.flow ??= {})[k] = (log.flow[k] ?? 0) + cart.qty;
       if (req) { req.status = 'filled'; delete req.cartId; }
     }
   }
@@ -97,7 +102,7 @@ export function tickLogistics(state: SimState): void {
     const items = req.itemId === 'food' ? FOOD : [req.itemId];
     let best: { from: string; item: string; road: NonNullable<ReturnType<typeof planRoad>> } | undefined;
     for (const from of towns) {
-      if (from === req.townId || (sent.get(from) ?? 0) >= LOGISTICS.departuresPerTown) continue;
+      if (from === req.townId || atWar(state, from, req.townId) || (sent.get(from) ?? 0) >= LOGISTICS.departuresPerTown) continue;
       const item = items.find((i) => surplus(state, from, i) >= 1);
       if (!item) continue;
       const road = planRoad(state, from, req.townId);
