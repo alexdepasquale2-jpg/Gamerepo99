@@ -1,7 +1,7 @@
 # PLAN
 
 ## Status
-M4 code-complete on `ccr-2d087683-rpgezr` (382 tests, evidence gaps: none). Not on main yet.
+M4 gated GO (`61ff35f`), 383 tests. PR #1 open → main. Handoff on wip refreshed.
 
 ## Next 5 steps (one per session, gate: `npm run validate && npm test && npm run build`)
 
@@ -29,4 +29,4 @@ M4 code-complete on `ccr-2d087683-rpgezr` (382 tests, evidence gaps: none). Not 
    Done when: burnout → "Carry it on" continues with an heir; an exported file re-imports with the legend present.
 
 ## Blockers
-- Step 1 needs your Go/Hold and PR approval.
+- Step 1: only the PR #1 merge remains (yours).
