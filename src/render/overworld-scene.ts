@@ -137,6 +137,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    if (this.goods.overlayOpen()) { this.tickLife(delta); return; }
     let dx = 0;
     let dy = 0;
     if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
@@ -172,6 +173,13 @@ export class OverworldScene extends Phaser.Scene {
       this.player.play('hero-idle-down', true);
     }
     this.moving = dx !== 0 || dy !== 0;
+    // Physical arrival and social/economy IDs must agree for deeds/deliveries.
+    const arrived = this.layout.settlements.find((t) => {
+      const p = tileFootWorld(t.q, t.r);
+      return Math.hypot(p.x - this.player.x, p.y - this.player.y) < TILE_PX * 12;
+    });
+    const state = this.session.getState();
+    if (arrived && state) state.player.townId = arrived.id;
     this.syncChunks(false);
     this.tickLife(delta);
   }
@@ -313,7 +321,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private spawnPlayer(): void {
-    const start = this.layout.settlements[0];
+    const start = this.layout.settlements.find((s) => s.id === this.session.snapshot().townId) ?? this.layout.settlements[0];
     const foot = start
       ? tileFootWorld(start.q, start.r + 1)
       : { x: TILE_PX / 2, y: TILE_PX };

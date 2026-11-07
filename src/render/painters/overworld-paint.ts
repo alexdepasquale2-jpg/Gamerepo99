@@ -1,3 +1,4 @@
+import { BIOME_COLOR, type Biome } from '../../sim/map/terrain';
 /** Render-side painters for continuous overworld chunks. Presentation only. */
 
 import type Phaser from 'phaser';
@@ -232,6 +233,12 @@ export function paintGroundTile(
   // Roads are baked as a ribbon strip — skip per-tile dirt (still paint grass under)
   const onMeander = meanderKeys?.has(`${tile.q},${tile.r}`);
   paintGrassTile(host, container, tile);
+  const color = BIOME_COLOR[tile.biomeId as Biome];
+  if (color) {
+    const tint = host.add.rectangle(tile.q * TILE_PX, tile.r * TILE_PX, TILE_PX, TILE_PX, color);
+    tint.setOrigin(0, 0).setAlpha(tile.biomeId === 'water' ? 0.92 : 0.28).setDepth(0.3);
+    container.add(tint);
+  }
   if (onMeander || isRoadBiome(tile.biomeId)) {
     // Leave grass; ribbon draw sits above at depth 0.5
     return;
@@ -839,7 +846,6 @@ export function paintChunkContents(
   const roadKeys = new Set(
     chunk.tiles.filter((t) => isRoadBiome(t.biomeId)).map((t) => `${t.q},${t.r}`),
   );
-  const meander = expandMeanderRoadKeys(roadKeys);
 
   const baseQ = chunk.cx * CHUNK_SIZE;
   const baseR = chunk.cy * CHUNK_SIZE;
@@ -848,6 +854,18 @@ export function paintChunkContents(
   paintChunkGrassFill(host, container, baseQ, baseR, CHUNK_SIZE);
   paintPoissonGrassDetail(host, container, baseQ, baseR, CHUNK_SIZE);
   addGrassTintOverlay(host, container, baseQ, baseR, CHUNK_SIZE);
+
+  // Coherent regional terrain over the art fill. A single graphics object per
+  // chunk keeps water/forest/hills visible without thousands of scene objects.
+  const terrain = host.add.graphics();
+  terrain.setDepth(0.3);
+  for (const tile of chunk.tiles) {
+    const color = BIOME_COLOR[tile.biomeId as Biome];
+    if (!color) continue;
+    terrain.fillStyle(color, tile.biomeId === 'water' ? 0.94 : 0.36);
+    terrain.fillRect(tile.q * TILE_PX, tile.r * TILE_PX, TILE_PX, TILE_PX);
+  }
+  container.add(terrain);
 
   // Organic road ribbon (soft edges) — one bake per chunk
   if (roadKeys.size > 0) {

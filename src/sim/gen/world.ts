@@ -13,7 +13,8 @@ import {
   pickWorldShape,
 } from './load/load-world-tables';
 import { generateSettlements, type SettlementGen } from './places/settlements-gen';
-import { generateRoutes, type RouteGen } from './places/routes-gen';
+import type { RouteGen } from './places/routes-gen';
+import { geographicRoads } from '../map/world-layout';
 import { generateDoctrines, type DoctrineGen } from './society/doctrines-gen';
 import { loadFacilitiesBiomesTables } from './load/load-facilities-biomes';
 import { generateFacilities, type FacilityGen } from './places/facilities-gen';
@@ -119,7 +120,11 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
     worldTables.doctrines,
     shape,
   );
-  const routes = generateRoutes(geoRng, settlements, worldTables.routes, shape);
+  const routes: RouteGen[] = geographicRoads(settlements, seed).map((r) => ({
+    id: r.id, fromId: r.from, toId: r.to,
+    days: Math.max(1, Math.ceil(r.path.slice(1).reduce((len, p, i) => len + Math.hypot(p.q - r.path[i]!.q, p.r - r.path[i]!.r), 0) / 120)),
+    biomeIds: [],
+  }));
   const doctrines = generateDoctrines(
     geoRng,
     settlements,

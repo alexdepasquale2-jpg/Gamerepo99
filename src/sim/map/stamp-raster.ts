@@ -19,13 +19,13 @@ import type {
   TileRenderView,
 } from './types';
 import { layoutWorld, type WorldLayout } from './world-layout';
+import { biomeAt } from './terrain';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
 const PROP_INTERVAL = 48;
 /** Extra padding around layout AABB for biome fill. */
-const LAYOUT_PAD = 16;
-const DEFAULT_BIOME = 'mill_heath';
+const LAYOUT_PAD = 40;
 
 type SparseRoad = Map<string, Cell>;
 
@@ -61,8 +61,11 @@ function buildRoads(layout: WorldLayout): SparseRoad {
     const from = byId.get(route.from);
     const to = byId.get(route.to);
     if (!from || !to) continue;
-    for (const cell of bresenhamLine(from.q, from.r, to.q, to.r)) {
-      roads.set(cellKey(cell.q, cell.r), cell);
+    for (let i = 1; i < route.path.length; i++) {
+      const a = route.path[i - 1]!, b = route.path[i]!;
+      for (const cell of bresenhamLine(Math.round(a.q), Math.round(a.r), Math.round(b.q), Math.round(b.r))) {
+        roads.set(cellKey(cell.q, cell.r), cell);
+      }
     }
   }
   return roads;
@@ -94,14 +97,6 @@ function buildProps(
     });
   }
   return props;
-}
-
-function pickBiome(world: FabricWorld, q: number, r: number): string {
-  const biomes = world.biomes ?? [];
-  if (biomes.length === 0) return DEFAULT_BIOME;
-  // Stable pick from q,r — no RNG allocation per tile.
-  const i = Math.abs((q * 73856093) ^ (r * 19349663)) % biomes.length;
-  return biomes[i]?.id ?? DEFAULT_BIOME;
 }
 
 /**
@@ -159,7 +154,7 @@ export function createStampRasterSource(
             tiles.push({
               q,
               r,
-              biomeId: pickBiome(world, q, r),
+              biomeId: biomeAt(seed, q, r),
               warmth: 0.35,
             });
           }

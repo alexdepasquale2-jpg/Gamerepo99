@@ -246,127 +246,34 @@ export function bakeRoadRibbon(
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, size, size);
 
-  // Prefer raw sim road cells; apply continuous float meander for smooth Catmull-Rom
-  const raw: { q: number; r: number }[] = [];
-  for (const k of roadKeys) {
-    const [qq, rr] = k.split(',').map(Number);
-    if (qq! < chunkOriginQ - 2 || qq! >= chunkOriginQ + chunkTiles + 2) continue;
-    raw.push({ q: qq!, r: rr! });
-  }
-  // Dedup by q (keep median r) — strip prior integer-meander duplicates
-  const byQ = new Map<number, number[]>();
-  for (const p of raw) {
-    const arr = byQ.get(p.q) ?? [];
-    arr.push(p.r);
-    byQ.set(p.q, arr);
-  }
-  const uniqQ = [...byQ.keys()].sort((a, b) => a - b);
-  if (uniqQ.length < 1) return null;
-
-  const pts: { x: number; y: number }[] = [];
-  for (const q of uniqQ) {
-    const rs = byQ.get(q)!;
-    // Base r: if values look meander-expanded (span), take min as approx sim r
-    const baseR = Math.min(...rs);
-    const yTile = baseR + roadMeanderOffsetFloat(q);
-    pts.push({
-      x: (q - chunkOriginQ) * TILE_PX + TILE_PX / 2,
-      y: (yTile - chunkOriginR) * TILE_PX + TILE_PX / 2,
-    });
-  }
-  if (pts.length < 2) return null;
-
-  // Insert midpoints so Catmull-Rom has denser controls at bends
-  const denser: { x: number; y: number }[] = [];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i]!;
-    const b = pts[i + 1]!;
-    denser.push(a);
-    denser.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-  }
-  denser.push(pts[pts.length - 1]!);
-  const samples = densifyCatmullRom(denser, 2);
-  // Build left/right edge polygons for a continuous ribbon
-  const left: { x: number; y: number }[] = [];
-  const right: { x: number; y: number }[] = [];
-  for (let i = 0; i < samples.length; i++) {
-    const p = samples[i]!;
-    const prev = samples[Math.max(0, i - 1)]!;
-    const next = samples[Math.min(samples.length - 1, i + 1)]!;
-    let tx = next.x - prev.x;
-    let ty = next.y - prev.y;
-    const len = Math.hypot(tx, ty) || 1;
-    tx /= len;
-    ty /= len;
-    const nx = -ty;
-    const ny = tx;
-    const t = i / Math.max(1, samples.length - 1);
-    const halfW = 10 + 2.8 * Math.sin(t * Math.PI * 2.6 + pts[0]!.x * 0.01);
-    left.push({ x: p.x + nx * halfW, y: p.y + ny * halfW });
-    right.push({ x: p.x - nx * halfW, y: p.y - ny * halfW });
-  }
-
-  // Fill solid dirt body
-  ctx.beginPath();
-  ctx.moveTo(left[0]!.x, left[0]!.y);
-  for (const p of left) ctx.lineTo(p.x, p.y);
-  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i]!.x, right[i]!.y);
-  ctx.closePath();
-  ctx.fillStyle = '#8c6e40';
-  ctx.fill();
-
-  // Inner slightly lighter band
-  ctx.beginPath();
-  const inset = 0.55;
-  ctx.moveTo(
-    left[0]!.x * inset + samples[0]!.x * (1 - inset),
-    left[0]!.y * inset + samples[0]!.y * (1 - inset),
-  );
-  for (let i = 0; i < samples.length; i++) {
-    const p = samples[i]!;
-    const l = left[i]!;
-    ctx.lineTo(l.x * 0.4 + p.x * 0.6, l.y * 0.4 + p.y * 0.6);
-  }
-  for (let i = samples.length - 1; i >= 0; i--) {
-    const p = samples[i]!;
-    const r = right[i]!;
-    ctx.lineTo(r.x * 0.4 + p.x * 0.6, r.y * 0.4 + p.y * 0.6);
-  }
-  ctx.closePath();
-  ctx.fillStyle = '#9a7a48';
-  ctx.fill();
-
-  // Soft feather: draw edge stroke with low alpha then blur
-  ctx.lineJoin = 'round';
+  // Stroke connected raster neighbours without projecting onto X: supports
+  // north/south roads, forks and loops, with no invented extra meander.
   ctx.lineCap = 'round';
-  for (const width of [14, 10, 6]) {
-    ctx.strokeStyle = `rgba(154,122,72,${0.12 + width * 0.01})`;
+  ctx.lineJoin = 'round';
+  for (const [width, color] of [[26, 'rgba(112,89,54,0.3)'], [21, '#8c6e40'], [12, '#9a7a48']] as const) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
-    ctx.moveTo(samples[0]!.x, samples[0]!.y);
-    for (const p of samples) ctx.lineTo(p.x, p.y);
+    for (const k of roadKeys) {
+      const [q, r] = k.split(',').map(Number) as [number, number];
+      const x = (q - chunkOriginQ + 0.5) * TILE_PX;
+      const y = (r - chunkOriginR + 1) * TILE_PX;
+      for (const [dq, dr] of [[1, 0], [0, 1], [1, 1], [-1, 1]]) {
+        if (!roadKeys.has(`${q + dq!},${r + dr!}`)) continue;
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dq! * TILE_PX, y + dr! * TILE_PX);
+      }
+      // Carry the dirt ribbon all the way to the chunk boundary.
+      if (q === chunkOriginQ || q === chunkOriginQ + chunkTiles - 1 || r === chunkOriginR || r === chunkOriginR + chunkTiles - 1) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + (q === chunkOriginQ ? -TILE_PX : q === chunkOriginQ + chunkTiles - 1 ? TILE_PX : 0), y + (r === chunkOriginR ? -TILE_PX : r === chunkOriginR + chunkTiles - 1 ? TILE_PX : 0));
+      }
+      ctx.moveTo(x + width / 2, y);
+      ctx.arc(x, y, width / 2, 0, Math.PI * 2);
+    }
     ctx.stroke();
   }
-
-  // Denser, darker stipple like v4 mockup
-  for (let i = 0; i < samples.length; i += 2) {
-    const p = samples[i]!;
-    const h = hash2(Math.floor(p.x * 3), Math.floor(p.y * 5));
-    if (h % 5 === 0) continue; // ~80% keep
-    const ox = ((h % 7) - 3) * 0.9;
-    const oy = (((h >> 3) % 7) - 3) * 0.7;
-    ctx.fillStyle = h % 2 === 0 ? 'rgba(88,68,40,0.72)' : 'rgba(72,56,34,0.55)';
-    ctx.beginPath();
-    ctx.ellipse(p.x + ox, p.y + oy, 1.8 + (h % 3) * 0.3, 1.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    if (h % 4 === 0) {
-      ctx.fillStyle = 'rgba(60,46,28,0.45)';
-      ctx.fillRect(p.x + ox + 2, p.y + oy - 1, 1, 1);
-    }
-  }
-
-  // Alpha feather pass on the whole canvas edges of opaque region
-  featherAlpha(ctx, size, size, 5);
 
   if (host.textures.exists(key)) host.textures.remove(key);
   host.textures.addCanvas(key, canvas);
@@ -374,76 +281,6 @@ export function bakeRoadRibbon(
   img.setOrigin(0, 0);
   img.setDepth(0.5);
   return img;
-}
-
-function densifyCatmullRom(
-  pts: { x: number; y: number }[],
-  step: number,
-): { x: number; y: number }[] {
-  if (pts.length < 2) return pts.slice();
-  const out: { x: number; y: number }[] = [];
-  const n = pts.length;
-  for (let i = 0; i < n - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)]!;
-    const p1 = pts[i]!;
-    const p2 = pts[i + 1]!;
-    const p3 = pts[Math.min(n - 1, i + 2)]!;
-    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    const segs = Math.max(1, Math.ceil(dist / step));
-    for (let k = 0; k < segs; k++) {
-      const t = k / segs;
-      const t2 = t * t;
-      const t3 = t2 * t;
-      // Centripetal-ish Catmull-Rom (uniform form)
-      const x =
-        0.5 *
-        ((2 * p1.x) +
-          (-p0.x + p2.x) * t +
-          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
-      const y =
-        0.5 *
-        ((2 * p1.y) +
-          (-p0.y + p2.y) * t +
-          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
-          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-      out.push({ x, y });
-    }
-  }
-  out.push(pts[n - 1]!);
-  return out;
-}
-
-function featherAlpha(ctx: CanvasRenderingContext2D, w: number, h: number, radius: number): void {
-  const src = ctx.getImageData(0, 0, w, h);
-  const dst = ctx.createImageData(w, h);
-  dst.data.set(src.data);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      if (src.data[i + 3]! < 8) continue;
-      // distance to transparent
-      let minD = radius + 1;
-      for (let dy = -radius; dy <= radius && minD > 0; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-          const xx = x + dx;
-          const yy = y + dy;
-          if (xx < 0 || yy < 0 || xx >= w || yy >= h) {
-            minD = Math.min(minD, Math.hypot(dx, dy));
-            continue;
-          }
-          if (src.data[(yy * w + xx) * 4 + 3]! < 8) {
-            minD = Math.min(minD, Math.hypot(dx, dy));
-          }
-        }
-      }
-      if (minD <= radius) {
-        const f = minD / (radius + 0.01);
-        dst.data[i + 3] = Math.floor(src.data[i + 3]! * Math.min(1, f));
-      }
-    }
-  }
-  ctx.putImageData(dst, 0, 0);
 }
 
 /** Subtle low-frequency multiply tint so grass doesn't lock to 32px. */

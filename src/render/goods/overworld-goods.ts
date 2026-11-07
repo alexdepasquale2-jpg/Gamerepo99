@@ -47,6 +47,7 @@ export function attachOverworldGoods(
     layout.settlements.map((t) => ({ ...t, name: meta.get(t.id)?.name ?? t.id, size: meta.get(t.id)?.politySize ?? 60 })),
     layout.routes,
     { player: getPlayer, caravans: () => living.caravanPositions(), despair },
+    seed,
   );
 
   const hearthOf = (townId: string, fallback: Pt): Pt => {
