@@ -98,6 +98,9 @@
       "channels": [
         "rumor",
         "letter"
+      ],
+      "effects": [
+        { "id": "fx_tax_collector", "target": "player.perception.trust", "op": "add", "value": -0.05, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -108,6 +111,9 @@
       "channels": [
         "kin",
         "rumor"
+      ],
+      "effects": [
+        { "id": "fx_spy", "target": "player.perception.trust", "op": "add", "value": -0.04, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -117,6 +123,9 @@
       "spawn": "patron_obligation_tick",
       "channels": [
         "letter"
+      ],
+      "effects": [
+        { "id": "fx_patron_demand", "target": "player.spark", "op": "add", "value": -1, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -127,6 +136,9 @@
       "channels": [
         "kin",
         "ripple"
+      ],
+      "effects": [
+        { "id": "fx_betrayal", "target": "player.spark", "op": "add", "value": -2, "scaleBy": "player.notoriety" }
       ]
     },
     {
@@ -137,6 +149,9 @@
       "channels": [
         "ripple",
         "rumor"
+      ],
+      "effects": [
+        { "id": "fx_copycat", "target": "player.perception.trust", "op": "add", "value": 0.03, "scaleBy": "player.notoriety" }
       ]
     }
   ],

@@ -130,7 +130,7 @@ export function actInteraction(
   }
   if (def0?.stashAct) applyStashAct(s, def0.stashAct);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
-  recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited });
+  recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited, marksChanged: person.marks.some((m) => m.stacks !== (marksBefore[m.markId] ?? 0)) });
   applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
   for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);

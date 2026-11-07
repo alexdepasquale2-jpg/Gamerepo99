@@ -5,7 +5,7 @@ import type { Inhabitant } from '../types/runtime';
 export type WorldDelta =
   | { t: 'day'; day: number }
   | { t: 'reignite'; personId: string; methodId: string; marks?: string[]; flame?: number; day: number }
-  | { t: 'doctrine'; townId: string; patch: Record<string, number>; day: number }
+  | { t: 'doctrine'; townId: string; doctrineId?: string; patch: Record<string, number>; day: number }
   | { t: 'route'; routeId: string; broken?: boolean; condition?: number; day: number }
   | { t: 'letter'; packet: Record<string, unknown>; day: number }
   | { t: 'grave'; personId: string; epitaphId?: string; townId?: string; name?: string; day: number }
@@ -78,4 +78,6 @@ export type LegacyState = {
   playerName?: string;
   /** Genuine-growth acts by the current life since succession (inherited_dependence decay). */
   growthSinceSuccession: number;
+  /** Last recorded route state, so dawn route changes are logged once. */
+  routeSeen?: Record<string, { broken: boolean; condition: number }>;
 };

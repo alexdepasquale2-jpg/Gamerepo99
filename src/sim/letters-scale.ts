@@ -6,6 +6,7 @@
  */
 
 import type { DataTables } from './load-data';
+import { pushDelta } from './legacy/state';
 import { pushJuice } from './packets';
 import { deriveRng } from './rng';
 import { createSocialGraph, walkCascade, type SocialGraph } from './social/social-graph';
@@ -103,6 +104,7 @@ function launch(state: SimState, ls: LettersState, f: Omit<Flight, 'id' | 'days'
   if (!from || !to || from === to) return null;
   const out: Flight = { ...f, id: `ltr_${ls.seq++}_${state.day}`, days: routeDays(state, from, to), fromTownId: from, toTownId: to };
   ls.flight.push(out);
+  pushDelta(state, { t: 'letter', day: state.day, packet: { id: out.id, kind: out.kind, templateId: out.templateId, packetType: out.packetType, fromPersonId: out.fromPersonId, toPersonId: out.toPersonId, fromTownId: out.fromTownId, toTownId: out.toTownId, days: out.days } });
   return out;
 }
 

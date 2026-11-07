@@ -6,6 +6,9 @@ export type Rng = {
   int: (min: number, max: number) => number;
   /** Alias kept for M1 world/tick call sites. */
   nextInt: (min: number, max: number) => number;
+  /** Raw stream position (save/load). */
+  getState?: () => number;
+  setState?: (s: number) => void;
 };
 
 export function createRng(seed: number): Rng {
@@ -24,7 +27,15 @@ export function createRng(seed: number): Rng {
     return min + Math.floor(next() * (max - min));
   };
 
-  return { next, int, nextInt: int };
+  return {
+    next,
+    int,
+    nextInt: int,
+    getState: () => state,
+    setState: (s) => {
+      state = s >>> 0;
+    },
+  };
 }
 
 /** Derive an independent stream from a seed + labels (FNV-1a over the parts). Pure. */

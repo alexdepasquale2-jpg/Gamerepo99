@@ -58,14 +58,16 @@ export function acceptDeal(state: SimState, patronId: string, dealId: string): {
   return { ok: true };
 }
 
-/** Meet an obligation through an interaction (tithe paid from carried coin). */
+/** Meet an obligation through an interaction (tithe paid from carried coin; guard_caravan is service, no cost). */
 export function fulfilDeal(state: SimState, dealId: string): { ok: boolean } {
   const d = deals(state)[dealId];
   const found = findDeal(state, dealId);
-  if (!d || !found || d.status !== 'active' || found.deal.obligation.kind !== 'tithe') return { ok: false };
-  const cost = found.deal.obligation.magnitude;
-  if ((state.player.coin ?? 0) < cost) return { ok: false };
-  state.player.coin = (state.player.coin ?? 0) - cost;
+  if (!d || !found || d.status !== 'active' || !['tithe', 'guard_caravan'].includes(found.deal.obligation.kind)) return { ok: false };
+  if (found.deal.obligation.kind === 'tithe') {
+    const cost = found.deal.obligation.magnitude;
+    if ((state.player.coin ?? 0) < cost) return { ok: false };
+    state.player.coin = (state.player.coin ?? 0) - cost;
+  }
   d.status = 'fulfilled';
   applyObligationEffect(state, found.patron, found.deal, 'fulfil');
   pushJuice(state, 'patron.fulfilled', { patronId: d.patronId, dealId });
