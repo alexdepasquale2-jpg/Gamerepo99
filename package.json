@@ -17,7 +17,8 @@
     "verify:m1": "npm test && npm run build && npm run test:e2e:m1",
     "validate": "node scripts/validate-data.mjs",
     "bake:social": "vite-node scripts/bake-social-web.ts",
-    "test:bots": "vitest run tests/bots"
+    "test:bots": "vitest run tests/bots",
+    "balance": "vite-node scripts/balance-bots.mts"
   },
   "dependencies": {
     "phaser": "^3.87.0"
