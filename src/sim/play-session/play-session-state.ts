@@ -1,6 +1,7 @@
 /** Play-session state assembly: generate world, seed player/people, interaction compat runtime. */
 
 import { tickCaravans } from '../caravans';
+import { doctrineSupplyHook } from '../doctrine-tick';
 import { createEventBus } from '../event-bus';
 import { generateWorld } from '../fabric/fabric-bake';
 import type { FabricWorld } from '../gen/world';
@@ -51,7 +52,7 @@ export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
     biomeTerrainMuls: loadBiomeTerrainMuls(),
     sizeTravelMuls: loadSizeTravelMuls(),
   };
-  state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day) };
+  state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
   installPlayReactions(state);
   const interactionRt = interactionRuntimeFromPeople(state.people, player.spark, data.interactions);
   return { world, routes, state, interactionRt };
