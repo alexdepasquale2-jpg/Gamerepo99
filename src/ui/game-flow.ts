@@ -9,7 +9,7 @@ import type { MenuHandle } from './menus/dom';
 
 export type GameHost = {
   /** Boot (or reboot) the Phaser game around this session. */
-  start: (session: PlaySession) => void;
+  start: (session: PlaySession, autosave: () => void) => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
 };
@@ -34,7 +34,11 @@ export function runGameFlow(host: GameHost): void {
 
   function begin(s: PlaySession): void {
     session = s;
-    host.start(s);
+    host.start(s, () => {
+      refreshStatus();
+      const blob = s.saveBlob();
+      if (blob) slots.write(AUTO_SLOT, blob, { town: s.snapshot().townId });
+    });
     refreshStatus();
   }
 
@@ -81,13 +85,6 @@ export function runGameFlow(host: GameHost): void {
     open(
       openPauseMenu({
         onResume: resume,
-        onRest: () => {
-          session!.tick();
-          refreshStatus();
-          const blob = session!.saveBlob();
-          const r = blob ? slots.write(AUTO_SLOT, blob, { town: session!.snapshot().townId }) : null;
-          return r && !r.ok ? `A day passes. ${r.error}` : 'A day passes.';
-        },
         onSave: () =>
           open(
             openSaveMenu('save', slots, {

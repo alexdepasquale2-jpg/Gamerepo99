@@ -20,7 +20,12 @@ export type SurfaceHandle = {
   tintOf: (townId: string) => number;
 };
 
-export function attachSurface(scene: Phaser.Scene, session: PlaySession, settlements: Settlement[]): SurfaceHandle {
+export function attachSurface(
+  scene: Phaser.Scene,
+  session: PlaySession,
+  settlements: Settlement[],
+  positionOf?: (personId: string) => { x: number; y: number } | undefined,
+): SurfaceHandle {
   const queue = createBubbleQueue(FEEL.tint.bubbleMs);
   const anims = new Map(settlements.map((s) => [s.id, createTintAnimator()]));
   const overrides = new Map<string, number>();
@@ -51,6 +56,8 @@ export function attachSurface(scene: Phaser.Scene, session: PlaySession, settlem
   scene.events.once('shutdown', off);
 
   const anchor = (personId: string): { x: number; y: number } => {
+    const live = positionOf?.(personId);
+    if (live) return live;
     const town = settlements.find((s) => s.id === townOf.get(personId)) ?? settlements[0];
     if (!town) return { x: 0, y: 0 };
     let h = 0;
