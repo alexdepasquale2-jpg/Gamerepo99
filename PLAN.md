@@ -72,3 +72,7 @@ Rule: no phase ships without a 30-dawn deterministic run test and `npm run valid
 
 ## Economy on screen (done)
 Noticeboard (E at a board) has a second page, Town economy: shortages, carts on the way, building plans with progress and missing goods, workshops, neighbours' treaties/war, faith, crafts (`sim/economy/economy-view.ts`, pure + tested). Plots show in the world: staked claims with progress, finished buildings with owner labels near the player (`render/goods/plot-markers.ts`). World map (M): land rings, ally/trade/war lines, orange village carts. Plots are terrain-aware (inside the world, off water) and start outside the town art (centre reserve 5 cells). Gotcha: negative world coords hide depth-sorted objects under the ground, so keep placements >= 0. Owners can rebuild the same kind after finishing (Tam has two smithies). Not yet: ask/answer help UI beyond gifting, clicking a plot for details, carts drawn in the world (only on the map).
+
+## World scale + density (planned)
+Spec: `docs/design/2026-11-07-world-scale-plan.md`. A 40x-area world built from an ASCII refinement ladder (L0 world → L4 tiles, deterministic "diffusion-style" refine). Tiles are made only near the player; the economy graph always runs.
+Next: phase 1, L0 grid as data + `map:ascii` golden test.
