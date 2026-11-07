@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "spec": "Day phases (0..1 of the day clock) -> where villagers go. 'home' near their house, 'work' at a nearby node, 'gather' at the hearth.",
+  "phases": [
+    { "until": 0.12, "place": "home" },
+    { "until": 0.45, "place": "work" },
+    { "until": 0.55, "place": "gather" },
+    { "until": 0.68, "place": "work" },
+    { "until": 0.8, "place": "gather" },
+    { "until": 1.01, "place": "home" }
+  ],
+  "wanderTiles": 1.1
+}

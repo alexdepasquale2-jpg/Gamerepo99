@@ -96,6 +96,12 @@ export type SimState = {
   economyHooks?: EconomyLodHooks;
   /** M4 packet-02: live caravan mobiles. */
   caravans?: CaravanMobile[];
+  /** Player inventory: itemId -> qty (persisted in saves). */
+  inventory?: Record<string, number>;
+  /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
+  worldNodes?: Record<string, { charges: number; regrowIn: number }>;
+  /** Cargo the player carries for a person: delivered to someone in another town. */
+  cargo?: { itemId: string; qty: number; fromPersonId: string; toTownId: string }[];
   /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
   routeBreakJuiced?: Record<string, boolean>;
   /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */

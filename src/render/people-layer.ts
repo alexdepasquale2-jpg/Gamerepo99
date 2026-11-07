@@ -44,6 +44,8 @@ export type PeopleLayer = {
   nearest: (player: { x: number; y: number }) => Person | null;
   setPrompt: (p: Person | null) => void;
   freeze: (id: string | null) => void;
+  /** Daily schedule: where a person should be now (null = home). */
+  setSchedule: (fn: (p: Person) => { x: number; y: number } | null) => void;
 };
 
 export function createPeopleLayer(
@@ -92,6 +94,7 @@ export function createPeopleLayer(
     .setVisible(false);
   let promptFor: Person | null = null;
   let frozen: string | null = null;
+  let schedule: (p: Person) => { x: number; y: number } | null = () => null;
   const headOf = (id: string) => {
     const s = byId.get(id)?.sprite;
     return s ? { x: s.x, y: s.y - 36 } : { x: 0, y: 0 };
@@ -102,6 +105,7 @@ export function createPeopleLayer(
     byId,
     headOf,
     freeze: (id) => (frozen = id),
+    setSchedule: (fn) => (schedule = fn),
     setPrompt: (p) => (promptFor = p),
     nearest(player) {
       let best: Person | null = null;
@@ -124,17 +128,18 @@ export function createPeopleLayer(
           if (p.nextPick <= 0) {
             const r = hash(p.id + Math.floor(time / 1000));
             const wander = TILE_PX * 1.1;
+            const c = schedule(p) ?? p.home;
             p.target =
               r % 3 === 0
-                ? { ...p.home }
-                : { x: p.home.x + ((r % 200) / 100 - 1) * wander, y: p.home.y + (((r >> 8) % 200) / 100 - 1) * wander * 0.6 };
+                ? { ...c }
+                : { x: c.x + ((r % 200) / 100 - 1) * wander, y: c.y + (((r >> 8) % 200) / 100 - 1) * wander * 0.6 };
             p.nextPick = 2500 + (r % 5000);
           }
           const dx = p.target.x - s.x;
           const dy = p.target.y - s.y;
           const d = Math.hypot(dx, dy);
           if (d > 2) {
-            const step = Math.min(d, (14 * dt) / 1000);
+            const step = Math.min(d, ((d > TILE_PX * 3 ? 34 : 14) * dt) / 1000);
             s.x += (dx / d) * step;
             s.y += (dy / d) * step;
             moving = true;

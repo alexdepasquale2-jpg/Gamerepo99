@@ -21,6 +21,7 @@ import {
   type TravelSimState,
 } from '../travel/travel';
 import { tickPackets } from '../packets';
+import { regrowNodes } from '../goods/nodes';
 import { advanceToDawn } from '../scenario/scenario-advance';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
@@ -152,6 +153,7 @@ function createPlayModeSession(defaults: {
       // Rest is a real dawn, not just a calendar/packet increment.
       advanceToDawn(state);
       tickPackets(state);
+      regrowNodes(state);
       appendJuiceSince(beforeLen);
       maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'tick' });
@@ -195,6 +197,7 @@ function createPlayModeSession(defaults: {
     },
     worldFile: (opts) => (state ? exportWorld(state, opts) : null),
     adoptState: (st) => adopt(st as TravelSimState),
+    getState: () => state ?? undefined,
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {
