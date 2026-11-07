@@ -7,11 +7,13 @@ import {
   layoutWorld,
   type PlaySession,
   type TileSource,
+  forceSpark,
 } from '../sim';
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
 import { FEEL } from './feel';
+import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
 import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
@@ -39,6 +41,7 @@ export class OverworldScene extends Phaser.Scene {
   private sparkBar!: Phaser.GameObjects.Rectangle;
   private hint!: Phaser.GameObjects.Text;
   private lastChunkKey = '';
+  private uiTap = false;
 
   constructor() {
     super('overworld');
@@ -54,13 +57,24 @@ export class OverworldScene extends Phaser.Scene {
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements);
     this.spawnPlayer();
+    const surface = attachSurface(this, this.session, this.layout.settlements);
+    // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
+    (window as unknown as { __hearth?: unknown }).__hearth = {
+      session: this.session,
+      surface,
+      towns: this.layout.settlements.map((t) => t.id),
+      burnOut: () => {
+        forceSpark(this.session, 0);
+        this.session.tick();
+      },
+    };
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.add
-      .text(8, 8, '2.5D overworld — WASD/arrows · Enter near town for methods', {
-        fontFamily: 'monospace',
+      .text(8, 8, 'Hold to walk · find a town', {
+        fontFamily: 'Georgia, serif',
         fontSize: '12px',
         color: '#f2e9e4',
       })
@@ -68,8 +82,8 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(1_000_000);
 
     this.hint = this.add
-      .text(8, 68, `settlements: ${this.layout.settlements.length}`, {
-        fontFamily: 'monospace',
+      .text(8, 68, '', {
+        fontFamily: 'Georgia, serif',
         fontSize: '12px',
         color: '#8a7a68',
       })
@@ -77,6 +91,19 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(1_000_000);
 
     this.input.keyboard?.on('keydown-ENTER', () => this.tryOpenMethods());
+    // Touch: hold anywhere to walk toward the finger; tap the button to enter a nearby town.
+    this.add
+      .text(this.scale.width - 8, 8, 'Enter town', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f4e6c8', backgroundColor: '#2a2420', padding: { x: 12, y: 6 } })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(1_000_001)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+        e.stopPropagation();
+        this.uiTap = true;
+        this.tryOpenMethods();
+      });
+    this.input.on('pointerup', () => (this.uiTap = false));
     this.syncChunks(true);
     this.syncSparkFromSession(false);
     const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
@@ -90,6 +117,14 @@ export class OverworldScene extends Phaser.Scene {
     if (this.cursors.right?.isDown || this.wasd.D.isDown) dx += 1;
     if (this.cursors.up?.isDown || this.wasd.W.isDown) dy -= 1;
     if (this.cursors.down?.isDown || this.wasd.S.isDown) dy += 1;
+    const ptr = this.input.activePointer;
+    if (dx === 0 && dy === 0 && ptr.isDown && !this.uiTap) {
+      const ox = ptr.worldX - this.player.x;
+      const oy = ptr.worldY - this.player.y;
+      const dead = TILE_PX / 2;
+      if (Math.abs(ox) > dead) dx = Math.sign(ox);
+      if (Math.abs(oy) > dead) dy = Math.sign(oy);
+    }
     if (dx !== 0 || dy !== 0) {
       const step = walkDelta(
         dx,
@@ -200,15 +235,9 @@ export class OverworldScene extends Phaser.Scene {
     const town = this.nearestTown();
     if (!town) return;
     this.hint.setText(`near ${town.id} — methods`);
-    const menu = this.registry.get('methodMenu') as
-      | { show: (a: { id: string }[], cb: (id: string) => void) => unknown }
-      | undefined;
-    menu?.show(this.session.listActions(), (actionId) => {
-      this.session.act(actionId);
-      this.syncSparkFromSession(true);
-    });
     const hud = this.registry.get('hud') as { setTown?: (id: string) => void } | undefined;
     hud?.setTown?.(town.id);
+    this.scene.start('town', { townId: town.id });
   }
 
 

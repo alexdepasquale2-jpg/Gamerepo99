@@ -1,20 +1,38 @@
-/** Minimal town view — people chips + method commit path + spark lerp. */
+/** Town view — people as figures, tap one to see what you can do for (or to) them. */
 
 import Phaser from 'phaser';
 import { createEventBus, type PlaySession } from '../sim';
 import { FEEL } from './feel';
+import { HERO_TEX } from './sheet-frames';
 import { attachSparkFx } from './spark-fx';
-
-const TILE = 32;
 
 type TownData = { townId?: string };
 
-/** Registry menu shape — mirrored so render never imports ui/. */
-type RegistryMethodMenu = {
-  show: (
-    actions: Array<{ id: string; family?: string }>,
-    onPick: (actionId: string) => void,
-  ) => Array<{ id: string; label: string; family?: string }>;
+const W = 640;
+const H = 360;
+const INK = '#f4e6c8';
+const DIM = '#a89068';
+const GOLD = '#f2b84b';
+const SERIF = 'Georgia, serif';
+const KIND = 0x84b8b0;
+const SAVAGE = 0xc8664a;
+
+/** marta_ellison -> Marta Ellison; marrow_den -> Marrow Den. */
+export const pretty = (id: string): string =>
+  id
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((w) => w[0]!.toUpperCase() + w.slice(1))
+    .join(' ');
+
+const METHOD_VERB: Record<string, string> = {
+  inspire: 'Inspire',
+  carry_burden: 'Carry their burden',
+  challenge: 'Challenge',
+  shame: 'Shame',
+  lie: 'Lie to',
+  show_up: 'Show up for',
+  listen: 'Listen to',
 };
 
 export class TownScene extends Phaser.Scene {
@@ -22,7 +40,10 @@ export class TownScene extends Phaser.Scene {
   private townId = 'unknown';
   private sparkFill = 1;
   private sparkBar!: Phaser.GameObjects.Rectangle;
-  private menuTexts: Phaser.GameObjects.Text[] = [];
+  private actionUi: Phaser.GameObjects.GameObject[] = [];
+  private figures = new Map<string, Phaser.GameObjects.Sprite>();
+  private selected?: string;
+  private feedback!: Phaser.GameObjects.Text;
   private localBus = createEventBus();
 
   constructor() {
@@ -31,29 +52,35 @@ export class TownScene extends Phaser.Scene {
 
   init(data: TownData): void {
     this.townId = data.townId ?? 'unknown';
+    this.selected = undefined;
+    this.figures.clear();
+    this.actionUi = [];
   }
 
   create(): void {
     this.session = this.registry.get('playSession') as PlaySession;
-    if (!this.session) {
-      throw new Error('town scene requires playSession in registry');
-    }
+    if (!this.session) throw new Error('town scene requires playSession in registry');
 
-    this.add.rectangle(200, 150, 400, 300, 0x3a3228).setDepth(0);
-    this.add
-      .text(8, 8, `Town: ${this.townId} — pick a method (1–5) · Esc back`, {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#f2e9e4',
-      })
-      .setDepth(10);
+    // Warm hearth backdrop: dusk gradient + ground band.
+    const g = this.add.graphics();
+    g.fillGradientStyle(0x1a1420, 0x1a1420, 0x3a2a22, 0x3a2a22, 1);
+    g.fillRect(0, 0, W, H * 0.62);
+    g.fillStyle(0x2c2419, 1).fillRect(0, H * 0.62, W, H * 0.38);
+    g.fillStyle(0x4a3826, 1).fillRect(0, H * 0.62, W, 2);
+    const glow = this.add.circle(W / 2, H * 0.62, 70, 0xf2b84b, 0.12);
+    this.tweens.add({ targets: glow, alpha: 0.05, scale: 1.15, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-    this.drawPeople();
+    this.add.text(16, 12, pretty(this.townId), { fontFamily: SERIF, fontSize: '22px', color: GOLD });
+    this.add.text(16, 40, 'Tap someone to go to them.', { fontFamily: SERIF, fontSize: '12px', color: DIM });
+
     this.createSparkHud();
-    this.openMethodMenu();
+    this.drawPeople();
+    this.feedback = this.add
+      .text(W / 2, H - 14, '', { fontFamily: SERIF, fontSize: '13px', color: '#84b8b0', align: 'center' })
+      .setOrigin(0.5, 1);
 
     attachSparkFx(this, this.localBus, {
-      getPlayerPos: () => ({ x: 200, y: 150 }),
+      getPlayerPos: () => this.figurePos(),
       onSparkSpentHud: (amount01) => {
         const next = Math.max(0, this.sparkFill - amount01);
         this.tweens.add({
@@ -69,107 +96,123 @@ export class TownScene extends Phaser.Scene {
       },
     });
 
-    this.input.keyboard?.on('keydown-ESC', () => {
-      this.scene.start('overworld');
-    });
+    this.input.keyboard?.on('keydown-ESC', () => this.scene.start('overworld'));
+    this.add
+      .text(W - 12, 12, 'Leave', { fontFamily: SERIF, fontSize: '16px', color: INK, backgroundColor: '#2a2420', padding: { x: 12, y: 6 } })
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('overworld'));
+
+    const first = this.peopleIds()[0];
+    if (first) this.select(first);
+  }
+
+  private peopleIds(): string[] {
+    const ids = this.session
+      .listActions()
+      .map((a) => {
+        const at = a.id.indexOf('@');
+        return at > 0 ? a.id.slice(at + 1) : null;
+      })
+      .filter((x): x is string => Boolean(x));
+    return [...new Set(ids)].slice(0, 6);
+  }
+
+  private figurePos(): { x: number; y: number } {
+    const f = this.selected ? this.figures.get(this.selected) : undefined;
+    return f ? { x: f.x, y: f.y - 30 } : { x: W / 2, y: H / 2 };
   }
 
   private drawPeople(): void {
-    const actions = this.session.listActions();
-    const personIds = [
-      ...new Set(
-        actions
-          .map((a) => {
-            const at = a.id.indexOf('@');
-            return at > 0 ? a.id.slice(at + 1) : null;
-          })
-          .filter((x): x is string => Boolean(x)),
-      ),
-    ].slice(0, 6);
-
-    personIds.forEach((id, i) => {
-      const x = 60 + (i % 3) * TILE * 2;
-      const y = 80 + Math.floor(i / 3) * TILE * 2;
-      this.add.rectangle(x, y, TILE - 4, TILE - 4, 0x85dcb8).setDepth(2);
+    const ids = this.peopleIds();
+    const span = Math.min(W - 80, ids.length * 92);
+    ids.forEach((id, i) => {
+      const x = W / 2 - span / 2 + 46 + i * (span / Math.max(1, ids.length));
+      const y = H * 0.62 - 4 + (i % 2) * 10;
+      this.add.ellipse(x, y + 2, 34, 10, 0x000000, 0.35);
+      const s = this.add.sprite(x, y, HERO_TEX, this.textures.get(HERO_TEX).has('7') ? '7' : undefined);
+      s.setOrigin(0.5, 1).setScale(3).setInteractive({ useHandCursor: true });
+      s.on('pointerdown', () => this.select(id));
+      this.tweens.add({ targets: s, y: y - 2, duration: 900 + i * 130, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
       this.add
-        .text(x, y + TILE * 0.7, id.slice(0, 12), {
-          fontFamily: 'monospace',
-          fontSize: '9px',
-          color: '#cfc6b8',
-        })
-        .setOrigin(0.5)
-        .setDepth(3);
+        .text(x, y + 10, pretty(id), { fontFamily: SERIF, fontSize: '12px', color: INK })
+        .setOrigin(0.5, 0);
+      this.figures.set(id, s);
+    });
+  }
+
+  private select(personId: string): void {
+    this.selected = personId;
+    for (const [id, s] of this.figures) {
+      s.setTint(id === personId ? 0xffffff : 0x8a7a6a);
+      s.setAlpha(id === personId ? 1 : 0.75);
+    }
+    this.showActions();
+  }
+
+  private showActions(): void {
+    for (const o of this.actionUi) o.destroy();
+    this.actionUi = [];
+    if (!this.selected) return;
+    const mine = this.session.listActions().filter((a) => a.id.endsWith('@' + this.selected));
+    const name = pretty(this.selected).split(' ')[0];
+    const colW = 196;
+    mine.slice(0, 6).forEach((a, i) => {
+      const method = a.id.slice(0, a.id.indexOf('@'));
+      const label = `${METHOD_VERB[method] ?? pretty(method)} ${method === 'carry_burden' ? '' : name}`.trim();
+      const x = 16 + (i % 3) * (colW + 8);
+      const y = 72 + Math.floor(i / 3) * 40;
+      const col = a.family === 'savage' ? SAVAGE : KIND;
+      const bg = this.add.rectangle(x, y, colW, 32, 0x2a2420, 0.92).setOrigin(0, 0).setStrokeStyle(1, col, 0.8);
+      const t = this.add
+        .text(x + 10, y + 16, label, { fontFamily: SERIF, fontSize: '14px', color: INK })
+        .setOrigin(0, 0.5);
+      bg.setInteractive({ useHandCursor: true })
+        .on('pointerover', () => bg.setFillStyle(0x3a3028, 1))
+        .on('pointerout', () => bg.setFillStyle(0x2a2420, 0.92))
+        .on('pointerdown', () => this.commit(a.id, label));
+      this.actionUi.push(bg, t);
+      const key = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX'][i];
+      if (key) this.input.keyboard?.once(`keydown-${key}`, () => this.commit(a.id, label));
     });
   }
 
   private createSparkHud(): void {
-    const h = FEEL.hud;
     const snap = this.session.snapshot();
     this.sparkFill = Math.max(0, Math.min(1, snap.spark / 100));
-    this.add
-      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight, h.emptyColor)
-      .setOrigin(0, 0.5)
-      .setScrollFactor(0)
-      .setDepth(40);
-    this.sparkBar = this.add
-      .rectangle(
-        h.sparkBarX,
-        h.sparkBarY,
-        h.sparkBarWidth * this.sparkFill,
-        h.sparkBarHeight - 2,
-        h.fillColor,
-      )
-      .setOrigin(0, 0.5)
-      .setScrollFactor(0)
-      .setDepth(41);
+    const h = FEEL.hud;
+    this.add.text(W - 156, 52, 'spark', { fontFamily: SERIF, fontSize: '11px', color: DIM }).setOrigin(1, 0.5);
+    this.add.rectangle(W - 150, 52, 138, 6, h.emptyColor).setOrigin(0, 0.5);
+    this.sparkBar = this.add.rectangle(W - 150, 52, 138 * this.sparkFill, 4, h.fillColor).setOrigin(0, 0.5);
+    // Keep width math in one place: bar width scales from the shortened track.
+    const track = 138;
+    this.sparkBar.setData('track', track);
   }
 
-  private openMethodMenu(): void {
-    for (const t of this.menuTexts) t.destroy();
-    this.menuTexts = [];
-
-    const actions = this.session.listActions().slice(0, 5);
-    const menu = this.registry.get('methodMenu') as RegistryMethodMenu | undefined;
-    const items = menu
-      ? menu.show(actions, (id) => this.commit(id))
-      : actions.map((a) => ({ id: a.id, label: a.id, family: a.family }));
-
-    items.forEach((item, i) => {
-      const label = `${i + 1}. ${item.label}`;
-      const text = this.add
-        .text(8, 200 + i * 18, label, {
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          color: '#f2b84b',
-        })
-        .setDepth(15)
-        .setInteractive({ useHandCursor: true });
-      text.on('pointerdown', () => this.commit(item.id));
-      this.menuTexts.push(text);
-
-      const key = [
-        'keydown-ONE',
-        'keydown-TWO',
-        'keydown-THREE',
-        'keydown-FOUR',
-        'keydown-FIVE',
-      ][i];
-      if (key) {
-        this.input.keyboard?.once(key, () => this.commit(item.id));
-      }
-    });
-  }
-
-  private commit(actionId: string): void {
+  private commit(actionId: string, label: string): void {
     const before = this.session.snapshot().spark;
     this.session.act(actionId);
     const after = this.session.snapshot().spark;
+    const r = this.session.lastResolve();
     const spent = Math.max(0, (before - after) / 100);
-    this.localBus.emit('vfx.spark_spent', {
-      x: 200,
-      y: 150,
-      amount01: spent > 0 ? spent : 0.12,
-    });
-    this.openMethodMenu();
+    const p = this.figurePos();
+    this.localBus.emit('vfx.spark_spent', { x: p.x, y: p.y, amount01: spent > 0 ? spent : 0.12 });
+    const track = (this.sparkBar.getData('track') as number) ?? FEEL.hud.sparkBarWidth;
+    this.sparkFill = Math.max(0, after / 100);
+    this.tweens.add({ targets: this.sparkBar, width: track * this.sparkFill, duration: 300 });
+    const who = this.selected ? pretty(this.selected).split(' ')[0] : 'They';
+    const line =
+      r?.kind === 'refused'
+        ? `${who} turns away.`
+        : (r?.flameDelta ?? 0) > 0
+          ? `${label}. Something in ${who} catches.`
+          : (r?.flameDelta ?? 0) < 0
+            ? `${label}. ${who} goes quiet.`
+            : `${label}.`;
+    this.feedback.setText(line).setAlpha(0);
+    this.tweens.add({ targets: this.feedback, alpha: 1, duration: 250 });
+    const f = this.selected ? this.figures.get(this.selected) : undefined;
+    if (f) this.tweens.add({ targets: f, scale: 3.3, duration: 120, yoyo: true });
+    this.showActions();
   }
 }

@@ -14,6 +14,7 @@ export type ScenarioPersonView = {
   siteId?: string;
   siteKind?: string;
   anchor?: boolean;
+  townId?: string;
   marks?: { markId: string; stacks: number }[];
 };
 

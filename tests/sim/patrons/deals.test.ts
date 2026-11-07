@@ -122,9 +122,7 @@ describe('guard_caravan deal', () => {
   const run = () => {
     const b = bootPlayState(7, 'marrow');
     b.state.player.townId = 'lowmere';
-    // The authored Lowmere voice is not in the generated world; tag the first Lowmere resident as the voice.
-    const v = Object.keys(b.state.people).sort().find((id) => b.state.people[id]!.townId === 'lowmere')!;
-    b.state.people[v]!.tags = ['doctrine_voice', 'leader'];
+    const v = 'leon_march';
     const go = (id: string) => actMethod(b.state, `${id}@${v}`, [], undefined, { interactionCompat: b.interactionRt });
     ensureHoard(b.state).notoriety = 0.5;
     const doc = ensureDoctrines(b.state).doctrine_strand_crossings!;

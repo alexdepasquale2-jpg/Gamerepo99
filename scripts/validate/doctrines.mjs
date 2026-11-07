@@ -9,6 +9,11 @@ export function validateDoctrines(data, ctx) {
   for (const d of doctrines) {
     req(towns.has(d.townId), `doctrine ${d.id}: town missing`);
     if (d.leaderPersonId) req(people.has(d.leaderPersonId), `doctrine ${d.id}: leader missing`);
+    if (d.leaderPersonId) {
+      const row = (data['people.json']?.people || []).find((x) => x.id === d.leaderPersonId);
+      req(row?.townId === d.townId, `doctrine ${d.id}: leader ${d.leaderPersonId} must live in ${d.townId}`);
+      req((row?.tags || []).some((t) => t === 'leader' || t === 'doctrine_voice'), `doctrine ${d.id}: leader ${d.leaderPersonId} needs leader/doctrine_voice tag`);
+    }
     req(Array.isArray(d.goals) && d.goals.length >= 1, `doctrine ${d.id}: goals`);
     const s = d.start || {};
     for (const k of ['realDelivery', 'perceivedDelivery', 'propaganda', 'control', 'exposure', 'legitimacy']) {

@@ -1,0 +1,27 @@
+/** Pause menu: Esc toggles; keyboard operable. Caller pauses/resumes the scenes. */
+import { openMenu, type MenuHandle } from './dom';
+
+export type PauseIo = {
+  onResume: () => void;
+  onRest: () => string;
+  onSave: () => void;
+  onLoad: () => void;
+  onWorldFile: () => void;
+  onTitle: () => void;
+};
+
+export function openPauseMenu(io: PauseIo): MenuHandle {
+  const handle = openMenu(
+    'Paused',
+    [
+      { id: 'resume', label: 'Resume', onPick: () => (handle.close(), io.onResume()) },
+      { id: 'rest', label: 'Rest until dawn', hint: 'Let a day pass', onPick: () => handle.setNote(io.onRest()) },
+      { id: 'save', label: 'Save', onPick: () => (handle.close(), io.onSave()) },
+      { id: 'load', label: 'Load', onPick: () => (handle.close(), io.onLoad()) },
+      { id: 'world', label: 'World file', onPick: () => (handle.close(), io.onWorldFile()) },
+      { id: 'title', label: 'Leave to title', hint: 'Your fire is kept by the last save', onPick: () => (handle.close(), io.onTitle()) },
+    ],
+    { id: 'hf-pause-menu', onEscape: () => (handle.close(), io.onResume()) },
+  );
+  return handle;
+}

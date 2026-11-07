@@ -77,7 +77,18 @@ function assignNames(out: Record<string, PersonState>, world: FabricWorld, data:
 
 export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0): Record<string, PersonState> {
   const out: Record<string, PersonState> = {};
-  for (const draft of world.people) {
+  // Authored doctrine leaders are always seeded, even if world gen did not draft them.
+  const doctrineRows = ((data as { doctrines?: { doctrines?: { leaderPersonId?: string | null }[] } }).doctrines?.doctrines ?? []);
+  const drafts: { id: string; anchor?: boolean }[] = [...world.people];
+  const have = new Set(drafts.map((d) => d.id));
+  for (const d of doctrineRows) {
+    const id = d.leaderPersonId;
+    if (id && !have.has(id) && data.peopleById[id]) {
+      have.add(id);
+      drafts.push({ id, anchor: true });
+    }
+  }
+  for (const draft of drafts) {
     const row = data.peopleById[draft.id];
     const start = Number(row?.flameStart ?? 20);
     const siteId = typeof row?.siteId === 'string' ? row.siteId : undefined;
