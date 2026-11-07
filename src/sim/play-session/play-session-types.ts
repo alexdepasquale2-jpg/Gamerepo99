@@ -1,3 +1,6 @@
+import type { SaveBlob } from '../save';
+import type { HearthWorldFile } from '../legacy/types';
+import type { SimState } from '../types/runtime';
 import type { UnspokenState } from '../social/unspoken-types';
 import type { FabricWorld } from '../gen/world-types';
 /** Play session public types (soft-cap extract from play-session). */
@@ -54,6 +57,13 @@ export type PlaySession = {
   successionOffer(): import('../legacy/flow').SuccessionOffer | null;
   /** Succession buttons: delegate to legacy carryItOn / letItRest. */
   chooseSuccession(choice: 'continue' | 'quit'): import('../legacy/flow').SuccessionResult;
+  /** M6 saves: one full-state blob out (saveState). */
+  saveBlob(): SaveBlob | null;
+  /** M6 saves: load path — replaces state, rebuilds the interaction runtime. */
+  loadBlob(blob: SaveBlob): void;
+  /** M6 world files: export current world / adopt an imported SimState. */
+  worldFile(opts?: { exporterName?: string; createdAt?: string }): HearthWorldFile | null;
+  adoptState(state: SimState): void;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
