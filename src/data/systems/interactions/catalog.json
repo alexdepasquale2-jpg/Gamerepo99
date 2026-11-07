@@ -45,7 +45,7 @@
     },
     {
       "id": "talk_hard",
-      "doctrineAct": "act_expose_lie",
+      "doctrineAct": ["act_expose_lie", "act_become_voice"],
       "kind": "conversation",
       "tags": [
         "talk",
@@ -326,6 +326,7 @@
     },
     {
       "id": "stand_up",
+      "doctrineAct": "act_become_voice",
       "kind": "stand_up",
       "tags": [
         "stand_up",

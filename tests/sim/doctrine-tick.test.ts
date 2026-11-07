@@ -135,6 +135,33 @@ describe('doctrine player acts', () => {
   });
 });
 
+describe('act_become_voice (actor gating)', () => {
+  function setup(traits: string[]) {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = Object.keys(d).sort().find((k) => s.towns?.[d[k]!.townId])!;
+    const pid = Object.keys(s.people).sort()[0]!;
+    s.people[pid]!.townId = d[id]!.townId;
+    s.player.statusTraits = traits;
+    d[id]!.propaganda = 0.5;
+    return { s, d, id, pid };
+  }
+  it('actor without civic_voice: no effect', () => {
+    const { s, d, id, pid } = setup([]);
+    expect(applyDoctrineAct(s, 'act_become_voice', pid)).toBeUndefined();
+    expect(d[id]!.propaganda).toBe(0.5);
+    expect(s.towns?.[d[id]!.townId]?.standing ?? 0).toBe(0);
+    expect(s.bus?.lastIds ?? []).not.toContain('doctrine.voice');
+  });
+  it('actor with civic_voice: propaganda drops, standing rises, juice', () => {
+    const { s, d, id, pid } = setup(['civic_voice']);
+    expect(applyDoctrineAct(s, 'act_become_voice', pid)).toBe(id);
+    expect(d[id]!.propaganda).toBeCloseTo(0.45);
+    expect(s.towns![d[id]!.townId]!.standing).toBeCloseTo(0.05);
+    expect(s.bus?.lastIds).toContain('doctrine.voice');
+  });
+});
+
 describe('doctrine act target gating', () => {
   it('shaming an untagged villager changes nothing and emits no exposure', () => {
     const s = boot();

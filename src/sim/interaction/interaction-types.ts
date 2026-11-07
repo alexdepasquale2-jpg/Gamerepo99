@@ -24,7 +24,7 @@ export interface InteractionDef {
   ripple?: string;
   tags?: string[];
   /** Optional doctrines.json act id applied to the target's town doctrine. */
-  doctrineAct?: string;
+  doctrineAct?: string | string[];
   requires?: { promisePending?: boolean };
   promise?: { op: 'make' | 'keep' | 'break'; idFrom?: string };
   presenceDelta?: number;

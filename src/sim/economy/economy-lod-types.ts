@@ -27,6 +27,8 @@ export type TownEconomyState = {
   economyOptIn: boolean;
   stock: Record<string, number>;
   despair: number;
+  /** 0..1 civic standing earned by player voice acts; absent = 0. */
+  standing?: number;
   /** Set once stock has been seeded from dawn-stock on first opt-in tick. */
   economySeeded?: boolean;
 };

@@ -114,7 +114,7 @@ export function actInteraction(
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
   encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
-  if (doctrineAct) applyDoctrineAct(s, doctrineAct, personId);
+  for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.
   const def = rt.catalog.get(interactionId);
   const helpedAtSite = def?.ripple === 'help' && person.flame > flameBefore && !!person.siteId;

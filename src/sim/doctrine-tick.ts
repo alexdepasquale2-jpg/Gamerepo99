@@ -126,7 +126,10 @@ export const doctrineSupplyHook: DoctrineSupplyHook = (state, { townId, deltaRea
   }
 };
 
-type ActRow = { id: string; requiresTargetTagsAny?: string[]; effects?: { target: string; op: string; value: number }[] };
+type ActRow = {
+  id: string;
+  requiresTargetTagsAny?: string[];
+  requiresActorTagsAny?: string[]; effects?: { target: string; op: string; value: number }[] };
 
 /** Apply a doctrines.json act (by id) to the doctrine held in the target person's town. */
 export function applyDoctrineAct(state: SimState, actId: string, personId: string): string | undefined {
@@ -138,6 +141,8 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
   if (!act || !townId) return undefined;
   const need = act.requiresTargetTagsAny;
   if (need?.length && !need.some((t) => person.tags?.includes(t))) return undefined;
+  const actor = act.requiresActorTagsAny;
+  if (actor?.length && !actor.some((t) => state.player.statusTraits.includes(t))) return undefined;
   const all = ensureDoctrines(state);
   const rows = ((state.data as DataTables | undefined)?.doctrines as { doctrines?: { id: string; leaderPersonId?: string }[] } | undefined)?.doctrines ?? [];
   const live = Object.keys(all).sort().filter((k) => all[k]!.townId === townId && !all[k]!.collapsed);
@@ -145,6 +150,11 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
   if (!id) return undefined;
   const d = all[id]!;
   for (const e of act.effects ?? []) {
+    if (e.target === 'town.standing' && e.op === 'add') {
+      const town = state.towns?.[townId];
+      if (town) town.standing = clamp01((town.standing ?? 0) + e.value);
+      continue;
+    }
     const m = e.target.startsWith('doctrine.') ? e.target.slice(9) : '';
     if (e.op === 'add' && m in d && typeof (d as Record<string, unknown>)[m] === 'number') {
       (d as unknown as Record<string, number>)[m] = clamp01((d as unknown as Record<string, number>)[m]! + e.value);
@@ -152,6 +162,9 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
   }
   if (act.effects?.some((e) => e.target === 'doctrine.exposure')) {
     pushJuice(state, 'doctrine.exposed', { doctrineId: id, townId, personId, exposure: d.exposure });
+  }
+  if (act.effects?.some((e) => e.target === 'town.standing')) {
+    pushJuice(state, 'doctrine.voice', { doctrineId: id, townId, personId, propaganda: d.propaganda });
   }
   return id;
 }

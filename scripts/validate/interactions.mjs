@@ -274,7 +274,9 @@ export function validateInteractions(data, ctx) {
     req(Array.isArray(it.tags), `interaction ${it.id}: tags`);
     if (it.doctrineAct !== undefined) {
       const acts = (data['doctrines.json']?.acts || []).map((a) => a.id);
-      req(acts.includes(it.doctrineAct), `interaction ${it.id}: unknown doctrineAct ${it.doctrineAct}`);
+      const list = Array.isArray(it.doctrineAct) ? it.doctrineAct : [it.doctrineAct];
+      req(list.length > 0, `interaction ${it.id}: doctrineAct empty`);
+      for (const a of list) req(acts.includes(a), `interaction ${it.id}: unknown doctrineAct ${a}`);
     }
     // no archetypeId branching keys
     req(it.archetypeId === undefined, `interaction ${it.id}: archetypeId forbidden`);
