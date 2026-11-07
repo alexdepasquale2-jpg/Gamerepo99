@@ -4,6 +4,7 @@ import { tickVillageEconomy } from '../../src/sim/economy/village-economy';
 import { tickLogistics } from '../../src/sim/economy/logistics';
 import { JOBS } from '../../src/sim/goods/jobs';
 import { ITEM_BY_ID } from '../../src/sim/goods/inventory';
+import { biomeAt } from '../../src/sim/map/terrain';
 import type { SimState } from '../../src/sim/types/runtime';
 
 const town = (n = 40, seed = 9): SimState => {
@@ -67,6 +68,19 @@ describe('build plans', () => {
     expect(contributeToPlan(s, plan.ownerId, item)).toMatch(/toward their/);
     expect(plan.have[item]).toBeGreaterThanOrEqual(1);
     expect(contributeToPlan(s, 'nobody', item)).toBeNull();
+  });
+  it('with a map position, plots stay inside the world and off water', () => {
+    const s = town(60);
+    s.towns = { ash: { id: 'ash', q: 20, r: 20 } } as never; // near the corner: northern rings would be negative
+    stock(s);
+    for (let i = 0; i < 300; i++) { step(s); stock(s); }
+    const cs = claimsIn(s, 'ash');
+    expect(cs.length).toBeGreaterThan(2);
+    for (const c of cs) for (let i = 0; i < c.w * 3; i++) for (let j = 0; j < c.h * 3; j++) {
+      const q = 20 + c.dx * 3 + i, r = 20 + c.dy * 3 + j;
+      expect(q >= 0 && r >= 0).toBe(true);
+      if (Math.abs(q - 20) > 13 || Math.abs(r - 20) > 13) expect(biomeAt(s.seed, q, r)).not.toBe('water');
+    }
   });
   it('is deterministic', () => {
     const run = (): string => { const s = town(); stock(s); for (let i = 0; i < 80; i++) { step(s); stock(s); } return JSON.stringify(s.build); };

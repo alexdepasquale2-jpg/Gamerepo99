@@ -7,13 +7,13 @@
 
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
-import { BUILDING_BY_ID, PLANS, activePlans, claimsIn, type Claim } from './build-plans';
+import { BUILDING_BY_ID, CELL_TILES, activePlans, claimsIn, type Claim } from './build-plans';
 import { companyOf, purseOf } from './companies';
 import { householdOf, security } from './households';
 
 export const LAND = {
   /** Tiles per plot cell side. */
-  cellTiles: 3,
+  cellTiles: CELL_TILES,
   /** A town's reach in tiles with nothing built, plus per built / claimed building, capped. */
   baseReach: 12,
   perBuilt: 2.5,

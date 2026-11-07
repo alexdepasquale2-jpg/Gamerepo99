@@ -9,6 +9,7 @@
 
 import buildingsJson from '../../data/items/buildings.json';
 import { jobOf } from '../goods/jobs';
+import { biomeAt } from '../map/terrain';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 
@@ -16,6 +17,11 @@ export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Reco
 const T = buildingsJson as unknown as { workshopMul: number; buildings: BuildingDef[] };
 export const BUILDINGS = T.buildings;
 export const BUILDING_BY_ID = new Map(BUILDINGS.map((b) => [b.id, b]));
+
+/** Tiles per plot cell side (borders map plots to tiles with this). */
+export const CELL_TILES = 3;
+/** The settlement art covers this many tiles from a town's centre; it is always dry land. */
+const TOWN_TILES = 13;
 
 export const PLANS = {
   /** Chance per dawn that a villager without a plan takes up an ambition. */
@@ -26,9 +32,9 @@ export const PLANS = {
   residentsPerBuilding: 10,
   /** Dawns without any goods arriving before the plan is given up. */
   stallDays: 40,
-  /** Town centre reserve (cells from 0,0) and furthest plot ring. */
-  centerRadius: 1,
-  maxRing: 9,
+  /** Town centre reserve (cells from 0,0; the settlement art spans about 13 tiles = 5 cells) and furthest plot ring. */
+  centerRadius: 5,
+  maxRing: 11,
 };
 
 export type Claim = { id: string; planId: string; ownerId: string; townId: string; dx: number; dy: number; w: number; h: number; kind: string; status: 'claimed' | 'built' };
@@ -73,7 +79,19 @@ export function contributeToPlan(state: SimState, personId: string, itemId: stri
 function findPlot(state: SimState, townId: string, w: number, h: number): { dx: number; dy: number } | null {
   const taken = claimsIn(state, townId);
   const R = PLANS.centerRadius;
+  const o = state.towns?.[townId];
+  /** With a map position: the whole footprint must be inside the world (no negative tiles) and off water. */
+  const unbuildable = (dx: number, dy: number): boolean => {
+    if (o?.q === undefined || o.r === undefined) return false;
+    for (let i = 0; i < w * CELL_TILES; i++) for (let j = 0; j < h * CELL_TILES; j++) {
+      const tq = o.q + dx * CELL_TILES + i, tr = o.r + dy * CELL_TILES + j;
+      if (tq < 0 || tr < 0) return true;
+      if (Math.abs(tq - o.q) > TOWN_TILES || Math.abs(tr - o.r) > TOWN_TILES) { if (biomeAt(state.seed, tq, tr) === 'water') return true; }
+    }
+    return false;
+  };
   const hit = (dx: number, dy: number): boolean => {
+    if (unbuildable(dx, dy)) return true;
     if (dx <= R && dx + w > -R && dy <= R && dy + h > -R) return true;
     return taken.some((c) => dx < c.dx + c.w && dx + w > c.dx && dy < c.dy + c.h && dy + h > c.dy);
   };

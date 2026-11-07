@@ -11,8 +11,12 @@ import type { PeopleLayer } from '../people-layer';
 import { hash } from '../people-layer';
 import { createNodesLayer } from './nodes-layer';
 import { createStashChests } from './stash-chest';
+import { createPlotMarkers } from './plot-markers';
+import { mapEconomy } from '../../sim/economy/economy-view';
+import { townReach } from '../../sim/economy/borders';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
+import { pointOnRoad } from '../../sim/map/world-layout';
 import { useItem, resolveDrop, dropItem, pickUpItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
@@ -112,6 +116,7 @@ export function attachOverworldGoods(
   });
   const mail = createCorrespondence(scene, st, () => inv.refresh());
   const chests = createStashChests(scene, st, layout.settlements, () => inv.refresh());
+  const plots = createPlotMarkers(scene, st);
   const memories = new Map<string, Phaser.GameObjects.Text>();
   // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
   const badge = scene.add.text(12, 62, '', { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#ffd877', stroke: '#1b1612', strokeThickness: 3 }).setScrollFactor(0).setDepth(1_000_000).setVisible(false);
@@ -123,7 +128,21 @@ export function attachOverworldGoods(
     scene,
     layout.settlements.map((t) => ({ ...t, name: meta.get(t.id)?.name ?? t.id, size: meta.get(t.id)?.politySize ?? 60 })),
     layout.routes,
-    { player: getPlayer, caravans: () => living.caravanPositions(), despair },
+    {
+      player: getPlayer, caravans: () => living.caravanPositions(), despair,
+      economy: () => {
+        const s = st();
+        if (!s) return { carts: [], links: [], reach: {} };
+        const m = mapEconomy(s, (id) => townReach(s, id));
+        const carts = m.carts.flatMap((c) => {
+          const route = layout.routes.find((r) => r.id === c.routeId);
+          if (!route) return [];
+          const q = pointOnRoad(route.path, c.from === route.from ? c.f : 1 - c.f);
+          return [tileFootWorld(q.q, q.r)];
+        });
+        return { carts, links: m.links, reach: m.reach };
+      },
+    },
     seed,
   );
 
@@ -169,6 +188,7 @@ export function attachOverworldGoods(
     update(time, dt, player) {
       document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
+      plots.update(player);
       living.update(time, dt);
       map.update(time);
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
@@ -182,11 +202,13 @@ export function attachOverworldGoods(
     },
     onAct() {
       chests.refresh();
+      plots.refresh();
       inv.refresh();
     },
     onDawn() {
       nodes.refresh();
       chests.refresh();
+      plots.refresh();
       living.refresh();
       inv.refresh();
     },

@@ -8,7 +8,9 @@ import { tileFootWorld } from '../depth-sort';
 
 type Town = { id: string; q: number; r: number; name: string; size: number; kind?: SettlementKind };
 type Pt = { x: number; y: number };
-export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number> };
+/** Economy overlay: village carts (world px), treaty/war lines between towns, and each town's reach in tiles. */
+export type MapEconomyFeed = { carts: Pt[]; links: { a: string; b: string; kind: 'trade' | 'alliance' | 'war' }[]; reach: Record<string, number> };
+export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number>; economy?: () => MapEconomyFeed };
 export type WorldMap = { toggle: () => void; isOpen: () => boolean; update: (time: number) => void };
 
 const D = 1_000_200;
@@ -59,6 +61,21 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
       path.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
       g.strokePath();
     }
+    const eco = feed.economy?.();
+    if (eco) {
+      for (const t of towns) {
+        const p = tx(pos.get(t.id)!), reach = (eco.reach[t.id] ?? 0) * TILE_PX * s;
+        if (reach > 2) g.lineStyle(1, 0xf2e6b8, big ? 0.35 : 0.25).strokeCircle(p.x, p.y, reach);
+      }
+      for (const l of eco.links) {
+        const a = pos.get(l.a), b = pos.get(l.b);
+        if (!a || !b) continue;
+        const pa = tx(a), pb = tx(b);
+        g.lineStyle(l.kind === 'war' ? (big ? 3 : 2) : 1.5, l.kind === 'war' ? 0xd0422e : l.kind === 'alliance' ? 0x7fd08a : 0xc8d878, l.kind === 'war' ? 0.9 : 0.55).lineBetween(pa.x, pa.y, pb.x, pb.y);
+      }
+      g.fillStyle(0xf09a3a);
+      for (const c of eco.carts) { const p = tx(c); g.fillRect(p.x - (big ? 2.5 : 1.5), p.y - (big ? 2.5 : 1.5), big ? 5 : 3, big ? 5 : 3); }
+    }
     const desp = feed.despair();
     for (const t of towns) {
       const p = tx(pos.get(t.id)!);
@@ -92,7 +109,7 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
       const d = desp[t.id] ?? 0;
       labels.add(scene.add.text(p.x, p.y + 6, `${t.name} · ${sizeClass(t).label}${d > 0.4 ? ' (despairing)' : ''}`, font).setOrigin(0.5, 0));
     }
-    labels.add(scene.add.text(40, H - 46, 'Forest · hills · blue water · golden fields | red: you · pale: cargo caravans', font));
+    labels.add(scene.add.text(40, H - 46, 'Forest · hills · blue water · golden fields | red: you · pale: caravans · orange: village carts | rings: land · green line: allies · red: war', font));
   };
 
   return {
