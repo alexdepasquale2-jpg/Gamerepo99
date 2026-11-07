@@ -11,10 +11,14 @@ import {
   type PaintHost,
 } from './painters/overworld-paint';
 
-export type ChunkLayerHost = PaintHost;
+export type ChunkLayerHost = PaintHost & { tweens?: Phaser.Tweens.TweenManager };
+
+/** New chunks built per streamed sync (cold build ~2-3 ms each); the rest follow next frames. */
+const BUILDS_PER_SYNC = 1;
 
 export type ChunkLayer = {
-  sync: (coords: ChunkCoord[]) => void;
+  /** Mount `coords` (nearest first); returns true while some are still pending. `all` skips the budget. */
+  sync: (coords: ChunkCoord[], all?: boolean) => boolean;
   destroy: () => void;
 };
 
@@ -43,7 +47,7 @@ export function createChunkLayer(
   }
 
   return {
-    sync(coords: ChunkCoord[]) {
+    sync(coords: ChunkCoord[], all = false) {
       const want = new Set(coords.map(keyOf));
       for (const [k, container] of mounted) {
         if (!want.has(k)) {
@@ -53,16 +57,24 @@ export function createChunkLayer(
           chunkProps.delete(k);
         }
       }
-      for (const coord of coords) {
+      const mid = coords[coords.length >> 1];
+      const todo = coords.filter((c) => !mounted.has(keyOf(c)))
+        .sort((a, b) => (mid ? Math.hypot(a.cx - mid.cx, a.cy - mid.cy) - Math.hypot(b.cx - mid.cx, b.cy - mid.cy) : 0));
+      const budget = all ? todo.length : BUILDS_PER_SYNC;
+      for (const coord of todo.slice(0, budget)) {
         const k = keyOf(coord);
-        if (mounted.has(k)) continue;
         const chunk = source.getChunk(coord);
         const painted = paintChunkContents(host, ensureFullChunkTiles(chunk));
         painted.setDepth(0);
         mounted.set(k, painted);
+        if (!all && host.tweens) {
+          painted.setAlpha(0);
+          host.tweens.add({ targets: painted, alpha: 1, duration: 160 });
+        }
 
         chunkProps.set(k, chunk.props.flatMap((prop) => paintProp(host, null, prop)));
       }
+      return todo.length > budget;
     },
     destroy() {
       for (const c of mounted.values()) c.destroy(true);

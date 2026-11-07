@@ -556,8 +556,8 @@ export class OverworldScene extends Phaser.Scene {
     const coords = chunksAround(q, r, CHUNK_SIZE, CHUNK_MARGIN);
     const key = coords.map((c) => `${c.cx},${c.cy}`).join('|');
     if (!force && key === this.lastChunkKey) return;
-    this.lastChunkKey = key;
-    this.layer.sync(coords);
+    // Streamed chunks are built a few per frame; keep syncing until none are pending.
+    this.lastChunkKey = this.layer.sync(coords, force) ? '' : key;
   }
 
   private createSparkHud(): void {
