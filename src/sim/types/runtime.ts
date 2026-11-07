@@ -98,6 +98,8 @@ export type SimState = {
   caravans?: CaravanMobile[];
   /** Player inventory: itemId -> qty (persisted in saves). */
   inventory?: Record<string, number>;
+  /** Provenance for individual goods (side table; counts in `inventory` stay authoritative). */
+  itemInstances?: import('../goods/instances').ItemInstance[];
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;

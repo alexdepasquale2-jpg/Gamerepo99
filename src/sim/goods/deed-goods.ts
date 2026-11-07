@@ -3,6 +3,7 @@
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
+import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 
 export type DeedGoodsResult = { ok: boolean; line: string };
@@ -51,6 +52,7 @@ function gift(state: SimState, personId: string, selected?: string): DeedGoodsRe
   const g = chosen ? { itemId: chosen, affinity: giftAffinity(state, personId, chosen) } : bestGift(state, personId);
   if (!g) return { ok: false, line: 'You have nothing to give. Gather something first.' };
   removeItem(state, g.itemId);
+  giveInstance(state, g.itemId, personId);
   const relief = deliverToTown(state, townOf(state, personId), g.itemId, 1, personId);
   const feel = g.affinity >= 2 ? 'holds it close' : g.affinity > 0 ? 'smiles' : 'accepts it politely';
   return { ok: true, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}` };
@@ -64,6 +66,7 @@ function trade(state: SimState, personId: string, selected?: string): DeedGoodsR
     const it = goods.find((g) => g.item.id === selected)?.item ?? goods[0]!.item;
     const coin = Math.round(priceAt(state, townId, it.id) * ITEMS.deeds.tradeMarkup);
     removeItem(state, it.id);
+    consumeInstance(state, it.id);
     addItem(state, 'coin', coin);
     const relief = deliverToTown(state, townId, it.id, 1, personId);
     return { ok: true, line: `Traded ${it.name} for ${coin} coin.${relief ? ' They were short of it.' : ''}` };
@@ -106,6 +109,7 @@ function work(state: SimState, personId: string): DeedGoodsResult {
   for (const y of ITEMS.deeds.workAlongsideYield) {
     if (y.chance !== undefined && rng.next() >= y.chance) continue;
     addItem(state, y.itemId, y.qty);
+    for (let k = 0; k < y.qty; k++) mintInstance(state, y.itemId, personId, townOf(state, personId));
     got.push(`${y.qty} ${itemName(y.itemId)}`);
   }
   return { ok: true, line: `You work alongside ${first(personId)}. +${got.join(', +')}` };
