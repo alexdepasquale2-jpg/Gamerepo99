@@ -120,7 +120,7 @@ export function attachOverworldGoods(
   const memories = new Map<string, Phaser.GameObjects.Text>();
   // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
   const badge = scene.add.text(12, 62, '', { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#ffd877', stroke: '#1b1612', strokeThickness: 3 }).setScrollFactor(0).setDepth(1_000_000).setVisible(false);
-  const trader = createCaravanTrade(scene, st, () => inv.refresh());
+  const trader = createCaravanTrade(scene, st, () => inv.refresh(), (tid) => world.settlements?.find((x) => x.id === tid)?.name ?? tid);
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId, nav);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
   const boards = createNeedsBoards(scene, session, layout, new Map([...meta].map(([id, s]) => [id, s.name])), getPlayer);

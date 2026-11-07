@@ -9,8 +9,10 @@ export type ItemRow = {
   use?: { spark?: number; hearthMemory?: boolean; correspondence?: boolean };
 };
 type AffinityRule = { personMatch: string; itemTag: string; weight: number };
+export type MarketTable = { goods: string[]; sellFactor: number; buyFactor: number };
 export type ItemsTable = {
   items: ItemRow[];
+  market: MarketTable;
   startingInventory: Record<string, number>;
   giftAffinity: { rules: AffinityRule[] };
   deeds: {

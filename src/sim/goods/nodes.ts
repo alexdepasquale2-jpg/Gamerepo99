@@ -8,7 +8,7 @@ import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
 
-type Yield = { itemId: string; min: number; max: number };
+type Yield = { itemId: string; min: number; max: number; chance?: number };
 export type NodeKind = { id: string; name: string; yields: Yield[]; charges: number; regrowDawns: number; weight: number; nearTown: number };
 type NodesTable = {
   kinds: NodeKind[];
@@ -25,7 +25,7 @@ function pickKind(seed: number, q: number, r: number, roll: number): string {
     case 'water': return 'fishing_spot';
     case 'forest': return roll < 0.85 ? 'tree' : 'herb_patch';
     case 'hills': return roll < 0.4 ? 'ore_vein' : 'rock';
-    default: return roll < 0.6 ? 'berry_bush' : 'herb_patch';
+    default: return roll < 0.4 ? 'berry_bush' : roll < 0.7 ? 'sheep_flock' : 'herb_patch';
   }
 }
 
@@ -89,7 +89,9 @@ export function gatherNode(state: SimState, n: WorldNode): string | null {
   const rng = deriveRng(state.seed, 'gather', n.id, state.day, cur.charges);
   const got: string[] = [];
   for (const y of k.yields) {
+    if (y.chance !== undefined && rng.next() >= y.chance) continue;
     const q = rng.int(y.min, y.max + 1);
+    if (q <= 0) continue;
     addItem(state, y.itemId, q);
     got.push(`+${q} ${itemName(y.itemId)}`);
   }

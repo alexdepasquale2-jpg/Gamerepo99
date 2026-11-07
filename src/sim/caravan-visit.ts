@@ -85,6 +85,30 @@ function unload(state: SimState, m: CaravanMobile, n: number): void {
   pushJuice(state, data?.economyLod?.juice.deliver ?? 'stock.deliver', payload);
 }
 
+/** Goods the player sold aboard (the hold) come off with the stop; each unit into a shortage eases despair. */
+function unloadHold(state: SimState, m: CaravanMobile): void {
+  const v = m.visit;
+  const town = v && state.towns?.[v.townId];
+  const hold = m.hold;
+  if (!v || !town || !hold) return;
+  for (const res of Object.keys(hold).sort()) {
+    const n = hold[res]!;
+    if (n <= 0) continue;
+    for (let i = 0; i < n; i++) {
+      const short = isShort(state, v.townId, res);
+      town.stock[res] = (town.stock[res] ?? 0) + 1;
+      if (short && town.economyOptIn !== false) {
+        town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief);
+        v.relieved++;
+        if (town.caravanTrade) town.caravanTrade.relieved++;
+      }
+      if (town.caravanTrade) town.caravanTrade.received++;
+    }
+    pushJuice(state, (state.data as DataTables | undefined)?.economyLod?.juice.deliver ?? 'stock.deliver', { townId: v.townId, routeId: m.routeId, resourceId: res, qty: n });
+  }
+  delete m.hold;
+}
+
 /** The town sells its biggest surplus onto the wagon for the trip home (at the start of the trading phase). */
 function tradeBack(state: SimState, m: CaravanMobile): void {
   const v = m.visit!;
@@ -116,13 +140,14 @@ function finishPhase(state: SimState, m: CaravanMobile): boolean {
   const v = m.visit!;
   if (m.phase === 'unloading') {
     unload(state, m, v.total); // anything the frame clock hadn't moved yet
+    unloadHold(state, m);
     m.phase = m.heading === 'outbound' ? 'trading' : 'departing';
     if (m.phase === 'trading') tradeBack(state, m); // crates then visibly go aboard while the phase runs
   } else if (m.phase === 'trading') {
     m.phase = 'departing';
   } else {
     pushJuice(state, 'caravan.depart', { townId: v.townId, routeId: m.routeId, caravanId: m.id });
-    if (m.heading === 'return') return false;
+    if (m.heading === 'return') { unloadHold(state, m); return false; } // goods sold after the unload still arrive
     m.heading = 'return';
     m.progress01 = 0;
     m.phase = undefined;
