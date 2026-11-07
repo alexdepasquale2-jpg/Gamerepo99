@@ -8,15 +8,15 @@ dawnsSurvived counts completed dawns (a mid-dawn burnout does not count its part
 
 | style | archetype | burnout rate | median dawns | mean reignited | mean hollow | mean despair | endings |
 |---|---|---:|---:|---:|---:|---:|---|
-| kind | marrow | 0 | 60 | 9 | 0 | 0.1 | {"ash_hoard":5} |
-| kind | ivy_quill | 0 | 60 | 9 | 0 | 0.1 | {"ash_hoard":5} |
-| kind | basilisk_brood | 0 | 60 | 9 | 0 | 0.1 | {"ash_hoard":5} |
+| kind | marrow | 0 | 60 | 9 | 0 | 0.1 | {"survived":5} |
+| kind | ivy_quill | 0 | 60 | 9 | 0 | 0.1 | {"survived":5} |
+| kind | basilisk_brood | 0 | 60 | 9 | 0 | 0.1 | {"survived":5} |
 | harsh | marrow | 1 | 6 | 7 | 8.4 | 0.076 | {"burnout":5} |
 | harsh | ivy_quill | 0 | 60 | 9 | 9 | 0.291 | {"survived":5} |
 | harsh | basilisk_brood | 1 | 6 | 5.8 | 8.2 | 0.108 | {"burnout":5} |
-| hoarder | marrow | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":5} |
-| hoarder | ivy_quill | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":5} |
-| hoarder | basilisk_brood | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":5} |
+| hoarder | marrow | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":3,"survived":2} |
+| hoarder | ivy_quill | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":3,"survived":2} |
+| hoarder | basilisk_brood | 0 | 60 | 9 | 9 | 0.1 | {"ash_hoard":3,"survived":2} |
 | neglect | marrow | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
 | neglect | ivy_quill | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
 | neglect | basilisk_brood | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
