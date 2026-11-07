@@ -16,6 +16,7 @@ import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
 import deedsJson from '../../data/systems/interactions/deeds.json';
+import { handleProvidedAction, providedActions } from './action-providers';
 
 type DeedRow = { id: string; label: string; hostMethod: string; requiresPendingPromise?: boolean; requiresOtherPerson?: boolean; savage?: boolean };
 export const DEEDS: readonly DeedRow[] = (deedsJson as { deeds: DeedRow[] }).deeds;
@@ -34,7 +35,7 @@ function deedAllowed(state: SimState, d: DeedRow, personId: string, rt?: CompatR
   return true;
 }
 
-type PlayAction = { id: string; family?: string };
+type PlayAction = { id: string; family?: string; label?: string };
 type PlayEvent = { type: string; methodId?: string };
 type MethodRow = { id: string; family?: string };
 
@@ -63,6 +64,8 @@ export function listMethodActions(state: SimState, rt?: CompatRuntime): PlayActi
         }
       }
     }
+    // Acts other systems offer for this person (stash, patrons, asking about the past…).
+    for (const a of providedActions(state, personId, rt)) out.push({ id: a.id, family: a.family ?? 'deed', label: a.label });
   }
   out.push({ id: 'advance:dawn', family: 'rest' });
   out.push({ id: 'advance:day', family: 'rest' });
@@ -101,6 +104,8 @@ export function actMethod(
   extras?: ActExtras,
   opts?: { interactionCompat?: CompatRuntime },
 ): void {
+  if (handleProvidedAction(state, actionId, eventLog, opts?.interactionCompat)) return;
+
   if (actionId.startsWith('approach@')) {
     if (extras && extras.metrics.firstChoiceAtTick == null) {
       extras.metrics.firstChoiceAtTick = extras.tickN;

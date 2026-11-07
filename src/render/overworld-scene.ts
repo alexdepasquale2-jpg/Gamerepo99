@@ -34,7 +34,8 @@ import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 import { getWalkMul, setWalkMul } from '../dev/dev-flags';
 import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
-import { blockedDoorLine, canEnterBuilding, eavesdropReports, walkSpeedMul } from '../sim/embodiment';
+import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
+import { collectDawnLines } from '../sim/dawn-lines';
 import { featuresIn } from '../sim/map/ladder/features';
 
 const CHUNK_MARGIN = 1;
@@ -105,7 +106,7 @@ export class OverworldScene extends Phaser.Scene {
         const f = tileFootWorld(t.q + 2 + slot, t.r + 2);
         return { x: f.x, y: f.y };
       },
-      moveTo: (townId) => this.moveToTown(townId),
+      moveTo: (townId) => this.arriveAt(townId),
       say: (text) => this.say(text),
     });
     if (this.session.getState()?.player.bodies?.length) {
@@ -172,6 +173,24 @@ export class OverworldScene extends Phaser.Scene {
         },
         speed: { get: getWalkMul, set: setWalkMul },
         dawn: () => this.session.tick(),
+        /** A real rest at a hearth: fade, dusk + dawn, dawn lines; resolves when the lines start. */
+        rest: () => new Promise<string[]>((done) => this.rest(done)),
+        /** Ring chips on offer for a person (all pages): [{ id, label }]. */
+        chips: (personId: string) => this.chipsFor(personId).map((c) => ({ id: c.id, label: c.label })),
+        /** Open the ring on a person as if E was pressed beside them (walks you there first). */
+        ring: (personId: string) => {
+          const p = this.people.byId.get(personId);
+          if (!p) return false;
+          this.player.setPosition(p.sprite.x + 20, p.sprite.y);
+          this.openRing(p);
+          return this.ring.isOpen();
+        },
+        /** Open a town's noticeboard at a page index or page id. */
+        board: (townId: string, page?: number | string) => this.goods.openBoard(townId, page),
+        /** Put the player at a town (as arriving there). */
+        arriveAt: (townId: string) => this.arriveAt(townId),
+        /** Last line shown by say(). */
+        lastSay: () => this.hint.text,
         give: (itemId: string, n: number) => {
           const st = this.session.getState();
           if (!st) return;
@@ -355,10 +374,9 @@ export class OverworldScene extends Phaser.Scene {
     return this.session
       .listActions()
       .filter((a) => a.id.endsWith('@' + id))
-      .slice(0, 14)
       .map((a) => {
         const m = a.id.slice(0, a.id.indexOf('@'));
-        return { id: a.id, label: deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
+        return { id: a.id, label: a.label ?? deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
       });
   }
 
@@ -552,7 +570,7 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
-  private rest(): void {
+  private rest(onLines?: (lines: string[]) => void): void {
     this.resting = true;
     this.closeRing();
     const cam = this.cameras.main;
@@ -560,6 +578,7 @@ export class OverworldScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
       this.life.dawn();
+      this.people.sync();
       this.people.settle();
       this.goods.onDawn();
       (this.registry.get('autosave') as (() => void) | undefined)?.();
@@ -570,10 +589,11 @@ export class OverworldScene extends Phaser.Scene {
           this.resting = false;
           playSfx('dawn');
           this.say(`Dawn. Day ${this.session.snapshot().day}.`);
-          // Siblings waiting in other towns report what they overheard in the night.
+          // Everything systems want you to hear on waking (sim/dawn-lines), one after another.
           const st = this.session.getState();
-          const heard = st ? eavesdropReports(st) : [];
-          heard.forEach((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
+          const lines = st ? collectDawnLines(st) : [];
+          lines.forEach((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
+          onLines?.(lines);
         });
       });
     });
@@ -620,10 +640,12 @@ export class OverworldScene extends Phaser.Scene {
     return me ? walkSpeedMul(me) : 1;
   }
 
-  /** Put the player at a town's hearth side (used when the brood switches to a sibling elsewhere). */
-  private moveToTown(townId: string): void {
+  /** Put the player at a town's hearth side (brood switching, road travel, tests). */
+  arriveAt(townId: string): void {
     const t = this.layout.settlements.find((x) => x.id === townId);
     if (!t) return;
+    const st = this.session.getState();
+    if (st) st.player.townId = townId;
     const foot = tileFootWorld(t.q, t.r + 1);
     this.player.setPosition(foot.x, foot.y);
     applySpriteSort(this.player);
@@ -638,6 +660,11 @@ export class OverworldScene extends Phaser.Scene {
     cam.startFollow(this.player, true, FEEL.overworld.camLerp, FEEL.overworld.camLerp);
     cam.setDeadzone(FEEL.overworld.camDeadzoneX, FEEL.overworld.camDeadzoneY);
     cam.setZoom(FEEL.worldScale.camZoom);
+  }
+
+  /** Rebuild the chunks around the player (after the land itself changed, e.g. a tile edit). */
+  refreshChunks(): void {
+    this.syncChunks(true);
   }
 
   private syncChunks(force: boolean): void {

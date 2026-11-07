@@ -26,6 +26,7 @@ import { tickPackets } from '../packets';
 import { regrowNodes } from '../goods/nodes';
 import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
 import { firstTrust } from '../embodiment';
+import '../contrib';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
