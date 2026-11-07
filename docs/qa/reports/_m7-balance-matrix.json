@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T02:54:32.074Z",
+  "generatedAt": "2026-11-07T03:02:37.759Z",
   "seeds": [
     1,
     2,
@@ -20,7 +20,7 @@
       "meanDespair": 0.1,
       "minSparkFloor": 88,
       "endings": {
-        "ash_hoard": 5
+        "survived": 5
       }
     },
     {
@@ -34,7 +34,7 @@
       "meanDespair": 0.1,
       "minSparkFloor": 90,
       "endings": {
-        "ash_hoard": 5
+        "survived": 5
       }
     },
     {
@@ -48,7 +48,7 @@
       "meanDespair": 0.1,
       "minSparkFloor": 85,
       "endings": {
-        "ash_hoard": 5
+        "survived": 5
       }
     },
     {
@@ -104,7 +104,8 @@
       "meanDespair": 0.1,
       "minSparkFloor": 85,
       "endings": {
-        "ash_hoard": 5
+        "ash_hoard": 3,
+        "survived": 2
       }
     },
     {
@@ -118,7 +119,8 @@
       "meanDespair": 0.1,
       "minSparkFloor": 87,
       "endings": {
-        "ash_hoard": 5
+        "ash_hoard": 3,
+        "survived": 2
       }
     },
     {
@@ -132,7 +134,8 @@
       "meanDespair": 0.1,
       "minSparkFloor": 82,
       "endings": {
-        "ash_hoard": 5
+        "ash_hoard": 3,
+        "survived": 2
       }
     },
     {
@@ -190,7 +193,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 88,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -204,7 +207,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 88,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -218,7 +221,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 88,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -232,7 +235,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 88,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -246,7 +249,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 88,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -260,7 +263,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 90,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -274,7 +277,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 90,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -288,7 +291,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 90,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -302,7 +305,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 90,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -316,7 +319,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 90,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -330,7 +333,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -344,7 +347,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -358,7 +361,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -372,7 +375,7 @@
       "despair": 0.15,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -386,7 +389,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -638,7 +641,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -666,7 +669,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 85,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -708,7 +711,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 87,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -736,7 +739,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 87,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -778,7 +781,7 @@
       "despair": 0,
       "finalSpark": 100,
       "minSpark": 82,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
@@ -806,7 +809,7 @@
       "despair": 0.05,
       "finalSpark": 100,
       "minSpark": 82,
-      "ending": "ash_hoard",
+      "ending": "survived",
       "actErrors": 0
     },
     {
