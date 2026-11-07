@@ -30,6 +30,8 @@ type Pt = { x: number; y: number };
 export type OverworldGoods = {
   update: (time: number, dt: number, player: Pt) => void;
   onDawn: () => void;
+  /** Call after any session.act: stash acts change chests and carried goods. */
+  onAct: () => void;
   /** Try gathering a nearby node. Returns a line when something happened. */
   gatherNear: (player: Pt) => string | null;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
@@ -102,7 +104,7 @@ export function attachOverworldGoods(
       if (act.kind === 'gift_give') {
         const r = api.beforeDeed('gift_give', act.personId, act.itemId);
         if (r.line) say(r.line);
-        if (r.ok) session.act(`gift_give@${act.personId}`);
+        if (r.ok) { session.act(`gift_give@${act.personId}`); api.onAct(); }
       } else if (act.kind === 'drop' && dropItem(s, itemId, { x: wx, y: wy })) {
         showGround(); inv.refresh(); say(`You set down the ${ITEM_BY_ID.get(itemId)?.name ?? itemId}.`);
       }
@@ -167,7 +169,6 @@ export function attachOverworldGoods(
     update(time, dt, player) {
       document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
-      if (Math.floor(time / 500) !== Math.floor((time - dt) / 500)) chests.refresh();
       living.update(time, dt);
       map.update(time);
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
@@ -178,6 +179,10 @@ export function attachOverworldGoods(
         const p = hearthOf(townId, { x: 0, y: 0 });
         memories.set(townId, scene.add.text(p.x + 20, p.y - 24, '◆', { color: '#f2b84b', fontSize: '16px', stroke: '#503c25', strokeThickness: 2 }).setDepth(p.y + 1));
       }
+    },
+    onAct() {
+      chests.refresh();
+      inv.refresh();
     },
     onDawn() {
       nodes.refresh();

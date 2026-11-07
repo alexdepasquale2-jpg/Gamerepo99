@@ -458,6 +458,7 @@ export class OverworldScene extends Phaser.Scene {
       if (jid === 'person.reignite' || jid === 'site.kindle') reignited = true;
     });
     this.session.act(c.id);
+    this.goods.onAct();
     off();
     const after = this.session.snapshot().spark;
     const r = this.session.lastResolve();
