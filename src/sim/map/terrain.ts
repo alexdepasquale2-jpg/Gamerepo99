@@ -1,4 +1,6 @@
 /** Continuous seeded value noise; identical biomes for tiles, map and resources. */
+import { WORLD_SCALE as S } from './constants';
+import { createLadder, type Ladder } from './ladder/refine';
 export type Biome = 'forest' | 'hills' | 'water' | 'fields' | 'meadow';
 export const BIOME_COLOR: Record<Biome, number> = {
   forest: 0x304e32, hills: 0x777557, water: 0x407b91, fields: 0x999152, meadow: 0x69834a,
@@ -18,7 +20,7 @@ function noise(seed: number, q: number, r: number, scale: number): number {
 }
 /** Row (tile r) of the river centre line at column q. */
 export function riverRow(seed: number, q: number): number {
-  return Math.sin(q / 86 + seed * 0.001) * 34 + Math.sin(q / 31) * 7;
+  return (Math.sin(q / (86 * S) + seed * 0.001) * 34 + Math.sin(q / (31 * S)) * 7) * S;
 }
 /** Seeded hash in [0,1) for terrain features such as fords. */
 export function terrainHash(seed: number, x: number, y: number): number {
@@ -34,17 +36,25 @@ export function areaBiomeAt(seed: number, q: number, r: number): Biome {
   return elevation < 0.39 ? 'fields' : 'meadow';
 }
 export const isRiverAt = (seed: number, q: number, r: number): boolean => Math.abs(r - riverRow(seed, q)) < 2.6;
-/** 'noise' = continuous noise per tile; 'ladder' = refined from the L0 grid (see ladder/). */
+/** 'ladder' (default) = refined from the L0 grid (see ladder/); 'noise' = stretched noise per tile. */
 export type TerrainMode = 'noise' | 'ladder';
-let mode: TerrainMode = 'noise';
-let ladderArea: ((seed: number, q: number, r: number) => Biome) | null = null;
+let mode: TerrainMode = 'ladder';
 export const terrainMode = (): TerrainMode => mode;
-/** Set once at boot (before any terrain query); ladder/ registers its area function. */
-export function setTerrainMode(next: TerrainMode, area?: (seed: number, q: number, r: number) => Biome): void {
-  mode = next;
-  if (area) ladderArea = area;
+/** Set once at boot, before any terrain query. */
+export function setTerrainMode(next: TerrainMode): void { mode = next; }
+const ladders = new Map<number, Ladder>();
+export function ladderFor(seed: number): Ladder {
+  let l = ladders.get(seed);
+  if (!l) { l = createLadder(seed); ladders.set(seed, l); }
+  return l;
+}
+/** Cheap overview biome for maps: river + L1 (16-tile) ladder cells. */
+export function coarseBiomeAt(seed: number, q: number, r: number): Biome {
+  if (mode !== 'ladder') return biomeAt(seed, q, r);
+  if (Math.abs(r - riverRow(seed, q)) < 8) return 'water';
+  return ladderFor(seed).area(1, Math.floor(q / 16), Math.floor(r / 16));
 }
 export function biomeAt(seed: number, q: number, r: number): Biome {
   if (isRiverAt(seed, q, r)) return 'water';
-  return mode === 'ladder' && ladderArea ? ladderArea(seed, q, r) : areaBiomeAt(seed, q, r);
+  return mode === 'ladder' ? ladderFor(seed).tileArea(q, r) : areaBiomeAt(seed, q / S, r / S);
 }

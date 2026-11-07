@@ -1,6 +1,6 @@
-/** L0 world grid: today's terrain down-sampled to 64-tile cells, with roads and towns. Pure. */
+/** L0 world grid: 64-tile cells of area biome, with roads and towns stamped. Pure. */
 import { bresenhamLine } from '../corridor';
-import { biomeAt, type Biome } from '../terrain';
+import { biomeAt, ladderFor, type Biome } from '../terrain';
 import type { WorldLayout } from '../world-layout';
 import { AREA_GLYPH, AREA_ORDER, ROAD, TOWN } from './glyphs';
 import { cellOf, type AsciiGrid } from './grid';
@@ -22,7 +22,8 @@ export function cellArea(seed: number, q0: number, r0: number, size: number, bio
   return best;
 }
 
-export function buildL0(layout: WorldLayout, seed: number, cellTiles = L0_CELL): AsciiGrid {
+export function buildL0(layout: WorldLayout, seed: number, cellTiles = L0_CELL, area?: (X: number, Y: number) => Biome): AsciiGrid {
+  const areaAt = area ?? ((X: number, Y: number) => ladderFor(seed).area(0, X, Y));
   const qs = layout.settlements.map((s) => s.q), rs = layout.settlements.map((s) => s.r);
   const cq0 = Math.floor(Math.min(0, ...qs) / cellTiles) - PAD_CELLS;
   const cr0 = Math.floor(Math.min(0, ...rs) / cellTiles) - PAD_CELLS;
@@ -33,7 +34,7 @@ export function buildL0(layout: WorldLayout, seed: number, cellTiles = L0_CELL):
   const cells: string[][] = [];
   for (let y = 0; y < h; y++) {
     const row: string[] = [];
-    for (let x = 0; x < w; x++) row.push(AREA_GLYPH[cellArea(seed, g.q0 + x * cellTiles, g.r0 + y * cellTiles, cellTiles)]);
+    for (let x = 0; x < w; x++) row.push(AREA_GLYPH[areaAt(cq0 + x, cr0 + y)]);
     cells.push(row);
   }
   const put = (x: number, y: number, c: string) => { if (cells[y]?.[x] !== undefined) cells[y]![x] = c; };

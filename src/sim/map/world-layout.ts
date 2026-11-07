@@ -2,6 +2,7 @@
 import type { FabricWorld } from '../gen/world-types';
 import type { SettlementGen } from '../gen/places/settlements-gen';
 import { deriveRng } from '../rng';
+import { WORLD_SCALE as S } from './constants';
 
 export type MapPoint = { q: number; r: number };
 export type SettlementKind = 'city' | 'town' | 'village';
@@ -45,16 +46,17 @@ export function placeSettlements(raw: SettlementGen[], seed: number): LayoutSett
     }
     placed.push({ id: s.id, kind, ...best });
   }
+  // Placed at the original scale, then stretched, so the layout is exactly proportional.
   // Keep input order stable: it controls existing player spawning and social allocation.
-  return raw.map((s) => placed.find((p) => p.id === s.id)!);
+  return raw.map((s) => placed.find((p) => p.id === s.id)!).map((p) => ({ ...p, q: Math.round(p.q * S), r: Math.round(p.r * S) }));
 }
 
 /** Shared small-amplitude curve, sampled in tiles; endpoints are exact. */
 export function roadPath(a: MapPoint, b: MapPoint, seed: number, id: string): MapPoint[] {
   const rng = deriveRng(seed, 'road-curve', id);
   const dx = b.q - a.q, dy = b.r - a.r, len = Math.hypot(dx, dy) || 1;
-  const amplitude = Math.min(9, len * 0.025) * (rng.next() < 0.5 ? -1 : 1);
-  const count = Math.max(2, Math.ceil(len / 3));
+  const amplitude = Math.min(9 * S, len * 0.025) * (rng.next() < 0.5 ? -1 : 1);
+  const count = Math.max(2, Math.ceil(len / (3 * S)));
   return Array.from({ length: count + 1 }, (_, i) => {
     const f = i / count;
     const offset = Math.sin(f * Math.PI) * (Math.sin(f * Math.PI * 2) * 0.35 + 0.65) * amplitude;
@@ -106,7 +108,7 @@ export function geographicRoads(settlements: SettlementGen[], seed: number): Lay
     if (chosen.some((r) => r.id === edge.id)) continue;
     edge.path = roadPath(edge.path[0]!, edge.path[edge.path.length - 1]!, seed, edge.id);
     if (!clear(edge)) continue;
-    if (points.some((p) => p.id !== edge.from && p.id !== edge.to && edge.path.some((v) => Math.hypot(v.q - p.q, v.r - p.r) < 14))) continue;
+    if (points.some((p) => p.id !== edge.from && p.id !== edge.to && edge.path.some((v) => Math.hypot(v.q - p.q, v.r - p.r) < 14 * S))) continue;
     chosen.push(edge);
   }
   return chosen.map(({ id, from, to, path }) => ({ id, from, to, path }));

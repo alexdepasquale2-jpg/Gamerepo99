@@ -12,13 +12,37 @@ describe('L0 world grid', () => {
     const a = toAscii(buildL0(layout, 42));
     expect(toAscii(buildL0(layout, 42))).toBe(a);
     expect(a).toMatchInlineSnapshot(`
-      "TT^TTT.^
-      TT#=~T.T
-      .T====#T
-      ..==#=,,
-      TT===T,T
-      ,T#=TT.~
-      T,.,,.^."
+      "TTTTT..^^^^^^^^^TTT...~....TTTTTTT..
+      TTTTT..^#=^^^^^^TTT...~....TTTTTTT..
+      TTTTT.^^===^^^^^TT...~~~...TTTTTTT..
+      TTTTTT^^=^==^^^^T...~~~~..TTTTTTTT..
+      TTTTTT^^=^^^=^^^...~~~~~..TTTTTTTT..
+      TTTTTT^^^=^^^==^~~~~~~~~,.TTTTTTTT..
+      TTTTTT^^^=^^^^==~~~~~~~~~,TTTTTTTT.,
+      TTTTTT^^^=^^^~~==~~~~~~~~,TTTTTTTT,,
+      TTTTTT^^^=^^^~~~==~~~~~~~,TTTTTTTT,,
+      TTTTTT^^^=^^^~~~~==~~~~~~,TTTTTTT,,,
+      TTTTT^^^^=^^^~~~~~==~~~~,,,TTTTTT,,,
+      ....^^^^^=^^~~~~~~~==.,,,,,TTTT===#,
+      .....^^^^=^~~~~~~~~.==.,,,,,======,,
+      ......^~~=~~~~~~~~...==.=====,==,,,,
+      .....~~~~=~~~~~~~~....=#=,,,,==,,,,,
+      .....~~~~=~~~~~~~~^^^==T.,,,==,,,,,,
+      .....~~~~=~~~~~~~~^^==^T.,==,,,,,,,,
+      ........~=~~~~~~~~^==^^TT==,,,,,,,,,
+      ........^=^^~~~~~~==^^^==TT,,,,,,,,,
+      .....TTT^=^^^~~~~==^^===TTTTTTTTT,,,
+      ...TTTTTT=T..~~~~=^^==^TTTTTTTTTTT,,
+      ..TTTTTTT=T..~~~=~^==^^TTTTTTTTTTT,,
+      ..TTTTTTT=T..~~====^^^^TTTTTTTTTTT,,
+      ..TTTTTTT=T..~====^^^TTTTTTTTTTTTT..
+      ..TTTTTTT==..====..TTTTTTTTTTTTTTT..
+      .,TTTTTTTT=T,===~..TTTTTTTTTTTTTTT..
+      ,,,TTTTTTT=T==~~~..TTTTTTTTTTTTTT...
+      ,,,TTTTTTT===,,~...TTTTTTTTTTTTTT...
+      ,,,TTTTTTT==,,,...TTTTTTTTTTTTTTT...
+      ,,,TTTTTTT#T,,,...TTTTTTTTTTTTTTT..~
+      ,,,TTTTTTTTT,,,...TTTTTTTTTTTTTTT..."
     `);
   });
 

@@ -18,7 +18,7 @@ describe('StampRasterSource lazy getChunk + props', () => {
     const a = createStampRasterSource(world, 7);
     const b = createStampRasterSource(world, 7);
     const c = createStampRasterSource(world, 8);
-    expect(a.kind).toBe('stamp');
+    expect(a.kind).toBe('native');
     expect(a.chunkSize).toBe(CHUNK_SIZE);
     expect(a.fingerprint()).toBe(b.fingerprint());
     expect(a.fingerprint()).not.toBe(c.fingerprint());

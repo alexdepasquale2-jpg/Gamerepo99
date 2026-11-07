@@ -7,6 +7,7 @@
  */
 import { areaBiomeAt, type Biome } from '../terrain';
 import { AREA_ORDER } from './glyphs';
+import { WORLD_SCALE as S } from '../constants';
 import { cellArea, L0_CELL } from './l0';
 
 export const LADDER_FACTOR = 4;
@@ -20,8 +21,8 @@ const BLOCK = 32;
 const MAX_BLOCKS = 512;
 
 export type L0Area = (seed: number, X: number, Y: number) => Biome;
-/** Default L0: majority of today's area biome inside the 64-tile cell. */
-export const sampledL0: L0Area = (seed, X, Y) => cellArea(seed, X * L0_CELL, Y * L0_CELL, L0_CELL, areaBiomeAt);
+/** Default L0: the original area noise stretched by WORLD_SCALE, majority per 64-tile cell. */
+export const sampledL0: L0Area = (seed, X, Y) => cellArea(seed, (X * L0_CELL) / S, (Y * L0_CELL) / S, L0_CELL / S, areaBiomeAt);
 
 function hash(seed: number, k: number, x: number, y: number, i: number): number {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(k * 31 + i, 2246822519) ^ seed;
@@ -40,6 +41,7 @@ export type Ladder = {
 export function createLadder(seed: number, l0: L0Area = sampledL0): Ladder {
   const caches: Map<string, Uint8Array>[] = Array.from({ length: LADDER_LEVELS + 1 }, () => new Map());
   const l0Cache = new Map<string, number>();
+  const lastBlock = caches.map(() => ({ bx: 0, by: 0, block: null as Uint8Array | null }));
 
   const level0 = (X: number, Y: number): number => {
     const key = `${X},${Y}`;
@@ -87,6 +89,8 @@ export function createLadder(seed: number, l0: L0Area = sampledL0): Ladder {
   function areaIndex(k: number, x: number, y: number): number {
     if (k <= 0) return level0(x, y);
     const bx = Math.floor(x / BLOCK), by = Math.floor(y / BLOCK);
+    const last = lastBlock[k]!;
+    if (last.block && last.bx === bx && last.by === by) return last.block[(y - by * BLOCK) * BLOCK + (x - bx * BLOCK)]!;
     const key = `${bx},${by}`;
     const cache = caches[k]!;
     let block = cache.get(key);
@@ -96,12 +100,13 @@ export function createLadder(seed: number, l0: L0Area = sampledL0): Ladder {
       cache.set(key, block);
       if (cache.size > MAX_BLOCKS) cache.delete(cache.keys().next().value!);
     }
+    last.bx = bx; last.by = by; last.block = block;
     return block[(y - by * BLOCK) * BLOCK + (x - bx * BLOCK)]!;
   }
 
   return {
     areaIndex,
     area: (k, x, y) => AREA_ORDER[areaIndex(k, x, y)]!,
-    tileArea: (q, r) => AREA_ORDER[areaIndex(LADDER_LEVELS, q, r)]!,
+    tileArea: (q, r) => AREA_ORDER[areaIndex(LADDER_LEVELS, Math.floor(q), Math.floor(r))]!,
   };
 }

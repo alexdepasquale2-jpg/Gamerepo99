@@ -1,4 +1,4 @@
-import { biomeAt, BIOME_COLOR } from '../../sim/map/terrain';
+import { coarseBiomeAt, BIOME_COLOR } from '../../sim/map/terrain';
 import type { LayoutRoute, SettlementKind } from '../../sim/map/world-layout';
 /** World map (M) + corner minimap: towns sized by polity, roads, player, caravans, despair tint. */
 
@@ -50,7 +50,7 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
     for (let x = 0; x < bw * s; x += cell) for (let y = 0; y < bh * s; y += cell) {
       const q = (bx + (x + cell / 2) / s) / TILE_PX;
       const r = (by + (y + cell / 2) / s) / TILE_PX;
-      g.fillStyle(BIOME_COLOR[biomeAt(seed, q, r)], 0.9).fillRect(left + x, top + y, Math.min(cell, bw * s - x), Math.min(cell, bh * s - y));
+      g.fillStyle(BIOME_COLOR[coarseBiomeAt(seed, q, r)], 0.9).fillRect(left + x, top + y, Math.min(cell, bw * s - x), Math.min(cell, bh * s - y));
     }
     g.lineStyle(big ? 2 : 1, 0xc8a878, 0.8);
     for (const r of routes) {

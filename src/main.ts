@@ -6,10 +6,10 @@ import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
-import { useTerrain } from './sim/map/ladder/mode';
+import { setTerrainMode } from './sim/map/terrain';
 
-// ?terrain=ladder switches tiles to the refined map ladder (phase 3 flag).
-useTerrain(new URLSearchParams(location.search).get('terrain') === 'ladder' ? 'ladder' : 'noise');
+// Tiles come from the refined map ladder; ?terrain=noise falls back to per-tile noise.
+if (new URLSearchParams(location.search).get('terrain') === 'noise') setTerrainMode('noise');
 
 const hud = createHud();
 hud.setStatus('booting overworld');
