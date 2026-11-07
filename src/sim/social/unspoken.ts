@@ -5,6 +5,7 @@
  */
 
 import { deriveRng } from '../rng';
+import { enqueueLetter } from '../letters-scale';
 import { pushJuice } from '../packets';
 import type { SimState } from '../types/runtime';
 import { getCentrality } from './centrality';
@@ -287,6 +288,7 @@ function applyResult(state: SimState, t: UnspokenTables, r: ComeToPassResult): v
   });
   if (e.letterOrRumor) {
     pushJuice(state, 'packet.emit', { kind: e.letterOrRumor, fromPersonId: r.carrierId, outcomeId: r.outcome.id });
+    enqueueLetter(state, { kind: e.letterOrRumor, fromPersonId: r.carrierId, outcomeId: r.outcome.id });
   }
   if (townId && townId === state.player.townId) witnessOutcome(state.unspoken!, t, r.classId, r.outcome.kind);
 }

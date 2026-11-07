@@ -104,6 +104,7 @@ function sampleLod(): LodSample {
     const juiceBefore = state.bus?.lastIds?.length ?? 0;
     for (let i = 0; i < SHORT_DAWNS; i++) advanceToDawn(state);
     const juice = juiceSince(state, juiceBefore);
+    notes.push(`letters in flight=${state.letters?.flight.length ?? 0}`);
     notes.push(`LOD available; advanced ${SHORT_DAWNS} dawn(s) seed=${SEED}`);
     return {
       attempted: true,

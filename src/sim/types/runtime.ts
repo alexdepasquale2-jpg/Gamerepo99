@@ -1,3 +1,4 @@
+import type { LettersState } from '../letters-scale';
 import type { UnspokenState } from '../social/unspoken-types';
 import type { CaravanMobile } from '../caravans-types';
 import type { DoctrineState } from '../doctrine-tick';
@@ -92,4 +93,6 @@ export type SimState = {
   unspoken?: UnspokenState;
   /** M4 Task C: runtime doctrine meters (seeded lazily from doctrines.json). */
   doctrines?: Record<string, DoctrineState>;
+  /** M4 Task D: queued/in-flight letters and rumors. */
+  letters?: LettersState;
 };
