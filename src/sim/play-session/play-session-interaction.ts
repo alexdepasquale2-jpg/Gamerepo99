@@ -17,6 +17,7 @@ import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { applyDoctrineAct } from '../doctrine-tick';
+import { fireNotorietyEvent } from '../hoard/events';
 import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
 import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
@@ -82,6 +83,7 @@ export function actInteraction(
   const refusal = refuseMethod(s, personId, methodId);
   if (refusal) {
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: refusal.line });
+    fireNotorietyEvent(s, 'refusal');
     finish({ kind: 'refused', flameDelta: 0, sparkCost: sparkBefore - s.player.spark, personId, methodId });
     return;
   }

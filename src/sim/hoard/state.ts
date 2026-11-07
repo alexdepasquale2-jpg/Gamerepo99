@@ -17,6 +17,12 @@ export type HoardState = {
   peakCoin: number;
   reigniteCount: number;
   lastStashActDay: number;
+  /** Coin spent today (guard hire + upkeep); drives gain_flash_spend. */
+  spend?: { day: number; coin: number };
+  /** siteId -> person id with a stash-raid goal (att_rival_hoarder). */
+  raiders?: Record<string, string>;
+  /** Attractor ids that fired on a given dawn (read by refuse_tax). */
+  attractorsToday?: { day: number; ids: string[] };
 };
 
 export type StashSiteDef = {
@@ -29,11 +35,14 @@ export type StashSiteDef = {
   theftRiskBase: number;
 };
 
-export type StashActDef = { id: string; methodIds: string[]; amount?: number; coinCost?: number };
+export type StashActDef = { id: string; methodIds: string[]; amount?: number; coinCost?: number; upkeepPerDay?: number };
 
 export type NotorietyRow = { id: string; add: number; when?: Record<string, number | boolean> };
 
+export type NotorietyTrigger = { event: string; gainId: string; attractorId?: string; minGuards?: number; playerInTown?: boolean };
+
 export type NotorietyTable = {
+  triggers?: NotorietyTrigger[];
   gains: NotorietyRow[];
   losses: NotorietyRow[];
   fade: number;
@@ -42,7 +51,7 @@ export type NotorietyTable = {
   roadWeightScale: number;
   leverage: { discount: number; tagsAny: string[] };
   spread: { rippleTag: string; kinDilution: number; emitPacketType: string };
-  attractors: { id: string; minNotoriety: number; weight: number; spawn: string; channels: string[] }[];
+  attractors: { id: string; minNotoriety: number; weight: number; spawn: string; channels: string[]; raidBonus?: number }[];
   hoardLegacy: { peakCoinMin: number; endingId: string };
 };
 
