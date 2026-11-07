@@ -146,5 +146,20 @@
       "hoard_legacy"
     ],
     "endingId": "ash_hoard"
+  },
+  "fade": 0.01,
+  "despair": {
+    "dampenAbove": 0.6,
+    "collapseAbove": 0.9,
+    "mul": 0.5
+  },
+  "attractorRollScale": 0.25,
+  "roadWeightScale": 40,
+  "leverage": {
+    "discount": 0.3,
+    "tagsAny": [
+      "hard",
+      "defend"
+    ]
   }
 }

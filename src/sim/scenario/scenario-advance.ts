@@ -2,6 +2,7 @@
 
 import { tickDoctrines } from '../doctrine-tick';
 import { tickLetters } from '../letters-scale';
+import { tickHoardDawn } from '../hoard';
 import { tickEconomyLod } from '../economy/economy-lod';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
@@ -86,6 +87,7 @@ export function advanceToDawn(state: SimState): void {
   if (state.towns) tickDoctrines(state);
   tickLetters(state);
   tickUnspokenDawn(state);
+  tickHoardDawn(state);
   clampPlayerSpark(state);
 }
 

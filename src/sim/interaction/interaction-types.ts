@@ -25,6 +25,10 @@ export interface InteractionDef {
   tags?: string[];
   /** Optional doctrines.json act id applied to the target's town doctrine. */
   doctrineAct?: string | string[];
+  /** Optional stash-sites.json act id (stash_hide|stash_guard_hire|stash_withdraw). */
+  stashAct?: string;
+  /** Optional coin earned (a meter, never spent as a button). */
+  coinGain?: number;
   requires?: { promisePending?: boolean };
   promise?: { op: 'make' | 'keep' | 'break'; idFrom?: string };
   presenceDelta?: number;

@@ -16,6 +16,8 @@ export type EncounterEntry = {
   weight: number;
   blurb?: string;
   prism?: string;
+  /** notoriety.json attractor id: weight grows with notoriety (>= its minNotoriety). */
+  attractorId?: string;
 };
 
 export type EncounterTable = {

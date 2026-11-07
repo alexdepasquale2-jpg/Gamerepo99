@@ -21,6 +21,29 @@ export function validateHoarder(data, ctx) {
     if (s.siteId) req(siteIds.has(s.siteId), `stash ${s.id}: site missing`);
   }
 
+  const stashActs = data['stash-sites.json']?.acts || [];
+  for (const id of ['stash_hide', 'stash_guard_hire', 'stash_withdraw']) {
+    req(stashActs.some((a) => a.id === id), `stash-sites act ${id} missing`);
+  }
+  req(typeof stashActs.find((a) => a.id === 'stash_hide')?.amount === 'number', 'stash_hide.amount number required');
+  req(typeof stashActs.find((a) => a.id === 'stash_guard_hire')?.coinCost === 'number', 'stash_guard_hire.coinCost number required');
+  req(typeof noto?.fade === 'number' && noto.fade >= 0 && noto.fade <= 1, 'notoriety.fade in [0,1]');
+  req(typeof noto?.despair?.mul === 'number' && noto.despair.dampenAbove < noto.despair.collapseAbove, 'notoriety.despair dampenAbove<collapseAbove + mul');
+  req(typeof noto?.attractorRollScale === 'number' && typeof noto?.roadWeightScale === 'number', 'notoriety roll/road scales required');
+  req(Array.isArray(noto?.leverage?.tagsAny) && typeof noto.leverage.discount === 'number', 'notoriety.leverage required');
+  req(typeof noto?.hoardLegacy?.peakCoinMin === 'number', 'notoriety.hoardLegacy.peakCoinMin required');
+  const attractorIds = new Set((noto?.attractors || []).map((a) => a.id));
+  for (const t of data['road-encounters.json']?.tables || []) {
+    for (const e of t.entries || []) {
+      if (e.attractorId) req(attractorIds.has(e.attractorId), `road entry ${e.id}: unknown attractor ${e.attractorId}`);
+    }
+  }
+  const actIds = new Set(stashActs.map((a) => a.id));
+  for (const it of data['interactions.json']?.interactions || []) {
+    if (it.stashAct !== undefined) req(actIds.has(it.stashAct), `interaction ${it.id}: unknown stashAct ${it.stashAct}`);
+    if (it.coinGain !== undefined) req(typeof it.coinGain === 'number' && it.coinGain > 0, `interaction ${it.id}: coinGain > 0`);
+  }
+
   const patrons = data['patrons.json']?.patrons || [];
   req(patrons.length >= 1, 'patrons need >=1 polity');
   const doctrineIds = new Set((data['doctrines.json']?.doctrines || []).map((d) => d.id));

@@ -1,3 +1,4 @@
+import type { HoardState } from './hoard/state';
 import type { UnspokenState } from './social/unspoken-types';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
@@ -9,6 +10,9 @@ export type SaveBlob = {
   npcs: Array<{ id: string; x: number; y: number }>;
   /** Social graph 06: Blessings and Burdens instances + tuning. */
   unspoken?: UnspokenState;
+  /** Hoarder path: carried coin + hoard state (notoriety, stashes, peakCoin, reigniteCount). */
+  coin?: number;
+  hoard?: HoardState;
 };
 
 export function serializeSave(blob: SaveBlob): string {
