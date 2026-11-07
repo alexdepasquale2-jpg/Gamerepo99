@@ -59,6 +59,7 @@ import hooksSparkRecovery from '../data/hooks/spark-recovery.json';
 import hooksPersonalCost from '../data/hooks/personal-cost.json';
 import hooksRefusal from '../data/hooks/refusal.json';
 import hooksLegacy from '../data/hooks/legacy.json';
+import hooksCivic from '../data/hooks/civic.json';
 
 export type TraitsTables = {
   embodiment: unknown[];
@@ -184,6 +185,7 @@ const HOOK_PARTS = [
   hooksPersonalCost,
   hooksRefusal,
   hooksLegacy,
+  hooksCivic,
 ] as Array<{ hooks?: HookDef[] }>;
 
 function collectHooks(): HookDef[] {
