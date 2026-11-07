@@ -46,11 +46,11 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
    free audio assets (credit in `CREDITS.md`). Merge or drop leftover `wip` art/patches here.
    Done when: Playwright screenshot check of a reignite + a despairing town; build size noted.
 
-9. **M7 balance bots.** Harness DONE (#7, #11); tuning pending Alex. Headless bots per playstyle (kind, harsh, hoarder, neglect) × archetypes × seeds,
+9. **M7 balance bots.** Matrix summary: docs/qa/reports/M7_BALANCE_SUMMARY.md (harsh x marrow/basilisk_brood still burn out; kind/hoarder too easy; baseline stale). Harness DONE (#7, #11); tuning pending Alex. Headless bots per playstyle (kind, harsh, hoarder, neglect) × archetypes × seeds,
    using `specs/2026-11-06-spark-pacing-balance.md`. Close the basilisk_brood × savage burnout pocket.
    Done when: matrix report, no archetype/playstyle stuck or trivially winning, all runs deterministic.
 
-10. **M7 perf + bug sweep.** Perf profile DONE (#6). Profile 100+ dawns on the big world (dawn tick budget, delta-log size from M5).
+10. **M7 perf + bug sweep.** DONE: 150 dawns, tick p50 1.6ms/max 7.4ms, delta log 21KB, no bugs found. Perf profile DONE (#6). Profile 100+ dawns on the big world (dawn tick budget, delta-log size from M5).
     Fix found bugs with tests. Done when: dawn tick under budget, no open P1 bugs.
     M8 (public build) only after your clearance.
 
