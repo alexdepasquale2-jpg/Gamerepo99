@@ -13,6 +13,7 @@ export type SaveBlob = {
   /** Hoarder path: carried coin + hoard state (notoriety, stashes, peakCoin, reigniteCount). */
   coin?: number;
   hoard?: HoardState;
+  patronDeals?: Record<string, import('./patrons/types').PatronDeal>;
 };
 
 export function serializeSave(blob: SaveBlob): string {

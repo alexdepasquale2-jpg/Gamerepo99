@@ -59,6 +59,7 @@ import hooksSparkRecovery from '../data/hooks/spark-recovery.json';
 import hooksPersonalCost from '../data/hooks/personal-cost.json';
 import hooksRefusal from '../data/hooks/refusal.json';
 import notorietyJson from '../data/economy/notoriety.json';
+import patronsJson from '../data/economy/patrons.json';
 import stashSitesJson from '../data/economy/stash-sites.json';
 import hooksLegacy from '../data/hooks/legacy.json';
 import hooksCivic from '../data/hooks/civic.json';
@@ -141,6 +142,7 @@ export type DataTables = {
   hooksById: Map<string, HookDef>;
   /** M5 hoarder: economy/notoriety.json and economy/stash-sites.json. */
   notoriety: unknown;
+  patrons?: unknown;
   stashSites: { sites: unknown[]; acts: unknown[] };
   /** M4 dawn economy LOD (economy/economy-lod.json). */
   economyLod: EconomyLodTable;
@@ -266,6 +268,7 @@ export function loadData(): DataTables {
     interactions: loadInteractionTables(),
     hooksById,
     notoriety: notorietyJson,
+    patrons: patronsJson,
     stashSites: stashSitesJson as unknown as DataTables['stashSites'],
     economyLod: economyLodJson as unknown as EconomyLodTable,
     dawnStock: dawnStockJson as unknown as DawnStockTable,

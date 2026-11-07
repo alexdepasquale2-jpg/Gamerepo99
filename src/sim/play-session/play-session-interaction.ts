@@ -18,6 +18,7 @@ import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { applyDoctrineAct } from '../doctrine-tick';
 import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
+import { applyPatronInteraction } from '../patrons';
 import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
@@ -126,6 +127,7 @@ export function actInteraction(
   }
   if (def0?.stashAct) applyStashAct(s, def0.stashAct);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
+  applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
   for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
   if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {
