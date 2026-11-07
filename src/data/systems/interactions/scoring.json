@@ -10,8 +10,8 @@
     "situationMulDefault": 1,
     "dawnRecoveryRef": "time.recovery_base_dawn",
     "strainMulByTag": {
-      "hard": 0.55,
-      "shame_lean": 0.55
+      "hard": 0.44,
+      "shame_lean": 0.44
     },
     "sparkGainAdjustByTag": {
       "gentle": -1,

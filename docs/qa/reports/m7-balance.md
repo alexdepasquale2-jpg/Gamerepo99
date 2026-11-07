@@ -8,22 +8,21 @@ dawnsSurvived counts completed dawns (a mid-dawn burnout does not count its part
 
 | style | archetype | burnout rate | median dawns | mean reignited | mean hollow | mean despair | endings |
 |---|---|---:|---:|---:|---:|---:|---|
-| kind | marrow | 0 | 60 | 11 | 0 | 0.1 | {"survived":5} |
-| kind | ivy_quill | 0 | 60 | 11 | 0 | 0.1 | {"survived":5} |
-| kind | basilisk_brood | 0 | 60 | 11 | 0 | 0.1 | {"survived":5} |
-| harsh | marrow | 1 | 6 | 6.2 | 9.4 | 0.115 | {"burnout":5} |
-| harsh | ivy_quill | 0 | 60 | 11 | 11 | 0.297 | {"survived":5} |
-| harsh | basilisk_brood | 1 | 6 | 5.6 | 9.4 | 0.079 | {"burnout":5} |
-| hoarder | marrow | 0 | 60 | 11 | 11 | 0.1 | {"ash_hoard":3,"survived":2} |
-| hoarder | ivy_quill | 0 | 60 | 11 | 11 | 0.1 | {"ash_hoard":3,"survived":2} |
-| hoarder | basilisk_brood | 0 | 60 | 11 | 11 | 0.1 | {"ash_hoard":3,"survived":2} |
-| neglect | marrow | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
-| neglect | ivy_quill | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
-| neglect | basilisk_brood | 0 | 60 | 0 | 0 | 0.1 | {"survived":5} |
+| kind | marrow | 0 | 60 | 21 | 0 | 0.6 | {"survived":5} |
+| kind | ivy_quill | 0 | 60 | 22.4 | 0 | 0.6 | {"survived":5} |
+| kind | basilisk_brood | 0 | 60 | 22.2 | 0 | 0.6 | {"survived":5} |
+| harsh | marrow | 0.2 | 60 | 61.6 | 64.6 | 0.818 | {"survived":4,"burnout":1} |
+| harsh | ivy_quill | 0 | 60 | 60.8 | 64.2 | 0.812 | {"survived":5} |
+| harsh | basilisk_brood | 0 | 60 | 60.6 | 67 | 0.796 | {"survived":5} |
+| hoarder | marrow | 0 | 60 | 31.2 | 45.6 | 0.6 | {"ash_hoard":3,"survived":2} |
+| hoarder | ivy_quill | 0 | 60 | 29.4 | 45.4 | 0.6 | {"ash_hoard":3,"survived":2} |
+| hoarder | basilisk_brood | 0 | 60 | 30 | 47.4 | 0.6 | {"ash_hoard":3,"survived":2} |
+| neglect | marrow | 0 | 60 | 0 | 0 | 0.6 | {"survived":5} |
+| neglect | ivy_quill | 0 | 60 | 0 | 0 | 0.6 | {"survived":5} |
+| neglect | basilisk_brood | 0 | 60 | 0 | 0 | 0.6 | {"survived":5} |
 
 ## Stuck cells (burnout rate >= 0.8)
-- harsh x marrow (burnout 1, median 6 dawns)
-- harsh x basilisk_brood (burnout 1, median 6 dawns)
+- none
 
 ## Trivial cells (never burns out and spark never falls below 60; non-neglect)
 - kind x marrow (burnout 0, median 60 dawns)
@@ -42,8 +41,8 @@ Swallowed act errors across all cells: 0 (hoarder stash/carry picks that fail ar
 
 ## basilisk_brood
 - kind: burnout 0, median 60 dawns
-- harsh: burnout 1, median 6 dawns
+- harsh: burnout 0, median 60 dawns
 - hoarder: burnout 0, median 60 dawns
 - neglect: burnout 0, median 60 dawns
 
-The known basilisk_brood x savage (harsh) burnout pocket is reproduced (burnout 1).
+The known basilisk_brood x savage (harsh) burnout pocket is not reproduced by this bot policy.
