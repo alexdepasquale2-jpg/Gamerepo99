@@ -2,6 +2,7 @@ import type { LettersState } from '../letters-scale';
 import type { UnspokenState } from '../social/unspoken-types';
 import type { CaravanMobile } from '../caravans-types';
 import type { HoardState } from '../hoard/state';
+import type { LegacyState } from '../legacy/types';
 import type { DoctrineState } from '../doctrine-tick';
 /** Runtime sim shapes assembled from data + tick state. */
 
@@ -105,6 +106,8 @@ export type SimState = {
   letters?: LettersState;
   /** M5 Task A: notoriety, stashes, peak coin, reignite count (saveable). */
   hoard?: HoardState;
+  /** M5 Task C: bond ledger, graves, legends, lineage, delta log (saveable). */
+  legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
 };
