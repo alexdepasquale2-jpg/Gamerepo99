@@ -141,18 +141,40 @@ export type ComeToPassCtx = {
   roll?: () => number;
 };
 
-function pickCarrier(inst: UnspokenInstance, ctx: ComeToPassCtx): string | undefined {
+function pickCarrier(inst: UnspokenInstance, ctx: ComeToPassCtx, prefer?: string): string | undefined {
   const onPath = new Set(inst.personIds);
-  const cands = new Set([...inst.personIds, ...(ctx.peopleByTown?.[inst.placeTownId] ?? [])]);
+  const sameTown = new Set(ctx.peopleByTown?.[inst.placeTownId] ?? []);
+  const cands = new Set([...inst.personIds, ...sameTown]);
   let best: string | undefined;
   let bestScore = -1;
   for (const c of [...cands].sort()) {
     if (c === ctx.playerId || c === inst.sourcePersonId) continue;
-    const cent = ctx.centrality ? getCentrality(ctx.centrality, c)?.betweenness ?? 0 : 0;
-    const score = (onPath.has(c) ? 1 : 0.5) * (1 + cent);
+    const row = ctx.centrality ? getCentrality(ctx.centrality, c) : undefined;
+    let score = (onPath.has(c) ? 1 : 0.5) * (1 + (row?.betweenness ?? 0));
+    const hit =
+      prefer === 'influential'
+        ? !!row?.influential
+        : prefer === 'same_town'
+          ? sameTown.has(c)
+          : !!prefer && !!ctx.graph?.edgesBetween(inst.sourcePersonId, c).some((e) => e.kind === prefer);
+    if (hit) score *= 2;
     if (score > bestScore) [best, bestScore] = [c, score];
   }
   return best;
+}
+
+const KIN_LABELS: Record<string, string> = { kin: 'cousin' };
+
+function fillSlots(text: string, inst: UnspokenInstance, carrierId: string, ctx: ComeToPassCtx): string {
+  const towns = ctx.peopleByTown ?? {};
+  const carrierTown = Object.keys(towns).sort().find((t) => towns[t].includes(carrierId));
+  const kinds = ctx.graph?.edgesBetween(inst.sourcePersonId, carrierId).map((e) => e.kind) ?? [];
+  const slots: Record<string, string> = {
+    carrier: carrierId,
+    kinLabel: kinds.includes('kin') ? KIN_LABELS.kin : 'a friend',
+    otherTown: inst.placeTownId && inst.placeTownId !== carrierTown ? inst.placeTownId : 'the next town over',
+  };
+  return text.replace(/\{(\w+)\}/g, (m, k: string) => slots[k] ?? m);
 }
 
 /** §6 + §8: roll each living instance; consumed ones are removed (exactly once). */
@@ -167,17 +189,9 @@ export function comeToPassUnspoken(st: UnspokenState, t: UnspokenTables, ctx: Co
     if (!c || inst.consumed || inst.weight < c.comeToPass.minWeight) continue;
     const req = c.comeToPass.requireTagsAny;
     if (req && !req.some((x) => ctx.circumstanceTags.includes(x))) continue;
-    const carrierId = pickCarrier(inst, ctx);
-    if (!carrierId) continue;
-
     const rng = deriveRng(ctx.seed, inst.id, ctx.day, 'comeToPass');
     const roll = ctx.roll ?? rng.next;
     const tun = tuningFor(st, c.id);
-    const cent = ctx.centrality ? getCentrality(ctx.centrality, carrierId)?.betweenness ?? 0 : 0;
-    const mod = 1 + tun.pBias + 0.1 * cent - 0.1 * (ctx.townDespair?.(inst.placeTownId) ?? 0);
-    const p = clamp(c.comeToPass.baseP * (inst.weight / c.baseWeight) * mod, ...rt.comeToPassPClamp);
-    if (roll() >= p) continue;
-
     const lean = c.leaning === 'blessing' ? 0.25 : c.leaning === 'burden' ? -0.25 : (c.comeToPass.mixedBias ?? 0);
     const blessingP = clamp(0.5 + lean + tun.blessingBias, ...rt.blessingPClamp);
     const kind: OutcomeKind = roll() < blessingP ? 'blessing' : 'burden';
@@ -187,6 +201,12 @@ export function comeToPassUnspoken(st: UnspokenState, t: UnspokenTables, ctx: Co
     if (!pool.length) continue;
     const outcome = pool[rng.int(0, pool.length)];
     const fragmentId = outcome.fragmentIds[rng.int(0, outcome.fragmentIds.length)];
+    const carrierId = pickCarrier(inst, ctx, outcome.carrierPrefer);
+    if (!carrierId) continue;
+    const cent = ctx.centrality ? getCentrality(ctx.centrality, carrierId)?.betweenness ?? 0 : 0;
+    const mod = 1 + tun.pBias + 0.1 * cent - 0.1 * (ctx.townDespair?.(inst.placeTownId) ?? 0);
+    const p = clamp(c.comeToPass.baseP * (inst.weight / c.baseWeight) * mod, ...rt.comeToPassPClamp);
+    if (roll() >= p) continue;
     inst.consumed = true;
     tun.samples += 1;
     out.push({
@@ -196,7 +216,7 @@ export function comeToPassUnspoken(st: UnspokenState, t: UnspokenTables, ctx: Co
       carrierId,
       sourcePersonId: inst.sourcePersonId,
       fragmentId,
-      line: fragmentId ? frags.get(fragmentId)?.text : undefined,
+      line: fragmentId && frags.get(fragmentId) ? fillSlots(frags.get(fragmentId)!.text, inst, carrierId, ctx) : undefined,
     });
   }
   st.instances = st.instances.filter((x) => !x.consumed);

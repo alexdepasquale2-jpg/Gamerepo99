@@ -15,6 +15,7 @@ import {
   encodeUnspokenForState,
   witnessOutcome,
 } from '../../../src/sim/social';
+import { createSocialGraph } from '../../../src/sim/social/social-graph';
 import { createPlaySession } from '../../../src/sim';
 
 const data = loadData();
@@ -104,6 +105,24 @@ describe('come to pass (§6, §8)', () => {
     expect(r.carrierId).not.toBe('player');
     expect(r.fragmentId).toBeTruthy();
     expect(typeof r.line).toBe('string');
+  });
+
+  it('filled line has no unfilled slots', () => {
+    const { st } = encodeKeep();
+    const [r] = comeToPassUnspoken(st, T, ctx(2));
+    expect(r.line).toBeTruthy();
+    expect(r.line).not.toContain('{');
+  });
+
+  it('carrierPrefer kin picks the kin-linked candidate', () => {
+    const { st } = encodeKeep();
+    const graph = createSocialGraph([
+      { id: 'e1', a: 'p1', b: 'p3', kind: 'kin', weight: 0.5 },
+    ]);
+    const c = { ...ctx(2), graph, peopleByTown: { ashford: ['player', 'p1', 'p2', 'p3'] } };
+    const prefer = (k: string) => ({ ...T, outcomes: T.outcomes.map((o) => ({ ...o, carrierPrefer: k })) });
+    const [r] = comeToPassUnspoken(st, prefer('kin'), c);
+    expect(r.carrierId).toBe('p3');
   });
 
   it('no matching circumstance → nothing comes to pass', () => {
