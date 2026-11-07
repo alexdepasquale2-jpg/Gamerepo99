@@ -24,12 +24,16 @@ export function riverRow(seed: number, q: number): number {
 export function terrainHash(seed: number, x: number, y: number): number {
   return hash(seed, x, y);
 }
-export function biomeAt(seed: number, q: number, r: number): Biome {
+/** Area biome without the river (lakes, hills, forest, fields, meadow). */
+export function areaBiomeAt(seed: number, q: number, r: number): Biome {
   const wet = noise(seed ^ 0x19ab, q, r, 72);
   const elevation = noise(seed ^ 0x772f, q, r, 94) * 0.75 + noise(seed, q, r, 26) * 0.25;
-  const river = riverRow(seed, q);
-  if (Math.abs(r - river) < 2.6 || wet < 0.23) return 'water';
+  if (wet < 0.23) return 'water';
   if (elevation > 0.64) return 'hills';
   if (wet > 0.53) return 'forest';
   return elevation < 0.39 ? 'fields' : 'meadow';
+}
+export const isRiverAt = (seed: number, q: number, r: number): boolean => Math.abs(r - riverRow(seed, q)) < 2.6;
+export function biomeAt(seed: number, q: number, r: number): Biome {
+  return isRiverAt(seed, q, r) ? 'water' : areaBiomeAt(seed, q, r);
 }
