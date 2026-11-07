@@ -101,6 +101,10 @@ function doctrineRun() {
   const exposureBefore = d[id]!.exposure;
   const actId = applyDoctrineAct(state, 'act_expose_lie', person.id);
   const actApplied = !!actId && d[actId]!.exposure > exposureBefore;
+  const [pa, pb] = Object.keys(state.people).sort();
+  state.people[pa!]!.townId = d[id]!.townId;
+  state.people[pb!]!.townId = '__kin_town';
+  state.kinEdges = [{ from: pa!, to: pb!, kind: 'kin' }];
   Object.assign(d[id]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.8, control: 0 });
   const r1 = tickDoctrines(state);
   const r2 = tickDoctrines(state);
@@ -113,7 +117,43 @@ function doctrineRun() {
     exposedEvents: events.filter((e) => e.id === 'doctrine.exposed').length,
     kinRelapsePressure: events.filter((e) => e.id === 'packet.emit' && e.payload?.kind === 'relapse_pressure').length,
     survivors: kin.length,
+    ...rulesRun(),
   };
+}
+
+/** Challenger swap (3 dawns) and city->village shock on a fresh state, linked doctrine pair. */
+function rulesRun() {
+  const pairOf = (city: boolean) => {
+    const state = boot();
+    const d = ensureDoctrines(state);
+    for (const r of state.economyRoutes ?? []) {
+      for (const [x, y] of [[r.fromTownId, r.toTownId], [r.toTownId, r.fromTownId]] as const) {
+        const a = Object.keys(d).sort().find((k) => d[k]!.townId === x);
+        const b = Object.keys(d).sort().find((k) => d[k]!.townId === y);
+        if (a && b && (!city || x === 'city_reach')) {
+          for (const k of Object.keys(d)) if (k !== a && k !== b) d[k]!.collapsed = true;
+          Object.assign(d[a]!, { realDelivery: 0.5, exposure: 0, propaganda: 0.2, control: 0 });
+          Object.assign(d[b]!, { realDelivery: 0.5, exposure: 0, propaganda: 0.2, control: 0 });
+          return { state, d, a, b };
+        }
+      }
+    }
+    throw new Error('no linked doctrine pair');
+  };
+  const sw = pairOf(false);
+  sw.d[sw.a]!.perceivedDelivery = 0.2;
+  sw.d[sw.b]!.perceivedDelivery = 0.9;
+  const t0 = sw.d[sw.a]!.townId;
+  const swappedAfter: boolean[] = [];
+  for (let i = 0; i < 3; i++) {
+    tickDoctrines(sw.state);
+    swappedAfter.push(sw.d[sw.a]!.townId !== t0);
+  }
+  const ci = pairOf(true);
+  Object.assign(ci.d[ci.a]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.8 });
+  ci.d[ci.b]!.perceivedDelivery = 0.5;
+  tickDoctrines(ci.state);
+  return { swappedAfter, shockDelta: +(ci.d[ci.b]!.perceivedDelivery - 0.5).toFixed(4) };
 }
 
 function unspokenRun() {
@@ -168,6 +208,9 @@ function main(): number {
     { name: 'forced exposed lie collapses once, juice, +0.05 despair', pass: du1.collapsed1.length >= 1 && du1.collapsed2.length === 0 && du1.collapseEvents >= 1 && Math.abs(du1.despairDelta - 0.05) < 1e-6, detail: `collapsed=${du1.collapsed1} second=${du1.collapsed2.length} despair+${du1.despairDelta}` },
     { name: 'cascade finite (second tick does not re-collapse)', pass: du1.collapsed2.length === 0, detail: `survivors=${du1.survivors}` },
     { name: 'doctrine tick spark-neutral', pass: du1.sparkNeutral, detail: `spark unchanged=${du1.sparkNeutral}` },
+    { name: 'collapse emits relapse_pressure packet to a kin town', pass: du1.kinRelapsePressure >= 1, detail: `packets=${du1.kinRelapsePressure}` },
+    { name: 'challenger swaps on dawn 3 only', pass: JSON.stringify(du1.swappedAfter) === '[false,false,true]', detail: `swappedAfter=${du1.swappedAfter}` },
+    { name: 'city collapse shocks village perceivedDelivery -0.1', pass: Math.abs(du1.shockDelta + 0.1) < 1e-6, detail: `delta=${du1.shockDelta}` },
     { name: 'deterministic double-run', pass: JSON.stringify(du1) === JSON.stringify(du2), detail: 'deep-equal' },
   ]);
   const letters = mk('src/sim/letters-scale.ts', [
@@ -195,10 +238,7 @@ function main(): number {
     modules,
     histogram: h,
     despairMaxDelta: +a.maxDelta.toFixed(4),
-    gaps: [
-      `gate-doc metric 'collapse emits relapse_pressure packet to a kin town': packets=${du1.kinRelapsePressure} (doctrine-tick.ts only juices + despair pulse + exposure cascade)`,
-      'gate-doc metrics challenger-swap (3 dawns) and city->village perceivedDelivery shock: not implemented, not checked',
-    ],
+    gaps: [],
     determinism,
     ok,
   };

@@ -60,6 +60,7 @@ export type PacketState = {
   kind?: string;
   fromTownId?: string;
   toTownId?: string;
+  relapseMulAdd?: number;
 };
 
 export type SimState = {

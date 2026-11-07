@@ -15,6 +15,12 @@ export function validateDoctrines(data, ctx) {
       req(typeof s[k] === 'number', `doctrine ${d.id}: start.${k}`);
     }
   }
+  const rules = data['doctrines.json']?.rules || {};
+  for (const k of ['margin', 'dawns', 'suppressControl', 'suppressExposure']) {
+    req(typeof rules.challenger?.[k] === 'number', `doctrines rules.challenger.${k}`);
+  }
+  for (const k of ['relapseMulBase', 'shockPerceived']) req(typeof rules.collapse?.[k] === 'number', `doctrines rules.collapse.${k}`);
+  req(towns.has(rules.collapse?.shockSourceTownId), 'doctrines rules.collapse.shockSourceTownId town missing');
   const acts = data['doctrines.json']?.acts || [];
   req(acts.length >= 3, 'doctrine acts need expose/carry/voice');
   for (const a of acts) {

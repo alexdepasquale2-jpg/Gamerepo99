@@ -6,7 +6,7 @@
  */
 
 import type { DataTables } from './load-data';
-import { pushJuice } from './packets';
+import { findCrossTownKin, pushJuice } from './packets';
 import type { SimState } from './types/runtime';
 import type { DoctrineSupplyHook } from './economy/economy-lod-types';
 
@@ -19,7 +19,7 @@ export type DoctrineMeters = {
   legitimacy: number;
 };
 
-export type DoctrineState = DoctrineMeters & { id: string; townId: string; collapsed?: boolean };
+export type DoctrineState = DoctrineMeters & { id: string; townId: string; collapsed?: boolean; streaks?: Record<string, number> };
 
 const GAP_MIN = 0.25;
 const EXPOSURE_MIN = 0.4;
@@ -41,6 +41,69 @@ export function applyCollapse(
 ): number {
   const gap = Math.abs(m.perceivedDelivery - m.realDelivery);
   return gap > GAP_MIN && m.exposure > EXPOSURE_MIN ? m.legitimacy * (1 - 2.5 * gap * gap) : m.legitimacy;
+}
+
+type Rules = {
+  challenger: { margin: number; dawns: number; suppressControl: number; suppressExposure: number };
+  collapse: { relapseMulBase: number; shockSourceTownId: string; shockPerceived: number };
+};
+const rulesOf = (state: SimState): Rules =>
+  ((state.data as DataTables | undefined)?.doctrines as { rules: Rules }).rules;
+
+/** Collapse side effects: relapse_pressure packet along a kin edge; city collapse shocks linked villages. */
+function collapseRipples(state: SimState, c: DoctrineState, all: Record<string, DoctrineState>, ids: string[]): void {
+  const r = rulesOf(state).collapse;
+  const gap = Math.abs(c.perceivedDelivery - c.realDelivery);
+  for (const p of Object.keys(state.people).sort()) {
+    if (state.people[p]!.townId !== c.townId) continue;
+    const hit = findCrossTownKin(state, p);
+    if (!hit) continue;
+    const pkt = {
+      id: `pkt_relapse_${c.id}_${state.day}`,
+      days: 2,
+      kind: 'relapse_pressure',
+      fromTownId: c.townId,
+      toTownId: hit.other.townId,
+      relapseMulAdd: r.relapseMulBase + gap,
+    };
+    state.packets.push(pkt);
+    pushJuice(state, 'packet.emit', { packetId: pkt.id, fromPersonId: p, toPersonId: hit.otherId, kind: pkt.kind, days: pkt.days });
+    break;
+  }
+  if (c.townId !== r.shockSourceTownId) return;
+  for (const id of ids) {
+    const n = all[id]!;
+    if (!n.collapsed && n.townId !== c.townId && linked(state, c.townId, n.townId)) {
+      n.perceivedDelivery = clamp01(n.perceivedDelivery + r.shockPerceived);
+    }
+  }
+}
+
+/** Challenger legitimacy > incumbent + margin for N consecutive dawns => peaceful town swap (control suppresses). */
+function challengerSwaps(state: SimState, all: Record<string, DoctrineState>, ids: string[]): void {
+  const r = rulesOf(state).challenger;
+  for (const a of ids.map((i) => all[i]!)) {
+    for (const b of ids.map((i) => all[i]!)) {
+      if (a === b || a.collapsed || b.collapsed || a.townId === b.townId || !linked(state, a.townId, b.townId)) continue;
+      const streaks = (a.streaks ??= {});
+      if (!(b.legitimacy > a.legitimacy + r.margin)) {
+        delete streaks[b.id];
+        continue;
+      }
+      streaks[b.id] = (streaks[b.id] ?? 0) + 1;
+      if (streaks[b.id]! < r.dawns) continue;
+      delete streaks[b.id];
+      if (a.control > r.suppressControl) {
+        b.exposure = clamp01(b.exposure + r.suppressExposure);
+        pushJuice(state, 'doctrine.suppressed', { doctrineId: a.id, challengerId: b.id });
+      } else {
+        [a.townId, b.townId] = [b.townId, a.townId];
+        a.streaks = {};
+        b.streaks = {};
+        pushJuice(state, 'doctrine.swap', { incumbentId: a.id, challengerId: b.id, townId: b.townId });
+      }
+    }
+  }
 }
 
 type DoctrineRow = { id: string; townId: string; start: DoctrineMeters };
@@ -136,6 +199,8 @@ export function tickDoctrines(state: SimState): { collapsed: string[]; competed:
       pushJuice(state, 'doctrine.collapse', { doctrineId: id, townId: d.townId });
     }
   }
+  for (const c of newlyCollapsed) collapseRipples(state, c, all, ids);
+  challengerSwaps(state, all, ids);
   // Cascade: each collapse nudges linked surviving doctrines' exposure once.
   for (const c of newlyCollapsed) {
     for (const id of ids) {

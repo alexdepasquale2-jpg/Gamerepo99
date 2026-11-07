@@ -6,6 +6,10 @@
     "strainNote": "city promises use feltByMaxGapAxis so village realDelivery may stay 0",
     "collapse": "if gap>0.25 and exposure>0.4: legitimacy *= (1 - 2.5 * gap^2)"
   },
+  "rules": {
+    "challenger": { "margin": 0.15, "dawns": 3, "suppressControl": 0.5, "suppressExposure": 0.05 },
+    "collapse": { "relapseMulBase": 0.1, "shockSourceTownId": "city_reach", "shockPerceived": -0.1 }
+  },
   "acts": [
     {
       "id": "act_expose_lie",

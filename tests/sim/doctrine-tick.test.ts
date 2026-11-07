@@ -149,3 +149,84 @@ describe('doctrine act target gating', () => {
     expect(s.bus?.lastIds ?? []).not.toContain('doctrine.exposed');
   });
 });
+
+describe('doctrine rules from data (challenger, relapse, city shock)', () => {
+  function linkedPair(s: SimState, preferCity = false) {
+    const d = ensureDoctrines(s);
+    const out: [string, string][] = [];
+    for (const r of s.economyRoutes!) {
+      const a = Object.keys(d).filter((k) => d[k]!.townId === r.fromTownId);
+      const b = Object.keys(d).filter((k) => d[k]!.townId === r.toTownId);
+      if (a.length && b.length) out.push([a[0]!, b[0]!], [b[0]!, a[0]!]);
+    }
+    const hit = preferCity ? out.find(([a]) => d[a]!.townId === 'city_reach') : out[0];
+    expect(hit).toBeTruthy();
+    for (const k of Object.keys(d)) if (k !== hit![0] && k !== hit![1]) d[k]!.collapsed = true;
+    return { d, inc: hit![0], chal: hit![1] };
+  }
+  const calm = { realDelivery: 0.5, exposure: 0, propaganda: 0.2 };
+
+  it('challenger swaps only after 3 consecutive dawns, not 2', () => {
+    const s = boot();
+    const { d, inc, chal } = linkedPair(s);
+    Object.assign(d[inc]!, { ...calm, perceivedDelivery: 0.2, control: 0 });
+    Object.assign(d[chal]!, { ...calm, perceivedDelivery: 0.9, control: 0 });
+    const [ti, tc] = [d[inc]!.townId, d[chal]!.townId];
+    tickDoctrines(s);
+    tickDoctrines(s);
+    expect(d[inc]!.townId).toBe(ti);
+    tickDoctrines(s);
+    expect(d[inc]!.townId).toBe(tc);
+    expect(d[chal]!.townId).toBe(ti);
+    expect(s.bus?.lastIds).toContain('doctrine.swap');
+  });
+
+  it('a broken streak resets; high control suppresses and adds exposure', () => {
+    const s = boot();
+    const { d, inc, chal } = linkedPair(s);
+    Object.assign(d[inc]!, { ...calm, perceivedDelivery: 0.2, control: 0 });
+    Object.assign(d[chal]!, { ...calm, perceivedDelivery: 0.9, control: 0 });
+    tickDoctrines(s);
+    tickDoctrines(s);
+    d[chal]!.perceivedDelivery = 0.2;
+    tickDoctrines(s);
+    d[chal]!.perceivedDelivery = 0.9;
+    tickDoctrines(s);
+    tickDoctrines(s);
+    expect(d[inc]!.townId).not.toBe(d[chal]!.townId);
+    const t = d[inc]!.townId;
+    d[inc]!.control = 0.9;
+    tickDoctrines(s);
+    expect(d[inc]!.townId).toBe(t);
+    expect(d[chal]!.exposure).toBeCloseTo(0.05);
+    expect(s.bus?.lastIds).toContain('doctrine.suppressed');
+  });
+
+  it('collapse emits a relapse_pressure packet to a kin town', () => {
+    const s = boot();
+    const d = ensureDoctrines(s);
+    const id = Object.keys(d).sort()[0]!;
+    const from = d[id]!.townId;
+    const [pa, pb] = Object.keys(s.people).sort();
+    s.people[pa!]!.townId = from;
+    if (s.people[pb!]!.townId === from) s.people[pb!]!.townId = 'elsewhere';
+    s.kinEdges = [{ from: pa!, to: pb!, kind: 'kin' }];
+    Object.assign(d[id]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.8, control: 0 });
+    tickDoctrines(s);
+    const pkt = s.packets.find((p) => p.kind === 'relapse_pressure');
+    expect(pkt?.fromTownId).toBe(from);
+    expect(pkt?.toTownId).toBe(s.people[pb!]!.townId);
+    expect(pkt?.relapseMulAdd).toBeCloseTo(0.1 + 0.82);
+    expect(s.bus?.lastIds).toContain('packet.emit');
+  });
+
+  it('city collapse lowers linked village perceivedDelivery by 0.1', () => {
+    const s = boot();
+    const { d, inc, chal } = linkedPair(s, true);
+    Object.assign(d[inc]!, { perceivedDelivery: 0.9, realDelivery: 0.1, exposure: 0.8, control: 0, propaganda: 0.2 });
+    Object.assign(d[chal]!, { ...calm, perceivedDelivery: 0.5, control: 0 });
+    tickDoctrines(s);
+    expect(d[inc]!.collapsed).toBe(true);
+    expect(d[chal]!.perceivedDelivery).toBeCloseTo(0.4);
+  });
+});

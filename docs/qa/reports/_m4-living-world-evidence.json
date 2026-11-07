@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T00:44:04.296Z",
+  "generatedAt": "2026-11-07T00:46:50.853Z",
   "kind": "m4-living-world-evidence",
   "status": "OK",
   "seed": 42,
@@ -73,6 +73,21 @@
           "detail": "spark unchanged=true"
         },
         {
+          "name": "collapse emits relapse_pressure packet to a kin town",
+          "pass": true,
+          "detail": "packets=1"
+        },
+        {
+          "name": "challenger swaps on dawn 3 only",
+          "pass": true,
+          "detail": "swappedAfter=false,false,true"
+        },
+        {
+          "name": "city collapse shocks village perceivedDelivery -0.1",
+          "pass": true,
+          "detail": "delta=-0.1"
+        },
+        {
           "name": "deterministic double-run",
           "pass": true,
           "detail": "deep-equal"
@@ -123,19 +138,17 @@
     "caravan.carter": 19,
     "caravan.ferry": 14,
     "caravan.guild": 8,
+    "doctrine.swap": 6,
     "letter.deliver": 6,
     "route.caravan": 10,
     "stock.deliver": 91
   },
   "despairMaxDelta": 0,
-  "gaps": [
-    "gate-doc metric 'collapse emits relapse_pressure packet to a kin town': packets=0 (doctrine-tick.ts only juices + despair pulse + exposure cascade)",
-    "gate-doc metrics challenger-swap (3 dawns) and city->village perceivedDelivery shock: not implemented, not checked"
-  ],
+  "gaps": [],
   "determinism": {
     "pass": true,
-    "fingerprintA": "5a68bed84c9981e1",
-    "fingerprintB": "5a68bed84c9981e1"
+    "fingerprintA": "b79ee2290efbcf35",
+    "fingerprintB": "b79ee2290efbcf35"
   },
   "ok": true
 }
