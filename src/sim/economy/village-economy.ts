@@ -6,6 +6,7 @@
  */
 
 import { JOBS, jobOf } from '../goods/jobs';
+import { workshopMul } from './build-plans';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 
@@ -70,12 +71,13 @@ export function tickVillageEconomy(state: SimState): void {
       for (const id of ids) {
         if (jobOf(state, id).id !== job.id) continue;
         const rng = rolls.get(id)!;
+        const mul = workshopMul(state, townId, job.id);
         for (const r of job.recipes) {
           if (r.chance !== undefined && rng.next() >= r.chance) continue;
           const inputs = Object.entries(r.in ?? {});
           if (inputs.some(([item, q]) => (g[item] ?? 0) < q)) continue;
           for (const [item, q] of inputs) g[item] = (g[item] ?? 0) - q;
-          for (const [item, q] of Object.entries(r.out)) g[item] = (g[item] ?? 0) + q;
+          for (const [item, q] of Object.entries(r.out)) g[item] = (g[item] ?? 0) + q * mul;
         }
       }
     }

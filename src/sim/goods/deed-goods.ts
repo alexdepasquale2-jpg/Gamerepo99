@@ -3,6 +3,7 @@
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
+import { contributeToPlan } from '../economy/build-plans';
 import { scarcity as localScarcity, supplyTown } from '../economy/village-economy';
 import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
@@ -58,9 +59,10 @@ function gift(state: SimState, personId: string, selected?: string): DeedGoodsRe
   if (!g) return { ok: false, line: 'You have nothing to give. Gather something first.' };
   removeItem(state, g.itemId);
   giveInstance(state, g.itemId, personId);
-  const relief = deliverToTown(state, townOf(state, personId), g.itemId, 1, personId);
+  const toPlan = contributeToPlan(state, personId, g.itemId);
+  const relief = toPlan ? false : deliverToTown(state, townOf(state, personId), g.itemId, 1, personId);
   const feel = g.affinity >= 2 ? 'holds it close' : g.affinity > 0 ? 'smiles' : 'accepts it politely';
-  return { ok: true, itemId: g.itemId, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}` };
+  return { ok: true, itemId: g.itemId, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}${toPlan ? ` ${toPlan}` : ''}` };
 }
 
 function trade(state: SimState, personId: string, selected?: string): DeedGoodsResult {

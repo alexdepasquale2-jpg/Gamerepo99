@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "spec": "Buildings villagers can plan. jobs = trades that want it (a builder with no match plans a house). cost = goods that must reach the site, labor = worker-days, w/h = plot cells it claims around the town centre. A finished building boosts production for its jobs in that town (workshopMul). Phase 4 of the economy sim, see PLAN.md.",
+  "workshopMul": 1.5,
+  "buildings": [
+    { "id": "farm", "name": "farm", "jobs": ["farmer"], "cost": { "timber": 4, "stone": 2, "tools": 1 }, "labor": 6, "w": 2, "h": 2 },
+    { "id": "mill", "name": "mill", "jobs": ["miller"], "cost": { "timber": 6, "stone": 6, "rope": 2, "tools": 2 }, "labor": 10, "w": 2, "h": 1 },
+    { "id": "bakery", "name": "bakery", "jobs": ["baker"], "cost": { "timber": 3, "stone": 4, "clay": 2, "nails": 2 }, "labor": 6, "w": 1, "h": 1 },
+    { "id": "smithy", "name": "smithy", "jobs": ["smith"], "cost": { "stone": 6, "timber": 3, "ore": 2, "tools": 1 }, "labor": 8, "w": 1, "h": 1 },
+    { "id": "weavery", "name": "weavery", "jobs": ["weaver"], "cost": { "timber": 4, "rope": 2, "nails": 2 }, "labor": 5, "w": 1, "h": 1 },
+    { "id": "pottery", "name": "pottery", "jobs": ["potter"], "cost": { "clay": 4, "stone": 2, "wood": 4 }, "labor": 5, "w": 1, "h": 1 },
+    { "id": "ropewalk", "name": "ropewalk", "jobs": ["ropemaker"], "cost": { "timber": 3, "nails": 1 }, "labor": 3, "w": 2, "h": 1 },
+    { "id": "sawmill", "name": "sawmill", "jobs": ["woodcutter"], "cost": { "timber": 4, "tools": 2, "nails": 3 }, "labor": 7, "w": 2, "h": 1 },
+    { "id": "chapel", "name": "chapel", "jobs": ["herbalist", "innkeeper", "shopkeeper"], "cost": { "stone": 10, "timber": 6, "pots": 1, "cloth": 2 }, "labor": 14, "w": 2, "h": 2 },
+    { "id": "house", "name": "house", "jobs": [], "cost": { "timber": 5, "stone": 3, "nails": 2, "cloth": 1 }, "labor": 5, "w": 1, "h": 1 }
+  ]
+}
