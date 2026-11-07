@@ -10,6 +10,7 @@ import {
 } from '../scenario/scenario-advance';
 import type { PlayLastResolve } from './play-session-types';
 import { listRoutesFrom, startTravel, type TravelSimState } from '../travel/travel';
+import { actDefs } from '../hoard';
 import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
@@ -109,10 +110,13 @@ export function actMethod(
     return;
   }
   const compat = opts?.interactionCompat;
-  const interactionId = compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
+  // A catalog interaction id carrying a stashAct is playable directly (hosted by the act's first method).
+  const direct = compat?.catalog.get(parsed.methodId);
+  const stash = direct?.stashAct ? actDefs(state).find((a) => a.id === direct.stashAct) : undefined;
+  const interactionId = stash ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;
   if (!compat || !interactionId || !compat.people.has(parsed.personId) || !state.people?.[parsed.personId]) {
     eventLog.push({ type: 'act', methodId: actionId });
     return;
   }
-  actInteraction(state, compat, { ...parsed, interactionId }, eventLog, extras);
+  actInteraction(state, compat, { ...parsed, methodId: stash?.methodIds[0] ?? parsed.methodId, interactionId }, eventLog, extras);
 }

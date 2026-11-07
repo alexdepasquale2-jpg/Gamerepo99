@@ -58,6 +58,23 @@
           "tags": [
             "quiet"
           ]
+        },
+        {
+          "id": "enc_road_thief_ashford_strand",
+          "weight": 0,
+          "attractorId": "att_thief",
+          "blurb": "A figure keeps pace behind you, eyeing your purse.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -2
+            }
+          ],
+          "prism": "encounter.spawn.thief",
+          "tags": [
+            "notoriety"
+          ]
         }
       ]
     },
@@ -97,7 +114,7 @@
         {
           "id": "enc_broken_axle",
           "weight": 20,
-          "blurb": "A caravan axle cracked — supply thins.",
+          "blurb": "A caravan axle cracked \u2014 supply thins.",
           "effects": [
             {
               "target": "route.condition",
@@ -127,6 +144,23 @@
           "quiet": true,
           "tags": [
             "quiet"
+          ]
+        },
+        {
+          "id": "enc_road_thief_glare_road",
+          "weight": 0,
+          "attractorId": "att_thief",
+          "blurb": "A figure keeps pace behind you, eyeing your purse.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -2
+            }
+          ],
+          "prism": "encounter.spawn.thief",
+          "tags": [
+            "notoriety"
           ]
         }
       ]

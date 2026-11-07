@@ -1,5 +1,6 @@
 /** Travel days + roadside encounters. Pure sim; no Phaser/DOM/Math.random; no gen/ imports. */
 
+import { attractorRoadBonus } from '../hoard';
 import type { Rng } from '../rng';
 import {
   loadBiomeTerrainMuls,
@@ -66,13 +67,15 @@ function terrainMulFor(
 function pickEncounter(
   table: EncounterTable | undefined,
   rng: Rng | undefined,
+  state?: TravelSimState,
 ): EncounterEntry | null {
   if (!table?.entries.length) return null;
-  const total = table.entries.reduce((a, e) => a + Math.max(0, e.weight), 0);
+  const w = (e: EncounterEntry): number => Math.max(0, e.weight) + (e.attractorId && state ? attractorRoadBonus(state, e.attractorId) : 0);
+  const total = table.entries.reduce((a, e) => a + w(e), 0);
   if (total <= 0) return table.entries[0] ?? null;
   let roll = rng ? rng.next() * total : 0;
   for (const e of table.entries) {
-    roll -= Math.max(0, e.weight);
+    roll -= w(e);
     if (roll < 0) return e;
   }
   return table.entries[table.entries.length - 1] ?? null;
@@ -119,7 +122,7 @@ export function startTravel(state: TravelSimState, routeId: string): { daysEff: 
     state.day += 1;
     state.player.spark = Math.min(sparkMax, (state.player.spark ?? 0) + 2);
     pushJuice(state, 'route.travel_step', { routeId, step: i + 1, daysEff, day: state.day });
-    const entry = pickEncounter(table, rng);
+    const entry = pickEncounter(table, rng, state);
     if (entry) {
       pushJuice(state, 'encounter.spawn', {
         routeId,

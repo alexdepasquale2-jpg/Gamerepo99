@@ -47,7 +47,8 @@
       ],
       "tags": [
         "hoard"
-      ]
+      ],
+      "amount": 25
     },
     {
       "id": "stash_guard_hire",
@@ -58,7 +59,8 @@
       "tags": [
         "hoard",
         "guard"
-      ]
+      ],
+      "coinCost": 10
     },
     {
       "id": "stash_withdraw",

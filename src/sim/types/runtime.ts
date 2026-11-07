@@ -1,6 +1,7 @@
 import type { LettersState } from '../letters-scale';
 import type { UnspokenState } from '../social/unspoken-types';
 import type { CaravanMobile } from '../caravans-types';
+import type { HoardState } from '../hoard/state';
 import type { DoctrineState } from '../doctrine-tick';
 /** Runtime sim shapes assembled from data + tick state. */
 
@@ -31,6 +32,8 @@ export type Inhabitant = {
   perception?: Record<string, unknown>;
   methodMods?: Record<string, unknown>;
   sparkMax?: number;
+  /** Hoarder meter (M5): earned via interactions, stashed via stash acts. */
+  coin?: number;
   townId?: string;
   x?: number;
   y?: number;
@@ -63,6 +66,8 @@ export type PacketState = {
   fromTownId?: string;
   toTownId?: string;
   relapseMulAdd?: number;
+  /** notoriety_rumor: diluted heat copy (kinDilution). */
+  heat?: number;
 };
 
 export type SimState = {
@@ -98,4 +103,6 @@ export type SimState = {
   doctrines?: Record<string, DoctrineState>;
   /** M4 Task D: queued/in-flight letters and rumors. */
   letters?: LettersState;
+  /** M5 Task A: notoriety, stashes, peak coin, reignite count (saveable). */
+  hoard?: HoardState;
 };

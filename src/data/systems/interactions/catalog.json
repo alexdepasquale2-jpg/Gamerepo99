@@ -45,7 +45,10 @@
     },
     {
       "id": "talk_hard",
-      "doctrineAct": ["act_expose_lie", "act_become_voice"],
+      "doctrineAct": [
+        "act_expose_lie",
+        "act_become_voice"
+      ],
       "kind": "conversation",
       "tags": [
         "talk",
@@ -134,7 +137,8 @@
         "flame01": 0.05
       },
       "bondDelta": 1,
-      "ripple": "help"
+      "ripple": "help",
+      "coinGain": 12
     },
     {
       "id": "trade_fair",
@@ -348,6 +352,48 @@
       "stoodUp": true,
       "touchScoreFlat": 3.2,
       "ripple": "help"
+    },
+    {
+      "id": "stash_hide",
+      "stashAct": "stash_hide",
+      "kind": "favor",
+      "tags": [
+        "hoard",
+        "stash",
+        "interaction:stash_hide"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "stash_guard_hire",
+      "stashAct": "stash_guard_hire",
+      "kind": "favor",
+      "tags": [
+        "hoard",
+        "guard",
+        "interaction:stash_guard_hire"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "stash_withdraw",
+      "stashAct": "stash_withdraw",
+      "kind": "favor",
+      "tags": [
+        "hoard",
+        "stash",
+        "interaction:stash_withdraw"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
     }
   ],
   "choiceSets": [

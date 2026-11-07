@@ -137,3 +137,5 @@ export type {
 } from './map/types';
 export { tickCaravans, loadCaravanSchedules } from './caravans';
 export type { CaravanMobile, CaravanScheduleRow, CaravanHeading } from './caravans-types';
+export { tickHoardDawn, addNotoriety, detectEnding, applyStashAct, rollAttractors, ensureHoard } from './hoard';
+export type { HoardState, StashRuntime } from './hoard';

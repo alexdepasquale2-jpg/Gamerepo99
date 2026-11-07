@@ -17,6 +17,7 @@ import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { applyDoctrineAct } from '../doctrine-tick';
+import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
 import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
@@ -91,6 +92,10 @@ export function actInteraction(
   const rolled = rollMethodMark(s, personId, methodId);
   if (rolled) ip.marks[rolled] = (ip.marks[rolled] ?? 0) + 1;
 
+  // Leverage edge: notoriety forgives some strain on hard/defiant acts.
+  const strain = sparkBefore - ip.spark;
+  if (strain > 0) ip.spark += Math.round(strain * leverageDiscount(s, rt.catalog.get(interactionId)?.tags));
+
   // Sync out.
   s.player.spark = ip.spark;
   person.flame = Math.round(ip.flame01 * FLAME_SCALE);
@@ -114,6 +119,13 @@ export function actInteraction(
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
   encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
+  const def0 = rt.catalog.get(interactionId);
+  if (def0?.coinGain) {
+    s.player.coin = (s.player.coin ?? 0) + def0.coinGain;
+    notePeakCoin(s);
+  }
+  if (def0?.stashAct) applyStashAct(s, def0.stashAct);
+  if (res.reignited) ensureHoard(s).reigniteCount += 1;
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
   for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
   if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {
