@@ -4,6 +4,7 @@ import type { Effect, EffectOp } from './types/data';
 import type { PacketState, SimState } from './types/runtime';
 import type { DataTables } from './load-data';
 import type { Rng } from './rng';
+import { visibleWealth } from './hoard/state';
 
 export type EffectCtx = {
   data: DataTables;
@@ -93,6 +94,20 @@ function setPath(state: SimState, ctx: EffectCtx, target: string, next: unknown)
   }
 }
 
+/** Named scalars (0..1) an effect value may be scaled by. Keep in sync with SCALE_BY_KEYS in scripts/validate/util.mjs. */
+export function scalarOf(state: SimState, ctx: EffectCtx, key: string): number {
+  switch (key) {
+    case 'town.despair':
+      return asNumber(ctx.townDespair ?? ctx.town?.despair ?? state.flags.townDespair, 0);
+    case 'player.notoriety':
+      return asNumber(state.hoard?.notoriety ?? state.flags.notoriety, 0);
+    case 'player.visibleWealth':
+      return visibleWealth(state);
+    default:
+      throw new Error(`UNKNOWN scaleBy: ${key}`);
+  }
+}
+
 function applyNumeric(op: EffectOp, current: number, value: number): number {
   if (op === 'add') return current + value;
   if (op === 'mul') return current * value;
@@ -155,6 +170,10 @@ export function applyEffect(state: SimState, effect: Effect, ctx: EffectCtx): vo
   }
 
   const current = asNumber(getPath(state, ctx, fx.target), 0);
-  const value = asNumber(fx.value, 0);
+  let value = asNumber(fx.value, 0);
+  if (fx.scaleBy !== undefined) {
+    const k = scalarOf(state, ctx, fx.scaleBy);
+    value = op === 'mul' ? 1 + (value - 1) * k : value * k;
+  }
   setPath(state, ctx, fx.target, applyNumeric(op, current, value));
 }

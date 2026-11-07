@@ -23,6 +23,8 @@ describe('neglect is an ending, not a loss', () => {
     const { state } = bootPlayState(7, 'marrow');
     expect(detectEnding(state)).toBeNull();
     ensureHoard(state).peakCoin = 40;
+    expect(detectEnding(state)).toBeNull();
+    state.hoard!.stash.s = { siteId: 's', coin: 40, goods: {}, guardsHired: 0 };
     expect(detectEnding(state)).toBe('ash_hoard');
     state.hoard!.reigniteCount = 1;
     expect(detectEnding(state)).toBeNull();
@@ -56,5 +58,15 @@ describe('neglect is an ending, not a loss', () => {
 
   it('play session still boots (no shame branch needed)', () => {
     expect(createPlaySession({ mode: 'play', seed: 1, archetypeId: 'marrow' })).not.toBeNull();
+  });
+
+  it('a favor (carry_burden -> favor_do) pays coin', () => {
+    const { state, interactionRt } = bootPlayState(21, 'marrow');
+    state.player.townId = 'ashford';
+    state.player.spark = 100;
+    const pid = Object.keys(state.people)[0]!;
+    const before = state.player.coin ?? 0;
+    actMethod(state, `carry_burden@${pid}`, [], undefined, { interactionCompat: interactionRt });
+    expect(state.player.coin ?? 0).toBeGreaterThan(before);
   });
 });
