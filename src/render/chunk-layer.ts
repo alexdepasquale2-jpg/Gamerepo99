@@ -72,7 +72,11 @@ export function createChunkLayer(
           host.tweens.add({ targets: painted, alpha: 1, duration: 160 });
         }
 
-        chunkProps.set(k, chunk.props.flatMap((prop) => paintProp(host, null, prop)));
+        // Every object a prop painter adds goes to the scene (foot-Y sort); capture them so they unmount with the chunk.
+        const list = (host.add as unknown as { displayList: { list: Phaser.GameObjects.GameObject[] } }).displayList.list;
+        const n0 = list.length;
+        for (const prop of chunk.props) paintProp(host, null, prop);
+        chunkProps.set(k, list.slice(n0));
       }
       return todo.length > budget;
     },

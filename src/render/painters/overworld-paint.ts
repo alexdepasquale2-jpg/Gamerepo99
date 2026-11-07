@@ -254,6 +254,7 @@ export function paintProp(
   prop: FacilityRenderView,
 ): Phaser.GameObjects.GameObject[] {
   const foot = tileFootWorld(prop.position.x, prop.position.y);
+  if (paintWildProp(host, prop, foot)) return [];
   const assetKey = PROP_ASSET[prop.type] ?? `facility.${prop.type}.${prop.state || 'idle'}`;
   const entry = lookupAsset(assetKey);
   const shadow = addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.0);
@@ -288,6 +289,48 @@ export function paintProp(
   container?.add(wall);
   container?.add(roof);
   return [...made, wall, roof];
+}
+
+/** Wilderness dressing (features.json): trees, undergrowth, fences, rocks, reeds, build sites. */
+function paintWildProp(host: PaintHost, prop: FacilityRenderView, foot: { x: number; y: number }): boolean {
+  const { x, y } = foot;
+  switch (prop.type) {
+    case 'tree': paintTree(host, null, prop.position.x, prop.position.y, Number(prop.state) || 0); return true;
+    case 'bush': case 'rock': case 'log': case 'stump': case 'sign': case 'hay': case 'flowers':
+      paintScatterOne(host, null, x, y, prop.type); return true;
+    case 'boulder': {
+      addSoftShadow(host, null, x, y, 1.4);
+      const base = host.add.ellipse(x, y - 9, 30, 20, 0x6a6a72); applySpriteSort(base);
+      const top = host.add.ellipse(x - 3, y - 14, 18, 10, 0x8e8e96); top.setDepth(y + 0.1);
+      return true;
+    }
+    case 'reeds': {
+      for (let i = 0; i < 4; i++) {
+        const blade = host.add.rectangle(x - 6 + i * 4, y - 7 - (i % 2) * 3, 2, 12 + (i % 2) * 5, i % 2 ? 0x7a8a3a : 0x5d6e2c);
+        applySpriteSort(blade);
+      }
+      return true;
+    }
+    case 'fence_h': case 'fence_v': {
+      const H = FEEL.worldScale.fencePostH, R = FEEL.worldScale.fenceRailH;
+      const post = host.add.rectangle(x, y - H / 2, 4, H, 0x6b4423); applySpriteSort(post);
+      const rail = prop.type === 'fence_h'
+        ? host.add.rectangle(x + TILE_PX / 2, y - H * 0.65, TILE_PX, R, 0x8b5a2b)
+        : host.add.rectangle(x, y - H * 0.65 - TILE_PX / 2, R + 1, TILE_PX, 0x8b5a2b);
+      rail.setDepth(y + 0.1);
+      return true;
+    }
+    case 'build_site': {
+      // Unfinished frame: corner posts, one beam, a stone footing waiting for work.
+      addSoftShadow(host, null, x, y, 1.6);
+      const footing = host.add.rectangle(x, y - 3, 40, 8, 0x8a8478); applySpriteSort(footing);
+      for (const dx of [-17, 17]) { const p = host.add.rectangle(x + dx, y - 20, 4, 32, 0x9a6a3a); p.setDepth(y + 0.05); }
+      const beam = host.add.rectangle(x, y - 35, 40, 4, 0x9a6a3a); beam.setDepth(y + 0.06);
+      const brace = host.add.rectangle(x - 6, y - 20, 3, 30, 0x7a5230); brace.setAngle(35); brace.setDepth(y + 0.04);
+      return true;
+    }
+    default: return false;
+  }
 }
 
 /** @deprecated Prefer bakeCliffStrip — kept for API compat / tests. */
@@ -778,6 +821,10 @@ export function paintChunkContents(
   for (const tile of chunk.tiles) {
     if (tile.biomeId === FORD_BIOME) { paintFordTile(terrain, tile.q, tile.r); continue; }
     if (tile.biomeId === FERRY_BIOME) { paintFerryTile(terrain, tile.q, tile.r); continue; }
+    if (tile.biomeId === 'stream') {
+      terrain.fillStyle(BIOME_COLOR.water, 0.9).fillRect(tile.q * TILE_PX + 2, tile.r * TILE_PX + 2, TILE_PX - 4, TILE_PX - 4);
+      continue;
+    }
     const color = BIOME_COLOR[tile.biomeId as Biome];
     if (!color) continue;
     terrain.fillStyle(color, tile.biomeId === 'water' ? 0.94 : 0.36);
