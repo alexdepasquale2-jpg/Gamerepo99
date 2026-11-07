@@ -7,7 +7,7 @@ export { createWorld } from './world';
 export type { World } from './world';
 export { tick } from './tick';
 export type { Npc, Tile, WorldConfig } from './types';
-export { serializeSave, parseSave } from './save';
+export { serializeSave, parseSave, saveState, loadState } from './save';
 export type { SaveBlob } from './save';
 
 /** Fabric public surface (also via ./fabric.ts). */
