@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A caravan's stop at a town, in game days (one day = 120s of real overworld time). Unloading moves crates into town stock one at a time; trading sells surplus back onto the wagon; turning around hands the road back.",
+  "unloadDays": 0.07,
+  "tradeDays": 0.05,
+  "departDays": 0.03,
+  "trade": {
+    "surplusAbove": 10,
+    "backhaulQty": 3,
+    "defaultUnitPrice": 2,
+    "startingCoin": 20
+  }
+}

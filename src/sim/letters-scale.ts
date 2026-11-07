@@ -7,6 +7,8 @@
 
 import { encodeUnspokenForState } from './social/unspoken';
 import { removeItem } from './goods/inventory';
+import { beginReply, tickReplies, COURIER_SURVIVAL_PER_DAY, type LetterReply } from './letter-replies';
+import { planRoad, type RoadLeg } from './road-journey';
 import type { DataTables } from './load-data';
 import { pushDelta } from './legacy/state';
 import { pushJuice } from './packets';
@@ -28,7 +30,8 @@ export type LetterPacket = {
   body?: string;
 };
 
-type Flight = LetterPacket & { kind: 'letter' | 'rumor'; days: number; fromTownId: string; toTownId: string };
+/** `legs`/`roadDays` are set for mail the player sends: it rides the road chain between the towns. */
+export type Flight = LetterPacket & { kind: 'letter' | 'rumor'; days: number; fromTownId: string; toTownId: string; legs?: RoadLeg[]; roadDays?: number };
 type Pending = { kind: 'letter' | 'rumor'; fromPersonId: string; outcomeId: string };
 
 export type LettersState = {
@@ -37,7 +40,9 @@ export type LettersState = {
   seq: number;
   seenGrowth: number;
   seenHollow: number;
-  correspondence?: { id: string; toPersonId: string; body: string; status: 'travelling' | 'delivered' | 'lost' }[];
+  correspondence?: { id: string; toPersonId: string; body: string; status: 'travelling' | 'delivered' | 'lost'; sentDay?: number }[];
+  /** Replies to the player's letters (see letter-replies). Created lazily. */
+  replies?: LetterReply[];
 };
 
 type Template = { id: string; packetType: string; edgeKind: string | null; title: string; body: string };
@@ -72,7 +77,7 @@ export function enqueueLetter(state: SimState, p: Pending): void {
 }
 
 /** Baked social web plus this seed's Fabric kin edges (generated people are not in the baked web). */
-function edgesOf(state: SimState, web?: SocialWebTable): SocialEdge[] {
+export function edgesOf(state: SimState, web?: SocialWebTable): SocialEdge[] {
   const kin: SocialEdge[] = (state.kinEdges ?? []).map((k) => ({
     id: `kin_${k.from}__${k.to}`,
     a: k.from,
@@ -103,11 +108,15 @@ function pickTemplate(ts: Template[], packetType: string, edge?: SocialEdge): Te
   return of.find((t) => t.edgeKind !== null && kinds.includes(t.edgeKind)) ?? of.find((t) => t.edgeKind === null);
 }
 
-function launch(state: SimState, ls: LettersState, f: Omit<Flight, 'id' | 'days' | 'fromTownId' | 'toTownId'>): Flight | null {
+function launch(state: SimState, ls: LettersState, f: Omit<Flight, 'id' | 'days' | 'fromTownId' | 'toTownId' | 'legs' | 'roadDays'>, road?: { legs: RoadLeg[]; days: number }): Flight | null {
   const from = townOf(state, f.fromPersonId);
   const to = townOf(state, f.toPersonId);
   if (!from || !to || from === to) return null;
-  const out: Flight = { ...f, id: `ltr_${ls.seq++}_${state.day}`, days: routeDays(state, from, to), fromTownId: from, toTownId: to };
+  const out: Flight = { ...f, id: `ltr_${ls.seq++}_${state.day}`, days: road?.days ?? routeDays(state, from, to), fromTownId: from, toTownId: to };
+  if (road) {
+    out.legs = road.legs;
+    out.roadDays = road.days;
+  }
   ls.flight.push(out);
   pushDelta(state, { t: 'letter', day: state.day, packet: { id: out.id, kind: out.kind, templateId: out.templateId, packetType: out.packetType, fromPersonId: out.fromPersonId, toPersonId: out.toPersonId, fromTownId: out.fromTownId, toTownId: out.toTownId, days: out.days } });
   return out;
@@ -191,6 +200,8 @@ export function tickLetters(state: SimState): string[] {
   const ls = ensureLetters(state);
   const t = tables(state);
   const delivered: string[] = [];
+  // Replies already on their way advance first, so a reply born this dawn waits for the next one.
+  const repliesIn = tickReplies(state);
   const tags = ((state.flags.circumstanceTags as string[] | undefined) ?? []).filter((x) => x !== 'letter_arrived');
   const keep: Flight[] = [];
   for (const f of ls.flight) {
@@ -199,9 +210,10 @@ export function tickLetters(state: SimState): string[] {
       continue;
     }
     // Long roads thin letters: survival falls off per day travelled beyond the first.
-    const total = routeDays(state, f.fromTownId, f.toTownId);
+    const total = f.roadDays ?? routeDays(state, f.fromTownId, f.toTownId);
     const note = ls.correspondence?.find((n) => n.id === f.id);
-    if (deriveRng(state.seed, 'letter-thin', f.id).next() >= Math.pow(t.falloff, Math.max(0, total - 1))) {
+    const survive = Math.pow(f.roadDays !== undefined ? COURIER_SURVIVAL_PER_DAY : t.falloff, Math.max(0, total - 1));
+    if (deriveRng(state.seed, 'letter-thin', f.id).next() >= survive) {
       if (note) note.status = 'lost';
       continue;
     }
@@ -210,13 +222,14 @@ export function tickLetters(state: SimState): string[] {
       const p = state.people[f.toPersonId];
       if (p) p.trust = Math.min(1, (p.trust ?? 0) + 0.03);
       encodeUnspokenForState(state, 'show_up', f.toPersonId, { tags: ['letter_arrived', 'kin'] });
+      beginReply(state, f);
     }
     delivered.push(f.id);
     const payload = { letterId: f.id, templateId: f.templateId, packetType: f.packetType, fromPersonId: f.fromPersonId, toPersonId: f.toPersonId, ...render(t.templates.find((x) => x.id === f.templateId), state, f) };
     pushJuice(state, f.kind === 'rumor' ? 'rumor.spread' : 'letter.deliver', payload);
   }
   ls.flight = keep;
-  if (delivered.length) tags.push('letter_arrived');
+  if (delivered.length || repliesIn.length) tags.push('letter_arrived');
   state.flags.circumstanceTags = tags;
 
   const growth = markStacks(state, 'genuine_growth');
@@ -236,8 +249,9 @@ export function sendPlayerLetter(state: SimState, toPersonId: string, body: stri
   if (!text) return 'Write a few words first.';
   if (!removeItem(state, 'letter')) return 'You need a sheet of stationery (Letter).';
   const ls = ensureLetters(state);
-  const f = launch(state, ls, { kind: 'letter', templateId: 'player_letter', packetType: 'proof_packet', fromPersonId: state.player.id, toPersonId, title: 'A letter from the road', body: text });
+  const road = state.player.townId ? planRoad(state, state.player.townId, to.townId) : null;
+  const f = launch(state, ls, { kind: 'letter', templateId: 'player_letter', packetType: 'proof_packet', fromPersonId: state.player.id, toPersonId, title: 'A letter from the road', body: text }, road ?? undefined);
   if (!f) return 'There is no route for this letter.';
-  (ls.correspondence ??= []).push({ id: f.id, toPersonId, body: text, status: 'travelling' });
-  return `Sent to ${to.name ?? to.id}. ${f.days} dawns by road; long journeys can lose letters.`;
+  (ls.correspondence ??= []).push({ id: f.id, toPersonId, body: text, status: 'travelling', sentDay: state.day });
+  return `Sent to ${to.name ?? to.id}. ${f.days} dawns by road; long journeys can lose letters. A reply may find its way back.`;
 }

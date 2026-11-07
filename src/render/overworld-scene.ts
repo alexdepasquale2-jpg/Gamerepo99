@@ -14,6 +14,7 @@ import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import type { WorldLayout } from '../sim/map/world-layout';
 import { createTerrainAccess } from '../sim/map/terrain-access';
+import { createNavigator, type Navigator } from '../sim/map/nav';
 import { FEEL } from './feel';
 import { attachSurface } from './surface-layer';
 import { createChunkLayer, type ChunkLayer } from './chunk-layer';
@@ -21,7 +22,9 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
-import { createPeopleLayer, pretty, type PeopleLayer, type Person } from './people-layer';
+import { createPeopleLayer, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
+import { INTERIOR_SCENE_KEY, type InteriorEnterData, type InteriorScene } from './interior-scene';
+import { allBuildings, nearestDoor, occupantOf, townBuildings, type Building, type InteriorKind } from '../sim/map/interiors';
 import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
@@ -38,6 +41,7 @@ export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
   private source!: TileSource;
   private terrain!: ReturnType<typeof createTerrainAccess>;
+  private nav!: Navigator;
   private layout!: WorldLayout;
   private layer!: ChunkLayer;
   private player!: Phaser.GameObjects.Sprite;
@@ -62,6 +66,10 @@ export class OverworldScene extends Phaser.Scene {
   private resting = false;
   private moving = false;
   private goods!: OverworldGoods;
+  private buildings: Building[] = [];
+  private doorPrompt!: Phaser.GameObjects.Text;
+  private inside: Building | null = null;
+  private entering = false;
 
   constructor() {
     super('overworld');
@@ -75,6 +83,7 @@ export class OverworldScene extends Phaser.Scene {
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed);
     this.terrain = createTerrainAccess(this.layout, seed);
+    this.nav = createNavigator(this.terrain);
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
     this.spawnPlayer();
@@ -85,9 +94,11 @@ export class OverworldScene extends Phaser.Scene {
       this.layout.settlements,
       (p) => this.openRing(p),
       (id) => this.chipsFor(id).length > 0,
+      this.nav,
     );
+    this.buildings = allBuildings(this.layout.settlements);
     this.life = createWorldLife(this, this.layout.settlements);
-    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }));
+    this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav);
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
       this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined,
     );
@@ -102,13 +113,20 @@ export class OverworldScene extends Phaser.Scene {
         forceSpark(this.session, 0);
         this.session.tick();
       },
+      // Interiors: enter(spec?) teleports to a door and walks in (instant, for screenshots/e2e).
+      interior: {
+        buildings: () => this.buildings.map((b) => ({ id: b.id, townId: b.townId, kind: b.kind, door: { ...b.door } })),
+        enter: (spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }) => this.debugEnterInterior(spec),
+        exit: () => this.interiorScene()?.leave(true),
+        state: () => this.interiorScene()?.state() ?? null,
+      },
     };
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.hint = this.add
-      .text(8, 28, 'Walk: WASD · E: talk/gather/rest · I: satchel · F: use · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
+      .text(8, 28, 'Walk: WASD · E: talk/gather/enter doors/rest · I: satchel · F: use · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
     this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
@@ -116,6 +134,12 @@ export class OverworldScene extends Phaser.Scene {
     const interact = (): void => this.interact();
     this.input.keyboard?.on('keydown-E', interact);
     this.input.keyboard?.on('keydown-ENTER', interact);
+    this.doorPrompt = this.add
+      .text(0, 0, 'E · Enter', { fontFamily: 'Georgia, serif', fontSize: '13px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
+      .setOrigin(0.5, 1)
+      .setDepth(998_500)
+      .setVisible(false);
+    this.events.on(Phaser.Scenes.Events.WAKE, () => this.onWake());
     this.input.keyboard?.on('keydown-ESC', () => { this.closeRing(); this.goods.closeOverlays(); });
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
       this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
@@ -203,6 +227,9 @@ export class OverworldScene extends Phaser.Scene {
     this.life.setPrompt(!!hearth && !this.ring.isOpen() && !this.resting, hearth?.pos);
     const near = this.ring.isOpen() ? null : this.people.nearest(this.player);
     this.people.setPrompt(near);
+    const door = this.doorTarget(near);
+    this.doorPrompt.setVisible(!!door);
+    if (door) this.doorPrompt.setPosition(door.door.x, door.door.y - 78 - Math.abs(Math.sin(this.time.now / 300)) * 3);
     if (this.ringFor && this.moving) {
       const p = this.people.byId.get(this.ringFor);
       if (!p || Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y) > 90) this.closeRing();
@@ -253,10 +280,99 @@ export class OverworldScene extends Phaser.Scene {
     if (this.goods.readBoard(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
+    const door = this.doorTarget(p);
+    if (door) return this.enterBuilding(door);
     if (p) return this.openRing(p);
     const got = this.goods.gatherNear(this.player);
     if (got) return this.say(got);
     if (this.life.nearestHearth(this.player)) this.rest();
+  }
+
+  /** Door in reach, unless a villager you could talk to is standing closer. */
+  private doorTarget(talk: Person | null): Building | null {
+    if (this.resting || this.entering || this.goods.overlayOpen() || this.ring.isOpen()) return null;
+    const hit = nearestDoor(this.buildings, this.player);
+    if (!hit) return null;
+    if (talk && Phaser.Math.Distance.Between(this.player.x, this.player.y, talk.sprite.x, talk.sprite.y) < hit.dist) return null;
+    return hit.building;
+  }
+
+  private interiorScene(): InteriorScene | undefined {
+    return this.scene.isActive(INTERIOR_SCENE_KEY) ? (this.scene.get(INTERIOR_SCENE_KEY) as InteriorScene) : undefined;
+  }
+
+  /** Walk through a door: fade, put the overworld to sleep, launch the room. */
+  private enterBuilding(b: Building, instant = false): void {
+    if (this.inside || this.entering) return;
+    this.entering = true;
+    this.closeRing();
+    this.doorPrompt.setVisible(false);
+    const world = this.session.getWorld();
+    const town = world?.settlements?.find((s) => s.id === b.townId);
+    const resident = occupantOf(
+      b,
+      townBuildings(this.layout.settlements.find((t) => t.id === b.townId)!),
+      this.session.listPeople().filter((p) => p.townId === b.townId).map((p) => p.id),
+    );
+    const payload: InteriorEnterData = {
+      returnTo: this.scene.key,
+      buildingId: b.id,
+      townId: b.townId,
+      townName: town?.name ?? pretty(b.townId),
+      kind: b.kind,
+      paletteIndex: b.paletteIndex,
+      occupant: resident ? { id: resident, name: pretty(resident).split(' ')[0]!, tint: tintOf(resident) } : undefined,
+      despair01: this.session.townDespair()[b.townId] ?? 0,
+    };
+    const go = (): void => {
+      this.inside = b;
+      this.entering = false;
+      this.moving = false;
+      this.scene.launch(INTERIOR_SCENE_KEY, payload);
+      this.scene.sleep();
+    };
+    if (instant) return go();
+    this.cameras.main.fadeOut(160, 20, 16, 12);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, go);
+  }
+
+  /** Back from a room: stand just outside the door. */
+  private onWake(): void {
+    const b = this.inside;
+    this.inside = null;
+    this.entering = false;
+    this.input.keyboard?.resetKeys();
+    const cam = this.cameras.main;
+    cam.resetFX();
+    if (b) {
+      const x = b.door.x, y = b.door.y + 12;
+      if (this.terrain.passable(Math.floor(x / TILE_PX), Math.floor((y - 2) / TILE_PX))) this.player.setPosition(x, y);
+      applySpriteSort(this.player);
+      this.playerShadow?.setPosition(this.player.x, this.player.y - 2).setDepth(this.player.y - 0.5);
+      if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down', true);
+      cam.centerOn(this.player.x, this.player.y);
+      this.syncChunks(false);
+    }
+    cam.fadeIn(200, 20, 16, 12);
+  }
+
+  /** QA hook: teleport to a door and step inside without fades. */
+  private debugEnterInterior(spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }): { id: string; kind: InteriorKind } | null {
+    if (this.inside || this.entering) return null;
+    const q = typeof spec === 'string' ? (spec in { house: 1, shop: 1, inn: 1 } ? { kind: spec as InteriorKind } : { buildingId: spec }) : spec ?? {};
+    const home = q.townId ?? this.session.snapshot().townId;
+    const match = (b: Building): boolean => (!q.buildingId || b.id === q.buildingId) && (!q.kind || b.kind === q.kind);
+    const b = (q.buildingId || q.townId ? this.buildings.filter(match).filter((x) => !q.townId || x.townId === q.townId) : [
+      ...this.buildings.filter((x) => x.townId === home && match(x)),
+      ...this.buildings.filter(match),
+    ])[0];
+    if (!b) return null;
+    this.player.setPosition(b.door.x, b.door.y + 12);
+    applySpriteSort(this.player);
+    this.cameras.main.centerOn(this.player.x, this.player.y);
+    this.syncChunks(false);
+    this.enterBuilding(b, true);
+    return { id: b.id, kind: b.kind };
   }
 
   private commit(p: Person, c: Chip): void {

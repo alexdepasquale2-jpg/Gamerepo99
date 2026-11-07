@@ -135,8 +135,9 @@ export type {
   FacilityRenderView,
   TileRenderView,
 } from './map/types';
-export { tickCaravans, loadCaravanSchedules } from './caravans';
-export type { CaravanMobile, CaravanScheduleRow, CaravanHeading } from './caravans-types';
+export { tickCaravans, advanceCaravanTravel, loadCaravanSchedules } from './caravans';
+export type { CaravanMobile, CaravanScheduleRow, CaravanHeading, CaravanPhase, CaravanVisit } from './caravans-types';
+export { caravanStatus, townShortages } from './caravan-visit';
 export { tickHoardDawn, addNotoriety, detectEnding, applyStashAct, rollAttractors, ensureHoard } from './hoard';
 export type { HoardState, StashRuntime } from './hoard';
 export { forceSpark } from './succession';

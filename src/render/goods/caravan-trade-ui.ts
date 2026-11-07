@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
+import { caravanStatus } from '../../sim/caravan-visit';
 import { caravanItem, tradeCaravan } from '../../sim/goods/caravan-trade';
 export function createCaravanTrade(scene: Phaser.Scene, getState: () => SimState | undefined, changed: () => void) {
   const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_410).setVisible(false);
@@ -13,7 +14,7 @@ export function createCaravanTrade(scene: Phaser.Scene, getState: () => SimState
     const x = scene.scale.width / 2 - 170, y = scene.scale.height / 2 - 95;
     panel.add(scene.add.rectangle(x, y, 340, 190, 0x231c16, 0.98).setOrigin(0).setStrokeStyle(2, 0xc79b61));
     const font = { fontFamily: 'monospace', fontSize: '12px', color: '#f4e6c8', wordWrap: { width: 310 } };
-    panel.add(scene.add.text(x + 15, y + 12, `Roadside trader\n${item?.name ?? m.cargoResourceId}: ${m.qty} aboard · ${item?.price ?? 0} coin each\nYour coin: ${s.inventory?.coin ?? 0}`, font));
+    panel.add(scene.add.text(x + 15, y + 12, `Roadside trader · ${caravanStatus(m)}\n${item?.name ?? m.cargoResourceId}: ${m.qty} aboard · ${item?.price ?? 0} coin each\nYour coin: ${s.inventory?.coin ?? 0}`, font));
     const button = (bx: number, text: string, fn: () => void) => {
       const t = scene.add.text(bx, y + 100, text, { ...font, backgroundColor: '#59402a', padding: { x: 8, y: 7 } }).setInteractive({ useHandCursor: true });
       t.on('pointerdown', fn); panel.add(t);

@@ -155,7 +155,7 @@ export function createStampRasterSource(
             tiles.push({
               q,
               r,
-              biomeId: terrain.isDeck(q, r) ? 'bridge_deck' : terrain.biome(q, r),
+              biomeId: terrain.isDeck(q, r) ? 'bridge_deck' : terrain.isFord(q, r) ? 'ford' : terrain.biome(q, r),
               warmth: 0.35,
             });
           }
