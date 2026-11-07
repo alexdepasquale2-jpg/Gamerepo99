@@ -15,6 +15,7 @@ const SEED = 42;
 function bootState(seed = SEED): SimState {
   const { state } = bootPlayState(seed, 'marrow');
   ensureEconomyState(state);
+  state.economyHooks = undefined; // isolate LOD from caravans (packet-02 registers the hook at boot)
   return state;
 }
 
@@ -56,7 +57,7 @@ describe('tickEconomyLod (M4 packet-01)', () => {
     for (let i = 0; i < 10; i++) s.act('advance:dawn');
     const types = s.events().map((e) => e.type);
     expect(types).not.toContain('stock.starve');
-    expect(types).not.toContain('stock.deliver');
+    // stock.deliver may appear: caravans (packet-02) deliver into Ashford by design.
   });
 
   it('opt-in flow: lowmere opt-in → stock grows from route_ashford_lowmere + stock.deliver juice', () => {

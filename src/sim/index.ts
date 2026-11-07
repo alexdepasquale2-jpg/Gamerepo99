@@ -135,3 +135,5 @@ export type {
   FacilityRenderView,
   TileRenderView,
 } from './map/types';
+export { tickCaravans, loadCaravanSchedules } from './caravans';
+export type { CaravanMobile, CaravanScheduleRow, CaravanHeading } from './caravans-types';

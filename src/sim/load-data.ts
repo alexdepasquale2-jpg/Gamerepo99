@@ -1,6 +1,8 @@
 /** Load and index locked JSON tables from src/data. Pure: no Phaser/DOM/Math.random. */
 
 import type { ArchetypeDef, HookDef } from './types/data';
+import { loadCaravanSchedules } from './caravans';
+import type { CaravanScheduleRow } from './caravans-types';
 
 import archetypesJson from '../data/people/archetypes.json';
 import traitsJson from '../data/people/traits.json';
@@ -142,6 +144,8 @@ export type DataTables = {
   economyResources: EconomyResourceRow[];
   /** world/routes.json rows (LOD flow; condition/broken/receiveShare). */
   economyRoutes: EconomyRouteState[];
+  /** world/caravan-schedules.json rows (maxConcurrent defaulted to 2). */
+  caravanSchedules: CaravanScheduleRow[];
   /** Social graph 05: prebaked web for default seed (legacy kinds mapped at load). */
   socialWeb: SocialWebTable;
   /** Social graph 05: prebaked centrality (read-only). */
@@ -259,12 +263,14 @@ export function loadData(): DataTables {
       id: r.id,
       fromTownId: r.fromTownId,
       toTownId: r.toTownId,
+      days: typeof r.days === 'number' ? r.days : 1,
       condition: typeof r.condition === 'number' ? r.condition : 1,
       broken: r.broken === true,
       extractive: r.extractive === true,
       receiveShare: r.receiveShare as unknown as Record<string, number> | undefined,
       facilityIds: [...(r.facilityIds ?? [])],
     })),
+    caravanSchedules: loadCaravanSchedules(),
     socialWeb: loadSocialWeb(),
     socialCentrality: socialCentralityJson as unknown as CentralityTable,
     socialPropagation: loadSocialPropagation(),

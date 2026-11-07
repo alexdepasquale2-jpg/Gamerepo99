@@ -1,4 +1,5 @@
 import type { UnspokenState } from '../social/unspoken-types';
+import type { CaravanMobile } from '../caravans-types';
 /** Runtime sim shapes assembled from data + tick state. */
 
 import type {
@@ -82,6 +83,10 @@ export type SimState = {
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
+  /** M4 packet-02: live caravan mobiles. */
+  caravans?: CaravanMobile[];
+  /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
+  routeBreakJuiced?: Record<string, boolean>;
   /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */
   unspoken?: UnspokenState;
 };

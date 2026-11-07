@@ -36,6 +36,7 @@ export type EconomyRouteState = {
   id: string;
   fromTownId: string;
   toTownId: string;
+  days: number;
   condition: number;
   broken: boolean;
   extractive: boolean;
