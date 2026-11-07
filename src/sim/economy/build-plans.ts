@@ -12,7 +12,7 @@ import { jobOf } from '../goods/jobs';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 
-export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Record<string, number>; labor: number; w: number; h: number };
+export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Record<string, number>; labor: number; w: number; h: number; slots?: number };
 const T = buildingsJson as unknown as { workshopMul: number; buildings: BuildingDef[] };
 export const BUILDINGS = T.buildings;
 export const BUILDING_BY_ID = new Map(BUILDINGS.map((b) => [b.id, b]));

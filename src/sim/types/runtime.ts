@@ -96,6 +96,8 @@ export type SimState = {
   logistics?: import('../economy/logistics').Logistics;
   /** Ambitions: build plans and land claims (see sim/economy/build-plans). */
   build?: import('../economy/build-plans').BuildState;
+  /** Companies and personal purses (see sim/economy/companies). */
+  companies?: import('../economy/companies').Companies;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
