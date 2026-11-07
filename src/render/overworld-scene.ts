@@ -447,7 +447,11 @@ export class OverworldScene extends Phaser.Scene {
     if (pre.line) this.say(pre.line);
     const before = this.session.snapshot().spark;
     let juiced = 0;
-    const off = this.session.onJuice(() => juiced++);
+    let reignited = false;
+    const off = this.session.onJuice((jid) => {
+      juiced++;
+      if (jid === 'person.reignite' || jid === 'site.kindle') reignited = true;
+    });
     this.session.act(c.id);
     off();
     const after = this.session.snapshot().spark;
@@ -456,6 +460,7 @@ export class OverworldScene extends Phaser.Scene {
     const spent = Math.max(0, (before - after) / 100);
     const h = headOf();
     this.bus.emit('vfx.spark_spent', { x: h.x, y: h.y + 10, amount01: spent > 0 ? spent : 0.12 });
+    if (reignited) this.bus.emit('vfx.reignite', { x: h.x, y: h.y + 10, warmthBefore: 0.2, warmthAfter: 0.8 });
     this.syncSparkFromSession(true);
     this.tweens.add({ targets: sprite, y: sprite.y - 5, duration: 110, yoyo: true });
     if (juiced === 0) {
