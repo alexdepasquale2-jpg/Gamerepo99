@@ -72,6 +72,13 @@ export class TownScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => {
       this.scene.start('overworld');
     });
+    this.add
+      .text(this.scale.width - 8, 8, '[ Back ]', { fontFamily: 'monospace', fontSize: '16px', color: '#f2e9e4', backgroundColor: '#2a2420', padding: { x: 8, y: 6 } })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(1_000_001)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('overworld'));
   }
 
   private drawPeople(): void {

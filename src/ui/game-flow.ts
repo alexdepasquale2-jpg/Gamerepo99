@@ -115,5 +115,15 @@ export function runGameFlow(host: GameHost): void {
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && session && !document.querySelector('.hf-menu')) pause();
   });
+  // Touch: a small always-on menu button (phones have no Esc key).
+  const menuBtn = document.createElement('button');
+  menuBtn.textContent = '☰';
+  menuBtn.setAttribute('aria-label', 'Menu');
+  menuBtn.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:20;font:18px monospace;padding:8px 12px;color:#f2e9e4;background:#2a2420;border:1px solid #5a4a3a;border-radius:6px';
+  menuBtn.addEventListener('click', () => {
+    if (session && !document.querySelector('.hf-menu')) pause();
+  });
+  document.body.appendChild(menuBtn);
   title();
 }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
+import { TownScene } from './render/town-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
@@ -36,7 +37,7 @@ runGameFlow({
       pixelArt: true, // nearest-neighbor — integer scales stay crisp under Scale.FIT
       antialias: false,
       roundPixels: true,
-      scene: [BootScene, OverworldScene],
+      scene: [BootScene, OverworldScene, TownScene],
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
