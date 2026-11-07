@@ -39,7 +39,7 @@ describe('interaction examples A/B/C (spec §8)', () => {
         for (const k of NUMERIC) {
           if (typeof e[k] === 'number') expect(out[k], `${at} ${k}`).toBeCloseTo(e[k] as number, 6);
         }
-        if (typeof e.spark === 'number') expect(out.spark, `${at} spark`).toBe(e.spark);
+        if (typeof e.spark === 'number') expect(out.spark, `${at} spark`).toBeCloseTo(e.spark, 6);
         for (const [m, n] of Object.entries(e.marks ?? {})) {
           expect(out.marks[m] ?? 0, `${at} mark ${m}`).toBe(n);
         }

@@ -2,16 +2,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { tickCaravans } from '../../../src/sim/caravans';
-import { ensureEconomyState } from '../../../src/sim/economy';
 import { loadData } from '../../../src/sim/load-data';
-import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
+import { bootAuthoredEconomy } from './authored-economy';
 import { advanceToDawn } from '../../../src/sim/scenario/scenario-advance';
 import type { SimState } from '../../../src/sim/types/runtime';
 
 function boot(seed = 7): SimState {
-  const { state } = bootPlayState(seed, 'marrow');
-  ensureEconomyState(state);
-  return state;
+  return bootAuthoredEconomy(seed);
 }
 const route = (s: SimState, id: string) => s.economyRoutes!.find((r) => r.id === id)!;
 const juice = (s: SimState) => s.bus?.lastIds ?? [];
@@ -55,8 +52,12 @@ describe('caravans (M4 packet-02)', () => {
     rt.days = 2;
     const stock = () => s.towns!.ashford.stock.food_grain ?? 0;
     const lm = () => s.towns!.lowmere.stock.food_grain ?? 0;
+    // Lowmere has surplus wool: the town sells a backhaul onto the wagon, which Ashford receives on the return leg.
+    s.towns!.lowmere.stock.wool = 14;
+    const wool = () => s.towns!.ashford.stock.wool ?? 0;
     const a0 = stock();
     const l0 = lm();
+    const w0 = wool();
     tickCaravans(s, 5); // spawn
     tickCaravans(s, 6);
     expect(s.caravans).toHaveLength(1);
@@ -65,7 +66,8 @@ describe('caravans (M4 packet-02)', () => {
     expect(s.caravans![0]).toMatchObject({ heading: 'return', progress01: 0 });
     tickCaravans(s, 8);
     tickCaravans(s, 9); // return arrive
-    expect(stock()).toBe(a0 + 4);
+    expect(wool()).toBe(w0 + 3); // backhaul (cfg backhaulQty 3), not the outbound grain
+    expect(stock()).toBe(a0);
     expect(s.caravans).toHaveLength(0);
   });
 
@@ -109,10 +111,13 @@ describe('caravans (M4 packet-02)', () => {
     only(s, 'cav_strand_grain', { periodDays: 1000, departDawnMod: 0 });
     const rt = route(s, 'route_ashford_lowmere');
     rt.days = 1;
-    const a0 = s.towns!.ashford.stock.food_grain ?? 0;
+    // The wagon's return leg carries Lowmere's surplus wool home to Ashford, which is short of wool.
+    s.towns!.lowmere.stock.wool = 14;
+    s.towns!.ashford.stock.wool = 0;
+    const a0 = s.towns!.ashford.stock.wool;
     const d0 = s.towns!.ashford.despair;
     for (let d = 0; d <= 2; d++) tickCaravans(s, d);
-    expect(s.towns!.ashford.stock.food_grain).toBe(a0 + 4);
+    expect(s.towns!.ashford.stock.wool).toBe(a0 + 3);
     expect(s.towns!.ashford.despair).toBe(d0);
   });
 

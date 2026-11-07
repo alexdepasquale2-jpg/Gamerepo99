@@ -10,7 +10,7 @@ function playSession(seed = 42): PlaySession {
 }
 
 describe('play-session interaction compat (default on)', () => {
-  it('inspire@<person> resolves talk_gentle: interaction event + spark net 0 (strain 1, gain 1)', () => {
+  it('inspire@<person> resolves talk_gentle: interaction event + spark net -1 (strain 1, gain 1, gentle tag -1)', () => {
     const s = playSession();
     const personId = s.listPeople()[0]!.id;
     const sparkBefore = s.snapshot().spark;
@@ -22,7 +22,7 @@ describe('play-session interaction compat (default on)', () => {
     // Legacy methods.sparkCost path must not run.
     expect(events.some((e) => e.type === 'spark.spend')).toBe(false);
     expect(events.some((e) => e.methodId === 'inspire')).toBe(false);
-    expect(s.snapshot().spark).toBe(sparkBefore);
+    expect(s.snapshot().spark).toBe(sparkBefore - 1);
   });
 
   it('advance:/travel:/approach@ still route outside compat', () => {

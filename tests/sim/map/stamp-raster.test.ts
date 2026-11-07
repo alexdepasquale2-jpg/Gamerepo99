@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { generateWorld } from '../../../src/sim/gen/world';
 import { CHUNK_SIZE } from '../../../src/sim/map/constants';
 import { createStampRasterSource } from '../../../src/sim/map/stamp-raster';
-import { layoutWorld } from '../../../src/sim/map/world-layout';
+import { layoutWorld, pointOnRoad } from '../../../src/sim/map/world-layout';
 
 const SOFT_CAP = 200;
 const PROP_TYPES = new Set(['field', 'mine', 'camp', 'waystation']);
@@ -36,25 +36,33 @@ describe('StampRasterSource lazy getChunk + props', () => {
     expect(far.tiles.length + far.props.length).toBe(0);
   });
 
-  it('corridor chunk between towns has a road tile and a wilderness prop', () => {
+  it('corridor chunks along connected roads have road tiles and wilderness props', () => {
     const world = generateWorld({ seed: 7, peopleCount: 8 });
     const layout = layoutWorld(world, 7);
     const source = createStampRasterSource(world, 7);
-    const [a, b] = layout.settlements;
-    expect(a).toBeDefined();
-    expect(b).toBeDefined();
-    const midQ = Math.floor((a!.q + b!.q) / 2);
-    const midR = Math.floor((a!.r + b!.r) / 2);
-    const cx = Math.floor(midQ / CHUNK_SIZE);
-    const cy = Math.floor(midR / CHUNK_SIZE);
-    const chunk = source.getChunk({ cx, cy });
-    expect(chunk.tiles.length).toBeGreaterThan(0);
-    const hasRoad = chunk.tiles.some(
-      (t) => t.biomeId === 'road' || t.biomeId.startsWith('road'),
-    );
-    expect(hasRoad).toBe(true);
-    const prop = chunk.props.find((p) => PROP_TYPES.has(p.type));
-    expect(prop).toBeDefined();
+    expect(layout.routes.length).toBeGreaterThan(0);
+    // Roads are routed 2D paths between connected settlements, so walk each road's own path
+    // (the midpoint of two arbitrary settlements is not necessarily on a road).
+    const seen = new Set<string>();
+    let roadChunks = 0;
+    let props = 0;
+    for (const route of layout.routes) {
+      const mid = pointOnRoad(route.path, 0.5);
+      for (const f of [0.25, 0.5, 0.75]) {
+        const pt = f === 0.5 ? mid : pointOnRoad(route.path, f);
+        const cx = Math.floor(pt.q / CHUNK_SIZE);
+        const cy = Math.floor(pt.r / CHUNK_SIZE);
+        const key = `${cx},${cy}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const chunk = source.getChunk({ cx, cy });
+        expect(chunk.tiles.length).toBeGreaterThan(0);
+        if (chunk.tiles.some((t) => t.biomeId === 'road' || t.biomeId.startsWith('road'))) roadChunks++;
+        props += chunk.props.filter((p) => PROP_TYPES.has(p.type)).length;
+      }
+    }
+    expect(roadChunks).toBeGreaterThan(0);
+    expect(props).toBeGreaterThan(0);
   });
 
   it('stamp modules stay under soft line cap', () => {
