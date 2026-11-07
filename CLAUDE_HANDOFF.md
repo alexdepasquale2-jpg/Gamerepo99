@@ -1,6 +1,6 @@
 # Hearthfall: Claude Code handoff
 
-Run from the repo root: `claude` then paste "Read CLAUDE_HANDOFF.md and do Task 1." Do one task per session.
+Check out `wip` first (`git checkout wip`). Run from the repo root: `claude` then paste "Read CLAUDE_HANDOFF.md and do Task 1." Do one task per session.
 
 ## State (Nov 6, 2026)
 - Branches: `main` is the working game, and `wip` holds unfinished work (including patches in `wip-patches/`). Keep only these two long-lived branches. Use one short-lived feature branch per task, then merge it into main and delete it.
