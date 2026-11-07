@@ -29,9 +29,9 @@
 | Check | Result | Detail |
 |---|---|---|
 | burnout -> Carry it on yields an heir | pass | heir=clara_whitby heirSpark=100 |
-| exportWorld -> importWorld on fresh state | pass | v1 hash=77f26798 |
+| exportWorld -> importWorld on fresh state | pass | v1 hash=a7364cdc |
 | grave + legend present after import | pass | graves=1 npcs=1 legends=2 |
-| same seed -> identical file | pass | hash=77f26798 |
+| same seed -> identical file | pass | hash=a7364cdc |
 
 ## Gaps
 
