@@ -56,7 +56,9 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
       next.push(m); // freeze in place until repaired
       continue;
     }
-    m.progress01 += (1 / Math.max(1, route.days)) * Math.min(1, Math.max(0, route.condition));
+    const daily = (1 / Math.max(1, route.days)) * Math.min(1, Math.max(0, route.condition));
+    m.progress01 += Math.max(0, daily - (m.travelCredit ?? 0));
+    m.travelCredit = 0;
     if (m.progress01 < 1 - 1e-9) {
       next.push(m);
       continue;
@@ -89,4 +91,17 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
   }
   state.caravans = next;
   return next;
+}
+
+/** Fractional travel is authoritative and saved, but cargo arrival is settled at dawn.
+ * Credit prevents a rest from charging the same day's journey twice. */
+export function advanceCaravanTravel(state: SimState, deltaDays: number, stoppedId?: string): void {
+  for (const m of state.caravans ?? []) {
+    const r = state.economyRoutes?.find((r) => r.id === m.routeId);
+    if (!r || r.broken || m.id === stoppedId || m.progress01 >= 1) continue;
+    const daily = Math.min(1, Math.max(0, r.condition)) / Math.max(1, r.days);
+    const step = Math.min(Math.max(0, deltaDays) * daily, Math.max(0, daily - (m.travelCredit ?? 0)), 1 - m.progress01);
+    m.progress01 += step;
+    m.travelCredit = (m.travelCredit ?? 0) + step;
+  }
 }

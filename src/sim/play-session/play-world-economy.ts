@@ -42,4 +42,8 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   state.caravans = (state.caravans ?? []).filter((m) => schedules.has(m.scheduleId));
   state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
   assignSettlementTowns(state.people, world);
+  if (!state.flags.caravansStarted) {
+    tickCaravans(state, state.day);
+    state.flags.caravansStarted = true;
+  }
 }

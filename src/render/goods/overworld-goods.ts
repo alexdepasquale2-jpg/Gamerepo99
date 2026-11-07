@@ -13,6 +13,7 @@ import { hash } from '../people-layer';
 import { createNodesLayer } from './nodes-layer';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
+import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
 
 type Pt = { x: number; y: number };
@@ -25,6 +26,8 @@ export type OverworldGoods = {
   gatherNear: (player: Pt) => string | null;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string) => { ok: boolean; line?: string };
+  meetCaravan: (player: Pt) => boolean;
+  closeOverlays: () => void;
   toggleInventory: () => void;
   toggleMap: () => void;
   selectSlot: (i: number) => void;
@@ -39,8 +42,9 @@ export function attachOverworldGoods(
   const st = () => session.getState();
   const nodes = createNodesLayer(scene, st, seed, layout.settlements, layout.routes);
   const despair = () => session.townDespair();
-  const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair);
   const inv = createInventoryUi(scene, st);
+  const trader = createCaravanTrade(scene, st, () => inv.refresh());
+  const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
   const map = createWorldMap(
     scene,
@@ -98,9 +102,15 @@ export function attachOverworldGoods(
       living.refresh();
       return r ? { ok: r.ok, line: r.line } : { ok: true };
     },
+    meetCaravan(player) {
+      const id = living.nearestCaravan(player);
+      if (!id) return false;
+      trader.open(id); return true;
+    },
+    closeOverlays: () => trader.close(),
     toggleInventory: () => inv.toggle(),
     toggleMap: () => map.toggle(),
     selectSlot: (i) => inv.select(i),
-    overlayOpen: () => inv.isOpen() || map.isOpen(),
+    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen(),
   };
 }

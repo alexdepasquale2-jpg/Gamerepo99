@@ -116,7 +116,7 @@ export class OverworldScene extends Phaser.Scene {
     const interact = (): void => this.interact();
     this.input.keyboard?.on('keydown-E', interact);
     this.input.keyboard?.on('keydown-ENTER', interact);
-    this.input.keyboard?.on('keydown-ESC', () => this.closeRing());
+    this.input.keyboard?.on('keydown-ESC', () => { this.closeRing(); this.goods.closeOverlays(); });
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
       this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
     );
@@ -246,8 +246,9 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private interact(): void {
-    if (this.resting) return;
+    if (this.resting || this.goods.overlayOpen()) return;
     if (this.ring.isOpen()) return;
+    if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     if (p) return this.openRing(p);
     const got = this.goods.gatherNear(this.player);
