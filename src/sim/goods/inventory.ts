@@ -14,7 +14,6 @@ export type ItemsTable = {
   startingInventory: Record<string, number>;
   giftAffinity: { rules: AffinityRule[] };
   deeds: {
-    workAlongsideYield: { itemId: string; qty: number; chance?: number }[];
     tradeMarkup: number; carryCargoQty: number; carryRewardCoin: number;
     shortageBelow: number; shortageDespairRelief: number;
   };

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "spec": "Named village jobs. Working alongside someone yields their job's goods. yield uses item ids from items.json; chance defaults to 1. Inputs, tools, buildings and hiring come in later phases (see PLAN.md, Economy sim).",
+  "jobs": [
+    { "id": "farmer", "name": "farmer", "yield": [{ "itemId": "berries", "qty": 2 }, { "itemId": "herbs", "qty": 1, "chance": 0.3 }] },
+    { "id": "baker", "name": "baker", "yield": [{ "itemId": "bread", "qty": 2 }] },
+    { "id": "woodcutter", "name": "woodcutter", "yield": [{ "itemId": "wood", "qty": 2 }, { "itemId": "timber", "qty": 1, "chance": 0.25 }] },
+    { "id": "mason", "name": "stonemason", "yield": [{ "itemId": "stone", "qty": 2 }, { "itemId": "timber", "qty": 1, "chance": 0.2 }] },
+    { "id": "miner", "name": "miner", "yield": [{ "itemId": "ore", "qty": 1 }, { "itemId": "stone", "qty": 1, "chance": 0.5 }] },
+    { "id": "smith", "name": "smith", "yield": [{ "itemId": "tools", "qty": 1, "chance": 0.6 }, { "itemId": "wood", "qty": 1 }] },
+    { "id": "weaver", "name": "weaver", "yield": [{ "itemId": "cloth", "qty": 1 }, { "itemId": "bread", "qty": 1, "chance": 0.3 }] },
+    { "id": "herbalist", "name": "herbalist", "yield": [{ "itemId": "herbs", "qty": 2 }] },
+    { "id": "fisher", "name": "fisher", "yield": [{ "itemId": "fish", "qty": 2 }] },
+    { "id": "innkeeper", "name": "innkeeper", "yield": [{ "itemId": "bread", "qty": 1 }, { "itemId": "coin", "qty": 2 }] },
+    { "id": "shopkeeper", "name": "shopkeeper", "yield": [{ "itemId": "coin", "qty": 3 }, { "itemId": "cloth", "qty": 1, "chance": 0.2 }] }
+  ]
+}

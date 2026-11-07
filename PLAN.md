@@ -57,3 +57,15 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
 ## Blockers
 - None open. Neglect→despair resolved (+0.01/dawn per untouched town, grace 1 dawn, capped 0.6, never fails; `economy-lod.json` despair.neglect). Balance resolved via `scoring.json` spark.strainMulByTag (hard/shame_lean ×0.55 → ~11 dawns) and sparkGainAdjustByTag (gentle/presence −1). M5 gate: Go (Niblet, on Alex's delegation).
 - Tests: 563/563 green, build green (verified on this branch).
+
+## Economy sim roadmap (one phase per session; each phase deterministic, saved, tested; features stay light and NPC-driven first)
+
+1. ~~**Named jobs + work yields.**~~ DONE. `data/items/jobs.json`, `sim/goods/jobs.ts`; a person's job derives from seed; work_alongside yields their job's goods.
+2. **Supply/demand core.** Per-town production from job holders, consumption per household, price from stock vs need (extends `priceAt`/needs board). Inputs and tools: processors consume items (flour->bread, ore+wood->tools). Add grain, flax, flour, rope, nails, pots.
+3. **Logistics.** Carts/couriers move surplus between towns along routes; shortage posts a request; roads have capacity and danger; caravans and stash theft already exist.
+4. **Ambitions + build plans.** A person picks an ambition (build farm/mill/smithy/house/chapel), then plans: site (free tiles), claim (land claim record), bill of materials, labor. Persisted `plans` table; steps tick at dawn; player can be asked to help (a request on the needs board).
+5. **Hiring + companies.** Plan owners hire idle jobholders (wages in coin); a company = owner + building + workers + ledger. Light: companies exist and produce, no player UI beyond gifts/work.
+6. **Households + lineage.** Man+woman adult household, children, surnames chosen by the founder (ancestry name). Gifted children: rare roll gated by household warmth/flame ("high vibration") and goods security. Heirs inherit claims.
+7. **Borders + claims.** Claim records become town/estate borders on the map; overlap creates disputes.
+8. **Light polity layer.** Diplomacy (treaty/feud meters), war (raids that destroy goods/claims), technology (unlock recipes by built institutions), religion (shrine + creed that sets meters). Planned and claimed by NPCs only; no player verbs yet.
+Rule: no phase ships without a 30-dawn deterministic run test and `npm run validate && npm test && npm run build`.

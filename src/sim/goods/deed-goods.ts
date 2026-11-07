@@ -3,6 +3,7 @@
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
+import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 
@@ -106,13 +107,14 @@ function carry(state: SimState, personId: string): DeedGoodsResult {
 function work(state: SimState, personId: string): DeedGoodsResult {
   const rng = deriveRng(state.seed, 'work', state.day, personId);
   const got: string[] = [];
-  for (const y of ITEMS.deeds.workAlongsideYield) {
+  const job = jobOf(state, personId);
+  for (const y of job.yield) {
     if (y.chance !== undefined && rng.next() >= y.chance) continue;
     addItem(state, y.itemId, y.qty);
-    for (let k = 0; k < y.qty; k++) mintInstance(state, y.itemId, personId, townOf(state, personId));
+    if (y.itemId !== 'coin') for (let k = 0; k < y.qty; k++) mintInstance(state, y.itemId, personId, townOf(state, personId));
     got.push(`${y.qty} ${itemName(y.itemId)}`);
   }
-  return { ok: true, line: `You work alongside ${first(personId)}. +${got.join(', +')}` };
+  return { ok: true, line: `You work alongside ${first(personId)} the ${job.name}. +${got.join(', +')}` };
 }
 
 /** Run the item side of a goods deed. ok=false means the deed should not resolve. */

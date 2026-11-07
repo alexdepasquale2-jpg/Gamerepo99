@@ -218,21 +218,6 @@
     ]
   },
   "deeds": {
-    "workAlongsideYield": [
-      {
-        "itemId": "bread",
-        "qty": 1
-      },
-      {
-        "itemId": "wood",
-        "qty": 1
-      },
-      {
-        "itemId": "tools",
-        "qty": 1,
-        "chance": 0.15
-      }
-    ],
     "tradeMarkup": 1.25,
     "carryCargoQty": 2,
     "carryRewardCoin": 4,
