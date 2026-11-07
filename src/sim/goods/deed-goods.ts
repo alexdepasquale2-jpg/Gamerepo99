@@ -6,7 +6,7 @@ import type { SimState } from '../types/runtime';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 
-export type DeedGoodsResult = { ok: boolean; line: string };
+export type DeedGoodsResult = { ok: boolean; line: string; /** Item that changed hands (gift/trade), for presentation. */ itemId?: string };
 const GOODS_DEEDS = new Set(['gift_give', 'trade_fair', 'carry_goods', 'work_alongside']);
 export const isGoodsDeed = (id: string): boolean => GOODS_DEEDS.has(id);
 
@@ -55,7 +55,7 @@ function gift(state: SimState, personId: string, selected?: string): DeedGoodsRe
   giveInstance(state, g.itemId, personId);
   const relief = deliverToTown(state, townOf(state, personId), g.itemId, 1, personId);
   const feel = g.affinity >= 2 ? 'holds it close' : g.affinity > 0 ? 'smiles' : 'accepts it politely';
-  return { ok: true, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}` };
+  return { ok: true, itemId: g.itemId, line: `${first(personId)} ${feel} (${itemName(g.itemId)}).${relief ? ' The town needed that.' : ''}` };
 }
 
 function trade(state: SimState, personId: string, selected?: string): DeedGoodsResult {
@@ -69,7 +69,7 @@ function trade(state: SimState, personId: string, selected?: string): DeedGoodsR
     consumeInstance(state, it.id);
     addItem(state, 'coin', coin);
     const relief = deliverToTown(state, townId, it.id, 1, personId);
-    return { ok: true, line: `Traded ${it.name} for ${coin} coin.${relief ? ' They were short of it.' : ''}` };
+    return { ok: true, itemId: it.id, line: `Traded ${it.name} for ${coin} coin.${relief ? ' They were short of it.' : ''}` };
   }
   const cost = priceAt(state, townId, 'bread');
   if (!hasItem(state, 'coin', cost)) return { ok: false, line: 'Nothing to trade and no coin.' };

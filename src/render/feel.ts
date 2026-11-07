@@ -5,6 +5,7 @@
  */
 
 export const FEEL = {
+  handoff: { ms: 700, arc: 22 },
   /** Per-town despair desaturation. satFloor 0.25 is a proposal pending sign-off (never fully grey). */
   tint: {
     satFloor: 0.25,
@@ -159,6 +160,14 @@ export const FEEL = {
 } as const;
 
 export type Feel = typeof FEEL;
+
+/** Item sprite flight from giver to receiver; `arc` is the peak lift in px. */
+export function handoffPath(from: { x: number; y: number }, to: { x: number; y: number }, t: number): { x: number; y: number } {
+  const u = Math.min(1, Math.max(0, t));
+  const e = u * u * (3 - 2 * u);
+  return { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e - Math.sin(u * Math.PI) * FEEL.handoff.arc };
+}
+
 
 /** Effective shake intensity honoring reduced-motion flag. */
 export function feelShakeIntensity(base: number): number {

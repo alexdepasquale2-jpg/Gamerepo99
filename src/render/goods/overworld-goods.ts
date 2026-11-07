@@ -17,6 +17,7 @@ import { useItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
+import { FEEL, handoffPath } from '../feel';
 import { playSfx } from '../sfx';
 import { unreadReplies } from '../../sim/letter-replies';
 import { createCaravanTrade } from './caravan-trade-ui';
@@ -142,6 +143,14 @@ export function attachOverworldGoods(
       const r = applyDeedGoods(s, methodId, personId, inv.selectedItem());
       inv.refresh();
       living.refresh();
+      if (r?.ok && r.itemId && people.byId.has(personId)) {
+        const it = ITEM_BY_ID.get(r.itemId), from = getPlayer(), to = people.headOf(personId);
+        const icon = scene.add.circle(from.x, from.y - 24, 5, parseInt((it?.color ?? '#f4e6c8').slice(1), 16)).setStrokeStyle(1, 0x1b1612).setDepth(1_000_000);
+        icon.setName('handoff');
+        const clock = { t: 0 };
+        // Item flies from the player to the villager.
+        scene.tweens.add({ targets: clock, t: 1, duration: FEEL.handoff.ms, onUpdate: () => { const p = handoffPath({ x: from.x, y: from.y - 24 }, { x: to.x, y: to.y }, clock.t); icon.setPosition(p.x, p.y); }, onComplete: () => icon.destroy() });
+      }
       return r ? { ok: r.ok, line: r.line } : { ok: true };
     },
     useSelected(indoors = false) {
