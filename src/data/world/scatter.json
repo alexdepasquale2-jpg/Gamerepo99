@@ -1,0 +1,11 @@
+{
+  "_doc": "Density between towns. Per 4-tile (L2) cell: chance of one prop by biome. Per 16-tile (L1) cell: chance of a hamlet on fields/meadow near a road. Town clearance and road distance in tiles.",
+  "townClearTiles": 40,
+  "cell": {
+    "fields": [{ "type": "field", "chance": 0.06 }, { "type": "farmstead", "chance": 0.004 }],
+    "meadow": [{ "type": "field", "chance": 0.012 }, { "type": "farmstead", "chance": 0.002 }],
+    "forest": [{ "type": "camp", "chance": 0.004 }],
+    "hills": [{ "type": "mine", "chance": 0.004 }]
+  },
+  "hamlet": { "chance": 0.05, "maxRoadTiles": 48, "farmsteads": [2, 4], "fields": [3, 7], "biomes": ["fields", "meadow"] }
+}

@@ -21,6 +21,7 @@ import type {
 import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
 import { terrainMode } from './terrain';
+import { scatterProps, type ScatterCtx } from './ladder/scatter';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
@@ -113,6 +114,17 @@ export function createStampRasterSource(
   const terrain = createTerrainAccess(layout, seed, roads);
   const props = buildProps(roads, seed);
   const bbox = layoutBBox(layout);
+  const roadCells = [...roads.values()];
+  const scatterCtx: ScatterCtx = {
+    biome: terrain.biome,
+    isRoad: (q, r) => roads.has(cellKey(q, r)),
+    townDistance: (q, r) => Math.min(...layout.settlements.map((s) => Math.hypot(q - s.q, r - s.r))),
+    roadDistance: (q, r, cap) => {
+      let best = cap;
+      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) best = d; }
+      return best;
+    },
+  };
   const fp = fingerprintHex([
     String(seed >>> 0),
     terrainMode(),
@@ -171,6 +183,7 @@ export function createStampRasterSource(
           p.position.y < tr1,
       );
 
+      if (terrainMode() === 'ladder') chunkProps.push(...scatterProps(seed, tq0, tr0, CHUNK_SIZE, scatterCtx));
       return { cx, cy, tiles, props: chunkProps };
     },
   };

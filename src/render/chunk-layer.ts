@@ -31,7 +31,8 @@ export function createChunkLayer(
 ): ChunkLayer {
   const mounted = new Map<string, Phaser.GameObjects.Container>();
   const keyOf = (c: ChunkCoord) => `${c.cx},${c.cy}`;
-  const paintedPropIds = new Set<string>();
+  /** Props are scene children (foot-Y sort), owned by their chunk so they unmount with it. */
+  const chunkProps = new Map<string, Phaser.GameObjects.GameObject[]>();
 
   // Scene-level stamps (null container → foot-Y depth joins player sort)
   for (const town of townMarkers) {
@@ -48,6 +49,8 @@ export function createChunkLayer(
         if (!want.has(k)) {
           container.destroy(true);
           mounted.delete(k);
+          for (const o of chunkProps.get(k) ?? []) o.destroy();
+          chunkProps.delete(k);
         }
       }
       for (const coord of coords) {
@@ -58,17 +61,14 @@ export function createChunkLayer(
         painted.setDepth(0);
         mounted.set(k, painted);
 
-        for (const prop of chunk.props) {
-          if (paintedPropIds.has(prop.id)) continue;
-          paintedPropIds.add(prop.id);
-          paintProp(host, null, prop);
-        }
+        chunkProps.set(k, chunk.props.flatMap((prop) => paintProp(host, null, prop)));
       }
     },
     destroy() {
       for (const c of mounted.values()) c.destroy(true);
       mounted.clear();
-      paintedPropIds.clear();
+      for (const objs of chunkProps.values()) for (const o of objs) o.destroy();
+      chunkProps.clear();
     },
   };
 }
