@@ -1,7 +1,8 @@
 # PLAN
 
 ## Status
-M4 on main (PR #1). M5 plan written. M5 Task A done (`0c675c7`, 405 tests); B + C next, in parallel.
+M5 on main (PRs #2,#4,#5,#8 + gap fixes #9–#14), 458 tests. M7 bots (#7) + perf (#6) + M6 plan (#3) merged.
+Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance numbers; then M6 surfacing (step 7).
 
 ## Next 5 steps (one per session, gate: `npm run validate && npm test && npm run build`)
 
@@ -19,18 +20,18 @@ M4 on main (PR #1). M5 plan written. M5 Task A done (`0c675c7`, 405 tests); B + 
    Neglect raises despair but never fails the run; it is a legitimate ending.
    Done when: a 30-dawn hoarder bot run ends cleanly with an ending, not a loss; notoriety drives encounters.
 
-4. **M5 Task B: kingdom patrons.** Deal with a large polity for leverage and notoriety; patrons tie into
+4. ~~**M5 Task B: kingdom patrons.**~~ DONE. Deal with a large polity for leverage and notoriety; patrons tie into
    doctrines (propaganda, perceived delivery). Change still comes only through interactions (no button spend).
    Done when: a patron deal shifts doctrine meters and notoriety, deterministically.
 
-5. **M5 Task C: generational play + async legacy.** Succession hands the heir an ember, reputation echoes and
+5. ~~**M5 Task C: generational play + async legacy.**~~ DONE. Succession hands the heir an ember, reputation echoes and
    rumors (via letters/rumors + unspoken). Export/import a versioned world file (seed + delta log + imprint);
    former PCs appear as legends, NPCs or graves.
    Done when: burnout → "Carry it on" continues with an heir; an exported file re-imports with the legend present.
 
 ## After M5 (steps 6–10)
 
-6. **Land M5.** Task A verified + pushed; then B and C run in parallel worktrees (own branch + PR each).
+6. ~~**Land M5.**~~ DONE except one evidence gap (neglect doesn't raise despair). Task A verified + pushed; then B and C run in parallel worktrees (own branch + PR each).
    Merge A → B → C, resolving overlaps in `doctrine-tick.ts`, `save.ts`, `types/runtime.ts`.
    Add `scripts/m5-depth-evidence.mts` (like M4's); gate doc + verdict. Done when: M5 on main, evidence `gaps: []`.
 
@@ -43,13 +44,14 @@ M4 on main (PR #1). M5 plan written. M5 Task A done (`0c675c7`, 405 tests); B + 
    free audio assets (credit in `CREDITS.md`). Merge or drop leftover `wip` art/patches here.
    Done when: Playwright screenshot check of a reignite + a despairing town; build size noted.
 
-9. **M7 balance bots.** Headless bots per playstyle (kind, harsh, hoarder, neglect) × archetypes × seeds,
+9. **M7 balance bots.** Harness DONE (#7, #11); tuning pending Alex. Headless bots per playstyle (kind, harsh, hoarder, neglect) × archetypes × seeds,
    using `specs/2026-11-06-spark-pacing-balance.md`. Close the basilisk_brood × savage burnout pocket.
    Done when: matrix report, no archetype/playstyle stuck or trivially winning, all runs deterministic.
 
-10. **M7 perf + bug sweep.** Profile 100+ dawns on the big world (dawn tick budget, delta-log size from M5).
+10. **M7 perf + bug sweep.** Perf profile DONE (#6). Profile 100+ dawns on the big world (dawn tick budget, delta-log size from M5).
     Fix found bugs with tests. Done when: dawn tick under budget, no open P1 bugs.
     M8 (public build) only after your clearance.
 
 ## Blockers
-- None. Open questions are listed in the M5 plan index and task files.
+- Neglect→despair: spec §7 says despair rises when you never reignite, but LOD only raises it on starve/broken routes. Needs a rule (Alex).
+- Balance numbers (harsh burnout ~6 dawns for basilisk_brood/marrow; gentle styles cost nothing) need Alex's OK.
