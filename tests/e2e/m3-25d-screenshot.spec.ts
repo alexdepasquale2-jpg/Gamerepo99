@@ -7,6 +7,7 @@ const OUT = path.join('artifacts', '25d');
 test('capture continuous overworld screenshots', async ({ page }) => {
   fs.mkdirSync(OUT, { recursive: true });
   await page.goto('/');
+  await page.locator('[data-id=new]').click(); // title menu first (M6)
   const canvas = page.locator('#game canvas');
   await expect(canvas).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(1000);
