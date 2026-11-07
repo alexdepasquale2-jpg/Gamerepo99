@@ -3,7 +3,6 @@ import { openMenu, type MenuHandle } from './dom';
 
 export type PauseIo = {
   onResume: () => void;
-  onRest: () => string;
   onSave: () => void;
   onLoad: () => void;
   onWorldFile: () => void;
@@ -15,7 +14,6 @@ export function openPauseMenu(io: PauseIo): MenuHandle {
     'Paused',
     [
       { id: 'resume', label: 'Resume', onPick: () => (handle.close(), io.onResume()) },
-      { id: 'rest', label: 'Rest until dawn', hint: 'Let a day pass', onPick: () => handle.setNote(io.onRest()) },
       { id: 'save', label: 'Save', onPick: () => (handle.close(), io.onSave()) },
       { id: 'load', label: 'Load', onPick: () => (handle.close(), io.onLoad()) },
       { id: 'world', label: 'World file', onPick: () => (handle.close(), io.onWorldFile()) },

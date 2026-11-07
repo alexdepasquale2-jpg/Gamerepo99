@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
-import { TownScene } from './render/town-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
@@ -26,7 +25,7 @@ function stop(): void {
 // Title menu first; the game boots when the player starts or loads a world.
 runGameFlow({
   stop,
-  start(session) {
+  start(session, autosave) {
     stop();
     game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -37,7 +36,7 @@ runGameFlow({
       pixelArt: true, // nearest-neighbor — integer scales stay crisp under Scale.FIT
       antialias: false,
       roundPixels: true,
-      scene: [BootScene, OverworldScene, TownScene],
+      scene: [BootScene, OverworldScene],
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -47,6 +46,7 @@ runGameFlow({
           g.registry.set("playSession", session);
           g.registry.set('methodMenu', methodMenu);
           g.registry.set('hud', hud);
+          g.registry.set('autosave', autosave);
         },
       },
     });
