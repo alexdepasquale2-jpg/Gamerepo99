@@ -42,7 +42,7 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
    ("Your fire went out. Someone remembers it." / Carry it on / Let it rest), save/load menu using `SaveBlob`.
    Done when: a played 10-dawn session shows each M4/M5 event to the player through people, no popups.
 
-8. **M6 juice + audio pass.** Reignite VFX (`plans/2026-11-05-spark-reignite-vfx.md`), color return on reignite,
+8. **M6 juice + audio pass.** PARTIAL: overworld now fires reignite VFX; procedural sfx (src/render/sfx.ts, N mutes). Left: Playwright reignite + despair screenshots, build-size note, listen/tune cues. Reignite VFX (`plans/2026-11-05-spark-reignite-vfx.md`), color return on reignite,
    free audio assets (credit in `CREDITS.md`). Merge or drop leftover `wip` art/patches here.
    Done when: Playwright screenshot check of a reignite + a despairing town; build size noted.
 
@@ -56,4 +56,4 @@ Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance
 
 ## Blockers
 - None open. Neglect→despair resolved (+0.01/dawn per untouched town, grace 1 dawn, capped 0.6, never fails; `economy-lod.json` despair.neglect). Balance resolved via `scoring.json` spark.strainMulByTag (hard/shame_lean ×0.55 → ~11 dawns) and sparkGainAdjustByTag (gentle/presence −1). M5 gate: Go (Niblet, on Alex's delegation).
-- Known: 13 vitest failures pre-existing since 98ce756 runtime wiring; not yet triaged.
+- Tests: 563/563 green, build green (verified on this branch).
