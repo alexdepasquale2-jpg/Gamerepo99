@@ -7,7 +7,7 @@ Everything is on `main` (https://github.com/alexdepasquale2-jpg/Gamerepo99). Sta
 - Economy sim phases 1–8 done and on main, deterministic and tested: named jobs, village ledger (production, processing, demand, shortage pricing), logistics (requests, carts on roads), ambitions and build plans (plots, claims, labor), companies and wages, households and family lines (gifted births, inheritance), borders and claim disputes, light polity (diplomacy, war, tech, creeds). All NPC-run; the player only helps by gifting.
 - Economy is shown on screen: noticeboard page 2 (E at a town board), plot markers in the world, M-map overlays (rings, treaty/war lines, carts).
 - Checks at last commit: 628 unit tests, build, 15 e2e passing (1 skipped by design).
-- Live private artifact of the game (mobile, on-screen keys): https://claude.ai/artifact/DLJdBXRYjMfUmQLpaQhhjw. It is an old build; rebuild with `npx vite build --base=./` and republish to refresh.
+- Live private artifact of the game (mobile, on-screen keys): https://claude.ai/artifact/DLJdBXRYjMfUmQLpaQhhjw. Version 2 is the build of `main` at e1a7b48 (economy on screen). To refresh: `npx vite build --base=./ --outDir <scratch>/site`, wrap with the play page (on-screen keys), publish to the same URL; not yet tested on a phone.
 
 ## Where things are
 - `src/sim/economy/`: `village-economy`, `logistics`, `build-plans`, `companies`, `households`, `borders`, `polity`, `economy-view` (pure read model for UI). Data: `src/data/items/{items,jobs,buildings,polity}.json`.
