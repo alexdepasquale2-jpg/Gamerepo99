@@ -42,7 +42,7 @@ export function dropItem(state: SimState, itemId: string, at: { x: number; y: nu
   const inst = (state.itemInstances ?? []).find((i) => i.itemId === itemId && i.heldBy === 'player');
   if (inst) inst.heldBy = 'ground';
   const list = (state.groundItems ??= []);
-  const g = { id: `g${state.day}_${list.length}_${Math.round(at.x)}_${Math.round(at.y)}`, itemId, x: at.x, y: at.y, instId: inst?.id };
+  const g = { id: `g${state.day}_${1 + list.reduce((m, i) => Math.max(m, Number(/^g\d+_(\d+)/.exec(i.id)?.[1] ?? 0)), 0)}`, itemId, x: at.x, y: at.y, instId: inst?.id };
   list.push(g);
   return g;
 }

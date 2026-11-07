@@ -13,7 +13,7 @@ export type ItemInstance = {
 
 export function mintInstance(state: SimState, itemId: string, madeBy: string, townId: string): ItemInstance {
   const list = (state.itemInstances ??= []);
-  const inst: ItemInstance = { id: `${itemId}#${list.length + 1}_${state.day}`, itemId, madeBy, townId, dawn: state.day, heldBy: 'player' };
+  const inst: ItemInstance = { id: `${itemId}#${1 + list.reduce((m, i) => Math.max(m, Number(/#(\d+)_/.exec(i.id)?.[1] ?? 0)), 0)}_${state.day}`, itemId, madeBy, townId, dawn: state.day, heldBy: 'player' };
   list.push(inst);
   return inst;
 }

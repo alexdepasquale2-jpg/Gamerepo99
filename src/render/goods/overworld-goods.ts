@@ -78,7 +78,12 @@ export function attachOverworldGoods(
     for (const g of live) {
       if (groundViews.has(g.id)) continue;
       const c = scene.add.circle(g.x, g.y, 5, parseInt((ITEM_BY_ID.get(g.itemId)?.color ?? '#f4e6c8').slice(1), 16)).setStrokeStyle(1, 0x1b1612).setDepth(g.y).setName('ground-item').setInteractive({ useHandCursor: true });
-      c.on('pointerdown', () => { const s = st(); if (s && Math.hypot(g.x - getPlayer().x, g.y - getPlayer().y) < 70 && pickUpItem(s, g.id)) { inv.refresh(); showGround(); } else say('Too far to pick up.'); });
+      c.on('pointerdown', () => {
+        const s = st();
+        if (!s || Math.hypot(g.x - getPlayer().x, g.y - getPlayer().y) >= 70) { say('Too far to pick up.'); return; }
+        if (pickUpItem(s, g.id)) inv.refresh();
+        showGround();
+      });
       groundViews.set(g.id, c);
     }
   };
@@ -92,6 +97,7 @@ export function attachOverworldGoods(
       if (act.kind === 'gift_give') {
         const r = api.beforeDeed('gift_give', act.personId, act.itemId);
         if (r.line) say(r.line);
+        if (r.ok) session.act(`gift_give@${act.personId}`);
       } else if (act.kind === 'drop' && dropItem(s, itemId, { x: wx, y: wy })) {
         showGround(); inv.refresh(); say(`You set down the ${ITEM_BY_ID.get(itemId)?.name ?? itemId}.`);
       }
