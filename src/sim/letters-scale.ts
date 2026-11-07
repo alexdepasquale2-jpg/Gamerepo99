@@ -145,6 +145,8 @@ export function rollCrossTownLetters(
   if (opts.genuineGrowth && rng.next() < (t.crossTown.onGenuineGrowthChance ?? 0)) fromEdge(t.crossTown.emitPacketType ?? 'proof_packet');
   if (opts.hollowness && rng.next() < (t.crossTown.onHollownessChance ?? 0)) fromEdge(t.crossTown.emitPressureType ?? 'relapse_pressure');
 
+  if (!ls.pending.length || out.length >= MAX_PACKETS_PER_DAWN) return out;
+  // Built only when the backlog needs a cascade walk (graph construction is O(edges) per dawn).
   const g = createSocialGraph(edges);
   const prop = { ...DEFAULT_SOCIAL_PROPAGATION, falloff: t.falloff };
   while (ls.pending.length && out.length < MAX_PACKETS_PER_DAWN) {

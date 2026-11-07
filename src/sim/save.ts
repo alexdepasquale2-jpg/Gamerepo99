@@ -17,6 +17,7 @@ export type SaveBlob = {
   /** Legacy: reserved protagonist imprint + bond/grave/lineage state (M5 Task C). */
   imprint?: ProtagonistImprint | null;
   legacy?: LegacyState;
+  patronDeals?: Record<string, import('./patrons/types').PatronDeal>;
 };
 
 export function serializeSave(blob: SaveBlob): string {

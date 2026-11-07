@@ -60,7 +60,8 @@
         "hoard",
         "guard"
       ],
-      "coinCost": 10
+      "coinCost": 10,
+      "upkeepPerDay": 2
     },
     {
       "id": "stash_withdraw",

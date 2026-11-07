@@ -18,7 +18,9 @@ import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { applyDoctrineAct } from '../doctrine-tick';
+import { fireNotorietyEvent } from '../hoard/events';
 import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
+import { applyPatronInteraction } from '../patrons';
 import { runHooks } from '../hooks';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
@@ -83,6 +85,7 @@ export function actInteraction(
   const refusal = refuseMethod(s, personId, methodId);
   if (refusal) {
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: refusal.line });
+    fireNotorietyEvent(s, 'refusal');
     finish({ kind: 'refused', flameDelta: 0, sparkCost: sparkBefore - s.player.spark, personId, methodId });
     return;
   }
@@ -128,6 +131,7 @@ export function actInteraction(
   if (def0?.stashAct) applyStashAct(s, def0.stashAct);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
   recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited });
+  applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);
   const doctrineAct = rt.catalog.get(interactionId)?.doctrineAct;
   for (const actId of doctrineAct === undefined ? [] : [doctrineAct].flat()) applyDoctrineAct(s, actId, personId);
   if (rt.catalog.get(interactionId)?.kind === 'stand_up' && person.flame > flameBefore && person.townId) {

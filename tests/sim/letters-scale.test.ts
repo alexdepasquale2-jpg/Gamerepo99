@@ -47,3 +47,25 @@ describe('letters at scale', () => {
     expect(state.letters!.flight.length + (state.bus?.lastIds ?? []).filter((x) => x === 'letter.deliver').length).toBeGreaterThan(0);
   });
 });
+
+/** Golden fingerprints captured on the pre-optimisation code (graph built every dawn). */
+describe('letters dawn output unchanged by lazy graph build (M7 perf)', () => {
+  function fingerprint(queue: boolean): number {
+    const { state } = bootPlayState(11, 'marrow');
+    ensureEconomyState(state);
+    for (const p of Object.values(state.people)) p.marks = [{ markId: 'genuine_growth', stacks: 1 }];
+    const ids = Object.keys(state.people);
+    const out: string[][] = [];
+    for (let i = 0; i < 25; i++) {
+      if (queue && i % 4 === 0) enqueueLetter(state, { kind: i % 8 === 0 ? 'rumor' : 'letter', fromPersonId: ids[i % ids.length]!, outcomeId: 'x' });
+      state.day++;
+      out.push(tickLetters(state));
+    }
+    const s = JSON.stringify([out, state.letters, state.bus?.lastIds, state.flags.circumstanceTags]);
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  it('empty backlog', () => expect(fingerprint(false)).toBe(2595570247));
+  it('queued backlog', () => expect(fingerprint(true)).toBe(1862730088));
+});

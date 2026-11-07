@@ -126,6 +126,12 @@ export const doctrineSupplyHook: DoctrineSupplyHook = (state, { townId, deltaRea
   }
 };
 
+/** Patron hook: nudge one meter of a live doctrine (clamped). Legitimacy is recomputed at the next dawn, never set. */
+export function nudgeDoctrine(state: SimState, id: string, meter: 'realDelivery' | 'perceivedDelivery' | 'propaganda' | 'control' | 'exposure', add: number): void {
+  const d = ensureDoctrines(state)[id];
+  if (d && !d.collapsed) d[meter] = clamp01(d[meter] + add);
+}
+
 type ActRow = {
   id: string;
   requiresTargetTagsAny?: string[];

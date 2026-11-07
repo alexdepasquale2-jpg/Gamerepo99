@@ -108,4 +108,6 @@ export type SimState = {
   hoard?: HoardState;
   /** M5 Task C: bond ledger, graves, legends, lineage, delta log (saveable). */
   legacy?: LegacyState;
+  /** M5 Task B: patron deals by deal id (saveable). */
+  patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
 };
