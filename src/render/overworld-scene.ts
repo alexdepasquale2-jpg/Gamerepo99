@@ -34,6 +34,8 @@ import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 
 const CHUNK_MARGIN = 1;
+/** Playtest only: ?speed=20 walks 20x faster across the big world. */
+const TEST_SPEED = Math.max(1, Number(new URLSearchParams(globalThis.location?.search ?? '').get('speed')) || 1);
 const VERB: Record<string, string> = {
   inspire: 'Inspire', carry_burden: 'Carry burden', challenge: 'Challenge', shame: 'Shame',
   lie: 'Lie', show_up: 'Show up', listen: 'Listen',
@@ -209,7 +211,7 @@ export class OverworldScene extends Phaser.Scene {
         dx,
         dy,
         delta,
-        FEEL.overworld.walkTilesPerSec,
+        FEEL.overworld.walkTilesPerSec * TEST_SPEED,
         TILE_PX,
       );
       // Substeps prevent tunnelling during a slow frame; slide along banks.

@@ -3,7 +3,6 @@
 import nodesJson from '../../data/world/resource-nodes.json';
 import { deriveRng } from '../rng';
 import { biomeAt } from '../map/terrain';
-import { WORLD_SCALE } from '../map/constants';
 import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
@@ -57,18 +56,30 @@ export function placeNodes(seed: number, settlements: Place[], routes: { from: s
       out.push({ id: `${rt.from}>${rt.to}#${i}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
     }
   }
-  // Jittered regional cells fill the wilderness too, not just settlement rings.
-  if (settlements.length) {
-    const q0 = Math.min(...settlements.map((s) => s.q)) - 30, q1 = Math.max(...settlements.map((s) => s.q)) + 30;
-    const r0 = Math.min(...settlements.map((s) => s.r)) - 30, r1 = Math.max(...settlements.map((s) => s.r)) + 30;
-    // Cell grows with the world so the node count (one sprite each, scanned per frame) stays as before.
-    const C = Math.round(9 * WORLD_SCALE);
-    for (let x = Math.floor(q0 / C); x <= Math.ceil(q1 / C); x++) for (let y = Math.floor(r0 / C); y <= Math.ceil(r1 / C); y++) {
-      const rng = deriveRng(seed, 'biome-nodes', x, y);
-      const q = x * C + rng.int(1, C - 1), r = y * C + rng.int(1, C - 1);
-      if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
-      out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
-    }
+  return out;
+}
+
+const WILD_CELL = 9;
+/**
+ * Wild nodes are never placed up front. The wilderness is only a seeded probability
+ * (one per 9-tile cell, kind by biome); a node collapses into a real one when something
+ * looks at its tile rect [q0,q1) x [r0,r1). Same cell -> same id, so saved charges
+ * (state.worldNodes) still find it.
+ */
+export function wildNodesIn(seed: number, settlements: Place[], q0: number, r0: number, q1: number, r1: number): WorldNode[] {
+  const out: WorldNode[] = [];
+  if (!settlements.length) return out;
+  const bq0 = Math.min(...settlements.map((s) => s.q)) - 30, bq1 = Math.max(...settlements.map((s) => s.q)) + 30;
+  const br0 = Math.min(...settlements.map((s) => s.r)) - 30, br1 = Math.max(...settlements.map((s) => s.r)) + 30;
+  const C = WILD_CELL;
+  const xa = Math.max(Math.floor(bq0 / C), Math.floor(q0 / C)), xb = Math.min(Math.ceil(bq1 / C), Math.floor((q1 - 1) / C));
+  const ya = Math.max(Math.floor(br0 / C), Math.floor(r0 / C)), yb = Math.min(Math.ceil(br1 / C), Math.floor((r1 - 1) / C));
+  for (let x = xa; x <= xb; x++) for (let y = ya; y <= yb; y++) {
+    const rng = deriveRng(seed, 'biome-nodes', x, y);
+    const q = x * C + rng.int(1, 8), r = y * C + rng.int(1, 8);
+    if (q < q0 || q >= q1 || r < r0 || r >= r1) continue;
+    if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
+    out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
   }
   return out;
 }
