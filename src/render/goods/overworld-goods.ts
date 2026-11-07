@@ -10,6 +10,7 @@ import { HEARTH_OFFSET, type WorldLife } from '../world-life';
 import type { PeopleLayer } from '../people-layer';
 import { hash } from '../people-layer';
 import { createNodesLayer } from './nodes-layer';
+import { createStashChests } from './stash-chest';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
 import { useItem } from '../../sim/goods/item-use';
@@ -53,6 +54,7 @@ export function attachOverworldGoods(
   const despair = () => session.townDespair();
   const inv = createInventoryUi(scene, st);
   const mail = createCorrespondence(scene, st, () => inv.refresh());
+  const chests = createStashChests(scene, st, layout.settlements, () => inv.refresh());
   const memories = new Map<string, Phaser.GameObjects.Text>();
   // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
   const badge = scene.add.text(12, 62, '', { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#ffd877', stroke: '#1b1612', strokeThickness: 3 }).setScrollFactor(0).setDepth(1_000_000).setVisible(false);
@@ -109,6 +111,7 @@ export function attachOverworldGoods(
     update(time, dt, player) {
       document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
+      if (Math.floor(time / 500) !== Math.floor((time - dt) / 500)) chests.refresh();
       living.update(time, dt);
       map.update(time);
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
@@ -122,6 +125,7 @@ export function attachOverworldGoods(
     },
     onDawn() {
       nodes.refresh();
+      chests.refresh();
       living.refresh();
       inv.refresh();
     },

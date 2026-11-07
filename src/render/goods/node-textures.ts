@@ -38,6 +38,11 @@ const P: Record<string, [number, number, Painter]> = {
   depleted: [16, 10, (g) => {
     g.fillStyle(0x6a5a40, 0.7).fillEllipse(8, 6, 12, 5);
   }],
+  chest: [12, 9, (g) => {
+    g.fillStyle(0x6a4020).fillRect(0, 2, 12, 7);
+    g.fillStyle(0x8a5a32).fillRect(0, 0, 12, 3);
+    g.fillStyle(0xf2b84b).fillRect(5, 3, 2, 3).fillRect(0, 5, 12, 1);
+  }],
   stall: [24, 20, (g) => {
     g.fillStyle(0x6a4a2a).fillRect(2, 8, 2, 12).fillRect(20, 8, 2, 12).fillRect(1, 13, 22, 4);
     g.fillStyle(0xc8423a).fillRect(0, 4, 24, 4);
