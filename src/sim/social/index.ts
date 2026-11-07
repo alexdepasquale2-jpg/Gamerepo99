@@ -20,6 +20,7 @@ export {
   decayUnspoken,
   encodeUnspoken,
   encodeUnspokenForState,
+  surfaceUnspokenInReply,
   tickUnspokenDawn,
   witnessOutcome,
 } from './unspoken';

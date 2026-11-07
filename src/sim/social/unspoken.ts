@@ -335,3 +335,42 @@ export function tickUnspokenDawn(state: SimState): void {
   decayUnspoken(state.unspoken, d.unspoken);
   runComeToPass(state, d, d.unspoken);
 }
+
+/**
+ * A reply letter is a circumstance in which a latent Blessing or Burden can come to pass: the
+ * writer is the carrier, so the outcome (and its line) is theirs and lands in the reply.
+ * Considers instances the writer started, sits on the path of, or that were placed in their town.
+ * At most one surfaces per reply. `roll` replaces the derived rng (tests).
+ */
+export function surfaceUnspokenInReply(
+  state: SimState,
+  writerId: string,
+  opts: { tags?: readonly string[]; roll?: () => number; rollKey?: string } = {},
+): ComeToPassResult | undefined {
+  const d = (state.data ?? {}) as UnspokenData;
+  const t = d.unspoken;
+  const st = state.unspoken;
+  if (!t || !st?.instances.length) return undefined;
+  const town = state.people[writerId]?.townId;
+  const base = ctxFor(state, d);
+  const rng = deriveRng(state.seed, 'reply-surface', opts.rollKey ?? writerId, state.day);
+  const ctx: ComeToPassCtx = {
+    ...base,
+    circumstanceTags: [...base.circumstanceTags, ...(opts.tags ?? [])],
+    peopleByTown: {},
+    roll: opts.roll ?? (() => rng.next()),
+  };
+  const near = st.instances
+    .filter((x) => !x.consumed && (x.sourcePersonId === writerId || x.personIds.includes(writerId) || (!!town && x.placeTownId === town)))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  for (const inst of near) {
+    // The writer is the only candidate carrier; when they started it themselves, the source slot is vacated.
+    const probe: UnspokenInstance = { ...inst, personIds: [writerId], sourcePersonId: inst.sourcePersonId === writerId ? '' : inst.sourcePersonId };
+    const [hit] = comeToPassUnspoken({ seq: st.seq, instances: [probe], tuning: st.tuning }, t, ctx);
+    if (!hit) continue;
+    st.instances = st.instances.filter((x) => x.id !== inst.id);
+    applyResult(state, t, { ...hit, sourcePersonId: inst.sourcePersonId });
+    return hit;
+  }
+  return undefined;
+}

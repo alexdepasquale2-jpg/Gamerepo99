@@ -17,6 +17,7 @@ import { useItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
+import { unreadReplies } from '../../sim/letter-replies';
 import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
 import type { Navigator } from '../../sim/map/nav';
@@ -53,6 +54,8 @@ export function attachOverworldGoods(
   const inv = createInventoryUi(scene, st);
   const mail = createCorrespondence(scene, st, () => inv.refresh());
   const memories = new Map<string, Phaser.GameObjects.Text>();
+  // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
+  const badge = scene.add.text(12, 62, '', { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#ffd877', stroke: '#1b1612', strokeThickness: 3 }).setScrollFactor(0).setDepth(1_000_000).setVisible(false);
   const trader = createCaravanTrade(scene, st, () => inv.refresh());
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId, nav);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
@@ -99,6 +102,8 @@ export function attachOverworldGoods(
       nodes.update(player, time);
       living.update(time, dt);
       map.update(time);
+      const cur = st(), unread = cur ? unreadReplies(cur) : 0;
+      badge.setVisible(unread > 0 && !mail.isOpen()).setText(`✉ ${unread} unread ${unread === 1 ? 'reply' : 'replies'} · L`);
       for (const townId of Object.keys(st()?.hearthKeepsakes ?? {})) if (!memories.has(townId)) {
         const p = hearthOf(townId, { x: 0, y: 0 });
         memories.set(townId, scene.add.text(p.x + 20, p.y - 24, '◆', { color: '#f2b84b', fontSize: '16px', stroke: '#503c25', strokeThickness: 2 }).setDepth(p.y + 1));

@@ -10,6 +10,7 @@ import { TILE_PX } from '../../sim/map/constants';
 import type { Navigator } from '../../sim/map/nav';
 import { tileFootWorld } from '../depth-sort';
 import { ensureGoodsTextures, texKey } from './node-textures';
+import { couriersOnRoad } from '../../sim/letter-replies';
 import { caravanCrates, MAX_CRATES, turnFraction } from './caravan-crates';
 
 type Town = { id: string; q: number; r: number };
@@ -18,6 +19,7 @@ const DAY_MS = 120_000;
 const STOCK_OK = 4;
 
 type Wagon = { progress: number; dir: Pt; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; crates: Phaser.GameObjects.Image[] };
+type Courier = { dot: Phaser.GameObjects.Rectangle; seal: Phaser.GameObjects.Rectangle };
 type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: number };
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
@@ -51,6 +53,7 @@ export function createLivingWorld(
 
   // Only show real economy mobiles, never a phantom wagon per edge.
   const wagons = new Map<string, Wagon>();
+  const couriers = new Map<string, Courier>();
   const critters: Critter[] = [];
   const cr = deriveRng(seed, 'critters');
   for (const p of pos.values()) {
@@ -136,6 +139,24 @@ export function createLivingWorld(
           const u = f2.towardTown ? f2.t : 1 - f2.t;
           c.setVisible(true).setPosition(foot.x + (sx - foot.x) * u, foot.y + (sy - foot.y) * u - Math.sin(u * Math.PI) * 18).setDepth(foot.y + 3);
         });
+      }
+      // Mail riders: small envelopes that creep along the real road between towns (one step per dawn, eased).
+      const riders = state ? couriersOnRoad(state) : [];
+      const riding = new Set(riders.map((c) => c.id));
+      for (const [id, c] of couriers) if (!riding.has(id)) { c.dot.destroy(); c.seal.destroy(); couriers.delete(id); }
+      for (const c of riders) {
+        const road = byRoute.get(c.pos.routeId);
+        if (!road) continue;
+        const f = road.from === c.pos.from ? c.pos.f : 1 - c.pos.f;
+        const p = roadAt(road.path, f), foot = tileFootWorld(p.q, p.r);
+        let m = couriers.get(c.id);
+        if (!m) {
+          m = { dot: scene.add.rectangle(foot.x, foot.y - 6, 10, 7, 0xf4e6c8).setStrokeStyle(1, 0x503c25), seal: scene.add.rectangle(foot.x, foot.y - 6, 3, 3, c.kind === 'reply' ? 0xc8553d : 0x5ec8c8) };
+          couriers.set(c.id, m);
+        }
+        const tx = foot.x, ty = foot.y - 6 + Math.sin(time / 260) * 1.2;
+        m.dot.setPosition(m.dot.x + (tx - m.dot.x) * 0.05, m.dot.y + (ty - m.dot.y) * 0.05).setDepth(foot.y + 1);
+        m.seal.setPosition(m.dot.x, m.dot.y).setDepth(foot.y + 1.1);
       }
       for (const c of critters) {
         const t = time / 1000 + c.seed;

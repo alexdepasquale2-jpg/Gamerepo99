@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "note": "Replies to player letters. Tone is derived from trust, flame, town despair, social-web ties and any Blessing/Burden that surfaces. Slots: {fromName} {fromTown} {originTown} {quote} {neighbour} {neighbourTown}.",
+  "courierSurvivalPerDay": 0.9,
+  "writeDays": { "base": 1, "heavyDespair": 1, "lowFlame": 1, "max": 3 },
+  "tones": {
+    "warm": {
+      "title": "A warm reply from {fromName}",
+      "openers": [
+        "Dear friend, your letter found me on a good morning.",
+        "I read your letter aloud at the hearth. Twice."
+      ],
+      "echoes": [
+        "You wrote \"{quote}\" and I could hear you saying it.",
+        "\"{quote}\" - that line has been in my pocket all day."
+      ],
+      "closers": [
+        "Come by the road when you can. There is always a stool for you.",
+        "Write again. Your handwriting makes the mantel look kinder."
+      ]
+    },
+    "hopeful": {
+      "title": "A hopeful reply from {fromName}",
+      "openers": [
+        "Thank you for writing. It arrived just when I needed a reason to find a pen.",
+        "Your letter came with the carrier's dust still on it, and I was glad of it."
+      ],
+      "echoes": [
+        "About \"{quote}\": I have been turning it over, and I think you may be right.",
+        "You said \"{quote}\". I am not sure I believed it, but I would like to."
+      ],
+      "closers": [
+        "Things are mending slowly here. Write again and tell me how it goes.",
+        "Safe roads to you."
+      ]
+    },
+    "guarded": {
+      "title": "A careful reply from {fromName}",
+      "openers": [
+        "Your letter arrived. I am not much for writing, so this will be short.",
+        "I did not know what to say, so I waited. Here is what I have."
+      ],
+      "echoes": [
+        "You wrote \"{quote}\". Perhaps. I will think on it.",
+        "Regarding \"{quote}\": I have heard fine words before."
+      ],
+      "closers": [
+        "If you mean it, the road runs both ways.",
+        "Send word again, if you like."
+      ]
+    },
+    "weary": {
+      "title": "A tired reply from {fromName}",
+      "openers": [
+        "Forgive the shaky hand. The days here are long and the evenings longer.",
+        "I nearly did not answer. The ink had dried and so had most of me."
+      ],
+      "echoes": [
+        "\"{quote}\" - it is kind of you to say. It is hard to hold on to, here.",
+        "You wrote \"{quote}\". I read it in the dark and it helped a little."
+      ],
+      "closers": [
+        "Do not wait on me for a long letter. A short one from you would be enough.",
+        "Keep your own fire fed. Someone should."
+      ]
+    },
+    "bitter": {
+      "title": "A cold reply from {fromName}",
+      "openers": [
+        "I will be brief. Letters are cheap, and this one is the cheapest I own.",
+        "Your letter reached me. I wish I could say that pleased me."
+      ],
+      "echoes": [
+        "\"{quote}\" - easy to write from far away.",
+        "You wrote \"{quote}\". I have heard what that is worth."
+      ],
+      "closers": [
+        "Do not expect much from me.",
+        "That is all."
+      ]
+    }
+  },
+  "town": {
+    "shortage": [
+      "The granary at {fromTown} is thin and everyone counts loaves.",
+      "We are short on stores at {fromTown}; the caravans cannot come soon enough."
+    ],
+    "heavy": [
+      "A quiet has settled over {fromTown}; people keep their doors shut.",
+      "{fromTown} feels hollow lately. The lamps go out early."
+    ],
+    "steady": [
+      "{fromTown} is steady. Smoke from the chimneys again, which counts for something.",
+      "The hearth at {fromTown} burns without much fuss these days."
+    ]
+  },
+  "web": {
+    "kin": [
+      "{neighbour}, my own kin, sends greetings.",
+      "{neighbour} is family, and asks after you."
+    ],
+    "friendship": [
+      "{neighbour} says hello. We talk about you more than you would think.",
+      "{neighbour} and I shared your news over supper."
+    ],
+    "trade": [
+      "{neighbour} says the road trade has been fair, and sends regards.",
+      "{neighbour} mentioned your name at the stall."
+    ],
+    "debt": [
+      "{neighbour} and I are still settling an old debt, but I do not hold that against you.",
+      "{neighbour} is owed a favour by half the town, and I am not the only one."
+    ],
+    "rival": [
+      "{neighbour} has not spoken to me in weeks. It colours everything.",
+      "I will not tell you what {neighbour} said. You would not like it."
+    ],
+    "struggling": [
+      "I worry about {neighbour}, who is barely holding on. If you pass through, look in.",
+      "{neighbour} has gone very quiet. I fear for them."
+    ]
+  },
+  "postscript": {
+    "blessing": "P.S. Something small and good has happened. {line}",
+    "burden": "P.S. I may as well say it. {line}"
+  }
+}
