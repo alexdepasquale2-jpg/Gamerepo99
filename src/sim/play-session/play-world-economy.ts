@@ -16,7 +16,7 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   state.towns = Object.fromEntries(layout.settlements.map((s) => {
     const old = oldTowns[s.id];
     const stock = { food_grain: 12, timber: 8, ore_iron: 4, ...data.dawnStock.seedStockByTown[s.id], ...old?.stock };
-    return [s.id, { ...old, id: s.id, stock, despair: old?.despair ?? 0, economyOptIn: true, economySeeded: true }];
+    return [s.id, { ...old, id: s.id, q: s.q, r: s.r, stock, despair: old?.despair ?? 0, economyOptIn: true, economySeeded: true }];
   }));
   const oldRoutes = new Map((state.economyRoutes ?? []).map((r) => [r.id, r]));
   // Per-road producers keep the existing condition/shortage/repair machinery;

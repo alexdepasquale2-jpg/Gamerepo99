@@ -27,6 +27,9 @@ export type TownEconomyState = {
   economyOptIn: boolean;
   stock: Record<string, number>;
   despair: number;
+  /** Settlement centre in map tiles (set when the world is bound; used by borders). */
+  q?: number;
+  r?: number;
   /** 0..1 civic standing earned by player voice acts; absent = 0. */
   standing?: number;
   /** Set once stock has been seeded from dawn-stock on first opt-in tick. */

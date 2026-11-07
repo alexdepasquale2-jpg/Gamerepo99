@@ -1,3 +1,4 @@
+export { tickBorders, claimRect, estateOf, townReach, tension, bordersOf } from './borders';
 export { tickHouseholds, householdOf, householdsIn, heirOf, inheritFrom, sexOf } from './households';
 export { tickCompanies, companiesIn, companyOf, purseOf, workJobId } from './companies';
 export { tickBuildPlans, activePlans, claimsIn, buildNeeds, workshopMul, contributeToPlan } from './build-plans';
