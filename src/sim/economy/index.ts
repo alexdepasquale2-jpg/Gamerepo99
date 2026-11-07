@@ -1,3 +1,4 @@
+export { tickHouseholds, householdOf, householdsIn, heirOf, inheritFrom, sexOf } from './households';
 export { tickCompanies, companiesIn, companyOf, purseOf, workJobId } from './companies';
 export { tickBuildPlans, activePlans, claimsIn, buildNeeds, workshopMul, contributeToPlan } from './build-plans';
 export { tickLogistics, openRequests, cartPosition } from './logistics';

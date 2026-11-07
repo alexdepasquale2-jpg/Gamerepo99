@@ -98,6 +98,8 @@ export type SimState = {
   build?: import('../economy/build-plans').BuildState;
   /** Companies and personal purses (see sim/economy/companies). */
   companies?: import('../economy/companies').Companies;
+  /** Households, children and family lines (see sim/economy/households). */
+  kin?: import('../economy/households').KinState;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */

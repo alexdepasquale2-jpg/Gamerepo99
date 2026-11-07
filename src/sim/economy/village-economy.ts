@@ -85,7 +85,8 @@ export function tickVillageEconomy(state: SimState): void {
     }
     // Consume: households eat, then wear things out. Shortage is what was wanted and not there.
     l.need = {}; l.short = {};
-    const pop = ids.length;
+    // Children eat and wear things out too, at half an adult's rate.
+    const pop = ids.length + 0.5 * (state.kin?.children ?? []).filter((c) => c.status === 'child' && c.townId === townId).length;
     let food = pop * HOUSEHOLD.food.perPerson;
     l.need.food = food;
     for (const item of HOUSEHOLD.food.eats) {
