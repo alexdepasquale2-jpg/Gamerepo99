@@ -3,19 +3,21 @@
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
 import { advanceCaravanTravel } from '../../sim/caravans';
+import { caravanStatus } from '../../sim/caravan-visit';
 import { deriveRng } from '../../sim/rng';
 import { pointOnRoad, type LayoutRoute } from '../../sim/map/world-layout';
 import { TILE_PX } from '../../sim/map/constants';
 import type { Navigator } from '../../sim/map/nav';
 import { tileFootWorld } from '../depth-sort';
 import { ensureGoodsTextures, texKey } from './node-textures';
+import { caravanCrates, MAX_CRATES, turnFraction } from './caravan-crates';
 
 type Town = { id: string; q: number; r: number };
 type Pt = { x: number; y: number };
 const DAY_MS = 120_000;
 const STOCK_OK = 4;
 
-type Wagon = { progress: number; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text };
+type Wagon = { progress: number; dir: Pt; wagon: Phaser.GameObjects.Image; ox: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; crates: Phaser.GameObjects.Image[] };
 type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: number };
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
@@ -95,28 +97,45 @@ export function createLivingWorld(
       if (state) advanceCaravanTravel(state, Math.min(dt, 100) / DAY_MS, stoppedId());
       const mobiles = state?.caravans ?? [];
       const liveIds = new Set(mobiles.map((m) => m.id));
-      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); w.label.destroy(); wagons.delete(id); }
+      for (const [id, w] of wagons) if (!liveIds.has(id)) { w.wagon.destroy(); w.ox.destroy(); w.label.destroy(); w.crates.forEach((c) => c.destroy()); wagons.delete(id); }
       for (const m of mobiles) {
         const road = byRoute.get(m.routeId);
         if (!road) continue;
         const f = m.heading === 'outbound' ? m.progress01 : 1 - m.progress01;
         let w = wagons.get(m.id);
         if (!w) {
-          w = { progress: f,
+          w = { progress: f, dir: { x: m.heading === 'outbound' ? 1 : -1, y: 0 },
+            crates: Array.from({ length: MAX_CRATES }, () => scene.add.image(0, 0, texKey('crate')).setOrigin(0.5, 1).setScale(2).setVisible(false)),
             wagon: scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2),
             ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2),
             label: scene.add.text(0, 0, 'Trader · E', { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 1) };
           wagons.set(m.id, w);
         }
-        // Fractional sim progress follows the actual curve; towns wait for dawn unloading.
+        // Fractional sim progress follows the actual curve; at a town the wagon halts, unloads and turns.
         w.progress = f;
         const p = roadAt(road.path, w.progress);
         const ahead = roadAt(road.path, Math.max(0, Math.min(1, w.progress + (m.heading === 'outbound' ? 0.003 : -0.003))));
         const foot = tileFootWorld(p.q, p.r), lead = tileFootWorld(ahead.q, ahead.r);
-        const dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy) || 1;
-        w.wagon.setPosition(foot.x, foot.y).setDepth(foot.y).setFlipX(dx < 0);
-        w.label.setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
-        w.ox.setPosition(foot.x + dx / length * 26, foot.y + dy / length * 26).setDepth(foot.y + dy / length * 26).setFlipX(dx < 0);
+        let dx = lead.x - foot.x, dy = lead.y - foot.y, length = Math.hypot(dx, dy);
+        if (length < 0.5) { dx = w.dir.x; dy = w.dir.y; length = Math.hypot(dx, dy) || 1; } else w.dir = { x: dx, y: dy };
+        // Turning around: swing to face back the way it came halfway through the departure.
+        if (turnFraction(m) >= 0.5) { dx = -dx; dy = -dy; }
+        const halted = m.phase !== undefined;
+        const bob = halted && m.phase !== 'departing' ? Math.sin(time / 120) * 1.2 : 0;
+        w.wagon.setPosition(foot.x, foot.y + bob).setDepth(foot.y).setFlipX(dx < 0);
+        w.label.setText(`${caravanStatus(m)} · E`).setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
+        const oxx = foot.x + dx / length * 26, oxy = foot.y + dy / length * 26;
+        w.ox.setPosition(oxx, oxy).setDepth(oxy).setFlipX(dx < 0);
+        // Crates hop between wagon and the town's stall (unloading in, trading back aboard).
+        const stall = pos.get(m.visit?.townId ?? '');
+        const flying = stall ? caravanCrates(m) : [];
+        const sx = stall ? stall.x - TILE_PX * 2.2 : foot.x, sy = stall ? stall.y + TILE_PX * 2.6 : foot.y;
+        w.crates.forEach((c, i) => {
+          const f2 = flying[i];
+          if (!f2) return void c.setVisible(false);
+          const u = f2.towardTown ? f2.t : 1 - f2.t;
+          c.setVisible(true).setPosition(foot.x + (sx - foot.x) * u, foot.y + (sy - foot.y) * u - Math.sin(u * Math.PI) * 18).setDepth(foot.y + 3);
+        });
       }
       for (const c of critters) {
         const t = time / 1000 + c.seed;

@@ -71,6 +71,7 @@ export const SURFACED: Record<string, Entry> = {
 export const SILENT: readonly string[] = [
   'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
   'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
+  'caravan.arrive', 'caravan.trade', 'caravan.depart',
   'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
   'succession.carried', 'succession.rested', 'legend.heard', 'legend.act', 'grave.found',
 ];

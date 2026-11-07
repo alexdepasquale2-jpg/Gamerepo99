@@ -31,6 +31,8 @@ export type TownEconomyState = {
   standing?: number;
   /** Set once stock has been seeded from dawn-stock on first opt-in tick. */
   economySeeded?: boolean;
+  /** Running totals of what caravans really moved through this town. */
+  caravanTrade?: { visits: number; received: number; sold: number; relieved: number };
 };
 
 /** Mutable route condition on SimState.economyRoutes (from world/routes.json). */

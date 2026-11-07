@@ -6,6 +6,7 @@
  */
 
 import type { CaravanMobile, CaravanScheduleRow } from './caravans-types';
+import { advanceVisit, beginVisit, isHalted } from './caravan-visit';
 import { ensureEconomyState } from './economy/economy-lod';
 import type { DataTables } from './load-data';
 import { pushJuice } from './packets';
@@ -19,14 +20,6 @@ export function loadCaravanSchedules(): CaravanScheduleRow[] {
     ...s,
     maxConcurrent: s.maxConcurrent ?? DEFAULT_MAX_CONCURRENT,
   }));
-}
-
-function deliver(state: SimState, townId: string, m: CaravanMobile, prism?: string): void {
-  const town = state.towns?.[townId];
-  if (town) town.stock[m.cargoResourceId] = (town.stock[m.cargoResourceId] ?? 0) + m.qty;
-  const payload = { townId, routeId: m.routeId, resourceId: m.cargoResourceId, qty: m.qty };
-  if (prism) pushJuice(state, prism, payload);
-  pushJuice(state, (state.data as DataTables).economyLod.juice.deliver, payload);
 }
 
 /** One dawn of caravans. Returns live mobiles after the tick. */
@@ -52,6 +45,11 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
     const route = routes.get(m.routeId);
     const sched = byId.get(m.scheduleId);
     if (!route || !sched) continue;
+    // A wagon halted at a town finishes its stop (unload, trade, turn around) while the player rests.
+    if (isHalted(m)) {
+      if (!advanceVisit(state, m, Infinity)) next.push(m);
+      continue;
+    }
     if (route.broken) {
       next.push(m); // freeze in place until repaired
       continue;
@@ -63,14 +61,8 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
       next.push(m);
       continue;
     }
-    if (m.heading === 'outbound') {
-      deliver(state, route.toTownId, m, sched.prism);
-      m.heading = 'return';
-      m.progress01 = 0;
-      next.push(m);
-    } else {
-      deliver(state, route.fromTownId, m, sched.prism);
-    }
+    beginVisit(state, m, m.heading === 'outbound' ? route.toTownId : route.fromTownId, sched.prism);
+    if (!advanceVisit(state, m, Infinity)) next.push(m);
   }
 
   for (const s of schedules) {
@@ -93,15 +85,34 @@ export function tickCaravans(state: SimState, dawnIndex: number): CaravanMobile[
   return next;
 }
 
-/** Fractional travel is authoritative and saved, but cargo arrival is settled at dawn.
- * Credit prevents a rest from charging the same day's journey twice. */
+/**
+ * Real-time caravan clock (overworld frames). Wagons roll along their road; on reaching a town they
+ * halt, unload into real stock, trade, turn around and set off again, all in game-day fractions.
+ * Dawn (tickCaravans) settles whatever is left, so resting never double-charges a day.
+ * `stoppedId` is the wagon the player is talking to: it waits.
+ */
 export function advanceCaravanTravel(state: SimState, deltaDays: number, stoppedId?: string): void {
+  ensureEconomyState(state);
+  const dt = Math.max(0, deltaDays);
+  const schedules = new Map(((state.data as DataTables | undefined)?.caravanSchedules ?? loadCaravanSchedules()).map((s) => [s.id, s]));
+  const retired = new Set<string>();
   for (const m of state.caravans ?? []) {
+    if (m.id === stoppedId) continue;
+    if (isHalted(m)) {
+      if (advanceVisit(state, m, dt)) retired.add(m.id);
+      continue;
+    }
     const r = state.economyRoutes?.find((r) => r.id === m.routeId);
-    if (!r || r.broken || m.id === stoppedId || m.progress01 >= 1) continue;
-    const daily = Math.min(1, Math.max(0, r.condition)) / Math.max(1, r.days);
-    const step = Math.min(Math.max(0, deltaDays) * daily, 1 - m.progress01);
-    m.progress01 += step;
-    m.travelCredit = (m.travelCredit ?? 0) + step;
+    if (!r || r.broken) continue;
+    if (m.progress01 < 1) {
+      const daily = Math.min(1, Math.max(0, r.condition)) / Math.max(1, r.days);
+      const step = Math.min(dt * daily, 1 - m.progress01);
+      m.progress01 += step;
+      m.travelCredit = (m.travelCredit ?? 0) + step;
+    }
+    if (m.progress01 >= 1 - 1e-9) {
+      beginVisit(state, m, m.heading === 'outbound' ? r.toTownId : r.fromTownId, schedules.get(m.scheduleId)?.prism);
+    }
   }
+  if (retired.size) state.caravans = (state.caravans ?? []).filter((m) => !retired.has(m.id));
 }

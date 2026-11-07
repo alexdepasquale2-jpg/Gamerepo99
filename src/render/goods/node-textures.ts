@@ -49,6 +49,11 @@ const P: Record<string, [number, number, Painter]> = {
     g.fillStyle(0x8a5a32).fillRect(11, 0, 4, 4);
     g.fillStyle(0x6aa84f).fillRect(16, 0, 4, 4);
   }],
+  crate: [8, 7, (g) => {
+    g.fillStyle(0x8a5a32).fillRect(0, 0, 8, 7);
+    g.fillStyle(0xc99358).fillRect(1, 1, 6, 2).fillRect(1, 4, 6, 2);
+    g.fillStyle(0x4a2e18).fillRect(0, 3, 8, 1).fillRect(3, 0, 1, 7);
+  }],
   wagon: [24, 16, (g) => {
     g.fillStyle(0xe8dcc0).fillEllipse(12, 6, 18, 10);
     g.fillStyle(0x7a5232).fillRect(3, 8, 18, 4);
