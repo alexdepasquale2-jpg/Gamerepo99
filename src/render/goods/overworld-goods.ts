@@ -13,7 +13,7 @@ import { createNodesLayer } from './nodes-layer';
 import { createStashChests } from './stash-chest';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
-import { useItem } from '../../sim/goods/item-use';
+import { useItem, resolveDrop, dropItem, pickUpItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
@@ -33,7 +33,7 @@ export type OverworldGoods = {
   /** Try gathering a nearby node. Returns a line when something happened. */
   gatherNear: (player: Pt) => string | null;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
-  beforeDeed: (methodId: string, personId: string) => { ok: boolean; line?: string };
+  beforeDeed: (methodId: string, personId: string, itemId?: string) => { ok: boolean; line?: string };
   useSelected: (indoors?: boolean) => string | null;
   letters: () => void;
   readBoard: (player: Pt) => boolean;
@@ -47,13 +47,56 @@ export type OverworldGoods = {
 
 export function attachOverworldGoods(
   scene: Phaser.Scene, session: PlaySession, world: FabricWorld, layout: WorldLayout,
-  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt, nav?: Navigator,
+  people: PeopleLayer, life: WorldLife, getPlayer: () => Pt, nav?: Navigator, say: (line: string) => void = () => {},
 ): OverworldGoods {
   const seed = session.getSeed();
   const st = () => session.getState();
   const nodes = createNodesLayer(scene, st, seed, layout.settlements, layout.routes);
   const despair = () => session.townDespair();
-  const inv = createInventoryUi(scene, st);
+  // Hotbar drag: villagers within reach light up; drop on one = gift, elsewhere = set the item on the ground.
+  const REACH = 26;
+  const personAt = (wx: number, wy: number): string | undefined => {
+    let best: string | undefined, bd = REACH;
+    for (const p of people.people) {
+      if (p.inside || !p.sprite.visible) continue;
+      const d = Math.hypot(p.sprite.x - wx, p.sprite.y - 14 - wy);
+      if (d < bd) { bd = d; best = p.id; }
+    }
+    return best;
+  };
+  let lit: string | undefined;
+  const light = (id?: string): void => {
+    if (lit === id) return;
+    if (lit) people.byId.get(lit)?.sprite.clearTint();
+    lit = id;
+    if (id) people.byId.get(id)?.sprite.setTint(0xffe38a);
+  };
+  const groundViews = new Map<string, Phaser.GameObjects.Arc>();
+  const showGround = (): void => {
+    const live = st()?.groundItems ?? [];
+    for (const [id, v] of groundViews) if (!live.some((g) => g.id === id)) { v.destroy(); groundViews.delete(id); }
+    for (const g of live) {
+      if (groundViews.has(g.id)) continue;
+      const c = scene.add.circle(g.x, g.y, 5, parseInt((ITEM_BY_ID.get(g.itemId)?.color ?? '#f4e6c8').slice(1), 16)).setStrokeStyle(1, 0x1b1612).setDepth(g.y).setName('ground-item').setInteractive({ useHandCursor: true });
+      c.on('pointerdown', () => { const s = st(); if (s && Math.hypot(g.x - getPlayer().x, g.y - getPlayer().y) < 70 && pickUpItem(s, g.id)) { inv.refresh(); showGround(); } else say('Too far to pick up.'); });
+      groundViews.set(g.id, c);
+    }
+  };
+  const inv = createInventoryUi(scene, st, {
+    move: (itemId, wx, wy) => light(itemId && itemId !== 'coin' ? personAt(wx, wy) : undefined),
+    drop: (itemId, wx, wy) => {
+      const s = st();
+      if (!s) return;
+      const pid = itemId === 'coin' ? undefined : personAt(wx, wy);
+      const act = resolveDrop({ itemId, qty: 1 }, pid ? { kind: 'person', id: pid } : { kind: 'ground' });
+      if (act.kind === 'gift_give') {
+        const r = api.beforeDeed('gift_give', act.personId, act.itemId);
+        if (r.line) say(r.line);
+      } else if (act.kind === 'drop' && dropItem(s, itemId, { x: wx, y: wy })) {
+        showGround(); inv.refresh(); say(`You set down the ${ITEM_BY_ID.get(itemId)?.name ?? itemId}.`);
+      }
+    },
+  });
   const mail = createCorrespondence(scene, st, () => inv.refresh());
   const chests = createStashChests(scene, st, layout.settlements, () => inv.refresh());
   const memories = new Map<string, Phaser.GameObjects.Text>();
@@ -108,7 +151,8 @@ export function attachOverworldGoods(
 
   let lastUnread = 0;
   scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
-  return {
+  showGround();
+  const api: OverworldGoods = {
     update(time, dt, player) {
       document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
@@ -137,10 +181,10 @@ export function attachOverworldGoods(
       inv.refresh();
       return line;
     },
-    beforeDeed(methodId, personId) {
+    beforeDeed(methodId, personId, itemId) {
       const s = st();
       if (!s || !isGoodsDeed(methodId)) return { ok: true };
-      const r = applyDeedGoods(s, methodId, personId, inv.selectedItem());
+      const r = applyDeedGoods(s, methodId, personId, itemId ?? inv.selectedItem());
       inv.refresh();
       living.refresh();
       if (r?.ok && r.itemId && people.byId.has(personId)) {
@@ -171,6 +215,7 @@ export function attachOverworldGoods(
     toggleInventory: () => inv.toggle(),
     toggleMap: () => map.toggle(),
     selectSlot: (i) => inv.select(i),
-    overlayOpen: () => inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen(),
+    overlayOpen: () => inv.dragging() || inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen(),
   };
+  return api;
 }

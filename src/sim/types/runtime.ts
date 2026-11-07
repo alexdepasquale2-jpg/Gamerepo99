@@ -100,6 +100,8 @@ export type SimState = {
   inventory?: Record<string, number>;
   /** Provenance for individual goods (side table; counts in `inventory` stay authoritative). */
   itemInstances?: import('../goods/instances').ItemInstance[];
+  /** Items the player set down in the world (px coords). */
+  groundItems?: { id: string; itemId: string; x: number; y: number; instId?: string }[];
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
