@@ -25,6 +25,8 @@
     "succession_rested": ["They say the fire went out. We'll remember it anyway.", "Someone used to come round. Kind, mostly."],
     "legend_heard": ["There's an old name people say here.", "Someone like you came through, long ago."],
     "legend_act": ["That one's strange. Acts like they've done this before.", "Saw the old stranger at it again."],
-    "grave_found": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it."]
+    "grave_found": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it."],
+    "kin_birth": ["A little one at ours. Come and see, when you can.", "We've a new mouth to feed, and glad of it."],
+    "kin_grown": ["Grown now. I'll make my own way here.", "First day keeping my own hours. Strange, and good."]
   }
 }
