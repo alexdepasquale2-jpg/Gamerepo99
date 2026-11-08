@@ -5,7 +5,7 @@
  */
 
 export const TARGET_KINDS = [
-  'person', 'node', 'facility', 'board', 'wagon', 'signpost', 'door', 'hearth', 'chest', 'ground-item', 'plot', 'tile', 'fauna', 'grave',
+  'person', 'node', 'facility', 'board', 'wagon', 'signpost', 'door', 'hearth', 'chest', 'ground-item', 'plot', 'tile', 'fauna', 'grave', 'prop',
 ] as const;
 export type TargetKind = (typeof TARGET_KINDS)[number];
 

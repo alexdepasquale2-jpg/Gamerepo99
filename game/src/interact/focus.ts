@@ -12,7 +12,7 @@ import type { TargetKind } from '../sim/play-session/targets';
 
 /** Ties go to the thing earlier in this list (board and signpost first, the hearth last). */
 export const KIND_PRIORITY: readonly TargetKind[] = [
-  'board', 'signpost', 'wagon', 'facility', 'door', 'person', 'chest', 'ground-item', 'node', 'plot', 'fauna', 'tile', 'hearth',
+  'board', 'signpost', 'wagon', 'facility', 'door', 'person', 'chest', 'ground-item', 'node', 'plot', 'fauna', 'prop', 'tile', 'hearth',
 ];
 export const DEFAULT_REACH = 48;
 /** How far around the player we ask the other areas for things (covers the longest reach). */

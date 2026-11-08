@@ -59,7 +59,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
 
   const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits, ctx.seed);
   const towns = createSettlements(scene, ctx.layout.settlements);
-  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn });
+  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear });
   const clock = createDayClock(0.3);
   const fx = createLightFx(scene);
   const townOf = (p: Pt): string | null => {

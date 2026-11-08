@@ -4,9 +4,12 @@
  *          share the fishing spot, return a stray sheep, shore up the seam …)  → `node.<verb>@node:<id>`
  *   fauna  each animal's verbs in data/world/fauna.json (shoo, drive off, scare, watch, drive home …),
  *          once per animal per verb per day                                       → `fauna.<verb>@fauna:<id>`
+ *   prop   each wild prop type's verbs in data/world/props.json (trees, rocks, camps, ruins, shrines …),
+ *          once per prop type per verb per day                                     → `prop.<verb>@prop:<id>`
  * Effects are bundles (contrib/use-effects). Pure: no Phaser/DOM.
  */
 import faunaJson from '../../data/world/fauna.json';
+import propsJson from '../../data/world/props.json';
 import { hasItem, itemName, removeItem } from '../goods/inventory';
 import { NODES, nodeCharges, type NodeKind } from '../goods/nodes';
 import { pushJuice } from '../packets';
@@ -23,6 +26,12 @@ type FaunaRow = { id: string; name: string; verbs?: ThingVerbRow[] };
 export const FAUNA: readonly FaunaRow[] = (faunaJson as { fauna: FaunaRow[] }).fauna;
 const FAUNA_VERBS = new Map(FAUNA.map((f) => [f.id, f.verbs ?? []]));
 
+type PropRow = { type: string; name: string; verbs: ThingVerbRow[] };
+export const PROPS: readonly PropRow[] = (propsJson as { props: PropRow[] }).props;
+const PROP_BY_TYPE = new Map(PROPS.map((p) => [p.type, p]));
+/** A wild prop's row (null for a type with no uses, like a critter, which acts as its animal). */
+export const propRow = (type: string): PropRow | null => PROP_BY_TYPE.get(type) ?? null;
+
 export const nodeVerbs = (kindId: string): readonly ThingVerbRow[] => NODE_VERBS.get(kindId) ?? [];
 export const faunaVerbs = (kindId: string): readonly ThingVerbRow[] => FAUNA_VERBS.get(kindId) ?? [];
 
@@ -35,7 +44,7 @@ function listRows(state: SimState, t: Target, prefix: string, rows: readonly Thi
   const n = nodeData(t);
   const out: ProvidedAction[] = [];
   for (const v of rows) {
-    if ((v.oncePerDay || prefix === 'fauna') && usedToday(state, onceKey(v))) continue;
+    if ((v.oncePerDay || prefix === 'fauna' || prefix === 'prop') && usedToday(state, onceKey(v))) continue;
     if (v.effect.charge && (!n || nodeCharges(state, n) < v.effect.charge)) continue;
     // A use that would do nothing right now (mend a whole seam) stays off the ring.
     if (v.needs && bundleRefusal(state, v.effect, { node: n, key: '' })) continue;
@@ -50,7 +59,7 @@ function actRow(state: SimState, actionId: string, t: Target, prefix: string, ro
   if (!verb.startsWith(`${prefix}.`)) return false;
   const v = rows.find((r) => r.id === verb.slice(prefix.length + 1));
   if (!v) return false;
-  const once = v.oncePerDay || prefix === 'fauna';
+  const once = v.oncePerDay || prefix === 'fauna' || prefix === 'prop';
   if (once && usedToday(state, onceKey(v))) return { ok: false, line: 'You have done that today.' };
   if (v.needs && !canPay(state, v.needs)) return { ok: false, line: `You need ${needsText(v.needs)} for that.` };
   const townId = townOfTarget(state, t);
@@ -87,5 +96,25 @@ registerTargetProvider({
   act(state, actionId, t) {
     const k = faunaKindOf(t);
     return k ? actRow(state, actionId, t, 'fauna', faunaVerbs(k), (v) => `fauna.${v.id}@${t.id}`, 'fauna.handled') : false;
+  },
+});
+
+/** The prop type of a `prop:<type>@<q>,<r>` target: data.type, else the id's head. */
+export function propTypeOf(t: Target): string | undefined {
+  if (t.kind !== 'prop') return undefined;
+  const d = t.data && typeof t.data === 'object' ? (t.data as { type?: unknown }).type : undefined;
+  return typeof d === 'string' && d ? d : t.id.split('@')[0] || undefined;
+}
+
+registerTargetProvider({
+  id: 'prop-uses',
+  kinds: ['prop'],
+  list(state, t) {
+    const row = propRow(propTypeOf(t) ?? '');
+    return row ? listRows(state, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`) : [];
+  },
+  act(state, actionId, t) {
+    const row = propRow(propTypeOf(t) ?? '');
+    return row ? actRow(state, actionId, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`, 'prop.used') : false;
   },
 });
