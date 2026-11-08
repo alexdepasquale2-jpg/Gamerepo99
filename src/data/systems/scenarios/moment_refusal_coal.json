@@ -56,5 +56,13 @@
     ],
     "fallback": "first_matching_tags"
   },
-  "specialBar": true
+  "specialBar": true,
+  "beat": {
+    "lines": [
+      {
+        "who": "jonah_pike",
+        "text": "You stopped. Nobody ever stops."
+      }
+    ]
+  }
 }

@@ -4,7 +4,8 @@ import type { LegacyState, WorldDelta } from './types';
 
 export type LegacyTable = typeof legacyJson;
 export const legacyTable = (): LegacyTable => legacyJson;
-export const CURRENT_WORLD_VERSION = 1;
+/** World file format version written by exportWorld; see HearthWorldFile in types.ts for the history. */
+export const CURRENT_WORLD_VERSION = 2;
 
 export function ensureLegacy(state: SimState): LegacyState {
   return (state.legacy ??= {

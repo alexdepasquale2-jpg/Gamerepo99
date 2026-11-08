@@ -86,6 +86,13 @@ export type FacilityRow = {
   outputs: { resourceId: string; qtyPerDawn: number }[];
   inputs?: { resourceId: string; qtyPerDawn: number }[];
   staffedMul: number;
+  /** Placed facilities (sim/economy/facilities): a real spot beside their road. Authored rows omit these. */
+  name?: string;
+  kind?: string;
+  q?: number;
+  r?: number;
+  workTags?: string[];
+  prism?: string;
 };
 
 export type EconomyResourceRow = { id: string; spoilPerDawn: number };

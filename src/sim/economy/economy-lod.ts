@@ -6,6 +6,7 @@
 
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
+import { facilityStaffMul, updateFacilityStaffing } from './facilities';
 import type { SimState } from '../types/runtime';
 import type {
   EconomyLodHooks,
@@ -79,6 +80,8 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
   const caravan = hooks?.caravan ?? state.economyHooks?.caravan ?? noop;
   const doctrine = hooks?.doctrine ?? state.economyHooks?.doctrine ?? noop;
   caravan(state);
+  // Placed facilities: who turned up to work this dawn decides how much they make.
+  updateFacilityStaffing(state);
 
   const lod = data.economyLod;
   const dawn = data.dawnStock;
@@ -113,7 +116,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
         const fac = facilitiesById.get(fid);
         if (!fac) continue;
         for (const out of fac.outputs) {
-          produced.set(out.resourceId, (produced.get(out.resourceId) ?? 0) + out.qtyPerDawn * fac.staffedMul);
+          produced.set(out.resourceId, (produced.get(out.resourceId) ?? 0) + out.qtyPerDawn * fac.staffedMul * facilityStaffMul(state, fac.id, fac.kind));
         }
       }
       for (const [resourceId, base] of produced) {

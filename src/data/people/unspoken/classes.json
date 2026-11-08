@@ -374,6 +374,27 @@
         "onPathEdges": 0.45,
         "onPlaceTown": 0.08
       }
+    },
+    {
+      "id": "unspoken_returned_faith",
+      "kind": "favor",
+      "leaning": "blessing",
+      "encodeFrom": { "interactionIds": ["return_item"], "tagsAny": ["return", "honest"] },
+      "baseWeight": 0.4,
+      "halfLifeDays": 9,
+      "comeToPass": {
+        "requireTagsAny": ["kin_visit", "caravan_arrive", "quiet_dawn"],
+        "minWeight": 0.16,
+        "baseP": 0.26,
+        "blessingOutcomeIds": ["debt_forgiven_soft", "market_favor", "shift_cover"],
+        "burdenOutcomeIds": ["rumor_twist", "cold_shoulder"],
+        "mixedBias": 0.05
+      },
+      "deposit": {
+        "onSourcePerson": 1.0,
+        "onPathEdges": 0.4,
+        "onPlaceTown": 0.08
+      }
     }
   ]
 }

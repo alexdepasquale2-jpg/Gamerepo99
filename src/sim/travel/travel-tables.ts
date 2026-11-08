@@ -1,9 +1,10 @@
 /** Authored travel/encounter/biome tables for travel.ts. No gen/ imports. */
 
 import biomesJson from '../../data/world/biomes.json';
+import encounterDensityJson from '../../data/world/encounter-density.json';
 import roadEncountersJson from '../../data/world/road-encounters.json';
 import routesJson from '../../data/world/routes.json';
-import type { EncounterTable, TravelRoute } from './travel-types';
+import type { EncounterEffect, EncounterTable, TravelRoute } from './travel-types';
 
 type AuthoredRoute = {
   id?: string;
@@ -31,7 +32,10 @@ export function loadEncounterTables(): EncounterTable[] {
     const entries: EncounterTable['entries'] = [];
     for (const e of row.entries) {
       if (!e || typeof e !== 'object') continue;
-      const er = e as { id?: string; weight?: number; blurb?: string; prism?: string; attractorId?: string };
+      const er = e as {
+        id?: string; weight?: number; blurb?: string; prism?: string; attractorId?: string;
+        effects?: unknown; tags?: unknown; quiet?: boolean; heard?: string;
+      };
       if (typeof er.id !== 'string') continue;
       entries.push({
         id: er.id,
@@ -39,6 +43,10 @@ export function loadEncounterTables(): EncounterTable[] {
         blurb: typeof er.blurb === 'string' ? er.blurb : undefined,
         prism: typeof er.prism === 'string' ? er.prism : undefined,
         attractorId: typeof er.attractorId === 'string' ? er.attractorId : undefined,
+        effects: Array.isArray(er.effects) ? (er.effects as EncounterEffect[]) : undefined,
+        tags: Array.isArray(er.tags) ? (er.tags as string[]) : undefined,
+        quiet: er.quiet === true || undefined,
+        heard: typeof er.heard === 'string' ? er.heard : undefined,
       });
     }
     out.push({ id: row.id, entries });
@@ -77,4 +85,19 @@ export function toTravelRoutes(
       encounterTableId: authored?.encounterTableId,
     };
   });
+}
+
+export type EncounterDensity = {
+  targetEncountersPerTravelDay: number;
+  pSpawnClamp: { min: number; max: number };
+  failChanceMul: number;
+  biomeWeightMul: Record<string, number>;
+  conditionWeightMul: { base: number; conditionCoef: number };
+  cooldownTravelDays: number;
+  cooldownBlocksTags: string[];
+};
+
+/** encounter-density.json (road-content-design §5). */
+export function loadEncounterDensity(): EncounterDensity {
+  return encounterDensityJson as unknown as EncounterDensity;
 }

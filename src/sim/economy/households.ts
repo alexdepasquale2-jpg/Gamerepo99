@@ -7,6 +7,7 @@
  */
 
 import namesJson from '../../data/people/names.json';
+import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { purseOf } from './companies';
@@ -34,7 +35,7 @@ export const KIN = {
 export const GIFTS = ['healer', 'maker', 'speaker', 'seer'];
 
 export type Household = { id: string; townId: string; adults: [string, string]; surname: string; generation: number; formed: number; kids: string[] };
-export type Child = { id: string; householdId: string; townId: string; given: string; surname: string; sex: 'm' | 'f'; gift?: string; parents: [string, string]; born: number; status: 'child' | 'adult'; personId?: string };
+export type Child = { id: string; householdId: string; townId: string; given: string; surname: string; sex: 'm' | 'f'; gift?: string; parents: [string, string]; born: number; status: 'child' | 'adult'; personId?: string; grown?: number };
 export type Lineage = { surname: string; founders: string[]; founded: number; generation: number };
 export type KinState = { households: Household[]; children: Child[]; lineages: Record<string, Lineage>; next: number };
 
@@ -42,6 +43,13 @@ const kin = (state: SimState): KinState => (state.kin ??= { households: [], chil
 const NAMES = namesJson as { given: string[]; family: string[] };
 
 export const sexOf = (state: SimState, id: string): 'm' | 'f' => (deriveRng(state.seed, 'sex', id).next() < 0.5 ? 'm' : 'f');
+/** The person a grown child becomes; their sex at birth is that person's, so it never changes on growing up. */
+const grownIdOf = (childId: string): string => `born_${childId}`;
+/** The parent who carries a child's news: the mother while she lives, else whichever parent does. */
+export const voiceOf = (state: SimState, c: Pick<Child, 'parents'>): string | undefined => {
+  const alive = c.parents.filter((p) => state.people[p]);
+  return alive.find((p) => sexOf(state, p) === 'f') ?? alive[0];
+};
 export const householdOf = (state: SimState, personId: string): Household | undefined =>
   (state.kin?.households ?? []).find((h) => h.adults.includes(personId) || h.kids.some((k) => state.kin!.children.find((c) => c.id === k)?.personId === personId));
 export const householdsIn = (state: SimState, townId: string): Household[] => (state.kin?.households ?? []).filter((h) => h.townId === townId);
@@ -121,18 +129,22 @@ export function tickHouseholds(state: SimState): void {
     const warm = warmth(state, h) >= KIN.warmFlame && sec >= KIN.giftedSecurity;
     const gifted = rng.next() < (warm ? KIN.giftedChanceWarm : KIN.giftedChanceBase);
     const id = `kid${k.next++}`;
+    rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
     const used = new Set(k.children.filter((c) => c.householdId === h.id).map((c) => c.given));
     k.children.push({
       id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: h.adults,
       given: pick(NAMES.given, used, deriveRng(state.seed, 'given', id).int(0, NAMES.given.length)),
-      sex: rng.next() < 0.5 ? 'm' : 'f', gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
+      sex: sexOf(state, grownIdOf(id)), gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
     });
     h.kids.push(id);
+    // The news comes from a parent, in their own voice.
+    const child = k.children[k.children.length - 1]!;
+    pushJuice(state, 'kin.birth', { personId: voiceOf(state, child), townId: h.townId, childId: id, line: `A little one at ours. ${child.given}, we're calling ${child.sex === 'f' ? 'her' : 'him'}.` });
   }
   for (const c of k.children) {
     if (c.status !== 'child' || state.day - c.born < KIN.comeOfAgeDays) continue;
     const parents = c.parents.map((p) => state.people[p]?.flame ?? 0);
-    const personId = `born_${c.id}`;
+    const personId = grownIdOf(c.id);
     state.people[personId] = {
       id: personId, name: `${c.given} ${c.surname}`, townId: c.townId, age: 18,
       flame: Math.min(100, parents.reduce((n, f) => n + f, 0) / 2 + (c.gift ? 15 : 0)),
@@ -140,5 +152,7 @@ export function tickHouseholds(state: SimState): void {
     };
     c.status = 'adult';
     c.personId = personId;
+    c.grown = state.day;
+    pushJuice(state, 'kin.grown', { personId, townId: c.townId });
   }
 }

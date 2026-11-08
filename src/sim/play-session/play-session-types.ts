@@ -42,7 +42,12 @@ export type PlaySession = {
   snapshot(): PlaySnapshot;
   events(): PlayEvent[];
   listRoutes(): string[];
+  /** Walk a road: every road day runs the world's dawn (same as journey(routeId)). */
   travel(routeId: string): void;
+  /** Roads out of the player's town with today's travellers for hire (seeded per seed/day/route). */
+  roads(): import('../travel/journey').RoadView[];
+  /** Take a road on foot, or with one of today's travellers (tradeId). Moves the player to the far town. */
+  journey(routeId: string, tradeId?: string): import('../travel/journey').JourneyResult | null;
   dump(): string;
   getWorld(): FabricWorld | null;
   getSeed(): number;

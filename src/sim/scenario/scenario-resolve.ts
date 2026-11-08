@@ -9,6 +9,8 @@ export type ScenarioPersonQuery = {
 
 export type ScenarioPersonView = {
   id: string;
+  /** Given + family name ("Marta Ellison"), when the person has one. */
+  name?: string;
   woundId?: string;
   tags?: string[];
   siteId?: string;
