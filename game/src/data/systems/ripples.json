@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "afterResolve": true,
+  "minFlameToRipple": 50,
+  "help": {
+    "flameMin": 6,
+    "flameMax": 12,
+    "requireMarksAny": [
+      "genuine_growth"
+    ],
+    "forbidMarksAny": [
+      "dependence"
+    ]
+  },
+  "harm": {
+    "flameMin": 4,
+    "flameMax": 8,
+    "requireMarksAny": [
+      "hollowness",
+      "resentment"
+    ]
+  },
+  "cling": {
+    "requireMarksAny": [
+      "dependence"
+    ],
+    "chance": 0.2,
+    "sparkDrain": 2
+  },
+  "crossTown": {
+    "onGenuineGrowthChance": 0.4,
+    "emitPacketType": "proof_packet",
+    "preferLinksWithTags": [
+      "rumor",
+      "ferry",
+      "mill_road"
+    ],
+    "onHollownessChance": 0.25,
+    "emitPressureType": "relapse_pressure",
+    "relapseMulAdd": 0.1
+  }
+}

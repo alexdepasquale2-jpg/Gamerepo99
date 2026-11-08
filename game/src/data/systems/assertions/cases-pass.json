@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "id": "assert_grief_somber_pass",
+      "title": "Grieving NPC speaking somberly",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "woundId": "grief",
+          "alive": true
+        },
+        "lineTags": [
+          "mood:somber",
+          "shape:grief"
+        ],
+        "action": "speak"
+      }
+    },
+    {
+      "id": "assert_doctrine_fall_after_expose_pass",
+      "title": "Follower count falls after expose",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "events": [
+          "doctrine.exposed"
+        ],
+        "stats": {
+          "doctrine.followerCount": {
+            "before": 10,
+            "after": 7
+          }
+        }
+      }
+    },
+    {
+      "id": "assert_alive_speak_pass",
+      "title": "Living person speaking",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "flags": [],
+          "alive": true
+        },
+        "action": "speak_or_meet"
+      }
+    },
+    {
+      "id": "assert_memory_aligned_pass",
+      "title": "Line aligns with hollowness memory",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "memory": [
+          "mark:hollowness"
+        ],
+        "lineTags": [
+          "mood:hollow",
+          "axis:mark_hollowness"
+        ]
+      }
+    },
+    {
+      "id": "assert_vector_ok_pass",
+      "title": "Voice vector in bounds",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "vector": {
+          "warmth": 0.4,
+          "bite": 0.5,
+          "piety": 0.2,
+          "secrecy": 0.3,
+          "weariness": 0.6
+        }
+      }
+    },
+    {
+      "id": "assert_shamed_child_wary_pass",
+      "title": "Shamed child stays wary",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "person": {
+          "tags": [
+            "child"
+          ]
+        },
+        "events": [
+          "shame_resolved"
+        ],
+        "lineTags": [
+          "mood:wary",
+          "shape:soft"
+        ]
+      }
+    },
+    {
+      "id": "assert_trust_recovers_later_pass",
+      "title": "Trust rebuilds days later",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "events": [
+          {
+            "id": "betrayal",
+            "day": 1
+          }
+        ],
+        "day": 8,
+        "trust": 0.5
+      }
+    },
+    {
+      "id": "assert_history_order_pass",
+      "title": "History beat in order",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "historyApplied": [
+          "hb_founding_mill",
+          "hb_loss_mill_fire",
+          "hb_miracle_yeast"
+        ],
+        "historyTags": [
+          "mill_founded",
+          "mill_fire",
+          "yeast_miracle"
+        ]
+      }
+    },
+    {
+      "id": "assert_dependence_boundaried_pass",
+      "title": "Dependent mark with boundary line",
+      "expectPass": true,
+      "violatesRuleId": null,
+      "fixture": {
+        "memory": [
+          "mark:dependence"
+        ],
+        "lineTags": [
+          "axis:mark_dependence",
+          "mood:boundaried"
+        ]
+      }
+    }
+  ]
+}

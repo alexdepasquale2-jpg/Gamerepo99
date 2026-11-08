@@ -1,0 +1,25 @@
+{
+  "fragments": [
+    {
+      "id": "frag_ruth_calder_challenge_alone_trust_high_boost2",
+      "text": "Correct me properly or sit down. Half-arguments fail my class. Stay. I'll say the true version.",
+      "tags": [
+        "person:ruth_calder",
+        "method:challenge",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:school",
+        "shape:precise",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

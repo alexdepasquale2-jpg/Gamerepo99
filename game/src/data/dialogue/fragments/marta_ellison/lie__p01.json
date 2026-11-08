@@ -1,0 +1,388 @@
+{
+  "fragments": [
+    {
+      "id": "frag_marta_ellison_lie_alone",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_opener",
+      "text": "If a story keeps the shop open, I'll tell it.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:opener",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_middle",
+      "text": "Truth rises slower than rumor.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:middle",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_closer",
+      "text": "Believe the crust. Ignore the crumb.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:closer",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_trust_low",
+      "text": "You get a clean lie. Don't ask for ingredients.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:trust_low"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "trust:low"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_notoriety_high",
+      "text": "I'll say I never saw you. Make it true by leaving.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:notoriety_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "notoriety:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_doctrine_skeptic",
+      "text": "I'll sign their paper. My oven keeps a different ledger.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:doctrine_skeptic"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "doctrine:skeptic"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_resentment",
+      "text": "Fine—I'll smile and burn the next batch for free.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:mark_resentment"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:resentment"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_verbatim_mirror",
+      "text": "Tomorrow's full of customers? Sure. Lie closer to the oven.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_shame_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. That word already lives in my mouth.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_hollowness_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. There's a hole where the answer was.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_resentment_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. Keep talking. I'm filing this.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_grief_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. Grief isn't done with me yet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_doctrine_follower_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. The notice says so. I keep the notice.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_doctrine_skeptic_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. I'll need better ink than their oath.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_trust_low_boost",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. You get the door. Not the soft room.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_spark_high_boost2",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. I've got heat left—use it carefully.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_notoriety_high_boost2",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_mark_dependence_boost2",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. Lean once. Then find your own feet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_lie_alone_spark_low_boost2",
+      "text": "Sure. The yeast failed. Not me. Not you. The yeast. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:marta_ellison",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

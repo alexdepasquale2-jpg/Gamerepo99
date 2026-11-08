@@ -1,0 +1,123 @@
+{
+  "historyBeats": [
+    {
+      "id": "hb_doctrine_mill_bread",
+      "kind": "doctrine_arrival",
+      "summary": "Mill-bread doctrine pinned itself to the Ashford notice like a recipe.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_mill_bread"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_mill"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "hb_doctrine_strand",
+      "kind": "doctrine_arrival",
+      "summary": "Strand crossings doctrine arrived with rope-taxes and calm talk.",
+      "preconditions": [
+        {
+          "tag": "ferry_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_strand_crossings"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_strand"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_ferry"
+      ],
+      "authoredSeed": true,
+      "townId": "lowmere"
+    },
+    {
+      "id": "hb_doctrine_reach",
+      "kind": "doctrine_arrival",
+      "summary": "Reach progress doctrine taught distance as a virtue.",
+      "preconditions": [
+        {
+          "tag": "desk_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "set",
+          "target": "town.doctrineId",
+          "value": "doctrine_reach_progress"
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_reach"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_desk"
+      ],
+      "authoredSeed": true,
+      "townId": "city_reach"
+    },
+    {
+      "id": "hb_doctrine_brine",
+      "kind": "doctrine_arrival",
+      "summary": "Brine Tithe nails went up on the hitch post.",
+      "preconditions": [
+        {
+          "tag": "hitch_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_brine"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_hitch"
+      ],
+      "arc": "brine_rise"
+    },
+    {
+      "id": "hb_doctrine_spur",
+      "kind": "doctrine_arrival",
+      "summary": "Spur Quota chalked cart counts before dawn.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "doctrine_spur"
+        }
+      ],
+      "chainsFrom": [
+        "hb_loss_quota_cart"
+      ],
+      "arc": "spur_extract"
+    }
+  ]
+}

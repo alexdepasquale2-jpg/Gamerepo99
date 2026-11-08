@@ -1,0 +1,373 @@
+{
+  "fragments": [
+    {
+      "id": "frag_priya_sen_shame_alone",
+      "text": "Call me a failed season. Seasons fail. We replant.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_opener",
+      "text": "Say it. Dirt hears worse.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:opener",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_middle",
+      "text": "Wry doesn't mean unhurt.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:middle",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_closer",
+      "text": "Hand me the hoe when you're finished.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:closer",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_hollowness",
+      "text": "You emptied the row. Fine. I'll fill it.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "axis:mark_hollowness"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:hollowness"
+      ]
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_verbatim_mirror",
+      "text": "I worked harder when demand died. Shame's late.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_shame_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. That word already lives in my mouth.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_hollowness_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. There's a hole where the answer was.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_resentment_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. Keep talking. I'm filing this.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_grief_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. Grief isn't done with me yet.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_doctrine_follower_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. The notice says so. I keep the notice.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_doctrine_skeptic_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. I'll need better ink than their oath.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_trust_low_boost",
+      "text": "Call me a failed season. Seasons fail. We replant. You get the door. Not the soft room.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_spark_high_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. I've got heat left—use it carefully.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_notoriety_high_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_mark_dependence_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. Lean once. Then find your own feet.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_spark_low_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_kin_strain_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. Family makes every word heavier.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_priya_sen_shame_alone_trust_high_boost2",
+      "text": "Call me a failed season. Seasons fail. We replant. Stay. I'll say the true version.",
+      "tags": [
+        "person:priya_sen",
+        "method:shame",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:garden",
+        "shape:wry",
+        "shape:dirt",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

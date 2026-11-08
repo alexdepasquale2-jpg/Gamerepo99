@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "assert_grief_cheerful_fail",
+      "title": "Grieving NPC speaking cheerfully",
+      "expectPass": false,
+      "violatesRuleId": "rule_no_cheerful_grief",
+      "fixture": {
+        "person": {
+          "woundId": "grief",
+          "alive": true
+        },
+        "lineTags": [
+          "mood:cheerful"
+        ],
+        "action": "speak"
+      }
+    }
+  ]
+}

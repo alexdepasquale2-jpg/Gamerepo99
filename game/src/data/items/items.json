@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity.",
+  "items": [
+    {
+      "id": "bread",
+      "name": "Bread",
+      "icon": "food",
+      "color": "#d9a45b",
+      "price": 3,
+      "economyResourceId": "food_grain",
+      "tags": [
+        "food",
+        "comfort"
+      ],
+      "use": {
+        "spark": 6
+      }
+    },
+    {
+      "id": "berries",
+      "name": "Berries",
+      "icon": "food",
+      "color": "#b8324a",
+      "price": 2,
+      "economyResourceId": "food_grain",
+      "tags": [
+        "food",
+        "sweet"
+      ],
+      "use": {
+        "spark": 3
+      }
+    },
+    {
+      "id": "fish",
+      "name": "Fish",
+      "icon": "food",
+      "color": "#7fa8c0",
+      "price": 4,
+      "economyResourceId": "food_grain",
+      "tags": [
+        "food"
+      ],
+      "use": {
+        "spark": 8
+      }
+    },
+    {
+      "id": "wood",
+      "name": "Wood",
+      "icon": "wood",
+      "color": "#8a5a32",
+      "price": 2,
+      "economyResourceId": "fuel_cord",
+      "tags": [
+        "fuel",
+        "build"
+      ]
+    },
+    {
+      "id": "timber",
+      "name": "Timber",
+      "icon": "wood",
+      "color": "#a8743e",
+      "price": 5,
+      "economyResourceId": "timber",
+      "tags": [
+        "build"
+      ]
+    },
+    {
+      "id": "stone",
+      "name": "Stone",
+      "icon": "stone",
+      "color": "#9a9a92",
+      "price": 2,
+      "economyResourceId": "timber",
+      "tags": [
+        "build"
+      ]
+    },
+    {
+      "id": "ore",
+      "name": "Iron Ore",
+      "icon": "stone",
+      "color": "#6e5a4e",
+      "price": 6,
+      "economyResourceId": "ore_iron",
+      "tags": [
+        "mineral",
+        "craft"
+      ]
+    },
+    {
+      "id": "herbs",
+      "name": "Herbs",
+      "icon": "herb",
+      "color": "#6aa84f",
+      "price": 4,
+      "tags": [
+        "healing",
+        "comfort"
+      ]
+    },
+    {
+      "id": "wool",
+      "name": "Wool",
+      "icon": "wool",
+      "color": "#e8e0d0",
+      "price": 4,
+      "economyResourceId": "wool",
+      "tags": [
+        "warmth",
+        "trade"
+      ]
+    },
+    {
+      "id": "cloth",
+      "name": "Cloth",
+      "icon": "cloth",
+      "color": "#c8b0d8",
+      "price": 5,
+      "economyResourceId": "wool",
+      "tags": [
+        "warmth",
+        "trade"
+      ]
+    },
+    {
+      "id": "tools",
+      "name": "Tools",
+      "icon": "tool",
+      "color": "#b0b8c0",
+      "price": 9,
+      "tags": [
+        "craft",
+        "work"
+      ]
+    },
+    {
+      "id": "keepsake",
+      "name": "Keepsake",
+      "icon": "keepsake",
+      "color": "#f2b84b",
+      "price": 7,
+      "tags": [
+        "memory",
+        "kin"
+      ],
+      "use": {
+        "hearthMemory": true
+      }
+    },
+    {
+      "id": "letter",
+      "name": "Letter",
+      "icon": "letter",
+      "color": "#f4e6c8",
+      "price": 1,
+      "tags": [
+        "kin",
+        "word"
+      ],
+      "use": {
+        "correspondence": true
+      }
+    },
+    {
+      "id": "coin",
+      "name": "Coin",
+      "icon": "coin",
+      "color": "#f2d24b",
+      "price": 1,
+      "tags": [
+        "coin"
+      ]
+    },
+    {
+      "id": "grain",
+      "name": "Grain",
+      "icon": "food",
+      "color": "#d8c36a",
+      "price": 2,
+      "tags": [
+        "food",
+        "raw"
+      ]
+    },
+    {
+      "id": "flour",
+      "name": "Flour",
+      "icon": "food",
+      "color": "#efe6d0",
+      "price": 3,
+      "tags": [
+        "food",
+        "raw"
+      ]
+    },
+    {
+      "id": "flax",
+      "name": "Flax",
+      "icon": "herb",
+      "color": "#8fae8a",
+      "price": 2,
+      "tags": [
+        "raw",
+        "trade"
+      ]
+    },
+    {
+      "id": "clay",
+      "name": "Clay",
+      "icon": "stone",
+      "color": "#b0724a",
+      "price": 2,
+      "tags": [
+        "raw",
+        "build"
+      ]
+    },
+    {
+      "id": "rope",
+      "name": "Rope",
+      "icon": "tool",
+      "color": "#b59a6a",
+      "price": 4,
+      "tags": [
+        "craft",
+        "work"
+      ]
+    },
+    {
+      "id": "nails",
+      "name": "Nails",
+      "icon": "tool",
+      "color": "#7d838a",
+      "price": 3,
+      "tags": [
+        "craft",
+        "build"
+      ]
+    },
+    {
+      "id": "pots",
+      "name": "Pots",
+      "icon": "stone",
+      "color": "#c4694a",
+      "price": 5,
+      "tags": [
+        "craft",
+        "comfort"
+      ]
+    }
+  ],
+  "startingInventory": {
+    "bread": 3,
+    "wood": 2,
+    "letter": 1,
+    "keepsake": 1,
+    "coin": 12
+  },
+  "giftAffinity": {
+    "spec": "Person tag/wound substring -> item tag liked (+) or disliked (-).",
+    "rules": [
+      {
+        "personMatch": "grief",
+        "itemTag": "memory",
+        "weight": 2
+      },
+      {
+        "personMatch": "kin",
+        "itemTag": "kin",
+        "weight": 2
+      },
+      {
+        "personMatch": "hunger",
+        "itemTag": "food",
+        "weight": 2
+      },
+      {
+        "personMatch": "cold",
+        "itemTag": "warmth",
+        "weight": 2
+      },
+      {
+        "personMatch": "sick",
+        "itemTag": "healing",
+        "weight": 2
+      },
+      {
+        "personMatch": "work",
+        "itemTag": "work",
+        "weight": 1
+      },
+      {
+        "personMatch": "",
+        "itemTag": "comfort",
+        "weight": 1
+      },
+      {
+        "personMatch": "",
+        "itemTag": "coin",
+        "weight": -1
+      }
+    ]
+  },
+  "deeds": {
+    "tradeMarkup": 1.25,
+    "carryCargoQty": 2,
+    "carryRewardCoin": 4,
+    "shortageBelow": 4,
+    "shortageDespairRelief": 0.04
+  },
+  "market": {
+    "spec": "Roadside traders deal in these goods (plus whatever their wagon carries). Prices scale with scarcity of the good in the town the wagon is bound for: sellFactor of base paid to you, buyFactor of base charged. Goods you sell ride in the wagon's hold and are unloaded into that town's stock, easing any shortage.",
+    "goods": [
+      "timber",
+      "ore",
+      "wool"
+    ],
+    "sellFactor": 0.8,
+    "buyFactor": 1.25
+  }
+}

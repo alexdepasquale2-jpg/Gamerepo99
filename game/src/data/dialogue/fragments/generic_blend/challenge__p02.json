@@ -1,0 +1,145 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_grower_challenge_alone_trust_high",
+      "text": "Fight the weeds. I'm busy. I trust you with this.",
+      "tags": [
+        "generic:gen_grower",
+        "method:challenge",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:soil",
+        "shape:wry"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_challenge_alone_kin_strain",
+      "text": "Fight the weeds. I'm busy. Family makes it heavier.",
+      "tags": [
+        "generic:gen_grower",
+        "method:challenge",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:soil",
+        "shape:wry"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_challenge_alone",
+      "text": "Don't raise your voice in a quiet house.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:alone",
+        "dict:hearth",
+        "shape:soft",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_gen_widow_challenge_opener",
+      "text": "Listen— Don't raise your voice in a quiet house.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:opener",
+        "dict:hearth",
+        "shape:soft",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_widow_challenge_middle",
+      "text": "Don't raise your voice in a quiet house, still.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:middle",
+        "dict:hearth",
+        "shape:soft",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_challenge_closer",
+      "text": "Don't raise your voice in a quiet house. Enough.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:closer",
+        "dict:hearth",
+        "shape:soft",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "closer"
+    },
+    {
+      "id": "frag_gen_widow_challenge_alone_spark_low",
+      "text": "Don't raise your voice in a quiet house. …slowly.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:hearth",
+        "shape:soft"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_challenge_alone_trust_high",
+      "text": "Don't raise your voice in a quiet house. I trust you with this.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:hearth",
+        "shape:soft"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_challenge_alone_kin_strain",
+      "text": "Don't raise your voice in a quiet house. Family makes it heavier.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:hearth",
+        "shape:soft"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    }
+  ]
+}

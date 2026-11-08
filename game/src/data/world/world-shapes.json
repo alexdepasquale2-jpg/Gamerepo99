@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-fabric-variety-fix.md",
+  "shapes": [
+    {
+      "id": "ridge_string",
+      "weight": 2,
+      "settlementCount": [
+        4,
+        5
+      ],
+      "gapBands": [
+        [
+          0.05,
+          0.25
+        ],
+        [
+          0.4,
+          0.55
+        ],
+        [
+          0.7,
+          0.95
+        ]
+      ],
+      "gapBias": "bimodal",
+      "rivalArcChance": 0.4,
+      "doctrinePressure": 2,
+      "routePolicy": "spine",
+      "biomeTags": [
+        "hill",
+        "open",
+        "road"
+      ]
+    },
+    {
+      "id": "delta_fan",
+      "weight": 2,
+      "settlementCount": [
+        4,
+        6
+      ],
+      "gapBands": [
+        [
+          0.1,
+          0.35
+        ],
+        [
+          0.35,
+          0.55
+        ],
+        [
+          0.55,
+          0.8
+        ]
+      ],
+      "gapBias": "low",
+      "rivalArcChance": 0.35,
+      "doctrinePressure": 2,
+      "routePolicy": "mesh_light",
+      "biomeTags": [
+        "wet",
+        "travel",
+        "salt"
+      ]
+    },
+    {
+      "id": "single_spine",
+      "weight": 1,
+      "settlementCount": [
+        3,
+        4
+      ],
+      "gapBands": [
+        [
+          0.05,
+          0.2
+        ],
+        [
+          0.45,
+          0.6
+        ],
+        [
+          0.8,
+          0.95
+        ]
+      ],
+      "gapBias": "mid",
+      "rivalArcChance": 0.25,
+      "doctrinePressure": 1,
+      "routePolicy": "spine",
+      "biomeTags": [
+        "road",
+        "extractive"
+      ]
+    },
+    {
+      "id": "twin_poles",
+      "weight": 2,
+      "settlementCount": [
+        3,
+        5
+      ],
+      "gapBands": [
+        [
+          0.0,
+          0.2
+        ],
+        [
+          0.75,
+          1.0
+        ]
+      ],
+      "gapBias": "bimodal",
+      "rivalArcChance": 0.5,
+      "doctrinePressure": 2,
+      "routePolicy": "spine",
+      "biomeTags": [
+        "forest",
+        "city_edge",
+        "ash"
+      ]
+    }
+  ]
+}

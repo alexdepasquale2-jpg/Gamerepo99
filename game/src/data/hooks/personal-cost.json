@@ -1,0 +1,220 @@
+{
+  "kind": "personal_cost",
+  "hooks": [
+    {
+      "id": "cost_loneliness_tax",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "kindSuccessToday": true,
+        "noBurningAdjacent": true
+      },
+      "effects": [
+        {
+          "id": "fx_loneliness",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "loneliness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_ink_integrity",
+      "kind": "personal_cost",
+      "trigger": "on_method_resolve",
+      "when": {
+        "methodId": "lie"
+      },
+      "effects": [
+        {
+          "id": "fx_ink_cost",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "ink"
+          ]
+        },
+        {
+          "id": "fx_ink_trust",
+          "target": "player.perception.trust",
+          "op": "add",
+          "value": -0.05,
+          "durationDays": 3,
+          "tags": [
+            "cost",
+            "reputation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_brood_strain",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "bodiesInMultipleTowns": true
+      },
+      "effects": [
+        {
+          "id": "fx_brood_strain",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "tags": [
+            "cost",
+            "brood"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_inherited_dependence_cling",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "playerHasStatusTrait": "inherited_dependence",
+        "noCarryUsedToday": true
+      },
+      "effects": [
+        {
+          "id": "fx_dep_cling_mood",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "inherited_dependence",
+            "cling"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_town_despair",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "townDespairAbove": 0.2
+      },
+      "effects": [
+        {
+          "id": "fx_despair_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "despair",
+            "doctrine"
+          ],
+          "scaleBy": "town.despair"
+        }
+      ]
+    },
+    {
+      "id": "on_expose_doctrine_gap",
+      "kind": "personal_cost",
+      "trigger": "on_doctrine_collapse",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_collapse_despair",
+          "target": "town.despair",
+          "op": "add",
+          "value": 0.2,
+          "tags": [
+            "collapse",
+            "doctrine"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_road_labor",
+      "kind": "personal_cost",
+      "trigger": "on_road_work",
+      "when": {},
+      "effects": [
+        {
+          "id": "fx_road_labor",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "exhaust",
+            "road"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_notoriety_heat",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "notorietyAbove": 0.4
+      },
+      "effects": [
+        {
+          "id": "fx_heat_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -1,
+          "tags": [
+            "notoriety",
+            "heat"
+          ],
+          "scaleBy": "player.notoriety"
+        }
+      ]
+    },
+    {
+      "id": "cost_stash_unguarded_decay",
+      "kind": "personal_cost",
+      "trigger": "dawn",
+      "when": {
+        "hasUnguardedStash": true
+      },
+      "effects": [
+        {
+          "id": "fx_stash_decay",
+          "target": "player.stash.goods",
+          "op": "mul",
+          "value": 0.97,
+          "tags": [
+            "hoard",
+            "decay"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cost_empty_row",
+      "kind": "personal_cost",
+      "trigger": "dusk",
+      "when": {
+        "interactionKindsTodayNotContains": [
+          "work_alongside"
+        ]
+      },
+      "effects": [
+        {
+          "id": "fx_empty_row",
+          "target": "player.spark",
+          "op": "add",
+          "value": -2,
+          "tags": [
+            "cost",
+            "row_grief"
+          ]
+        }
+      ],
+      "notes": "A day without working beside anyone: Bren hears the empty row."
+    }
+  ]
+}

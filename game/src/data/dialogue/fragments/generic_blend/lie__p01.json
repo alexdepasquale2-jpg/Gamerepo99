@@ -1,0 +1,398 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_miller_lie_alone",
+      "text": "Yield's fine. Fine as powdered hope.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:alone",
+        "dict:mill",
+        "shape:plain",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_gen_miller_lie_opener",
+      "text": "Listen— Yield's fine. Fine as powdered hope.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:opener",
+        "dict:mill",
+        "shape:plain",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_miller_lie_middle",
+      "text": "Yield's fine. Fine as powdered hope, still.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:middle",
+        "dict:mill",
+        "shape:plain",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_lie_closer",
+      "text": "Yield's fine. Fine as powdered hope. Enough.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:closer",
+        "dict:mill",
+        "shape:plain",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "closer"
+    },
+    {
+      "id": "frag_gen_miller_lie_alone_spark_low",
+      "text": "Yield's fine. Fine as powdered hope. …slowly.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:mill",
+        "shape:plain"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_lie_alone_trust_high",
+      "text": "Yield's fine. Fine as powdered hope. I trust you with this.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:mill",
+        "shape:plain"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_lie_alone_kin_strain",
+      "text": "Yield's fine. Fine as powdered hope. Family makes it heavier.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:mill",
+        "shape:plain"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_lie_alone",
+      "text": "Crossing was quiet. Quiet's a story.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:alone",
+        "dict:water",
+        "shape:yarn",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_gen_ferry_lie_opener",
+      "text": "Listen— Crossing was quiet. Quiet's a story.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:opener",
+        "dict:water",
+        "shape:yarn",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_ferry_lie_middle",
+      "text": "Crossing was quiet. Quiet's a story, still.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:middle",
+        "dict:water",
+        "shape:yarn",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_lie_closer",
+      "text": "Crossing was quiet. Quiet's a story. Enough.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:closer",
+        "dict:water",
+        "shape:yarn",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "closer"
+    },
+    {
+      "id": "frag_gen_ferry_lie_alone_spark_low",
+      "text": "Crossing was quiet. Quiet's a story. …slowly.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:water",
+        "shape:yarn"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_lie_alone_trust_high",
+      "text": "Crossing was quiet. Quiet's a story. I trust you with this.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:water",
+        "shape:yarn"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_lie_alone_kin_strain",
+      "text": "Crossing was quiet. Quiet's a story. Family makes it heavier.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:water",
+        "shape:yarn"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_lie_alone",
+      "text": "Records show calm. Records are polite.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:alone",
+        "dict:ink",
+        "shape:precise",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_gen_clerk_lie_opener",
+      "text": "Listen— Records show calm. Records are polite.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:opener",
+        "dict:ink",
+        "shape:precise",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_clerk_lie_middle",
+      "text": "Records show calm. Records are polite, still.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:middle",
+        "dict:ink",
+        "shape:precise",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_lie_closer",
+      "text": "Records show calm. Records are polite. Enough.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:closer",
+        "dict:ink",
+        "shape:precise",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "closer"
+    },
+    {
+      "id": "frag_gen_clerk_lie_alone_spark_low",
+      "text": "Records show calm. Records are polite. …slowly.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:ink",
+        "shape:precise"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_lie_alone_trust_high",
+      "text": "Records show calm. Records are polite. I trust you with this.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:ink",
+        "shape:precise"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_lie_alone_kin_strain",
+      "text": "Records show calm. Records are polite. Family makes it heavier.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:ink",
+        "shape:precise"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_lie_alone",
+      "text": "Rain's coming. Always is.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:alone",
+        "dict:soil",
+        "shape:wry",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "alone"
+    },
+    {
+      "id": "frag_gen_grower_lie_opener",
+      "text": "Listen— Rain's coming. Always is.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:opener",
+        "dict:soil",
+        "shape:wry",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_grower_lie_middle",
+      "text": "Rain's coming. Always is, still.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:middle",
+        "dict:soil",
+        "shape:wry",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_lie_closer",
+      "text": "Rain's coming. Always is. Enough.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:closer",
+        "dict:soil",
+        "shape:wry",
+        "generic_blend"
+      ],
+      "weight": 0.8,
+      "slot": "closer"
+    },
+    {
+      "id": "frag_gen_grower_lie_alone_spark_low",
+      "text": "Rain's coming. Always is. …slowly.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:soil",
+        "shape:wry"
+      ],
+      "weight": 0.75,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ]
+    }
+  ]
+}

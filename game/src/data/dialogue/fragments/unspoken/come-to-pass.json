@@ -1,0 +1,284 @@
+{
+  "fragments": [
+    {
+      "id": "frag_unspoken_dance_for_kids",
+      "text": "{kinLabel} from {otherTown} called this morning \u2014 put me in a good mood, so we're doing that dance for the kids after all.",
+      "tags": [
+        "unspoken:dance_for_kids",
+        "blessing:dance_for_kids",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_oven_shared",
+      "text": "Heard {kinLabel} left the oven warm for the alley kids. Word travels when someone means it.",
+      "tags": [
+        "unspoken:oven_shared",
+        "blessing:oven_shared",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_debt_forgiven_soft",
+      "text": "Someone tore up a chalk mark on the ledger. Soft debt, soft hands.",
+      "tags": [
+        "unspoken:debt_forgiven_soft",
+        "blessing:debt_forgiven_soft",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_letter_of_thanks",
+      "text": "A letter came for {carrier}. Thanks, ink-smudged, no seal needed.",
+      "tags": [
+        "unspoken:letter_of_thanks",
+        "blessing:letter_of_thanks",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_shift_cover",
+      "text": "{kinLabel} took the cold shift without being asked. That's how you keep a mill turning.",
+      "tags": [
+        "unspoken:shift_cover",
+        "blessing:shift_cover",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_kin_visit_warm",
+      "text": "Cousin from {otherTown} showed \u2014 laughter in the doorway before the boots were even off.",
+      "tags": [
+        "unspoken:kin_visit_warm",
+        "blessing:kin_visit_warm",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_shared_watch",
+      "text": "They kept watch together on the ridge. Nobody said the word brave. Didn't need to.",
+      "tags": [
+        "unspoken:shared_watch",
+        "blessing:shared_watch",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_market_favor",
+      "text": "Stall price bent a little for a friend-of-a-friend. Trade remembers kindness.",
+      "tags": [
+        "unspoken:market_favor",
+        "blessing:market_favor",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_loaf_left",
+      "text": "A loaf on the step, still warm. No note. That's the note.",
+      "tags": [
+        "unspoken:loaf_left",
+        "blessing:loaf_left",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_path_cleared",
+      "text": "Someone cleared the ditch path before dawn. Influential hands, quiet feet.",
+      "tags": [
+        "unspoken:path_cleared",
+        "blessing:path_cleared",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_grudge_retold",
+      "text": "{carrier} retold the slight at the well. The third listener flinched like it was theirs.",
+      "tags": [
+        "unspoken:grudge_retold",
+        "burden:grudge_retold",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_favor_called_bitter",
+      "text": "That favor? Called in cold. Smile gone before the ask finished.",
+      "tags": [
+        "unspoken:favor_called_bitter",
+        "burden:favor_called_bitter",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_rumor_twist",
+      "text": "A rumor walked the trade road and came back wearing the wrong face.",
+      "tags": [
+        "unspoken:rumor_twist",
+        "burden:rumor_twist",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_debt_called_in",
+      "text": "The chalk mark got circled twice. Debt's due, and the road knows it.",
+      "tags": [
+        "unspoken:debt_called_in",
+        "burden:debt_called_in",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_festival_cancelled",
+      "text": "Banners stayed folded. Festival's off \u2014 mood went out with the lanterns.",
+      "tags": [
+        "unspoken:festival_cancelled",
+        "burden:festival_cancelled",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_cold_shoulder",
+      "text": "Same street, no nod. Cold as the pump handle.",
+      "tags": [
+        "unspoken:cold_shoulder",
+        "burden:cold_shoulder",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_letter_of_blame",
+      "text": "Letter arrived with no greeting \u2014 just the blame laid flat.",
+      "tags": [
+        "unspoken:letter_of_blame",
+        "burden:letter_of_blame",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_shift_dumped",
+      "text": "Shift left on the slate with someone else's name scratched out. Dump, not cover.",
+      "tags": [
+        "unspoken:shift_dumped",
+        "burden:shift_dumped",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_sermon_pointed",
+      "text": "Sermon pointed without naming. Everyone knew who the finger meant.",
+      "tags": [
+        "unspoken:sermon_pointed",
+        "burden:sermon_pointed",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_unspoken_bridge_burned",
+      "text": "Kin door stayed shut. Bridge ash, not timber.",
+      "tags": [
+        "unspoken:bridge_burned",
+        "burden:bridge_burned",
+        "slot:alone",
+        "authored_anchor",
+        "reaction:unspoken"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    }
+  ]
+}

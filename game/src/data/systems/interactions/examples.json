@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-interaction-model.md",
+  "initial": {
+    "personId": "marta_fixture",
+    "flame01": 0.2,
+    "trust": 0.3,
+    "marks": {
+      "hollowness": 1
+    },
+    "touchScore": 0,
+    "presence": 0,
+    "bond": 0,
+    "spark": 88
+  },
+  "sequences": [
+    {
+      "id": "A_kind_path",
+      "title": "Kind path \u2014 hollow to reignited across 4 days",
+      "steps": [
+        {
+          "day": 1,
+          "interactionId": "show_up",
+          "expect": {
+            "presence": 1,
+            "touchScore": 1,
+            "spark": 87
+          }
+        },
+        {
+          "day": 1,
+          "interactionId": "talk_gentle",
+          "expect": {
+            "trust": 0.35,
+            "flame01": 0.23,
+            "touchScore": 1.3,
+            "spark": 86
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "show_up",
+          "expect": {
+            "presence": 2,
+            "touchScore": 2.3,
+            "spark": 85
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "favor_do",
+          "expect": {
+            "flame01": 0.28,
+            "bond": 1,
+            "touchScore": 7.8,
+            "spark": 85
+          }
+        },
+        {
+          "day": 3,
+          "interactionId": "work_alongside",
+          "expect": {
+            "flame01": 0.32,
+            "touchScore": 12.2,
+            "spark": 87
+          }
+        },
+        {
+          "day": 3,
+          "interactionId": "promise_make",
+          "args": {
+            "promiseLabel": "oven by dusk"
+          },
+          "expect": {
+            "promise": "pending",
+            "touchScore": 12.2,
+            "spark": 86
+          }
+        },
+        {
+          "day": 4,
+          "interactionId": "promise_keep",
+          "expect": {
+            "trust": 0.43,
+            "flame01": 0.4,
+            "marks": {
+              "hollowness": 0,
+              "genuine_growth": 1
+            },
+            "touchScore": 22.2,
+            "spark": 88,
+            "promise": "kept",
+            "reignited": false
+          }
+        },
+        {
+          "day": 4,
+          "interactionId": "talk_gentle",
+          "expect": {
+            "flame01": 0.46,
+            "touchScore": 24.0,
+            "spark": 87,
+            "reignited": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "B_savage_then_repair",
+      "title": "Savage scrape then repair",
+      "steps": [
+        {
+          "day": 1,
+          "interactionId": "talk_hard_shame",
+          "expect": {
+            "marks": {
+              "resentment": 1,
+              "hollowness": 1
+            },
+            "trust": 0.22,
+            "touchScore": -2,
+            "spark": 87.8064
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "show_up",
+          "expect": {
+            "presence": 1,
+            "touchScore": -1,
+            "spark": 86.8064
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "show_up",
+          "expect": {
+            "presence": 2,
+            "touchScore": 0,
+            "spark": 85.8064
+          }
+        },
+        {
+          "day": 3,
+          "interactionId": "stand_up",
+          "expect": {
+            "trust": 0.32,
+            "flame01": 0.28,
+            "touchScore": 8,
+            "spark": 83.8064
+          }
+        },
+        {
+          "day": 4,
+          "interactionId": "favor_do",
+          "expect": {
+            "flame01": 0.33,
+            "bond": 1,
+            "touchScore": 13.5,
+            "spark": 83.8064
+          }
+        },
+        {
+          "day": 4,
+          "interactionId": "promise_make",
+          "expect": {
+            "promise": "pending",
+            "touchScore": 13.5,
+            "spark": 82.8064
+          }
+        },
+        {
+          "day": 5,
+          "interactionId": "promise_keep",
+          "expect": {
+            "trust": 0.4,
+            "flame01": 0.41,
+            "marks": {
+              "hollowness": 0,
+              "genuine_growth": 1,
+              "resentment": 1
+            },
+            "touchScore": 23.5,
+            "spark": 84.8064,
+            "promise": "kept",
+            "reignited": false
+          }
+        },
+        {
+          "day": 5,
+          "interactionId": "talk_gentle",
+          "expect": {
+            "flame01": 0.47,
+            "touchScore": 25.3,
+            "spark": 83.8064,
+            "reignited": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "C_break_promise_deepen_hollow",
+      "title": "Break promise \u2014 deepen hollow; reignite blocked until repair",
+      "steps": [
+        {
+          "day": 1,
+          "interactionId": "promise_make",
+          "expect": {
+            "promise": "pending",
+            "spark": 87,
+            "touchScore": 0
+          }
+        },
+        {
+          "day": 1,
+          "interactionId": "promise_break",
+          "expect": {
+            "trust": 0.18,
+            "marks": {
+              "hollowness": 2,
+              "resentment": 1
+            },
+            "touchScore": -6,
+            "spark": 84,
+            "promise": "broken",
+            "reignited": false,
+            "reigniteBlocked": true
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "favor_do",
+          "expect": {
+            "flame01": 0.25,
+            "bond": 1,
+            "touchScore": -0.5,
+            "spark": 84
+          }
+        },
+        {
+          "day": 2,
+          "interactionId": "promise_make",
+          "expect": {
+            "promise": "pending",
+            "spark": 83
+          }
+        },
+        {
+          "day": 3,
+          "interactionId": "promise_keep",
+          "expect": {
+            "marks": {
+              "hollowness": 0,
+              "genuine_growth": 1,
+              "resentment": 1
+            },
+            "reignited": false
+          }
+        },
+        {
+          "day": 3,
+          "interactionId": "promise_make",
+          "expect": {
+            "promise": "pending"
+          }
+        },
+        {
+          "day": 4,
+          "interactionId": "promise_keep",
+          "expect": {
+            "marks": {
+              "hollowness": 0,
+              "genuine_growth": 2,
+              "resentment": 1
+            },
+            "reignited": false,
+            "note": "second keep clears path; flame/ts still short of full reignite \u2014 favors+talks remain"
+          }
+        }
+      ]
+    }
+  ],
+  "pacingRetune": "2026-11-06 middle-ground \u2014 kind nets kept; stand_up/talk_hard/introduce restored; spark expects updated"
+}

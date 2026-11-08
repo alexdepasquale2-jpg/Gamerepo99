@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "spec": "tests/scenarios/README.md",
+  "api": "createPlaySession",
+  "actionIdFormat": "methodId@personId | advance:dusk | advance:dawn | advance:day | advance:ticks:N | approach@personId",
+  "snapshotExtensions": [
+    "people.<id>.flame",
+    "people.<id>.marks",
+    "people.<id>.siteKindled",
+    "player.spark",
+    "bus.ids",
+    "lines.lastReactionId",
+    "lines.lastRefusalId",
+    "packets.inbox",
+    "metrics.firstChoiceAtTick",
+    "metrics.firstConsequenceAtTick",
+    "menu.methodIds"
+  ],
+  "features": {
+    "bakedDynamismLines": false
+  },
+  "notes": "All scenarios run with bakedDynamismLines=false so fixed lines.json paths hold. Brood M2: bodySlots=3, activeBodiesMax=1 (Forge 595d722) \u2014 scenarios must not require multi-active bodies. Line text asserts should prefer bus/marks/flame; if asserting text, allow lineIdAny including fallback mirrors.",
+  "m2Brood": {
+    "bodySlots": 3,
+    "activeBodiesMax": 1,
+    "doNotRequireMultiActive": true
+  },
+  "files": [
+    "moment_warm_loaf_cold_hill.json",
+    "moment_chalk_after_the_cut.json",
+    "moment_nail_across_the_water.json",
+    "moment_refusal_coal.json",
+    "moment_mark_comes_back.json",
+    "first_10_minutes_ashford_hook.json"
+  ]
+}
