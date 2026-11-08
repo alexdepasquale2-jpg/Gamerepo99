@@ -6,6 +6,7 @@
  * the authored rows, exactly as before. Pure + deterministic.
  */
 import dawnStockJson from '../../data/economy/dawn-stock.json';
+import { noteUse } from '../data-use-civic';
 import { districtAt, districtOfTown, type District } from '../map/districts';
 import type { SettlementKind } from '../map/world-layout';
 
@@ -49,6 +50,18 @@ export function roleStock(seed: number, townId: string): Record<string, number> 
   const out: Record<string, number> = { ...(STOCK.base[role.kind] ?? {}) };
   for (const [rid, n] of Object.entries(STOCK.landBonus[role.land] ?? {})) out[rid] = (out[rid] ?? 0) + n;
   return out;
+}
+
+/** A new town's opening stock was laid down: the dawn-stock rows it came from, and each resource in it. */
+export function noteSeedRows(seed: number, townId: string, authored: boolean, stock: Record<string, number>): void {
+  const role = townRole(seed, townId);
+  if (authored) noteUse('economy/dawn-stock', `town:${townId}`);
+  if (role && STOCK) {
+    noteUse('economy/dawn-stock', `base:${role.kind}`);
+    if (STOCK.landBonus[role.land]) noteUse('economy/dawn-stock', `land:${role.land}`);
+    if (STOCK.landFood?.[role.land]) noteUse('economy/dawn-stock', `landFood:${role.land}`);
+  }
+  for (const [rid, q] of Object.entries(stock)) if (q > 0) noteUse('economy/economy-resources', rid);
 }
 
 /** Which ledger item a town's seeded food arrives as ('grain' unless its land says otherwise). */

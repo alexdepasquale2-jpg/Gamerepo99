@@ -2,6 +2,7 @@
 
 import { findCrossTownKin, pushJuice } from '../packets';
 import { deriveRng } from '../rng';
+import { noteUse } from '../data-use-civic';
 import type { SimState } from '../types/runtime';
 import { clamp01, ensureHoard, notorietyTable, visibleWealth } from './state';
 
@@ -21,6 +22,7 @@ export function addNotoriety(state: SimState, gainId: string): void {
   const t = notorietyTable(state);
   const row = [...(t?.gains ?? []), ...(t?.losses ?? [])].find((r) => r.id === gainId);
   if (!t || !row) return;
+  noteUse('economy/notoriety', row.id);
   const h = ensureHoard(state);
   h.notoriety = clamp01(h.notoriety + row.add);
   mirror(state);
@@ -65,7 +67,7 @@ export function rollAttractors(state: SimState, ctx: 'dawn' | 'road'): string[] 
     if (n < a.minNotoriety || (ctx === 'road') !== road) continue;
     const mul = a.id === 'att_copycat' ? despairMul(state, state.player.townId) : 1;
     const rng = deriveRng(state.seed, 'attractor', ctx, state.day, a.id);
-    if (rng.next() < Math.min(1, a.weight * n * t.attractorRollScale * mul)) out.push(a.id);
+    if (rng.next() < Math.min(1, a.weight * n * t.attractorRollScale * mul)) { out.push(a.id); noteUse('economy/notoriety', a.id); }
   }
   return out;
 }
@@ -75,7 +77,9 @@ export function attractorRoadBonus(state: SimState, attractorId: string): number
   const t = notorietyTable(state);
   const a = t?.attractors.find((x) => x.id === attractorId);
   const n = ensureHoard(state).notoriety;
-  return t && a && n >= a.minNotoriety ? a.weight * n * t.roadWeightScale : 0;
+  if (!t || !a || n < a.minNotoriety) return 0;
+  noteUse('economy/notoriety', a.id);
+  return a.weight * n * t.roadWeightScale;
 }
 
 /** Leverage edge: fraction of spark strain forgiven on hard/defiant interactions. */

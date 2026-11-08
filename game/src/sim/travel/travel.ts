@@ -17,6 +17,7 @@ import type {
 import type { Inhabitant, SimState } from '../types/runtime';
 // journey.ts imports resolveDaysEff/sizeMulFor from here; the cycle is function-body only, so it is safe.
 import { runJourney, type JourneyOpts, type JourneyResult } from './journey';
+import { fastRoadMul } from './fast-roads';
 import { lapseHappenings } from '../happenings';
 import { runEscort } from './escort';
 
@@ -89,7 +90,8 @@ function pickEncounter(
 export function resolveDaysEff(route: TravelRoute, state: TravelSimState): number {
   const terrain = terrainMulFor(route.biomeIds, state.biomeTerrainMuls);
   const size = sizeMulFor(state.player, state.sizeTravelMuls ?? loadSizeTravelMuls());
-  return Math.max(1, Math.ceil(route.days * terrain * size));
+  // A friend who knows the road shows the shorter way (travel-trades fastRouteUnlocks).
+  return Math.max(1, Math.ceil(route.days * terrain * size * fastRoadMul(state, route)));
 }
 
 /**

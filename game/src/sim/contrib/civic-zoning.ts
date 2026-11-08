@@ -28,6 +28,7 @@ import { registerTargetProvider, type ProvidedAction } from '../play-session/act
 import { targetActionId } from '../play-session/targets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-civic';
 
 /** Who speaks for a town: the leader of a doctrine seated there, else its eldest. */
 export function leaderOf(state: SimState, townId: string): string | undefined {
@@ -56,6 +57,7 @@ function townDawn(state: SimState, townId: string): void {
 
   // Tier: growing is news and history; shrinking is quiet (nobody announces that).
   const tier = tierOf(state, townId);
+  noteUse('civic/zones', `tier:${tier.id}`);
   if (c.tier === undefined) c.tier = tier.id;
   else if (tierIndex(tier.id) > tierIndex(c.tier)) {
     c.tier = tier.id;

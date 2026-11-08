@@ -1,5 +1,6 @@
 /** Patron deals: accept (reward), dawn obligations, breakage, betrayal. Reached only via interactions. */
 import { addStock } from '../economy/food-stock';
+import { noteUse } from '../data-use-civic';
 import { addNotoriety, ensureHoard, notePeakCoin } from '../hoard';
 import { clamp01 } from '../hoard/state';
 import { enqueueLetter } from '../letters-scale';
@@ -35,6 +36,8 @@ export function acceptDeal(state: SimState, patronId: string, dealId: string): {
   const found = findDeal(state, dealId);
   if (!found || found.patron.id !== patronId || !openDeals(state, patronId).includes(dealId)) return { ok: false };
   const { patron, deal } = found;
+  noteUse('economy/patrons', patron.id);
+  noteUse('economy/patrons', `deal:${deal.id}`);
   const seat = patronSeat(state, patron);
   const offer = deal.offer;
   if (offer.coin) {

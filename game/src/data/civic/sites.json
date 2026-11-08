@@ -30,7 +30,7 @@
     "newsKeep": 30
   },
   "kinds": [
-    { "id": "farm", "name": "farm", "zone": "farm", "tier": "hamlet", "inputs": [], "outputs": ["grain", "flax"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["farm"], "fromFacilities": ["farm"] },
+    { "id": "farm", "name": "farm", "zone": "farm", "tier": "hamlet", "inputs": [], "outputs": ["grain", "flax"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["farm"], "fromFacilities": [] },
     { "id": "mill", "name": "mill", "zone": "craft", "tier": "hamlet", "inputs": ["grain"], "outputs": ["flour"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["mill"], "fromFacilities": ["mill"] },
     { "id": "smithy", "name": "smithy", "zone": "craft", "tier": "village", "inputs": ["ore", "wood"], "outputs": ["tools", "nails"], "roles": ["manager", "worker"], "fromBuildings": ["smithy"], "fromFacilities": [] },
     { "id": "workshop", "name": "workshop", "zone": "craft", "tier": "village", "inputs": ["flour", "flax", "clay"], "outputs": ["bread", "cloth", "rope", "pots"], "roles": ["manager", "worker"], "fromBuildings": ["bakery", "weavery", "pottery", "ropewalk"], "fromFacilities": [] },

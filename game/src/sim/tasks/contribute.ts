@@ -10,7 +10,7 @@
  * Pure and deterministic.
  */
 import { BUILDING_BY_ID } from '../economy/build-plans';
-import { facilityById, facilityOutput } from '../economy/facilities';
+import { facilityById, facilityOutput, shiftPay } from '../economy/facilities';
 import { addStock } from '../economy/food-stock';
 import { noteRoadNews, ROADS, routeById } from '../economy/roads';
 import { civicIfAny, siteById, SITE_KIND_BY_ID } from '../civic/sites';
@@ -133,7 +133,10 @@ export function contribute(state: SimState, taskId: string, effort = 1, opts: Co
   h.today[t.id] = { ...(lead ? { lead } : {}), goal: t.goal, verb: verbOfTask(t), effort: (rec?.effort ?? 0) + e };
   h.rev++;
   const turn = `${t.id}|${h.byTask[t.id]}`;
-  const line = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  const said = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  // A facility's crew shares the day's shift with you (facility-workers.json).
+  const share = t.source.type === 'facility' ? shiftPay(state, t.source.ref) : null;
+  const line = share ? `${said} ${share}` : said;
   const thanks = lead ? { personId: lead, line: pickLine(state, TASKS.thanks, `${turn}|thanks`, vars) } : undefined;
   // Spark hooks (personal-cost, spark-recovery) still key on the old work_alongside kind: real help counts as it.
   noteActToday(state, 'carry_burden', 'work_alongside');
