@@ -42,6 +42,7 @@ import { kinStrainOf } from '../sim/social/kin-strain';
 import { attachRoads, type RoadsHandle } from './road-signs';
 import { featuresIn } from '../sim/map/ladder/features';
 import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
+import { DEFAULT_SOCIAL_SEED } from '../sim/social/social-web-build';
 
 const CHUNK_MARGIN = 1;
 const VERB: Record<string, string> = {
@@ -717,10 +718,12 @@ export class OverworldScene extends Phaser.Scene {
       this.session = existing;
       return;
     }
-    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' });
+    // Fallback only (scene booted without the menu flow): the known world. New Game passes its chosen world in.
+    const seed = DEFAULT_SOCIAL_SEED;
+    const s = createPlaySession({ mode: 'play', seed, archetypeId: 'marrow' });
     if (!s || !('start' in s)) throw new Error('overworld requires play session');
     this.session = s as PlaySession;
-    this.session.start({ seed: 42, archetypeId: 'marrow' });
+    this.session.start({ seed, archetypeId: 'marrow' });
     this.registry.set('playSession', this.session);
   }
 

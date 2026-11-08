@@ -7,6 +7,8 @@ export type PauseIo = {
   onLoad: () => void;
   onWorldFile: () => void;
   onTitle: () => void;
+  /** This run's world number, shown so it can be written down and entered again. */
+  world?: number;
 };
 
 export function openPauseMenu(io: PauseIo): MenuHandle {
@@ -19,7 +21,7 @@ export function openPauseMenu(io: PauseIo): MenuHandle {
       { id: 'world', label: 'World file', onPick: () => (handle.close(), io.onWorldFile()) },
       { id: 'title', label: 'Leave to title', hint: 'Your fire is kept by the last save', onPick: () => (handle.close(), io.onTitle()) },
     ],
-    { id: 'hf-pause-menu', onEscape: () => (handle.close(), io.onResume()) },
+    { id: 'hf-pause-menu', onEscape: () => (handle.close(), io.onResume()), note: io.world === undefined ? undefined : `World ${io.world}` },
   );
   return handle;
 }

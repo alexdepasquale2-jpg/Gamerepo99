@@ -11,6 +11,7 @@ test('importing an old (v1) world file migrates it and names who came across', a
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator('[data-id=arch-marrow]').click();
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth);
 

@@ -1,4 +1,4 @@
-/** Social graph runtime (spec 2026-11-06-social-graph 05). Bake helpers live in ./bake (offline). */
+/** Social graph runtime (spec 2026-11-06-social-graph 05). Offline bake entry lives in ./bake; the per-seed builder is ./social-web-build. */
 export {
   addEdge,
   createSocialGraph,
@@ -13,6 +13,8 @@ export {
 export type { Neighbor, SocialGraph } from './social-graph';
 export { getCentrality, isInfluential, pickRumorNext, preferInfluential } from './centrality';
 export { weaveSocialWeb } from './worldgen-weave';
+export { buildSocialWeb, socialTablesForSeed } from './social-web-build';
+export type { SocialTables } from './social-web-build';
 export type { WeaveOpts, WeaveResult } from './worldgen-weave';
 export {
   comeToPassUnspoken,

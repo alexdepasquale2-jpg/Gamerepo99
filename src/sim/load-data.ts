@@ -45,6 +45,7 @@ import unspokenFragmentsJson from '../data/dialogue/fragments/unspoken/come-to-p
 import type { UnspokenTables } from './social/unspoken-types';
 import socialPropagationJson from '../data/people/social-propagation.json';
 import { normalizeSocialEdge } from './social/social-graph';
+import { socialTablesForSeed } from './social/social-web-build';
 import {
   DEFAULT_SOCIAL_PROPAGATION,
   type CentralityTable,
@@ -158,9 +159,9 @@ export type DataTables = {
   economyRoutes: EconomyRouteState[];
   /** world/caravan-schedules.json rows (maxConcurrent defaulted to 2). */
   caravanSchedules: CaravanScheduleRow[];
-  /** Social graph 05: prebaked web for default seed (legacy kinds mapped at load). */
+  /** Social graph 05: this world's web. loadData() gives the web baked for seed 42; dataForSeed() swaps in any other world's. */
   socialWeb: SocialWebTable;
-  /** Social graph 05: prebaked centrality (read-only). */
+  /** Social graph 05: this world's centrality (read-only; baked for 42, built at boot otherwise). */
   socialCentrality: CentralityTable;
   /** Social graph 05: falloff / maxHops / epsilon. */
   socialPropagation: SocialPropagation;
@@ -176,6 +177,18 @@ function loadSocialWeb(): SocialWebTable {
     meanHops: raw.meanHops ?? 0,
     edges: (raw.edges ?? []).map((e) => normalizeSocialEdge(e as Record<string, unknown>)),
   };
+}
+
+/**
+ * The tables for one world: same data, with the social web + centrality of `seed`.
+ * Returns `data` itself when it already carries that seed's web (the known world,
+ * seed 42, keeps the baked JSON byte for byte). Never mutates `data`, so two
+ * sessions on different seeds each hold their own web.
+ */
+export function dataForSeed(data: DataTables, seed: number): DataTables {
+  if (data.socialWeb.seed === seed && data.socialCentrality.seed === seed) return data;
+  const baked = { socialWeb: loadSocialWeb(), socialCentrality: socialCentralityJson as unknown as CentralityTable };
+  return { ...data, ...socialTablesForSeed(seed, baked) };
 }
 
 function loadSocialPropagation(): SocialPropagation {

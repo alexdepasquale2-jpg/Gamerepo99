@@ -5,6 +5,7 @@ import { openPauseMenu } from './menus/pause-menu';
 import { openSaveMenu } from './menus/save-menu';
 import { openTitleMenu } from './menus/title-menu';
 import { openInhabitantMenu } from './menus/inhabitant-menu';
+import { openWorldMenu, rollWorldSeed } from './menus/world-menu';
 import { playableArchetypes, rollArchetype } from '../sim/inhabitant';
 import { loadData } from '../sim/load-data';
 import { openWorldFileMenu } from './menus/world-file-menu';
@@ -33,6 +34,7 @@ export function runGameFlow(host: GameHost): void {
     status.dataset.day = String(snap?.day ?? '');
     status.dataset.fingerprint = snap?.fingerprint ?? '';
     status.dataset.spark = String(snap?.spark ?? '');
+    status.dataset.world = session ? String(session.getSeed()) : '';
   }
 
   function begin(s: PlaySession): void {
@@ -45,18 +47,29 @@ export function runGameFlow(host: GameHost): void {
     refreshStatus();
   }
 
-  function newGame(archetypeId: string): void {
-    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId }) as PlaySession;
-    s.start({ seed: 42, archetypeId });
+  function newGame(archetypeId: string, seed: number): void {
+    const s = createPlaySession({ mode: 'play', seed, archetypeId }) as PlaySession;
+    s.start({ seed, archetypeId });
     begin(s);
+  }
+
+  /** After who you are: which world. The new world's number is rolled once per visit and shown before you commit. */
+  function pickWorld(archetypeId: string): void {
+    open(
+      openWorldMenu({
+        newSeed: rollWorldSeed(Math.random()),
+        onPick: (seed) => (menu?.close(), newGame(archetypeId, seed)),
+        onBack: () => (menu?.close(), pickInhabitant()),
+      }),
+    );
   }
 
   function pickInhabitant(): void {
     const list = playableArchetypes(loadData());
     open(
       openInhabitantMenu(list, {
-        onPick: (id) => (menu?.close(), newGame(id)),
-        onRoll: () => (menu?.close(), newGame(rollArchetype(list, Math.random()).id)),
+        onPick: (id) => (menu?.close(), pickWorld(id)),
+        onRoll: () => (menu?.close(), pickWorld(rollArchetype(list, Math.random()).id)),
         onBack: () => (menu?.close(), title()),
       }),
     );
@@ -121,6 +134,7 @@ export function runGameFlow(host: GameHost): void {
             }),
           ),
         onTitle: title,
+        world: session.getSeed(),
       }),
     );
   }
