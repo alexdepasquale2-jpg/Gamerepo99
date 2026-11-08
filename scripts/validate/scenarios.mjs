@@ -62,6 +62,20 @@ export function validateScenarios(data, ctx) {
     for (const pid of sc.expect?.packets?.inboxNonEmptyForPersonAny || []) {
       req(peopleSet.has(pid), `scenario ${sc.id} packet person ${pid}`);
     }
+
+    // Live beat (sim/scenario/moments-live): what the people involved say when play matches the moment.
+    if (sc.specialBar) req(!!sc.beat, `scenario ${sc.id}: specialBar needs a beat to fire in play`);
+    if (sc.beat) {
+      req(!!sc.specialBar, `scenario ${sc.id}: a beat only fires on a specialBar scenario`);
+      if (sc.beat.archetypeOnly !== undefined) req(typeof sc.beat.archetypeOnly === 'boolean', `scenario ${sc.id} beat.archetypeOnly must be boolean`);
+      req(Array.isArray(sc.beat.lines) && sc.beat.lines.length >= 1, `scenario ${sc.id}: beat.lines`);
+      for (const l of sc.beat.lines || []) {
+        req(peopleSet.has(l.who), `scenario ${sc.id} beat speaker ${l.who}`);
+        req(typeof l.text === 'string' && l.text.trim().length > 0, `scenario ${sc.id} beat text`);
+      }
+      if (sc.beat.dawnLine !== undefined) req(typeof sc.beat.dawnLine === 'string' && sc.beat.dawnLine.length > 0, `scenario ${sc.id} beat.dawnLine`);
+      req(sc.steps.some((s) => s.op === 'method'), `scenario ${sc.id}: a beat needs a method step to match`);
+    }
   }
 
   // required moment ids from special bar
