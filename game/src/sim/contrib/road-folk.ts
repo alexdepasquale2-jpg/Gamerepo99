@@ -6,6 +6,7 @@
  * bound, ask a blessing, ask for news, feed or guide a refugee (a helped refugee settles where the road
  * ends), buy from a pedlar. Pure + deterministic.
  */
+import { doctrineRow } from '../doctrine-tick';
 import { atWar, CREEDS } from '../economy/polity';
 import { COVER_DAYS, scarcity, supplyTown } from '../economy/village-economy';
 import { priceAt } from '../goods/deed-goods';
@@ -163,7 +164,7 @@ function townNews(state: SimState, townId: string | undefined): string {
   const other = warOf(state, townId);
   if (other) return fill(VL.townNews.war!, { other: townName(state, other) });
   const docs = Object.values(state.doctrines ?? {}).filter((d) => d.townId === townId).sort((a, b) => a.id.localeCompare(b.id));
-  const name = (id: string): string => ((state.data as { doctrines?: { doctrines?: { id: string; name: string }[] } } | undefined)?.doctrines?.doctrines ?? []).find((r) => r.id === id)?.name ?? 'compact';
+  const name = (id: string): string => doctrineRow(state, id)?.name ?? 'compact';
   if (docs.some((d) => d.collapsed)) return fill(VL.townNews.fallen!, { doctrine: name(docs.find((d) => d.collapsed)!.id) });
   if (despairOf(state, townId) >= 0.5) return VL.townNews.despair!;
   const live = docs.find((d) => !d.collapsed);

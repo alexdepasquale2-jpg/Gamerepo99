@@ -7,7 +7,7 @@ import { nudgeDoctrine } from '../doctrine-tick';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
-import { applyObligationEffect, doctrineOf, findDeal, patronSeat, patronTable } from './doctrine-link';
+import { applyObligationEffect, dealDoctrine, doctrineOf, findDeal, patronDoctrineId, patronSeat, patronTable } from './doctrine-link';
 import type { PatronDeal, PatronDef } from './types';
 
 const deals = (state: SimState): Record<string, PatronDeal> => (state.patronDeals ??= {});
@@ -55,6 +55,7 @@ export function acceptDeal(state: SimState, patronId: string, dealId: string): {
     status: 'active',
     reigniteAtAccept: ensureHoard(state).reigniteCount,
     exposureAtAccept: doctrineOf(state, patron)?.exposure ?? 0,
+    ...(patronDoctrineId(state, patron) ? { doctrineId: patronDoctrineId(state, patron) } : {}),
   };
   addNotoriety(state, 'gain_patron_deal');
   applyObligationEffect(state, patron, deal, 'accept');
@@ -78,7 +79,8 @@ export function fulfilDeal(state: SimState, dealId: string): { ok: boolean } {
   if (found.deal.obligation.kind === 'tithe') state.player.coin = (state.player.coin ?? 0) - found.deal.obligation.magnitude;
   d.status = 'fulfilled';
   d.endedDay = state.day;
-  applyObligationEffect(state, found.patron, found.deal, 'fulfil');
+  const { id: backed, doc } = dealDoctrine(state, found.patron, d);
+  if (doc) applyObligationEffect(state, found.patron, found.deal, 'fulfil', backed);
   pushJuice(state, 'patron.fulfilled', noticed(found.patron, dealId, patronSeat(state, found.patron)));
   return { ok: true };
 }
@@ -96,7 +98,8 @@ export function breakDeal(state: SimState, dealId: string, as: 'broken' | 'betra
     h.notoriety = clamp01(h.notoriety + lev.notorietyAdd);
     state.flags.notoriety = h.notoriety;
   }
-  if (lev.doctrineExposureAdd) nudgeDoctrine(state, found.patron.doctrineId, 'exposure', lev.doctrineExposureAdd);
+  const { id: backed } = dealDoctrine(state, found.patron, d);
+  if (lev.doctrineExposureAdd && backed) nudgeDoctrine(state, backed, 'exposure', lev.doctrineExposureAdd);
   if (lev.betrayalSpawn) pushJuice(state, 'notoriety.attractor', { attractorId: lev.betrayalSpawn, dealId });
   pushJuice(state, as === 'broken' ? 'patron.broken' : 'patron.betrayed', noticed(found.patron, dealId, state.player.townId ?? patronSeat(state, found.patron)));
 }
@@ -110,15 +113,17 @@ export function tickPatronDawn(state: SimState): { due: string[]; broken: string
     const d = state.patronDeals[id]!;
     const found = findDeal(state, id);
     if (d.status !== 'active' || !found) continue;
-    const doc = doctrineOf(state, found.patron);
-    if (!doc || doc.collapsed) {
+    const { doc } = dealDoctrine(state, found.patron, d);
+    // Struck with a doctrine of another world (deals travel with you): it waits here, betrayal needs its patron near.
+    const away = !!d.doctrineId && !doc;
+    if (!away && (!doc || doc.collapsed)) {
       d.status = 'void';
       d.endedDay = state.day;
       out.voided.push(id);
       continue;
     }
-    const sour = Math.max(0, doc.exposure - d.exposureAtAccept);
-    const p = Math.min(1, found.deal.betrayalRisk * t.rules.betrayalDailyScale * (1 + t.rules.lowLegitimacyMul * (1 - doc.legitimacy) + t.rules.sourMul * sour));
+    const sour = doc ? Math.max(0, doc.exposure - d.exposureAtAccept) : 0;
+    const p = !doc ? 0 : Math.min(1, found.deal.betrayalRisk * t.rules.betrayalDailyScale * (1 + t.rules.lowLegitimacyMul * (1 - doc.legitimacy) + t.rules.sourMul * sour));
     if (deriveRng(state.seed, 'patron', state.day, id).next() < p) {
       breakDeal(state, id, 'betrayed');
       out.betrayed.push(id);

@@ -9,7 +9,7 @@
 import deedsJson from '../../data/systems/interactions/deeds.json';
 import { registerDawnLines } from '../dawn-lines';
 import { registerDawnTick } from '../dawn-ticks';
-import { ensureDoctrines, legitimacyOf, type DoctrineState } from '../doctrine-tick';
+import { doctrineRow, ensureDoctrines, legitimacyOf, type DoctrineState } from '../doctrine-tick';
 import { pushJuice } from '../packets';
 import { registerActionProvider, registerTargetProvider } from '../play-session/action-providers';
 import { ensureLegitimacyVoices, tickPromiseTally } from '../promise-tally';
@@ -37,8 +37,7 @@ const STEADY_EVERY = 5;
 const REMARK_CHANCE = 0.3;
 
 type Row = { id: string; name: string; goals?: { promise: string }[] };
-const rowOf = (state: SimState, id: string): Row | undefined =>
-  ((state.data as { doctrines?: { doctrines?: Row[] } } | undefined)?.doctrines?.doctrines ?? []).find((r) => r.id === id);
+const rowOf = (state: SimState, id: string): Row | undefined => doctrineRow(state, id);
 
 /** The compact that holds a town: the live one, else the last to fall there. */
 export function compactOf(state: SimState, townId: string | undefined): DoctrineState | undefined {

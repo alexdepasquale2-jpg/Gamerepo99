@@ -3,7 +3,7 @@ import { acceptDeal, fulfilDeal } from './deals';
 import { findDeal, patronTable, patronsBrokeredBy } from './doctrine-link';
 
 export { openDeals, acceptDeal, canFulfilDeal, fulfilDeal, breakDeal, tickPatronDawn } from './deals';
-export { patronTable, findDeal, patronSeat, patronsBrokeredBy } from './doctrine-link';
+export { patronTable, findDeal, patronSeat, patronDoctrineId, patronsBrokeredBy } from './doctrine-link';
 export type { PatronDeal, PatronDef, DealDef, PatronLines } from './types';
 
 /** Method that hosts a patron interaction when played directly by its catalog id. */

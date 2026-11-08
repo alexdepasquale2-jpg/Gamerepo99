@@ -12,6 +12,12 @@ export type PatronDeal = {
   exposureAtAccept: number;
   /** Day the deal stopped being active (kept, broken, betrayed or voided). Optional for old saves. */
   endedDay?: number;
+  /**
+   * The doctrine the deal was made with (the patron's, by role, in the world where it was struck). Deals travel
+   * with the player; in a world without that doctrine the deal waits (no betrayal, no nudges) until it falls due.
+   * Absent on older saves: the patron's doctrine in the current world.
+   */
+  doctrineId?: string;
 };
 
 export type DealDef = {
