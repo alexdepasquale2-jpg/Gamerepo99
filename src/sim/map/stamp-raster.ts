@@ -21,8 +21,9 @@ import type {
 import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
 import { terrainMode } from './terrain';
-import { scatterProps, type ScatterCtx } from './ladder/scatter';
-import { dressChunk, type DressCtx } from './ladder/dress';
+import { scatterProps } from './ladder/scatter';
+import { dressChunk } from './ladder/dress';
+import { ladderContexts } from './ladder/ctx';
 import { chunkEdits, type TileEdits } from './tile-edits';
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
@@ -118,28 +119,7 @@ export function createStampRasterSource(
   const terrain = createTerrainAccess(layout, seed, roads);
   const props = buildProps(roads, seed);
   const bbox = layoutBBox(layout);
-  const roadCells = [...roads.values()];
-  const scatterCtx: ScatterCtx = {
-    biome: terrain.biome,
-    isRoad: (q, r) => roads.has(cellKey(q, r)),
-    townDistance: (q, r) => Math.min(...layout.settlements.map((s) => Math.hypot(q - s.q, r - s.r))),
-    roadDistance: (q, r, cap) => {
-      let best = cap;
-      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) best = d; }
-      return best;
-    },
-  };
-  const dressCtx: DressCtx = {
-    biome: terrain.biome,
-    isRoad: scatterCtx.isRoad,
-    townDistance: scatterCtx.townDistance,
-    towns: layout.settlements,
-    nearestRoad: (q, r, cap) => {
-      let best = cap, at: { q: number; r: number } | null = null;
-      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) { best = d; at = c; } }
-      return at;
-    },
-  };
+  const { scatter: scatterCtx, dress: dressCtx } = ladderContexts(layout, terrain, roads);
   const fp = fingerprintHex([
     String(seed >>> 0),
     terrainMode(),

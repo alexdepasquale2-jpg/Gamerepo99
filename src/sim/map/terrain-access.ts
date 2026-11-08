@@ -102,12 +102,17 @@ export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: 
       for (const key of c.cells) if (!lakeCells.has(key) || c.run <= LAKE.fordMaxRun) lakeCells.set(key, c.run <= LAKE.fordMaxRun ? 'ford' : 'ferry');
     }
   };
+  // Slots whose whole neighbourhood is generated: one lookup per call on the navigator's hot path.
+  const lakeReady = new Set<string>();
   const lakeAt = (q: number, r: number): 'ford' | 'ferry' | undefined => {
-    const sq = Math.floor(q / LAKE.slotTiles), sr = Math.floor(r / LAKE.slotTiles);
-    const reach = Math.ceil((LAKE.ferryMaxRun + 2) / LAKE.slotTiles);
-    for (let dr = -reach; dr <= reach; dr++) for (let dq = -reach; dq <= reach; dq++) {
-      const k = `${sq + dq},${sr + dr}`;
-      if (!lakeDone.has(k)) { lakeDone.add(k); genLakeSlot(sq + dq, sr + dr); }
+    const sq = Math.floor(q / LAKE.slotTiles), sr = Math.floor(r / LAKE.slotTiles), sk = `${sq},${sr}`;
+    if (!lakeReady.has(sk)) {
+      lakeReady.add(sk);
+      const reach = Math.ceil((LAKE.ferryMaxRun + 2) / LAKE.slotTiles);
+      for (let dr = -reach; dr <= reach; dr++) for (let dq = -reach; dq <= reach; dq++) {
+        const k = `${sq + dq},${sr + dr}`;
+        if (!lakeDone.has(k)) { lakeDone.add(k); genLakeSlot(sq + dq, sr + dr); }
+      }
     }
     return lakeCells.get(cellKey(q, r));
   };
