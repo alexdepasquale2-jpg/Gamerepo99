@@ -9,7 +9,7 @@
 import { prettyTownId } from '../map/districts';
 import { registerBoardPage } from '../board-pages';
 import { registerDawnLines } from '../dawn-lines';
-import { ensureDoctrines, type DoctrineState } from '../doctrine-tick';
+import { doctrineRows, ensureDoctrines, type DoctrineState } from '../doctrine-tick';
 import { BUILDING_BY_ID } from '../economy/build-plans';
 import { LAND, bordersOf } from '../economy/borders';
 import { CREEDS, TECHS, pairKey, type Creed, type Treaty } from '../economy/polity';
@@ -28,8 +28,8 @@ type DoctrineRow = {
   hearsay?: { holds?: string; ledger?: string };
 };
 
-const rowsOf = (state: SimState): DoctrineRow[] =>
-  ((state.data as DataTables | undefined)?.doctrines as { doctrines?: DoctrineRow[] } | undefined)?.doctrines ?? [];
+/** Authored rows plus generated districts' doctrines (doctrine-tick doctrineRows). */
+const rowsOf = (state: SimState): DoctrineRow[] => doctrineRows(state);
 
 /** A town's spoken name: authored name without any "(…)" aside, else its id in title case. */
 export function townLabel(state: SimState, townId: string, nameOf?: (id: string) => string): string {

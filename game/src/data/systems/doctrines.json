@@ -8,7 +8,17 @@
   },
   "rules": {
     "challenger": { "margin": 0.15, "dawns": 3, "suppressControl": 0.5, "suppressExposure": 0.05 },
-    "collapse": { "relapseMulBase": 0.1, "shockSourceTownId": "city_reach", "shockPerceived": -0.1 }
+    "collapse": { "relapseMulBase": 0.1, "shockSourceTownId": "city_reach", "shockPerceived": -0.1 },
+    "seatNote": "shockSourceTownId is a role: the authored town when this world holds it, else the world's seat (a district's first town, or the town with the most people).",
+    "generatedNote": "A generated district raises one doctrine at its seat from districts.json doctrineStyles; these are its starting meters and hearsay by style (legitimacy ~ legitimacyOf(start)).",
+    "generated": {
+      "compact": { "start": { "realDelivery": 0.3, "perceivedDelivery": 0.4, "propaganda": 0.15, "control": 0.1, "exposure": 0.0, "legitimacy": 0.45 }, "hearsay": { "holds": "the bread still comes", "ledger": "the compact's bread-book" } },
+      "pact": { "start": { "realDelivery": 0.25, "perceivedDelivery": 0.35, "propaganda": 0.2, "control": 0.15, "exposure": 0.05, "legitimacy": 0.42 }, "hearsay": { "holds": "the roads are still safe", "ledger": "the toll-keeper's tally" } },
+      "creed": { "start": { "realDelivery": 0.45, "perceivedDelivery": 0.7, "propaganda": 0.5, "control": 0.35, "exposure": 0.1, "legitimacy": 0.69 }, "hearsay": { "holds": "the numbers keep climbing", "ledger": "the creed's own count" } },
+      "tithe": { "start": { "realDelivery": 0.4, "perceivedDelivery": 0.45, "propaganda": 0.3, "control": 0.3, "exposure": 0.1, "legitimacy": 0.51 }, "hearsay": { "holds": "the tenth still buys protection", "ledger": "the tithe-roll" } },
+      "quiet": { "start": { "realDelivery": 0.35, "perceivedDelivery": 0.4, "propaganda": 0.2, "control": 0.3, "exposure": 0.05, "legitimacy": 0.47 }, "hearsay": { "holds": "nobody has come to harm", "ledger": "the quiet-keeper's list" } },
+      "quota": { "start": { "realDelivery": 0.4, "perceivedDelivery": 0.55, "propaganda": 0.4, "control": 0.4, "exposure": 0.1, "legitimacy": 0.6 }, "hearsay": { "holds": "the quota is met", "ledger": "the quota book" } }
+    }
   },
   "acts": [
     {

@@ -7,6 +7,8 @@
 
 import type { DataTables } from './load-data';
 import { pushDelta } from './legacy/state';
+import { districtAt, districtId, districtOfTown } from './map/districts';
+import { deriveRng } from './rng';
 import { findCrossTownKin, pushJuice } from './packets';
 import type { SimState } from './types/runtime';
 import type { DoctrineSupplyHook } from './economy/economy-lod-types';
@@ -24,6 +26,10 @@ export type DoctrineState = DoctrineMeters & {
   id: string; townId: string; collapsed?: boolean; streaks?: Record<string, number>;
   /** Set on the doctrine a swap displaced: the winner that took its town will not chase it back (no ping-pong). */
   truceWith?: string;
+  /** A doctrine a generated district raised (it has no authored row): its name, style and leader. */
+  gen?: { name: string; style: string; promise: string; leaderPersonId?: string };
+  /** The patron that took this doctrine as its own because its authored one is not in this world (patrons/doctrine-link). */
+  patronId?: string;
 };
 
 const GAP_MIN = 0.25;
@@ -54,12 +60,15 @@ export function applyCollapse(
   return gap > GAP_MIN && m.exposure > EXPOSURE_MIN ? m.legitimacy * (1 - 2.5 * gap * gap) : m.legitimacy;
 }
 
+type Hearsay = { holds?: string; ledger?: string };
 type Rules = {
   challenger: { margin: number; dawns: number; suppressControl: number; suppressExposure: number };
   collapse: { relapseMulBase: number; shockSourceTownId: string; shockPerceived: number };
+  generated?: Record<string, { start: DoctrineMeters; hearsay?: Hearsay }>;
 };
 const rulesOf = (state: SimState): Rules =>
   ((state.data as DataTables | undefined)?.doctrines as { rules: Rules }).rules;
+const styleOf = (state: SimState, style: string) => ((state.data as DataTables | undefined)?.doctrines as { rules?: Rules } | undefined)?.rules?.generated?.[style];
 
 /** Collapse side effects: relapse_pressure packet along a kin edge; city collapse shocks linked villages. */
 function collapseRipples(state: SimState, c: DoctrineState, all: Record<string, DoctrineState>, ids: string[]): void {
@@ -81,7 +90,7 @@ function collapseRipples(state: SimState, c: DoctrineState, all: Record<string, 
     pushJuice(state, 'packet.emit', { packetId: pkt.id, fromPersonId: p, toPersonId: hit.otherId, kind: pkt.kind, days: pkt.days });
     break;
   }
-  if (c.townId !== r.shockSourceTownId) return;
+  if (c.townId !== worldSeat(state)) return;
   for (const id of ids) {
     const n = all[id]!;
     if (!n.collapsed && n.townId !== c.townId && linked(state, c.townId, n.townId)) {
@@ -118,15 +127,95 @@ function challengerSwaps(state: SimState, all: Record<string, DoctrineState>, id
   }
 }
 
-type DoctrineRow = { id: string; townId: string; start: DoctrineMeters };
+/** A doctrine as the rest of the game reads it: an authored doctrines.json row, or one built for a generated doctrine. */
+export type DoctrineRow = {
+  id: string; townId: string; name: string; start: DoctrineMeters;
+  leaderPersonId?: string | null; blurb?: string;
+  goals?: { id?: string; promise: string; feltByMaxGapAxis?: number }[];
+  hearsay?: Hearsay;
+};
 
-/** Lazily seed SimState.doctrines from doctrines.json (idempotent). */
+const authoredRows = (state: SimState): DoctrineRow[] =>
+  ((state.data as DataTables | undefined)?.doctrines as { doctrines?: DoctrineRow[] } | undefined)?.doctrines ?? [];
+
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Authored rows plus a row for each generated doctrine live in this world (names, leader, promise, hearsay). */
+export function doctrineRows(state: SimState): DoctrineRow[] {
+  const rows = authoredRows(state);
+  const gen = Object.values(state.doctrines ?? {}).filter((d) => d.gen && !rows.some((r) => r.id === d.id)).sort((a, b) => a.id.localeCompare(b.id));
+  if (!gen.length) return rows;
+  return [...rows, ...gen.map((d) => ({
+    id: d.id, townId: d.townId, name: d.gen!.name, leaderPersonId: d.gen!.leaderPersonId ?? null,
+    start: styleOf(state, d.gen!.style)?.start ?? d,
+    goals: [{ id: `goal_${d.gen!.style}`, promise: cap(d.gen!.promise), feltByMaxGapAxis: 1 }],
+    hearsay: styleOf(state, d.gen!.style)?.hearsay,
+  }))];
+}
+export const doctrineRow = (state: SimState, id: string): DoctrineRow | undefined => doctrineRows(state).find((r) => r.id === id);
+
+/** Every town this world holds: its economy towns (set at boot from the world layout, kept in saves). */
+const worldTowns = (state: SimState): Set<string> => new Set(Object.keys(state.towns ?? {}));
+const residents = (state: SimState, townId: string): string[] =>
+  Object.keys(state.people ?? {}).sort().filter((id) => {
+    const p = state.people[id]!;
+    // Visitors (vis_*) and folk on the road or retired are not the town's own to lead.
+    return p.townId === townId && !id.startsWith('vis_') && !p.tags?.some((t) => t === 'on_road' || t === 'retired');
+  });
+
+/** The generated district this world is (from its towns' ids), if it is one. */
+function districtOfWorld(towns: Set<string>): { col: number; row: number } | null {
+  for (const t of [...towns].sort()) { const d = districtOfTown(t); if (d) return d; }
+  return null;
+}
+
+/**
+ * The seat of this world, a role rather than a town id: the authored shock-source town when this world
+ * holds it, else a generated district's seat (its first town), else the town with the most people.
+ */
+export function worldSeat(state: SimState): string | undefined {
+  const towns = worldTowns(state);
+  const authored = (state.data as DataTables | undefined)?.doctrines ? rulesOf(state).collapse.shockSourceTownId : undefined;
+  if (authored && towns.has(authored)) return authored;
+  const d = districtOfWorld(towns);
+  const seat = d && districtAt(state.seed, d.col, d.row).towns.find((t) => t.seat)?.id;
+  if (seat && towns.has(seat)) return seat;
+  const ranked = [...towns].sort();
+  return ranked.map((t) => [t, residents(state, t).length] as const).sort((a, b) => b[1] - a[1])[0]?.[0];
+}
+
+/** A generated district's one doctrine: at its seat, meters by style, led by one of the seat's own folk. */
+function seedGenerated(state: SimState, d: { col: number; row: number }, seat: string): DoctrineState | undefined {
+  const char = districtAt(state.seed, d.col, d.row).character.doctrine;
+  const start = styleOf(state, char.style)?.start;
+  if (!start) return undefined;
+  const folk = residents(state, seat);
+  const adults = folk.filter((id) => (state.people[id]!.age ?? 30) >= 18);
+  const pool = adults.length ? adults : folk;
+  const leader = pool.length ? pool[deriveRng(state.seed, 'doctrine-leader', districtId(d.col, d.row)).int(0, pool.length)] : undefined;
+  // Tagged as leader so doctrine voices, the Power page and patron brokers find them (power-page leaderOf).
+  const lp = leader ? state.people[leader] : undefined;
+  if (lp && !lp.tags?.includes('leader')) lp.tags = [...(lp.tags ?? []), 'leader'];
+  return { id: `doctrine_${districtId(d.col, d.row)}`, townId: seat, ...start, gen: { ...char, ...(leader ? { leaderPersonId: leader } : {}) } };
+}
+
+/**
+ * Lazily seed SimState.doctrines for the live world (idempotent). The home world keeps the authored doctrines
+ * whose towns it holds; a generated district raises one doctrine at its seat. A state with no economy towns
+ * (bare test states; play always binds towns at boot) gets every authored row, as before.
+ */
 export function ensureDoctrines(state: SimState): Record<string, DoctrineState> {
   if (state.doctrines) return state.doctrines;
-  const rows = ((state.data as DataTables | undefined)?.doctrines as { doctrines?: DoctrineRow[] } | undefined)
-    ?.doctrines;
+  const towns = worldTowns(state);
   const out: Record<string, DoctrineState> = {};
-  for (const r of rows ?? []) out[r.id] = { id: r.id, townId: r.townId, ...r.start };
+  const d = districtOfWorld(towns);
+  if (d) {
+    const seat = worldSeat(state);
+    const g = seat ? seedGenerated(state, d, seat) : undefined;
+    if (g) out[g.id] = g;
+  } else {
+    for (const r of authoredRows(state)) if (!towns.size || towns.has(r.townId)) out[r.id] = { id: r.id, townId: r.townId, ...r.start };
+  }
   return (state.doctrines = out);
 }
 
@@ -162,7 +251,7 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
   const actor = act.requiresActorTagsAny;
   if (actor?.length && !actor.some((t) => state.player.statusTraits.includes(t))) return undefined;
   const all = ensureDoctrines(state);
-  const rows = ((state.data as DataTables | undefined)?.doctrines as { doctrines?: { id: string; leaderPersonId?: string }[] } | undefined)?.doctrines ?? [];
+  const rows = doctrineRows(state);
   const live = Object.keys(all).sort().filter((k) => all[k]!.townId === townId && !all[k]!.collapsed);
   const id = live.find((k) => rows.find((r) => r.id === k)?.leaderPersonId === personId) ?? live[0];
   if (!id) return undefined;

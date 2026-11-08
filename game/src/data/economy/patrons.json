@@ -98,7 +98,7 @@
     "sourMul": 2,
     "maxLettersPerDawn": 2,
     "warnDays": 2,
-    "seatNote": "A patron sits in homeTownId when people live there; otherwise in the town of its doctrine leader (generated worlds hold a subset of the authored towns). Brokers are voiceTagsAny people in the seat."
+    "seatNote": "Seats are roles. A patron sits in homeTownId when a voice lives there; otherwise in the town of the doctrine it backs in this world: its authored doctrineId when present, else the strongest unclaimed doctrine (the world seat first), so a generated district's one doctrine takes the first patron. Brokers are voiceTagsAny people in the seat."
   },
   "obligationEffects": {
     "tithe": {

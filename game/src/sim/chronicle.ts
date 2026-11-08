@@ -7,6 +7,7 @@
  * Templates in data/dialogue/chronicle.json. Pure, deterministic (seeded by seed/kind/day/key).
  */
 import table from '../data/dialogue/chronicle.json';
+import { doctrineRow } from './doctrine-tick';
 import { prettyTownId } from './map/districts';
 import type { HistoryEvent } from './gen/world-types';
 import { deriveRng } from './rng';
@@ -31,8 +32,7 @@ function personName(state: SimState, id: string | undefined, fallback = 'someone
   return (p?.name ?? (id ? title(id) : fallback)).split(' ')[0] ?? fallback;
 }
 function doctrineName(state: SimState, id: string | undefined): string {
-  const rows = ((state.data as { doctrines?: { doctrines?: { id: string; name?: string }[] } } | undefined)?.doctrines?.doctrines) ?? [];
-  return rows.find((d) => d.id === id)?.name ?? (id ? title(id.replace(/^doctrine_/, '')) : 'old creed');
+  return (id && doctrineRow(state, id)?.name) || (id ? title(id.replace(/^doctrine_/, '')) : 'old creed');
 }
 function eventName(state: SimState, id: string | undefined): string {
   if (id && CHRONICLE.events[id]) return CHRONICLE.events[id]!;
