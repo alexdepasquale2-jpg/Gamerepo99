@@ -1,11 +1,11 @@
 /** Shared collision/ground classification. Roads are safe crossings, settlements dry land. */
-import { biomeAt, riverRow, terrainHash, type Biome } from './terrain';
+import { biomeAt, riverDistance, riversAt, RIVER_HALF, terrainHash, type Biome, type RiverCurve } from './terrain';
 import { bresenhamLine, cellKey } from './corridor';
 import type { WorldLayout } from './world-layout';
 import { editAt, type TileEdits } from './tile-edits';
 import crossingCfg from '../../data/world/crossings.json';
 
-/** River fords: one candidate per FORD_SLOT columns, FORD_WIDTH columns wide. */
+/** River fords: one candidate per FORD_SLOT tiles along each river, FORD_WIDTH tiles wide. */
 export const FORD_SLOT = 40;
 export const FORD_WIDTH = 3;
 const FORD_CHANCE = 0.7;
@@ -38,28 +38,49 @@ export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: 
     for (let dr = -1; dr <= 1; dr++) for (let dq = -1; dq <= 1; dq++) if (roads.has(cellKey(q + dq, r + dr))) return true;
     return false;
   };
-  // Fords: shallow crossings laid across the river where it is narrow enough to wade.
-  // Each slot yields at most one strip; every wet cell of its columns (bank to bank) is ford.
-  const slots = new Map<number, Set<string>>();
-  const fordSlot = (slot: number): Set<string> => {
-    const cached = slots.get(slot);
+  // Fords: shallow crossings laid across each river where it is narrow enough to wade. Slots run
+  // along the river's own axis (columns for a west-east river, rows for a north-south one); each
+  // slot yields at most one strip, and every wet cell of its lines (bank to bank) is ford.
+  const slots = new Map<RiverCurve, Map<number, Set<string>>>();
+  let slotCount = 0;
+  const fordSlot = (river: RiverCurve, slot: number): Set<string> => {
+    let mine = slots.get(river);
+    const cached = mine?.get(slot);
     if (cached) return cached;
+    // Bounded: a long walk only ever needs nearby slots, and they regenerate identically.
+    if (++slotCount > 50_000) { slots.clear(); slotCount = 1; mine = undefined; }
+    if (!mine) { mine = new Map(); slots.set(river, mine); }
     const cells = new Set<string>();
-    slots.set(slot, cells);
-    if (terrainHash(seed ^ 0xf04d, slot, 1) >= FORD_CHANCE) return cells;
-    const q0 = slot * FORD_SLOT + 6 + Math.floor(terrainHash(seed ^ 0xf04d, slot, 2) * (FORD_SLOT - 12 - FORD_WIDTH));
+    mine.set(slot, cells);
+    // The home river (hashId 0) keeps the exact fords it always had.
+    const fs = seed ^ 0xf04d ^ river.hashId;
+    if (terrainHash(fs, slot, 1) >= FORD_CHANCE) return cells;
+    const u0 = slot * FORD_SLOT + 6 + Math.floor(terrainHash(fs, slot, 2) * (FORD_SLOT - 12 - FORD_WIDTH));
+    if (u0 < river.ua || u0 + FORD_WIDTH > river.ub) return cells; // strip must lie on this river's own run
+    const at = (u: number, v: number) => (river.axis === 0 ? biome(u, v) : biome(v, u));
+    const key2 = (u: number, v: number) => (river.axis === 0 ? cellKey(u, v) : cellKey(v, u));
     const strip: string[] = [];
-    for (let q = q0; q < q0 + FORD_WIDTH; q++) {
-      const mid = Math.round(riverRow(seed, q));
-      if (biome(q, mid) !== 'water') return cells;
+    for (let u = u0; u < u0 + FORD_WIDTH; u++) {
+      const mid = Math.round(river.centre(u));
+      if (at(u, mid) !== 'water') return cells;
       let top = mid, bottom = mid;
-      while (biome(q, top - 1) === 'water' && mid - top < FORD_MAX_RUN) top--;
-      while (biome(q, bottom + 1) === 'water' && bottom - mid < FORD_MAX_RUN) bottom++;
-      if (biome(q, top - 1) === 'water' || biome(q, bottom + 1) === 'water' || bottom - top + 1 > FORD_MAX_RUN) return cells;
-      for (let r = top; r <= bottom; r++) strip.push(cellKey(q, r));
+      while (at(u, top - 1) === 'water' && mid - top < FORD_MAX_RUN) top--;
+      while (at(u, bottom + 1) === 'water' && bottom - mid < FORD_MAX_RUN) bottom++;
+      if (at(u, top - 1) === 'water' || at(u, bottom + 1) === 'water' || bottom - top + 1 > FORD_MAX_RUN) return cells;
+      for (let v = top; v <= bottom; v++) strip.push(key2(u, v));
     }
     for (const k of strip) cells.add(k);
     return cells;
+  };
+  // A strip spans bank to bank (up to FORD_MAX_RUN); dist is inflated up to 1/0.45 near springs.
+  const FORD_REACH = (RIVER_HALF + FORD_MAX_RUN) / 0.45;
+  const riverFord = (q: number, r: number): boolean => {
+    const k = cellKey(q, r);
+    for (const c of riversAt(seed, q, r)) {
+      const u = c.axis === 0 ? q : r, v = c.axis === 0 ? r : q;
+      if (c.dist(u, v) < FORD_REACH && fordSlot(c, Math.floor(u / FORD_SLOT)).has(k)) return true;
+    }
+    return false;
   };
   // Lake crossings: per square slot, the shortest bank-to-bank water runs among a few seeded lines
   // become lanes (ford when wadeable, ferry pontoon when wider). A lane may run past its slot's
@@ -67,7 +88,7 @@ export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: 
   // first makes sure the slots around it have been generated.
   const lakeCells = new Map<string, 'ford' | 'ferry'>();
   const lakeDone = new Set<string>();
-  const nearRiver = (q: number, r: number) => Math.abs(r - riverRow(seed, q)) < 4.5;
+  const nearRiver = (q: number, r: number) => riverDistance(seed, q, r) < 4.5;
   const genLakeSlot = (sq: number, sr: number): void => {
     const S = LAKE.slotTiles, mix = sq * 7919 + sr * 104729;
     if (terrainHash(seed ^ 0x1a4e, mix, 1) >= LAKE.chance) return;
@@ -129,7 +150,7 @@ export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: 
     return lakeCells.get(cellKey(q, r));
   };
   const naturalFord = (q: number, r: number): boolean =>
-    biome(q, r) === 'water' && !isDeck(q, r) && (fordSlot(Math.floor(q / FORD_SLOT)).has(cellKey(q, r)) || lakeAt(q, r) === 'ford');
+    biome(q, r) === 'water' && !isDeck(q, r) && (riverFord(q, r) || lakeAt(q, r) === 'ford');
   const isFord = (q: number, r: number): boolean => {
     const e = edit(q, r);
     return e !== undefined ? e === 'ford' : naturalFord(q, r);

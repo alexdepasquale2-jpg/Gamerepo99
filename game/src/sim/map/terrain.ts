@@ -1,6 +1,8 @@
 /** Continuous seeded value noise; identical biomes for tiles, map and resources. */
 import { WORLD_SCALE as S } from './constants';
 import { createLadder, type Ladder } from './ladder/refine';
+import { RIVER_HALF, riverDistance } from './rivers';
+export { riverRow, riverDistance, riversAt, RIVER_HALF, type RiverCurve } from './rivers';
 export type Biome = 'forest' | 'hills' | 'water' | 'fields' | 'meadow';
 export const BIOME_COLOR: Record<Biome, number> = {
   forest: 0x304e32, hills: 0x777557, water: 0x407b91, fields: 0x999152, meadow: 0x69834a,
@@ -18,10 +20,6 @@ function noise(seed: number, q: number, r: number, scale: number): number {
   const b = hash(seed, ix, iy + 1) * (1 - fx) + hash(seed, ix + 1, iy + 1) * fx;
   return a * (1 - fy) + b * fy;
 }
-/** Row (tile r) of the river centre line at column q. */
-export function riverRow(seed: number, q: number): number {
-  return (Math.sin(q / (86 * S) + seed * 0.001) * 34 + Math.sin(q / (31 * S)) * 7) * S;
-}
 /** Seeded hash in [0,1) for terrain features such as fords. */
 export function terrainHash(seed: number, x: number, y: number): number {
   return hash(seed, x, y);
@@ -35,7 +33,8 @@ export function areaBiomeAt(seed: number, q: number, r: number): Biome {
   if (wet > 0.53) return 'forest';
   return elevation < 0.39 ? 'fields' : 'meadow';
 }
-export const isRiverAt = (seed: number, q: number, r: number): boolean => Math.abs(r - riverRow(seed, q)) < 2.6;
+/** Seeded per-district rivers (rivers.ts); the home district keeps its one river along riverRow. */
+export const isRiverAt = (seed: number, q: number, r: number): boolean => riverDistance(seed, q, r) < RIVER_HALF;
 /** 'ladder' (default) = refined from the L0 grid (see ladder/); 'noise' = stretched noise per tile. */
 export type TerrainMode = 'noise' | 'ladder';
 let mode: TerrainMode = 'ladder';
@@ -48,10 +47,15 @@ export function ladderFor(seed: number): Ladder {
   if (!l) { l = createLadder(seed); ladders.set(seed, l); }
   return l;
 }
-/** Cheap overview biome for maps: river + L1 (16-tile) ladder cells. */
-export function coarseBiomeAt(seed: number, q: number, r: number): Biome {
+/** Cheap overview biome for maps: river (a wider band, so it reads at zoom) + L1 (16-tile) ladder cells. */
+const COARSE_RIVER = 8;
+/**
+ * `riverBand` widens the river (in tiles from its centre) for a sparse sampler: a map that samples
+ * every N tiles passes ~N/2 so no river slips between samples.
+ */
+export function coarseBiomeAt(seed: number, q: number, r: number, riverBand = COARSE_RIVER): Biome {
   if (mode !== 'ladder') return biomeAt(seed, q, r);
-  if (Math.abs(r - riverRow(seed, q)) < 8) return 'water';
+  if (riverDistance(seed, q, r) < Math.max(COARSE_RIVER, riverBand)) return 'water';
   return ladderFor(seed).area(1, Math.floor(q / 16), Math.floor(r / 16));
 }
 export function biomeAt(seed: number, q: number, r: number): Biome {
