@@ -78,6 +78,8 @@ export type LegacyState = {
   playerName?: string;
   /** Genuine-growth acts by the current life since succession (inherited_dependence decay). */
   growthSinceSuccession: number;
+  /** Day inherited_dependence last faded (dawn line names the moment). Optional: older saves lack it. */
+  dependenceResolvedDay?: number;
   /** Last recorded route state, so dawn route changes are logged once. */
   routeSeen?: Record<string, { broken: boolean; condition: number }>;
 };

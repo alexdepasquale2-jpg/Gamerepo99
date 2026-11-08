@@ -95,6 +95,7 @@ export function tickInheritedDependence(state: SimState): boolean {
   state.player.statusTraits = state.player.statusTraits.filter((t) => t !== (row?.decay?.removeStatusTraitId ?? traitId));
   const hook = row?.decay?.onResolveHookId ? data.hooksById.get(row.decay.onResolveHookId) : undefined;
   for (const fx of hook?.effects ?? []) applyEffect(state, fx, { data, rng: deriveRng(state.seed, 'dep_resolve', state.day) });
+  lg.dependenceResolvedDay = state.day;
   pushJuice(state, 'status.lose', { traitId });
   return true;
 }
