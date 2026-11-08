@@ -103,7 +103,7 @@ registerDevHook('artGallery', (ctx) => async (on = true) => {
   keys.forEach((key, i) => {
     const f = manifestFrame(ctx.scene, key);
     if (!f) return;
-    const img = ctx.scene.add.image(p.x + ((i % COLS) - 3) * CELL, p.y - 120 + Math.floor(i / COLS) * CELL, f.tex, f.frame).setOrigin(0.5, 1).setDepth(1e6);
+    const img = ctx.scene.add.image(p.x + ((i % COLS) - 3) * CELL, p.y - 120 + Math.floor(i / COLS) * CELL, f.tex, f.frame).setOrigin(0.5, 1).setDepth(4.5e7);
     img.setScale(Math.min(4, Math.floor(60 / Math.max(img.width, img.height)) || 1));
     imgs.push(img);
   });

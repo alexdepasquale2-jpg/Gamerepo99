@@ -51,7 +51,7 @@ void main() {
 
 class WorldLightPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
   viewRect: number[] = [0, 0, 640, 360];
-  towns: number[] = new Array(MAX_TOWNS * 4).fill(-1e7);
+  towns: number[] = new Array(MAX_TOWNS * 4).fill(-1e4);
   lights: number[] = new Array(MAX_LIGHTS * 3).fill(0);
   day: [number, number, number] = [1, 1, 1];
   night = 0;
@@ -94,16 +94,18 @@ export function createLightFx(scene: Phaser.Scene): LightFx | null {
   return {
     apply(f) {
       const v = cam.worldView;
-      fx.viewRect = [v.x, v.y, v.width, v.height];
+      // Camera-relative: the shader works in px from the view's corner, so mediump floats keep their
+      // precision anywhere in a realm millions of px wide.
+      fx.viewRect = [0, 0, v.width, v.height];
       const near = [...f.towns].sort((a, b) => Math.hypot(a.x - v.centerX, a.y - v.centerY) - Math.hypot(b.x - v.centerX, b.y - v.centerY)).slice(0, MAX_TOWNS);
       const towns = new Array(MAX_TOWNS * 4).fill(0);
       for (let i = 0; i < MAX_TOWNS; i++) {
         const t = near[i];
-        towns.splice(i * 4, 4, t ? t.x : -1e7, t ? t.y : -1e7, t?.despair ?? 0, t?.warm ?? 0);
+        towns.splice(i * 4, 4, t ? t.x - v.x : -1e4, t ? t.y - v.y : -1e4, t?.despair ?? 0, t?.warm ?? 0);
       }
       fx.towns = towns;
       const lights = new Array(MAX_LIGHTS * 3).fill(0);
-      f.lights.slice(0, MAX_LIGHTS).forEach((l, i) => lights.splice(i * 3, 3, l.x, l.y, l.radius));
+      f.lights.slice(0, MAX_LIGHTS).forEach((l, i) => lights.splice(i * 3, 3, l.x - v.x, l.y - v.y, l.radius));
       fx.lights = lights;
       fx.day = f.day;
       fx.night = f.night;
