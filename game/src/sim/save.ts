@@ -14,6 +14,7 @@ import { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravel
 import { installPlayReactions } from './play-session/play-session-act';
 import { bootPlayState } from './play-session/play-session-state';
 import { rescalePoint } from './map/tile-edits';
+import { backfillSeededWounds } from './social/seeded-wounds';
 import { inventoryOf } from './goods/inventory';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
@@ -161,6 +162,8 @@ export function loadState(raw: SaveBlob, data: DataTables = loadData(), archetyp
   for (const k of ['unspoken', 'hoard', 'legacy', 'patronDeals'] as const) {
     if (blob[k] !== undefined) (state as Record<string, unknown>)[k] = clone(blob[k]);
   }
+  // B12: saves from before seeded wounds give generated villagers the wound a fresh boot would.
+  backfillSeededWounds(state);
   if (typeof blob.rngState === 'number') (state.rng as { setState?: (s: number) => void }).setState?.(blob.rngState);
   return state;
 }

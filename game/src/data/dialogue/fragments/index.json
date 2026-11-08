@@ -42,6 +42,10 @@
     "generic_blend/lie__p02.json",
     "generic_blend/shame__p01.json",
     "generic_blend/shame__p02.json",
+    "generic_blend/smith.json",
+    "generic_blend/middles__p03.json",
+    "generic_blend/places.json",
+    "generic_blend/openers.json",
     "harold_finch/_shared.json",
     "harold_finch/carry_burden.json",
     "harold_finch/challenge.json",
@@ -127,6 +131,7 @@
     "order-leon_march.json",
     "order-mira_whitby.json",
     "order-generic_blend.json",
+    "order-generic_voices.json",
     "order-unspoken.json"
   ],
   "orderNote": "Regrouped by voice (person) then topic (method) — Tidy overnight variety."

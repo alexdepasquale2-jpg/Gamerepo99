@@ -1,0 +1,424 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_any_city_carry_burden_1",
+      "text": "Fine, I'll take it. Nobody in this city carries anything for free.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_carry_burden_2",
+      "text": "Quick, before the street sees. Give it here.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_challenge_1",
+      "text": "Everyone in the city has an opinion. Yours costs extra.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_challenge_2",
+      "text": "Say it to my face, then. Not to the crowd.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_inspire_1",
+      "text": "Under all these bells, I'd forgotten I wanted anything.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_inspire_2",
+      "text": "A city of thousands, and you stopped for me.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_lie_1",
+      "text": "Sounds like something a crier sells on the corner.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_lie_2",
+      "text": "Pretty. The streets are full of pretty.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_shame_1",
+      "text": "Shout it. Nobody here hears anything twice.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_city_shame_2",
+      "text": "In a city this size, shame wears off by noon.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:city",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_carry_burden_1",
+      "text": "Help me as far as the square and we're square.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_carry_burden_2",
+      "text": "Neighbours carry for neighbours. That is how the square keeps.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_challenge_1",
+      "text": "Say that in the square and see who nods.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_challenge_2",
+      "text": "Half the town agrees with you. The other half's me.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_inspire_1",
+      "text": "Market day again. Maybe it'll be a good one.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_inspire_2",
+      "text": "You sound like the old crier. In the good years.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_lie_1",
+      "text": "That'll be all round the market by supper.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_lie_2",
+      "text": "The whole square'd laugh at that, and so do I.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_shame_1",
+      "text": "Fine. Tell the whole market.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_town_shame_2",
+      "text": "The square's heard worse of me, and I'm still here.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:town",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_carry_burden_1",
+      "text": "Ach, give it here. Same as we did at harvest.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_carry_burden_2",
+      "text": "We carry together out here. Always have.",
+      "tags": [
+        "generic:any",
+        "method:carry_burden",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_challenge_1",
+      "text": "Easy now. We don't shout across a field.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_challenge_2",
+      "text": "My gran would have clipped your ear for that.",
+      "tags": [
+        "generic:any",
+        "method:challenge",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_inspire_1",
+      "text": "Well now. That warms better than the hearth.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_inspire_2",
+      "text": "Like the old days, when the lane was full.",
+      "tags": [
+        "generic:any",
+        "method:inspire",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_lie_1",
+      "text": "Everybody knows everybody's business here, love. That's not true.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_lie_2",
+      "text": "Pull the other one. It's got a bell on.",
+      "tags": [
+        "generic:any",
+        "method:lie",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_shame_1",
+      "text": "The whole lane'll know by supper. Let them.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_any_village_shame_2",
+      "text": "We all know each other's worst out here. Go on.",
+      "tags": [
+        "generic:any",
+        "method:shame",
+        "slot:middle",
+        "place:village",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    }
+  ]
+}
