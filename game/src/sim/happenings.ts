@@ -13,19 +13,29 @@
  *  - relapse.mul         live play has no per-dawn relapse roll, so the modifier itself is the relapse:
  *                        burning people there lose relapseFlamePerDawn × (mul − 1) flame each dawn it lasts.
  *  - method.effectiveness scales that method's power on people in the town while it lasts (actInteraction).
+ *  - doctrine.exposure   nudges the exposure of every live doctrine held in the town (lasting, as exposure is).
+ *
+ * The world chooses too: a row's `when` (sim/happening-world) must hold in the town, and a matching one
+ * weighs whenWeight more, so a starving town riots and a lit one holds a festival. townBias names roles
+ * (den, village, city, despairing, lit) or, from older data, authored town ids. Lines (say/news/newsHere)
+ * may be a list of variants; one is drawn per happening from the seed.
  */
 
 import { prettyTownId } from './map/districts';
+import { nudgeDoctrine } from './doctrine-tick';
 import { applyEffect, FLAME_MAX, type EffectCtx } from './effects';
+import { burnAt, isTownRole, matchTownWhen, roleTowns, stampCollapses, type CollapseDays, type HappeningSubject, type HappeningWhen } from './happening-world';
 import { loadWorldTables, pickWeighted } from './gen/load/load-world-tables';
 import type { DataTables } from './load-data';
 import { pushJuice } from './packets';
 import { deriveRng, type Rng } from './rng';
+import { VISITOR_TAG } from './visitors';
 import type { Effect } from './types/data';
 import type { PersonState, SimState } from './types/runtime';
 
 export type HappeningEffectRow = Effect & {
-  pick?: 'random_burning' | 'random_stalled_or_burning' | 'same';
+  /** kin_of_dead: whoever told of the death the `when` matched (kin, else a neighbour), else anyone there. */
+  pick?: 'random_burning' | 'random_stalled_or_burning' | 'kin_of_dead' | 'same';
   methodId?: string;
   requireSkippedDenRest?: boolean;
 };
@@ -35,16 +45,19 @@ export type HappeningRow = {
   name: string;
   weight: number;
   durationDays: number;
+  /** Roles (den, home, village, town, city, despairing, lit) or authored town ids. */
   townBias?: string[];
   /** Only in its bias towns (e.g. your own den). */
   townStrict?: boolean;
+  /** What must be true of the town (sim/happening-world). */
+  when?: HappeningWhen;
   blurb?: string;
-  /** Bubble over the speaker. {target}/{town}/{name} fill in. */
-  say?: string;
+  /** Bubble over the speaker. {target}/{town}/{name}/{dead} fill in. A list is variants. */
+  say?: string | string[];
   /** Dawn line heard as news. */
-  news?: string;
+  news?: string | string[];
   /** Dawn line when the player woke in that town. */
-  newsHere?: string;
+  newsHere?: string | string[];
   effects: HappeningEffectRow[];
 };
 
@@ -54,6 +67,8 @@ export type HappeningsTuning = {
   minGapDays: number;
   maxActive: number;
   biasWeight: number;
+  /** Added to the town weight where an event's `when` holds. */
+  whenWeight: number;
   playerTownWeight: number;
   relapseFlamePerDawn: number;
 };
@@ -78,6 +93,10 @@ export type ActiveHappening = {
   targetId?: string;
   /** Player was in the town when it began. */
   here?: boolean;
+  /** The cause its `when` matched (death:<id>, war:<id>, collapse:<id>, chapel:…). */
+  about?: string;
+  /** Name of the dead, for a funeral's lines. */
+  deadName?: string;
   tags: string[];
   mods: HappeningMod[];
 };
@@ -86,16 +105,22 @@ export type HappeningsState = {
   active: ActiveHappening[];
   lastStartDay?: number;
   /** Recent starts, newest last (capped). */
-  log: { eventId: string; townId: string; day: number }[];
+  log: { eventId: string; townId: string; day: number; about?: string }[];
+  /** Dawn each doctrine was first seen collapsed (for collapsedWithin). */
+  collapsed?: CollapseDays;
+  /** Causes already told, `<eventId>|<townId>|<about>`, oldest first (capped; longer than the log, as a war outlasts many happenings). */
+  told?: string[];
 };
 
 const LOG_CAP = 20;
+const TOLD_CAP = 80;
 const DEFAULT_TUNING: HappeningsTuning = {
   minDay: 2,
   chancePerDawn: 0.35,
   minGapDays: 3,
   maxActive: 1,
   biasWeight: 3,
+  whenWeight: 4,
   playerTownWeight: 2,
   relapseFlamePerDawn: 8,
 };
@@ -129,13 +154,21 @@ export function happeningTownName(townId: string): string {
   return name.replace(/\s*\(.*\)\s*$/, '');
 }
 
-/** Map an authored bias town onto this world: the den is your home hearth; a missing town is the nearest gap. */
-export function mapBiasTown(state: SimState, authoredId: string, present: string[]): string | undefined {
+/**
+ * The present towns a townBias entry names. A role (den, village, city, despairing, lit) reads this world
+ * (sim/happening-world); an authored id from older data maps as before: the den is the den role (your
+ * home hearth, or a district's den-like town), a present town is itself, a missing one the nearest gap.
+ */
+export function biasTowns(state: SimState, entry: string, present: string[]): string[] {
+  if (isTownRole(entry)) return roleTowns(state, entry, present);
   const authored = ((state.data as DataTables | undefined)?.towns ?? []) as TownRow[];
-  if (authored.find((t) => t.id === authoredId)?.isDen) {
-    const home = state.player.homeTownId;
-    return home && present.includes(home) ? home : undefined;
-  }
+  if (authored.find((t) => t.id === entry)?.isDen) return roleTowns(state, 'den', present);
+  const one = mapBiasTown(state, entry, present);
+  return one ? [one] : [];
+}
+
+/** An authored (non-den) town id on this world: itself when present, else the nearest gap (never your home). */
+export function mapBiasTown(state: SimState, authoredId: string, present: string[]): string | undefined {
   if (present.includes(authoredId)) return authoredId;
   const gap = townRows().find((t) => t.id === authoredId)?.gapAxis;
   if (gap === undefined) return undefined;
@@ -150,52 +183,62 @@ export function mapBiasTown(state: SimState, authoredId: string, present: string
   return best;
 }
 
-function burnAt(state: SimState): number {
-  return (state.data as DataTables | undefined)?.reigniteThreshold ?? 35;
-}
-
 function folkIn(state: SimState, townId: string): PersonState[] {
   return Object.values(state.people)
     .filter((p) => p.townId === townId)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
-function pickPool(state: SimState, townId: string, pick: string): PersonState[] {
+function pickPool(state: SimState, townId: string, pick: string, sub?: HappeningSubject): PersonState[] {
   const folk = folkIn(state, townId);
   if (pick === 'random_burning') return folk.filter((p) => p.flame >= burnAt(state));
   if (pick === 'random_stalled_or_burning') return folk.filter((p) => p.flame > 0);
+  if (pick === 'kin_of_dead') {
+    const kin = folk.filter((p) => p.id === sub?.tellerId);
+    return kin.length ? kin : folk;
+  }
   return folk;
 }
 
-/** The player rested somewhere other than their own den last night. */
+/** The player rested somewhere other than their own den last night. Away from the home world there is no den fire to bank. */
 function skippedDenRest(state: SimState): boolean {
   const home = state.player.homeTownId;
-  return !!home && !!state.player.townId && state.player.townId !== home;
+  return !!home && !!state.towns?.[home] && !!state.player.townId && state.player.townId !== home;
 }
 
-function eligible(state: SimState, ev: HappeningRow, townId: string): boolean {
+function eligible(state: SimState, ev: HappeningRow, townId: string, sub: HappeningSubject): boolean {
   for (const fx of ev.effects ?? []) {
     if (fx.requireSkippedDenRest && !skippedDenRest(state)) return false;
-    if (fx.pick && fx.pick !== 'same' && pickPool(state, townId, fx.pick).length === 0) return false;
+    if (fx.pick && fx.pick !== 'same' && pickPool(state, townId, fx.pick, sub).length === 0) return false;
   }
   // Someone besides whoever it falls on, to carry the news.
   return folkIn(state, townId).length > 1;
 }
 
-/** Weighted (event, town) pairs for this dawn, in stable order. */
-export function happeningCandidates(state: SimState): { ev: HappeningRow; townId: string; weight: number }[] {
+export type HappeningCandidate = { ev: HappeningRow; townId: string; weight: number; subject: HappeningSubject };
+
+/** Weighted (event, town) pairs for this dawn, in stable order: bias roles, the event's `when`, where you woke. */
+export function happeningCandidates(state: SimState): HappeningCandidate[] {
   const t = happeningsTuning(state);
   const present = Object.keys(state.towns ?? {}).sort();
-  const out: { ev: HappeningRow; townId: string; weight: number }[] = [];
+  const collapses = state.happenings?.collapsed ?? {};
+  const told = new Set(state.happenings?.told ?? []);
+  const out: HappeningCandidate[] = [];
   for (const ev of happeningRows(state)) {
     if (!(ev.weight > 0)) continue;
-    const bias = new Set((ev.townBias ?? []).map((id) => mapBiasTown(state, id, present)).filter((id): id is string => !!id));
+    const bias = new Set((ev.townBias ?? []).flatMap((id) => biasTowns(state, id, present)));
+    // A reactive event (one with a `when`) is the world answering something: when it holds, it outweighs the everyday table.
+    const reactive = Object.keys(ev.when ?? {}).length > 0;
     for (const townId of present) {
       const inBias = bias.has(townId);
       if (ev.townStrict && !inBias) continue;
-      if (!eligible(state, ev, townId)) continue;
-      const w = 1 + (inBias ? t.biasWeight : 0) + (state.player.townId === townId ? t.playerTownWeight : 0);
-      out.push({ ev, townId, weight: ev.weight * w });
+      // One funeral per death, one vacuum per fall: a cause told here is passed over for the next one.
+      const subject = matchTownWhen(state, townId, ev.when, collapses, (about) => told.has(`${ev.id}|${townId}|${about}`));
+      if (!subject) continue;
+      if (subject.about && told.has(`${ev.id}|${townId}|${subject.about}`)) continue;
+      if (!eligible(state, ev, townId, subject)) continue;
+      const w = 1 + (inBias ? t.biasWeight : 0) + (reactive ? t.whenWeight : 0) + (state.player.townId === townId ? t.playerTownWeight : 0);
+      out.push({ ev, townId, weight: ev.weight * w, subject });
     }
   }
   return out;
@@ -206,7 +249,7 @@ function pickOne<T>(rng: Rng, items: T[]): T | undefined {
 }
 
 /** Begin `ev` in `townId` now: apply its effects and record what must lapse later. */
-export function startHappening(state: SimState, ev: HappeningRow, townId: string, rng: Rng): ActiveHappening {
+export function startHappening(state: SimState, ev: HappeningRow, townId: string, rng: Rng, subject: HappeningSubject = {}): ActiveHappening {
   const data = state.data as DataTables;
   const day = state.day;
   const here = state.player.townId === townId;
@@ -217,6 +260,8 @@ export function startHappening(state: SimState, ev: HappeningRow, townId: string
     startDay: day,
     endsDay: day + Math.max(1, Math.floor(ev.durationDays ?? 0)),
     here,
+    ...(subject.about ? { about: subject.about } : {}),
+    ...(subject.deadName ? { deadName: subject.deadName } : {}),
     tags: [...new Set((ev.effects ?? []).flatMap((fx) => fx.tags ?? []))],
     mods: [],
   };
@@ -235,7 +280,7 @@ export function startHappening(state: SimState, ev: HappeningRow, townId: string
       continue;
     }
     if (target.startsWith('person.')) {
-      if (fx.pick && fx.pick !== 'same') targetId = pickOne(rng, pickPool(state, townId, fx.pick))?.id;
+      if (fx.pick && fx.pick !== 'same') targetId = pickOne(rng, pickPool(state, townId, fx.pick, subject))?.id;
       if (!targetId) continue;
       applyEffect(state, fx, { data, rng, targetId });
       if (fx.op === 'grant_mark' && fx.markId && timed) act.mods.push({ kind: 'mark', until, personId: targetId, markId: fx.markId });
@@ -249,6 +294,14 @@ export function startHappening(state: SimState, ev: HappeningRow, townId: string
       const lasts = timed ? until : act.endsDay;
       if (target === 'relapse.mul') act.mods.push({ kind: 'relapse', until: lasts, mul });
       else if (fx.methodId) act.mods.push({ kind: 'method', until: lasts, methodId: fx.methodId, mul });
+      continue;
+    }
+    if (target === 'doctrine.exposure') {
+      // Through the doctrine tick's own nudge (clamped, live doctrines only); exposure does not lapse.
+      const add = Number(fx.value ?? 0);
+      for (const d of Object.values(state.doctrines ?? {}).sort((a, b) => a.id.localeCompare(b.id))) {
+        if (d.townId === townId && add) nudgeDoctrine(state, d.id, 'exposure', add);
+      }
       continue;
     }
     if (target.startsWith('town.') && town) {
@@ -273,14 +326,19 @@ export function startHappening(state: SimState, ev: HappeningRow, townId: string
     }
   }
   const folk = folkIn(state, townId);
-  const speakers = folk.filter((p) => p.id !== targetId && p.flame > 0 && p.name);
+  // A resident carries the news: a passing visitor may be gone before the dawn line is told.
+  const speakers = folk.filter((p) => p.id !== targetId && p.flame > 0 && p.name && !p.tags?.includes(VISITOR_TAG));
   act.speakerId = pickOne(rng, speakers.length ? speakers : folk.filter((p) => p.id !== targetId))?.id;
   act.targetId = targetId;
   const hs = ensureHappenings(state);
   hs.active.push(act);
   hs.lastStartDay = day;
-  hs.log.push({ eventId: ev.id, townId, day });
+  hs.log.push({ eventId: ev.id, townId, day, ...(subject.about ? { about: subject.about } : {}) });
   if (hs.log.length > LOG_CAP) hs.log.splice(0, hs.log.length - LOG_CAP);
+  if (subject.about) {
+    (hs.told ??= []).push(`${ev.id}|${townId}|${subject.about}`);
+    if (hs.told.length > TOLD_CAP) hs.told.splice(0, hs.told.length - TOLD_CAP);
+  }
   const line = happeningLine(state, act, 'say');
   pushJuice(state, 'happening.start', { eventId: ev.id, townId, personId: act.speakerId, targetId, line, here });
   return act;
@@ -330,6 +388,11 @@ export function tickHappenings(state: SimState): ActiveHappening | undefined {
   if (!state.data || !state.towns || !happeningRows(state).length) return undefined;
   lapseHappenings(state);
   const t = happeningsTuning(state);
+  // Note doctrine falls every dawn (not only on a draw), so a collapse is dated to the dawn it happened.
+  if (state.doctrines && Object.values(state.doctrines).some((d) => d.collapsed)) {
+    const h = ensureHappenings(state);
+    h.collapsed = stampCollapses(state, h.collapsed);
+  }
   const hs = state.happenings;
   let started: ActiveHappening | undefined;
   const gapOk = hs?.lastStartDay === undefined || state.day - hs.lastStartDay >= t.minGapDays;
@@ -338,7 +401,7 @@ export function tickHappenings(state: SimState): ActiveHappening | undefined {
     const rng = deriveRng(state.seed, 'happening', state.day);
     if (rng.next() < t.chancePerDawn) {
       const pick = pickWeighted(rng, happeningCandidates(state));
-      if (pick) started = startHappening(state, pick.ev, pick.townId, rng);
+      if (pick) started = startHappening(state, pick.ev, pick.townId, rng, pick.subject);
     }
   }
   applyRelapse(state);
@@ -380,9 +443,15 @@ function nameOf(state: SimState, id: string | undefined): string {
 export function happeningLine(state: SimState, act: ActiveHappening, which: 'say' | 'news'): string {
   const ev = happeningRows(state).find((e) => e.id === act.eventId);
   if (!ev) return '';
-  const tpl = which === 'say' ? ev.say ?? ev.blurb ?? '' : (act.here && ev.newsHere) || ev.news || `${ev.name} in {town}.`;
+  // A variant per happening, the same every time it is told (seed, event, town, start day).
+  const variant = (v: string | string[] | undefined): string | undefined => {
+    if (!Array.isArray(v)) return v || undefined;
+    return v.length ? v[deriveRng(state.seed, 'happening-line', act.eventId, act.townId, act.startDay, which).int(0, v.length)] : undefined;
+  };
+  const tpl = which === 'say' ? variant(ev.say) ?? ev.blurb ?? '' : (act.here && variant(ev.newsHere)) || variant(ev.news) || `${ev.name} in {town}.`;
   const first = (s: string): string => s.split(/\s+/)[0] ?? s;
   return tpl
+    .replace(/\{dead\}/g, act.deadName ?? 'the one they lost')
     .replace(/\{town\}/g, happeningTownName(act.townId))
     .replace(/\{name\}/g, first(nameOf(state, act.speakerId)))
     .replace(/\{target\}/g, first(nameOf(state, act.targetId)));

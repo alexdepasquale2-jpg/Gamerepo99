@@ -1,12 +1,13 @@
 {
   "version": 1,
   "tuning": {
-    "note": "Dawn draw (sim/happenings.ts): from minDay, once minGapDays have passed since the last happening began, chancePerDawn to start one (at most maxActive at a time). (event, town) pairs are weighted by event.weight x town weight: 1, plus biasWeight for a townBias town (authored ids map to this world's settlements: the den to the player's home hearth, a missing town to the nearest gap), plus playerTownWeight where the player woke. townStrict events only happen in their bias towns. relapse.mul effects make burning people in that town lose relapseFlamePerDawn x (mul - 1) flame each dawn they last.",
+    "note": "Dawn draw (sim/happenings.ts): from minDay, once minGapDays have passed since the last happening began, chancePerDawn to start one (at most maxActive at a time). (event, town) pairs are weighted by event.weight x town weight: 1, plus biasWeight for a townBias town, plus whenWeight where the event's `when` holds, plus playerTownWeight where the player woke. townBias names roles (den/home: your home hearth, or a generated district's den-like town; village, town, city; despairing; lit) or authored town ids (the den maps to the den role, a missing town to the nearest gap). `when` reads the town (sim/happening-world: starving, foodCoverBelow, despairAbove, legitimacyBelow, litAtLeast, hasCreed, newChapelWithin, deathWithin, atWar, warNearby, collapsedWithin, any); an event whose `when` fails there does not happen there, and one cause (a death, a war, a fallen doctrine) is told once per town. townStrict events only happen in their bias towns. say/news/newsHere may be lists of variants ({town}, {name}: the speaker, {target}: who it fell on, {dead}). relapse.mul effects make burning people in that town lose relapseFlamePerDawn x (mul - 1) flame each dawn they last.",
     "minDay": 2,
     "chancePerDawn": 0.35,
     "minGapDays": 3,
     "maxActive": 1,
     "biasWeight": 3,
+    "whenWeight": 4,
     "playerTownWeight": 2,
     "relapseFlamePerDawn": 8
   },
@@ -16,35 +17,21 @@
       "name": "Grey Rain",
       "weight": 12,
       "durationDays": 1,
-      "townBias": [
-        "ashford",
-        "lowmere"
-      ],
+      "townBias": ["village", "despairing"],
       "blurb": "The sky rinses color out of the streets. Even revived hands slow.",
-      "say": "Grey rain. Even the mended ones are slowing.",
-      "news": "Grey rain over {town}. {name} says even the mended ones are slowing.",
+      "say": [
+        "Grey rain. Even the mended ones are slowing.",
+        "This rain gets in under the skin. Look how slow they move.",
+        "Grey all the way down today. Keep your coal dry."
+      ],
+      "news": [
+        "Grey rain over {town}. {name} says even the mended ones are slowing.",
+        "It rained grey on {town} all morning. {name} says nobody lifted their head.",
+        "{name} says {town} woke to grey rain, and the lit ones felt it first."
+      ],
       "effects": [
-        {
-          "id": "effect_rain_relapse",
-          "target": "relapse.mul",
-          "op": "mul",
-          "value": 1.25,
-          "durationDays": 1,
-          "tags": [
-            "weather",
-            "cold"
-          ]
-        },
-        {
-          "id": "effect_rain_spark",
-          "target": "player.spark",
-          "op": "add",
-          "value": -3,
-          "durationDays": null,
-          "tags": [
-            "drain"
-          ]
-        }
+        { "id": "effect_rain_relapse", "target": "relapse.mul", "op": "mul", "value": 1.25, "durationDays": 1, "tags": ["weather", "cold"] },
+        { "id": "effect_rain_spark", "target": "player.spark", "op": "add", "value": -3, "durationDays": null, "tags": ["drain"] }
       ]
     },
     {
@@ -52,25 +39,25 @@
       "name": "Stranger with Embers",
       "weight": 8,
       "durationDays": 0,
-      "townBias": [
-        "ashford",
-        "lowmere"
-      ],
+      "townBias": ["village"],
       "blurb": "A traveler cups a dying coal and asks if you still know how.",
-      "say": "A stranger came through cupping a coal. Asked after someone who still knows how.",
-      "news": "A stranger with embers passed through {town}. {name} says they were asking after someone who still knows how.",
-      "newsHere": "A stranger cups a dying coal by the {town} hearth and asks if you still know how. You do. {name} watches it catch.",
+      "say": [
+        "A stranger came through cupping a coal. Asked after someone who still knows how.",
+        "There was a traveler at the well with a coal in both hands. Asking for you, I think.",
+        "Someone came through with embers. Wouldn't give a name, only asked who still tends fires."
+      ],
+      "news": [
+        "A stranger with embers passed through {town}. {name} says they were asking after someone who still knows how.",
+        "{name} says a traveler came to {town} carrying a dying coal, asking who still knows the way of it.",
+        "A stranger in {town} cupped an ember at every door. {name} says they moved on before noon."
+      ],
+      "newsHere": [
+        "A stranger cups a dying coal by the {town} hearth and asks if you still know how. You do. {name} watches it catch.",
+        "A traveler holds out a coal gone nearly black. You breathe on it and it answers. {name} sees.",
+        "At the edge of {town} a stranger offers you their last ember. It takes to your hands. {name} stops to look."
+      ],
       "effects": [
-        {
-          "id": "effect_stranger_spark",
-          "target": "player.spark",
-          "op": "add",
-          "value": 8,
-          "durationDays": null,
-          "tags": [
-            "gift"
-          ]
-        }
+        { "id": "effect_stranger_spark", "target": "player.spark", "op": "add", "value": 8, "durationDays": null, "tags": ["gift"] }
       ]
     },
     {
@@ -78,37 +65,21 @@
       "name": "Bad News Rider",
       "weight": 10,
       "durationDays": 0,
-      "townBias": [
-        "ashford",
-        "lowmere"
-      ],
+      "townBias": ["village", "town"],
       "blurb": "Hoofbeats. A letter. Someone's almost-healed crack splits.",
-      "say": "A rider came at first light. {target} read the letter twice.",
-      "news": "A rider brought bad news to {town}. {name} says {target} took it hard.",
+      "say": [
+        "A rider came at first light. {target} read the letter twice.",
+        "The rider didn't even get down. {target} hasn't spoken since.",
+        "Hoofbeats before dawn, and a letter for {target}. Bad, by the look of it."
+      ],
+      "news": [
+        "A rider brought bad news to {town}. {name} says {target} took it hard.",
+        "{name} says a rider came to {town} with a letter, and {target} went grey reading it.",
+        "Bad news rode into {town} at first light. {name} says it was for {target}."
+      ],
       "effects": [
-        {
-          "id": "effect_rider_force_relapse",
-          "target": "person.flame",
-          "op": "add",
-          "value": -12,
-          "durationDays": null,
-          "tags": [
-            "crisis"
-          ],
-          "pick": "random_burning"
-        },
-        {
-          "id": "effect_rider_fragile",
-          "target": "person.mark",
-          "op": "grant_mark",
-          "value": 1,
-          "markId": "fragile_hope",
-          "durationDays": 2,
-          "tags": [
-            "crisis"
-          ],
-          "pick": "same"
-        }
+        { "id": "effect_rider_force_relapse", "target": "person.flame", "op": "add", "value": -12, "durationDays": null, "tags": ["crisis"], "pick": "random_burning" },
+        { "id": "effect_rider_fragile", "target": "person.mark", "op": "grant_mark", "value": 1, "markId": "fragile_hope", "durationDays": 2, "tags": ["crisis"], "pick": "same" }
       ]
     },
     {
@@ -116,34 +87,21 @@
       "name": "Market Ghost",
       "weight": 9,
       "durationDays": 1,
-      "townBias": [
-        "ashford"
-      ],
+      "townBias": ["town", "despairing"],
       "blurb": "Stalls stand like ribs. Trade feels like a rumor.",
-      "say": "Stalls standing like ribs. Nobody's buying.",
-      "news": "The market in {town} stood empty this morning. {name} says trade feels like a rumor.",
+      "say": [
+        "Stalls standing like ribs. Nobody's buying.",
+        "Market day, and not a soul at the stalls.",
+        "I set out my table and packed it up again. Nobody came."
+      ],
+      "news": [
+        "The market in {town} stood empty this morning. {name} says trade feels like a rumor.",
+        "{name} says the stalls in {town} stood bare all morning.",
+        "No market to speak of in {town} today. {name} says even the sellers stayed home."
+      ],
       "effects": [
-        {
-          "id": "effect_market_vit",
-          "target": "town.vitality",
-          "op": "add",
-          "value": -5,
-          "durationDays": 1,
-          "tags": [
-            "economy"
-          ]
-        },
-        {
-          "id": "effect_market_inspire",
-          "target": "method.effectiveness",
-          "op": "mul",
-          "value": 0.85,
-          "methodId": "inspire",
-          "durationDays": 1,
-          "tags": [
-            "economy"
-          ]
-        }
+        { "id": "effect_market_vit", "target": "town.vitality", "op": "add", "value": -5, "durationDays": 1, "tags": ["economy"] },
+        { "id": "effect_market_inspire", "target": "method.effectiveness", "op": "mul", "value": 0.85, "methodId": "inspire", "durationDays": 1, "tags": ["economy"] }
       ]
     },
     {
@@ -151,36 +109,26 @@
       "name": "A Child Laughs",
       "weight": 6,
       "durationDays": 0,
-      "townBias": [
-        "ashford",
-        "lowmere"
-      ],
+      "townBias": ["village", "lit"],
       "blurb": "Short. Bright. Unreasonable. It helps more than it should.",
-      "say": "Did you hear that? A child, laughing.",
-      "news": "A child laughed in {town}, short and bright. {name} says it helped {target} more than it should.",
-      "newsHere": "Somewhere in {town} a child laughs. Short. Bright. {name} looks up, and so does {target}.",
+      "say": [
+        "Did you hear that? A child, laughing.",
+        "Somebody's little one is laughing at the geese. Listen.",
+        "That laugh. When did we last hear one of those?"
+      ],
+      "news": [
+        "A child laughed in {town}, short and bright. {name} says it helped {target} more than it should.",
+        "{name} says a child's laugh carried across {town}, and {target} smiled for the first time in days.",
+        "In {town} a child laughed at nothing. {name} says {target} hasn't stopped humming since."
+      ],
+      "newsHere": [
+        "Somewhere in {town} a child laughs. Short. Bright. {name} looks up, and so does {target}.",
+        "A child's laugh rings across {town}. {target} turns toward it like a plant to light. {name} grins.",
+        "A laugh, small and sudden, somewhere in {town}. {name} catches your eye. {target} is smiling."
+      ],
       "effects": [
-        {
-          "id": "effect_laugh_spark",
-          "target": "player.spark",
-          "op": "add",
-          "value": 5,
-          "durationDays": null,
-          "tags": [
-            "warm"
-          ]
-        },
-        {
-          "id": "effect_laugh_flame",
-          "target": "person.flame",
-          "op": "add",
-          "value": 4,
-          "durationDays": null,
-          "tags": [
-            "warm"
-          ],
-          "pick": "random_stalled_or_burning"
-        }
+        { "id": "effect_laugh_spark", "target": "player.spark", "op": "add", "value": 5, "durationDays": null, "tags": ["warm"] },
+        { "id": "effect_laugh_flame", "target": "person.flame", "op": "add", "value": 4, "durationDays": null, "tags": ["warm"], "pick": "random_stalled_or_burning" }
       ]
     },
     {
@@ -188,35 +136,21 @@
       "name": "Rumor of the Hill",
       "weight": 7,
       "durationDays": 1,
-      "townBias": [
-        "ashford",
-        "lowmere"
-      ],
+      "townBias": ["village"],
       "blurb": "Children say the hill walks. A shutter unlatches from the wrong side — a breach for something large.",
-      "say": "The little ones say the hill walks. I don't laugh at it.",
-      "news": "Children in {town} say the hill walks. {name} found a shutter unlatched from the wrong side.",
+      "say": [
+        "The little ones say the hill walks. I don't laugh at it.",
+        "A shutter came open from the outside last night. Something big, the children say.",
+        "They say the hill came down to drink. I found the mud on the step."
+      ],
+      "news": [
+        "Children in {town} say the hill walks. {name} found a shutter unlatched from the wrong side.",
+        "{name} says the children of {town} swear the hill moved in the night.",
+        "A rumor in {town}: the hill walks. {name} says a door stood open that nobody opened."
+      ],
       "effects": [
-        {
-          "id": "effect_hill_fear",
-          "target": "town.fear",
-          "op": "add",
-          "value": -0.15,
-          "durationDays": 1,
-          "tags": [
-            "ogre",
-            "access"
-          ]
-        },
-        {
-          "id": "effect_hill_breach",
-          "target": "town.vitality",
-          "op": "add",
-          "value": 0,
-          "durationDays": 1,
-          "tags": [
-            "breach_open"
-          ]
-        }
+        { "id": "effect_hill_fear", "target": "town.fear", "op": "add", "value": -0.15, "durationDays": 1, "tags": ["ogre", "access"] },
+        { "id": "effect_hill_breach", "target": "town.vitality", "op": "add", "value": 0, "durationDays": 1, "tags": ["breach_open"] }
       ]
     },
     {
@@ -224,27 +158,162 @@
       "name": "Den Goes Cold",
       "weight": 8,
       "durationDays": 0,
-      "townBias": [
-        "marrow_den"
-      ],
+      "townBias": ["den"],
+      "townStrict": true,
       "blurb": "You pushed through the night without banking the den fire. Morning takes its cut.",
-      "say": "Nobody banked the den fire. It's cold in here.",
-      "news": "The den fire went out while you were away. {name} says the hollow in {town} is cold this morning.",
-      "effects": [
-        {
-          "id": "effect_den_cold",
-          "target": "player.spark",
-          "op": "add",
-          "value": -6,
-          "durationDays": null,
-          "tags": [
-            "den",
-            "neglect"
-          ],
-          "requireSkippedDenRest": true
-        }
+      "say": [
+        "Nobody banked the den fire. It's cold in here.",
+        "The den's gone cold. Ash and nothing.",
+        "Somebody should have seen to the den fire."
       ],
-      "townStrict": true
+      "news": [
+        "The den fire went out while you were away. {name} says the hollow in {town} is cold this morning.",
+        "{name} says the den in {town} went dark in the night. Nobody banked it.",
+        "Word from {town}: the den fire died while you were gone. {name} says the stones are cold."
+      ],
+      "effects": [
+        { "id": "effect_den_cold", "target": "player.spark", "op": "add", "value": -6, "durationDays": null, "tags": ["den", "neglect"], "requireSkippedDenRest": true }
+      ]
+    },
+    {
+      "id": "bread_riot",
+      "name": "Bread Riot",
+      "weight": 10,
+      "durationDays": 2,
+      "townBias": ["town", "city", "despairing"],
+      "when": { "starving": true, "any": [{ "legitimacyBelow": 0.5 }, { "despairAbove": 0.5 }] },
+      "blurb": "Empty bellies find the granary door. Promises get thrown back at whoever made them.",
+      "say": [
+        "They broke the granary door. There was nothing behind it.",
+        "Bread, they shouted. Then they shouted the names of the ones who promised it.",
+        "I saw {target} throw the first stone. Hunger did the rest."
+      ],
+      "news": [
+        "There was a bread riot in {town}. {name} says the granary was empty when they got in.",
+        "{name} says {town} went hungry once too often. The crowd turned on the ones who promised bread.",
+        "Hungry folk filled the square in {town}. {name} says the old promises were shouted back, word for word."
+      ],
+      "newsHere": [
+        "The square in {town} fills with hungry people. {name} is among them, shouting for bread nobody has.",
+        "A crowd breaks the granary door in {town}. It is empty. {name} stands in the ruin of it, shaking.",
+        "In {town} the hungry turn on the ones who promised. {target} throws the first stone; {name} does not stop them."
+      ],
+      "effects": [
+        { "id": "effect_riot_despair", "target": "town.despair", "op": "add", "value": 0.06, "durationDays": 2, "tags": ["hunger", "unrest"] },
+        { "id": "effect_riot_exposure", "target": "doctrine.exposure", "op": "add", "value": 0.08, "durationDays": null, "tags": ["unrest"] },
+        { "id": "effect_riot_flame", "target": "person.flame", "op": "add", "value": -6, "durationDays": null, "tags": ["unrest"], "pick": "random_stalled_or_burning" }
+      ]
+    },
+    {
+      "id": "festival",
+      "name": "Festival",
+      "weight": 9,
+      "durationDays": 2,
+      "townBias": ["lit"],
+      "when": { "any": [{ "litAtLeast": 0.5 }, { "newChapelWithin": 4 }] },
+      "blurb": "Lanterns strung between the roofs. Somebody found a fiddle.",
+      "say": [
+        "Lanterns tonight! Someone's found a fiddle.",
+        "Half the town's lit. Seems a shame not to dance about it.",
+        "They're stringing lights between the roofs. Come and see."
+      ],
+      "news": [
+        "{town} is holding a festival. {name} says there are lanterns strung across every street.",
+        "{name} says {town} danced half the night, and nobody can remember why it started.",
+        "Word from {town}: a festival, music and lanterns. {name} says even {target} came out for it."
+      ],
+      "newsHere": [
+        "{town} strings lanterns between the roofs. {name} pulls you into the dance, and something in you catches.",
+        "There is music in {town} tonight. {target} is laughing; {name} presses a warm cup into your hands.",
+        "A festival in {town}: fiddles, lanterns, bread from somewhere. {name} says you should stay for the last song."
+      ],
+      "effects": [
+        { "id": "effect_festival_despair", "target": "town.despair", "op": "add", "value": -0.06, "durationDays": 2, "tags": ["warm", "festival"] },
+        { "id": "effect_festival_spark", "target": "player.spark", "op": "add", "value": 6, "durationDays": null, "tags": ["warm"] },
+        { "id": "effect_festival_flame", "target": "person.flame", "op": "add", "value": 3, "durationDays": null, "tags": ["warm"], "pick": "random_stalled_or_burning" }
+      ]
+    },
+    {
+      "id": "funeral",
+      "name": "Funeral",
+      "weight": 14,
+      "durationDays": 1,
+      "when": { "deathWithin": 3 },
+      "blurb": "A stone is set. Those who were closest stand nearest the hole.",
+      "say": [
+        "We put {dead} in the ground this morning.",
+        "{target} hasn't left {dead}'s stone since the burying.",
+        "They sang for {dead}. Badly, but they sang."
+      ],
+      "news": [
+        "{town} buried {dead}. {name} says {target} stood at the stone long after the rest went home.",
+        "{name} says the whole of {town} turned out to lay {dead} to rest. {target} took it worst.",
+        "A funeral in {town} for {dead}. {name} says {target} could not sing for crying."
+      ],
+      "newsHere": [
+        "{town} gathers at the new stone for {dead}. {target} stands nearest; {name} keeps a hand on their shoulder.",
+        "They lay {dead} to rest in {town}. {name} says a few words. {target} says none.",
+        "A slow line walks {dead} to the stones outside {town}. {target}'s flame gutters. {name} stays close."
+      ],
+      "effects": [
+        { "id": "effect_funeral_grief", "target": "person.flame", "op": "add", "value": -8, "durationDays": null, "tags": ["grief"], "pick": "kin_of_dead" },
+        { "id": "effect_funeral_fragile", "target": "person.mark", "op": "grant_mark", "value": 1, "markId": "fragile_hope", "durationDays": 2, "tags": ["grief"], "pick": "same" },
+        { "id": "effect_funeral_despair", "target": "town.despair", "op": "add", "value": 0.02, "durationDays": 1, "tags": ["grief"] }
+      ]
+    },
+    {
+      "id": "refugees",
+      "name": "Refugees",
+      "weight": 10,
+      "durationDays": 2,
+      "townBias": ["village", "town"],
+      "when": { "warNearby": true },
+      "blurb": "Carts piled with bedding. Faces that will not say what they saw.",
+      "say": [
+        "Carts on the road all morning, piled with bedding. Running from the fighting.",
+        "Families from the war, sleeping in the barn. Somebody gave them the last of the bread.",
+        "They won't say what they saw over there. You can see it on them anyway."
+      ],
+      "news": [
+        "Refugees from the fighting have reached {town}. {name} says there's no room, and they're making room.",
+        "{name} says {town} is full of folk fled from the war, sleeping wherever there's a roof.",
+        "Carts of people running from the war came into {town}. {name} took a family in."
+      ],
+      "newsHere": [
+        "Carts roll into {town} piled with bedding and children. Running from the war. {name} is already counting blankets.",
+        "Strangers from the fighting fill the square in {town}. {name} hands out bread and watches the road behind them."
+      ],
+      "effects": [
+        { "id": "effect_refugee_despair", "target": "town.despair", "op": "add", "value": 0.04, "durationDays": 2, "tags": ["war", "strain"] },
+        { "id": "effect_refugee_kind", "target": "method.effectiveness", "op": "mul", "value": 1.15, "methodId": "carry_burden", "durationDays": 2, "tags": ["war"] }
+      ]
+    },
+    {
+      "id": "power_vacuum",
+      "name": "Power Vacuum",
+      "weight": 12,
+      "durationDays": 2,
+      "townBias": ["town", "city"],
+      "when": { "collapsedWithin": 5 },
+      "blurb": "The old creed fell. Nobody holds the keys yet, and everyone is trying the doors.",
+      "say": [
+        "Nobody's in charge since it fell. Everyone's trying the doors.",
+        "The old promises are gone and nothing's taken their place. Folk are listening to anyone.",
+        "Three people stood on the steps today claiming to speak for the town."
+      ],
+      "news": [
+        "Since the doctrine fell, {town} has no one holding the keys. {name} says anyone with a voice is being heard.",
+        "{name} says {town} argued in the square all day over who speaks for it now.",
+        "{town} is between masters. {name} says it's frightening, and a little bit like air."
+      ],
+      "newsHere": [
+        "In {town} the old creed's banners come down and nothing goes up. {name} says folk will listen to anyone now. Even you.",
+        "{town} has no one in charge. {name} stands on the steps and asks who will say what comes next."
+      ],
+      "effects": [
+        { "id": "effect_vacuum_despair", "target": "town.despair", "op": "add", "value": 0.03, "durationDays": 2, "tags": ["unrest"] },
+        { "id": "effect_vacuum_inspire", "target": "method.effectiveness", "op": "mul", "value": 1.2, "methodId": "inspire", "durationDays": 2, "tags": ["opening"] }
+      ]
     }
   ]
 }
