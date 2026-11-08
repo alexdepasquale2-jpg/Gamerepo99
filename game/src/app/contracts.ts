@@ -127,6 +127,9 @@ export interface VoiceApi {
   mood(m: 'day' | 'dusk' | 'night' | 'despair' | 'reignite'): void;
   /** The last line or tell shown (dev/QA). */
   last(): string;
+  /** Sound and music share one mute (N toggles it; the pause menu can too). Persisted as `hf.sfx.muted`. */
+  muted(): boolean;
+  setMuted(m: boolean): void;
 }
 
 export interface SheetDef {
