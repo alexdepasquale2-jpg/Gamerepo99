@@ -138,7 +138,8 @@ export const FEEL = {
     sparkBarWidth: 120,
     sparkBarHeight: 10,
     sparkBarX: 12,
-    sparkBarY: 52,
+    /** Top-left, clear of the top-centre day chip (the say line sits below it at y 28). */
+    sparkBarY: 14,
     outlineColor: 0x5ec8c8,
     fillColor: 0xf2b84b,
     emptyColor: 0x2a2620,

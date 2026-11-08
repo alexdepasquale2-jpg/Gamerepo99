@@ -32,6 +32,7 @@ import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
 import { attachSessionFx } from './spark-fx/session-fx';
 import { isSuccessionOpen } from '../sim/succession';
+import { overlays } from '../ui/kit/overlay-stack';
 import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 import { getWalkMul, setWalkMul } from '../dev/dev-flags';
@@ -291,6 +292,9 @@ export class OverworldScene extends Phaser.Scene {
       .setDepth(998_500)
       .setVisible(false);
     // Esc closes whatever is open first (ring, satchel, map, letters); with nothing open it leaves the room.
+    // The scene claims Esc on the overlay stack while it owns it, so the root handler opens no pause menu.
+    const offEsc = overlays.claimEscape(() => this.room.active || this.ring.isOpen() || this.goods.overlayOpen());
+    this.events.once('shutdown', offEsc);
     this.input.keyboard?.on('keydown-ESC', () => {
       const open = this.ring.isOpen() || this.goods.overlayOpen();
       this.closeRing();
@@ -326,8 +330,6 @@ export class OverworldScene extends Phaser.Scene {
     this.input.on('pointerup', () => (this.uiTap = false));
     this.syncChunks(true);
     this.syncSparkFromSession(false);
-    const hud = this.registry.get('hud') as { setStatus?: (s: string) => void } | undefined;
-    hud?.setStatus?.('continuous overworld');
   }
 
   update(_time: number, delta: number): void {
@@ -415,7 +417,6 @@ export class OverworldScene extends Phaser.Scene {
       if (dx !== 0 || dy !== 0) { if (this.room.distanceToResident() > 90) this.closeRing(); }
       if (!this.room.residentHead(this.ringFor)) this.closeRing(); // they left the room
     }
-    document.body.dataset.hfLocalOverlay = 'true'; // Esc leaves the room, not the pause menu
   }
 
   private tickLife(delta: number): void {
@@ -803,18 +804,27 @@ export class OverworldScene extends Phaser.Scene {
     this.lastChunkKey = this.layer.sync(coords, force) ? '' : key;
   }
 
+  /** Spark bar, top-left: gold fill with the cyan outline (dual cue; an empty bar still reads). */
   private createSparkHud(): void {
     const h = FEEL.hud;
     this.add
       .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight, h.emptyColor)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
-      .setDepth(1_000_001);
+      .setDepth(1_000_001)
+      .setName('spark-hud');
     this.sparkBar = this.add
-      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight - 2, h.fillColor)
+      .rectangle(h.sparkBarX + 1, h.sparkBarY, h.sparkBarWidth - 2, h.sparkBarHeight - 4, h.fillColor)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
       .setDepth(1_000_002);
+    this.add
+      .rectangle(h.sparkBarX, h.sparkBarY, h.sparkBarWidth, h.sparkBarHeight)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1, h.outlineColor)
+      .setScrollFactor(0)
+      .setDepth(1_000_003)
+      .setName('spark-hud-outline');
   }
 
   private syncSparkFromSession(lerp: boolean): void {
@@ -827,12 +837,12 @@ export class OverworldScene extends Phaser.Scene {
         onUpdate: (tw) => {
           const v = (tw.targets[0] as { v: number }).v;
           this.sparkFill = v;
-          this.sparkBar.width = FEEL.hud.sparkBarWidth * v;
+          this.sparkBar.width = (FEEL.hud.sparkBarWidth - 2) * v;
         },
       });
     } else {
       this.sparkFill = next;
-      this.sparkBar.width = FEEL.hud.sparkBarWidth * next;
+      this.sparkBar.width = (FEEL.hud.sparkBarWidth - 2) * next;
     }
   }
 

@@ -1,6 +1,6 @@
 /** New game: pick who you are, or let the world roll someone. Every choice is a full inhabitant built from data. */
 import type { ArchetypeDef } from '../../sim/types/data';
-import { openMenu, type MenuHandle } from './dom';
+import { openMenu, type MenuHandle } from '../kit/menu';
 
 export function openInhabitantMenu(
   archetypes: ArchetypeDef[],

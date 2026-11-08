@@ -1,5 +1,8 @@
-/** Dev menu (` key or the DEV button): live info, speed, teleport, time, give items. Dev/playtest builds only. */
+/** Dev menu (` key or the DEV chip): live info, speed, teleport, time, give items. A kit side sheet. Dev/playtest builds only. */
 import { DEV_TOOLS } from '../dev/dev-flags';
+import { createSheet, kitButton, kitEl } from './kit/sheet';
+import { uiLayer } from './kit/layer';
+import { rgba, Z } from './kit/tokens';
 
 type Pt = { q: number; r: number };
 type Dev = {
@@ -20,48 +23,30 @@ const GIVE: [string, number][] = [['bread', 5], ['timber', 10], ['wool', 5], ['o
 
 export function createDevMenu(): void {
   if (!DEV_TOOLS) return;
-  const css = document.createElement('style');
-  css.textContent = `
-  #hf-dev-btn{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:60;font:600 12px Georgia,serif;color:#f4e6c8;background:#2a2018cc;border:1px solid #6a5a40;border-radius:6px;padding:6px 10px;min-height:32px}
-  #hf-dev{position:fixed;top:48px;left:50%;transform:translateX(-50%);z-index:60;width:min(420px,calc(100vw - 32px));max-height:calc(100vh - 120px);overflow:auto;background:#15110ded;color:#f4e6c8;border:1px solid #6a5a40;border-radius:8px;padding:10px 12px;font:13px Georgia,serif}
-  #hf-dev[hidden]{display:none}
-  #hf-dev h4{margin:10px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#f2b84b}
-  #hf-dev .row{display:flex;flex-wrap:wrap;gap:6px}
-  #hf-dev button{font:12px Georgia,serif;color:#f4e6c8;background:#2a2018;border:1px solid #6a5a40;border-radius:5px;padding:6px 8px;min-height:32px}
-  #hf-dev button.on{border-color:#f2b84b;color:#f2b84b}
-  #hf-dev .info{font:12px ui-monospace,monospace;white-space:pre-wrap;color:#d9c9a6}
-  #hf-dev .msg{min-height:16px;color:#9fd18b;font-size:12px;margin-top:6px}`;
-  document.head.appendChild(css);
-
+  // The chip sits at the canvas's bottom-right, clear of the day chip, minimap and hotbar.
   const btn = document.createElement('button');
   btn.id = 'hf-dev-btn';
+  btn.type = 'button';
+  btn.className = 'hf-chip';
   btn.textContent = 'DEV';
-  const panel = document.createElement('div');
-  panel.id = 'hf-dev';
-  panel.hidden = true;
-  document.body.append(btn, panel);
+  btn.style.cssText = `right:calc(var(--hf-u) * 6px);bottom:calc(var(--hf-u) * 6px);min-height:30px;border:1px solid ${rgba('line', 0.5)};cursor:pointer;z-index:${Z.dev}`;
+  uiLayer().el.appendChild(btn);
+  const sheet = createSheet({ id: 'hf-dev', title: 'Dev' });
+  const panel = sheet.body;
 
   const msg = (t: string) => { const m = panel.querySelector('.msg'); if (m) m.textContent = t; };
   const section = (title: string, items: [string, () => void, boolean?][]) => {
-    const h = document.createElement('h4');
-    h.textContent = title;
-    const row = document.createElement('div');
-    row.className = 'row';
-    for (const [label, fn, on] of items) {
-      const b = document.createElement('button');
-      b.textContent = label;
-      if (on) b.className = 'on';
-      b.addEventListener('click', () => { fn(); render(); });
-      row.appendChild(b);
-    }
+    const h = kitEl('div', 'hf-label', title);
+    const row = kitEl('div', 'hf-row');
+    row.style.cssText = 'justify-content:flex-start;gap:4px';
+    for (const [label, fn, on] of items) row.appendChild(kitButton(label, () => { fn(); render(); }, on === undefined ? {} : { on }));
     panel.append(h, row);
   };
 
   function render(): void {
     const dev = hearth()?.dev;
     panel.replaceChildren();
-    const info = document.createElement('div');
-    info.className = 'info';
+    const info = kitEl('pre', 'hf-pre hf-muted hf-small info');
     panel.appendChild(info);
     if (!dev) { info.textContent = 'Start a game first.'; return; }
     const sp = dev.speed.get();
@@ -78,21 +63,19 @@ export function createDevMenu(): void {
       ...HOURS.map(([l, p]) => [l, () => hearth()?.interior?.setHour(p)] as [string, () => void]),
     ]);
     section('Give', GIVE.map(([id, n]) => [`+${n} ${id}`, () => { dev.give(id, n); msg(`gave ${n} ${id}`); }] as [string, () => void]));
-    const m = document.createElement('div');
-    m.className = 'msg';
-    panel.appendChild(m);
+    panel.appendChild(kitEl('div', 'hf-note msg'));
     tickInfo();
   }
 
+  /** Info refreshes when the sheet opens and after each button (no timer). */
   function tickInfo(): void {
     const dev = hearth()?.dev, info = panel.querySelector('.info');
     if (!dev || !info) return;
     const w = dev.where();
     info.textContent = `tile ${w.q},${w.r}  ${w.biome}\nday ${w.day}  fps ${w.fps}  objects ${w.objects}  speed ${dev.speed.get()}x`;
   }
-  setInterval(() => { if (!panel.hidden) tickInfo(); }, 300);
 
-  const toggle = () => { panel.hidden = !panel.hidden; if (!panel.hidden) render(); };
+  const toggle = () => { if (sheet.isOpen()) sheet.close(); else { sheet.open(); render(); } };
   btn.addEventListener('click', toggle);
   window.addEventListener('keydown', (e) => { if (e.code === 'Backquote') { e.preventDefault(); toggle(); } });
 }

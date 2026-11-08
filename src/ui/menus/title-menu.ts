@@ -1,6 +1,6 @@
 /** Title menu. Continue is disabled (not hidden) with no saves; quitting is never shamed. */
 import type { SaveSlots } from '../save-slots';
-import { openMenu, type MenuHandle } from './dom';
+import { openMenu, type MenuHandle } from '../kit/menu';
 
 export function openTitleMenu(slots: SaveSlots, io: { onNew: () => void; onContinue: () => void; onLoad: () => void }): MenuHandle {
   const hasSave = slots.list().length > 0;
