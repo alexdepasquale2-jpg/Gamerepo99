@@ -41,6 +41,11 @@
       "graceDawns": 1,
       "neglectCap": 0.6,
       "note": "Town untouched (no interaction/reignite there) for graceDawns adds onNeglect, never above neglectCap; never a fail state."
+    },
+    "flameRelief": {
+      "perDawn": 0.025,
+      "minShare": 0.15,
+      "note": "Each dawn a town's despair falls by perDawn x (share of residents at or above the reignite threshold), once at least minShare burn. Neglect (+0.01) still applies, so a town needs about half its people lit to brighten on its own."
     }
   },
   "juice": {

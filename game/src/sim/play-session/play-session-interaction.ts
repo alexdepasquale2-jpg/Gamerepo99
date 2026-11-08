@@ -140,6 +140,8 @@ export function actInteraction(
     if (stacks <= (marksBefore[markId] ?? 0)) continue;
     pushJuice(s, 'mark.applied', { personId, markId, interactionId });
     maybeEmitCrossTownPacket(s, personId, markId);
+    // Seeing someone grow for real feeds your own spark (hooks: on_witness_genuine_growth).
+    if (markId === 'genuine_growth') runHooks(s, 'on_witness_genuine_growth', { data, rng: s.rng, targetId: personId });
   }
 
   const reaction = selectReactionLine({

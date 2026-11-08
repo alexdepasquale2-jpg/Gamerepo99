@@ -1,5 +1,6 @@
 /** Refusal hooks + reaction-line selection. Pure sim; no module-level mutable selector. */
 
+import { rememberLine } from './dyn/line-memory';
 import { matchesWhen } from './hooks';
 import type { DataTables } from './load-data';
 import type { Rng } from './rng';
@@ -81,7 +82,9 @@ export function selectReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
   const sel =
     (ctx.state as SimState & { reactionLineSelector?: ReactionLineSelector }).reactionLineSelector ??
     pickFixedReactionLine;
-  return sel(ctx);
+  const out = sel(ctx);
+  if (out.text) rememberLine(ctx.state, ctx.personId, out.lineId);
+  return out;
 }
 
 /**

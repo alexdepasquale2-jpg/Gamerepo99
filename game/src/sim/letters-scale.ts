@@ -8,6 +8,8 @@
 import { retireLetter, sealLetter } from './goods/instances';
 import { encodeUnspokenForState } from './social/unspoken';
 import { removeItem } from './goods/inventory';
+import { happeningTownName } from './happenings';
+import { dawnCircumstances } from './circumstances';
 import { beginReply, tickReplies, COURIER_SURVIVAL_PER_DAY, type LetterReply } from './letter-replies';
 import { planRoad, type RoadLeg } from './road-journey';
 import type { DataTables } from './load-data';
@@ -192,7 +194,7 @@ function render(tpl: Template | undefined, state: SimState, f: Flight): { title?
   if (f.body) return { title: f.title, body: f.body };
   if (!tpl) return {};
   const name = (id: string) => (state.people[id] as { name?: string } | undefined)?.name ?? id;
-  const sub: Record<string, string> = { fromName: name(f.fromPersonId), toName: name(f.toPersonId), fromTown: f.fromTownId };
+  const sub: Record<string, string> = { fromName: name(f.fromPersonId), toName: name(f.toPersonId), fromTown: f.fromTownId ? happeningTownName(f.fromTownId) : 'home' };
   return { title: tpl.title, body: tpl.body.replace(/\{(\w+)\}/g, (_, k: string) => sub[k] ?? '') };
 }
 
@@ -203,7 +205,8 @@ export function tickLetters(state: SimState): string[] {
   const delivered: string[] = [];
   // Replies already on their way advance first, so a reply born this dawn waits for the next one.
   const repliesIn = tickReplies(state);
-  const tags = ((state.flags.circumstanceTags as string[] | undefined) ?? []).filter((x) => x !== 'letter_arrived');
+  // Today's circumstances come fresh from the world (sim/circumstances); a letter's arrival adds its own.
+  const tags = dawnCircumstances(state);
   const keep: Flight[] = [];
   for (const f of ls.flight) {
     if (f.days > 1) {

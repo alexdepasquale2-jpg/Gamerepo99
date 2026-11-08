@@ -19,6 +19,7 @@ import type { ReactionLineResult, ReactionPickCtx } from '../method-reactions';
 import { createRng } from '../rng';
 import { townKind } from '../social/kin-strain';
 import { generatedVector, type VoiceVector } from '../social/seeded-wounds';
+import { dampRecent, linesSaid, recentLines } from './line-memory';
 import { scoreFragment, violatesConstraints, type Constraint, type Frag } from './line-score';
 
 type VoicesFile = {
@@ -151,12 +152,14 @@ export function genericVoiceLine(ctx: ReactionPickCtx, a: GenericVoiceArgs): Rea
     if (isKinStrainFrag(f)) s += CFG.strainBonus;
     return placeBias(f, place, s);
   });
-  // Varies day to day and as their flame moves; stable for the same moment.
-  const rng = createRng((ctx.seed ^ hashStr(`${ctx.personId}:${ctx.methodId}:${ctx.state.day}:${person?.flame ?? 0}:generic`)) >>> 0);
-  const body = pick(pool, scores, rng.next());
+  // Varies day to day, visit to visit and as their flame moves; what they said lately is damped.
+  const rng = createRng((ctx.seed ^ hashStr(`${ctx.personId}:${ctx.methodId}:${ctx.state.day}:${person?.flame ?? 0}:${linesSaid(ctx.state, ctx.personId)}:generic`)) >>> 0);
+  const body = pick(pool, dampRecent(ctx.state, ctx.personId, pool, scores), rng.next());
 
   if (place && !placeTagOf(body) && !body.text.includes('—') && rng.next() < CFG.openerChance) {
-    const openers = frags.filter((f) => !!f.text && tagsOf(f).includes('generic_piece') && f.slot === 'opener' && placeTagOf(f) === place);
+    const recent = recentLines(ctx.state, ctx.personId);
+    const all = frags.filter((f) => !!f.text && tagsOf(f).includes('generic_piece') && f.slot === 'opener' && placeTagOf(f) === place);
+    const openers = all.filter((f) => !recent.has(f.id)).length ? all.filter((f) => !recent.has(f.id)) : all;
     if (openers.length) {
       const o = openers[rng.int(0, openers.length)]!;
       // "Look," runs on into the line ("Look, don't rock the boat"); "I" stays upper case.
