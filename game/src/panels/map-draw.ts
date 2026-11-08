@@ -64,9 +64,10 @@ function land(model: MapModel, seed: number, cw: number, ch: number, cell: numbe
   const g = c.getContext('2d')!;
   const s = Math.min(cw / model.w, ch / model.h);
   const ox = (cw - model.w * s) / 2, oy = (ch - model.h * s) / 2;
+  const band = (0.6 * cell) / s; // rivers stay unbroken however coarse the sampling
   for (let x = 0; x < model.w * s; x += cell) for (let y = 0; y < model.h * s; y += cell) {
     const q = model.q0 + (x + cell / 2) / s, r = model.r0 + (y + cell / 2) / s;
-    g.fillStyle = hex(BIOME_COLOR[coarseBiomeAt(seed, Math.floor(q), Math.floor(r))]);
+    g.fillStyle = hex(BIOME_COLOR[coarseBiomeAt(seed, Math.floor(q), Math.floor(r), band)]);
     g.fillRect(Math.floor(ox + x), Math.floor(oy + y), cell, cell);
   }
   if (lands.size > 8) lands.delete(lands.keys().next().value!);
