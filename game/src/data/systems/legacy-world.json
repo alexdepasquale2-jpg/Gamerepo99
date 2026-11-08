@@ -1,7 +1,9 @@
 {
   "version": 1,
   "format": "hearthfall.world",
-  "contentPackIds": ["core@1"],
+  "contentPackIds": [
+    "core@1"
+  ],
   "defaultImportArchetypeId": "marrow",
   "deltaLogCap": 400,
   "ui": {
@@ -18,40 +20,96 @@
     "disillusionment": "ivy_quill",
     "shame_wound": "marrow"
   },
-  "heirArchetypeFallbacks": ["marrow", "ivy_quill", "basilisk_brood"],
-  "bondEventMap": [
-    { "when": "reignited", "event": "genuine_growth_applied" },
-    { "when": "flameUp", "methodIds": ["carry_burden", "inspire"], "event": "kind_method_success" },
-    { "when": "flameUp", "methodIds": ["carry_burden"], "event": "carry_completed" },
-    { "when": "flameUp", "methodIds": ["carry_burden"], "event": "dependence_stack", "repeatAfter": 2 },
-    { "when": "flameUp", "methodIds": ["inspire"], "event": "inspire_with_proof" }
+  "heirArchetypeFallbacks": [
+    "marrow",
+    "ivy_quill",
+    "basilisk_brood"
   ],
-  "dependenceEvents": ["dependence_stack"],
+  "bondEventMap": [
+    {
+      "when": "reignited",
+      "event": "genuine_growth_applied"
+    },
+    {
+      "when": "flameUp",
+      "methodIds": [
+        "carry_burden",
+        "inspire"
+      ],
+      "event": "kind_method_success"
+    },
+    {
+      "when": "flameUp",
+      "methodIds": [
+        "carry_burden"
+      ],
+      "event": "carry_completed"
+    },
+    {
+      "when": "flameUp",
+      "methodIds": [
+        "carry_burden"
+      ],
+      "event": "dependence_stack",
+      "repeatAfter": 2
+    },
+    {
+      "when": "flameUp",
+      "methodIds": [
+        "inspire"
+      ],
+      "event": "inspire_with_proof"
+    }
+  ],
+  "dependenceEvents": [
+    "dependence_stack"
+  ],
   "dependenceShareMin": 0.25,
   "rumorOutcomeId": "legacy_memory",
   "tendencyHooks": {
     "minTendency": 0.5,
     "byMethod": {
-      "shame": ["refusal_shame_child"],
-      "challenge": ["refusal_burn_ledger"]
+      "shame": [
+        "refusal_shame_child"
+      ],
+      "challenge": [
+        "refusal_burn_ledger"
+      ]
     }
   },
   "npcLod": {
     "actsPerDawn": 1,
     "maxNpcs": 3,
     "defaultFlameDelta": 2,
-    "methodFlameDelta": { "carry_burden": 4, "inspire": 5, "challenge": 3, "shame": -4, "lie": -2 }
+    "methodFlameDelta": {
+      "carry_burden": 4,
+      "inspire": 5,
+      "challenge": 3,
+      "shame": -4,
+      "lie": -2
+    }
   },
   "graveEpitaphId": "epi_remembered",
   "legendLines": [
     "{legacyName} lit a fire here once. People still talk about it.",
     "They say {legacyName} never really left; the warmth did not."
   ],
-  "graveLines": ["A stone for {legacyName}. Someone keeps it swept."],
-  "inspectLines": ["{legacyName} used to stop by. You can tell who remembers."],
+  "graveLines": [
+    "A stone for {legacyName}. Someone keeps it swept."
+  ],
+  "inspectLines": [
+    "{legacyName} used to stop by. You can tell who remembers."
+  ],
   "arrival": {
     "heard": "{count} you don't know {verb} spoken of in {town}: {names}.",
-    "counts": ["A name", "Two names", "Three names", "Four names", "Five names", "Six names"],
+    "counts": [
+      "A name",
+      "Two names",
+      "Three names",
+      "Four names",
+      "Five names",
+      "Six names"
+    ],
     "countMany": "{n} names",
     "verbOne": "is",
     "verbMany": "are",
@@ -60,7 +118,18 @@
     "legend": "{name}{who}. {deeds}",
     "who": " ({archetype})",
     "lineage": ", {ordinal} of their line",
-    "ordinals": ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"],
+    "ordinals": [
+      "first",
+      "second",
+      "third",
+      "fourth",
+      "fifth",
+      "sixth",
+      "seventh",
+      "eighth",
+      "ninth",
+      "tenth"
+    ],
     "ordinalMany": "{n}{suffix}",
     "deeds": "They {deeds}.",
     "noDeeds": "No one agrees on what they did, only that they were here.",
@@ -74,5 +143,11 @@
       "shame": "shamed people into moving",
       "lie": "told kind lies to keep hope going"
     }
-  }
+  },
+  "deedLegendLines": [
+    "{legacyName} was the one who {deed}. People still say so.",
+    "Ask anyone old: {legacyName} {deed}, and it took.",
+    "There's a song, near enough, about how {legacyName} {deed}.",
+    "You'll hear it at the well: {legacyName} {deed}. Some of us are here because of it."
+  ]
 }

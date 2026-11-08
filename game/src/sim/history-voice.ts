@@ -8,6 +8,7 @@
 import voiceJson from '../data/dialogue/history-voice.json';
 import { loadHistoryTables, type HistoryBeat } from './gen/load/load-history';
 import type { HistoryEvent } from './gen/world-types';
+import { chronicleCodas } from './chronicle';
 import { deriveRng, type Rng } from './rng';
 import type { PersonState, SimState } from './types/runtime';
 
@@ -51,7 +52,13 @@ const pick = <T>(rng: Rng, arr: readonly T[]): T | undefined => (arr.length ? ar
 
 /** Oldest third of the beats is deep past, newest third recent. */
 export function eraOf(beat: HistoryEvent, history: readonly HistoryEvent[]): Era {
-  const order = [...history].sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || a.id.localeCompare(b.id));
+  // What happened in play is never the deep past: the newer half of the chronicle is recent, the rest middle.
+  if (beat.tags?.includes('chronicle')) {
+    const lived = history.filter((h) => h.tags?.includes('chronicle')).sort((x, y) => (x.at ?? 0) - (y.at ?? 0));
+    const i = lived.findIndex((h) => h.id === beat.id);
+    return lived.length <= 1 || i >= lived.length / 2 ? 'recent' : 'middle';
+  }
+  const order = history.filter((h) => !h.tags?.includes('chronicle')).sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || a.id.localeCompare(b.id));
   const i = order.findIndex((h) => h.id === beat.id);
   if (order.length <= 1 || i < 0) return 'middle';
   const f = i / (order.length - 1);
@@ -59,13 +66,20 @@ export function eraOf(beat: HistoryEvent, history: readonly HistoryEvent[]): Era
 }
 
 export function beatKind(beat: HistoryEvent): string | undefined {
-  return beatRow(beat.id)?.kind ?? beat.tags?.find((t) => !t.includes(':'));
+  return beat.kind ?? beatRow(beat.id)?.kind ?? beat.tags?.find((t) => !t.includes(':'));
+}
+
+/** The words and town of a beat: a chronicle entry's own, else the authored row's. */
+export function beatInfo(beat: HistoryEvent): { summary?: string; townId?: string | null } {
+  if (beat.summary) return { summary: beat.summary, townId: beat.townId ?? null };
+  const row = beatRow(beat.id);
+  return { summary: row?.summary, townId: row?.townId };
 }
 
 /** How this person knows the beat, or null when it is not theirs to tell. */
 export function knowing(person: PersonState, beat: HistoryEvent, voice: HistoryVoice = VOICE): Knowing | null {
-  const row = beatRow(beat.id);
-  if (!row?.summary) return null; // nothing to retell
+  const row = beatInfo(beat);
+  if (!row.summary) return null; // nothing to retell
   const named = !!beat.personIds?.includes(person.id);
   if (!named && person.age !== undefined && person.age < voice.childAge) return null;
   if (row.townId && person.townId === row.townId) return 'town';
@@ -128,7 +142,7 @@ export function buildRetelling(inp: RetellInput): string {
   // Generated beats name many people; being named lets you speak as a witness, but not always.
   const how = beat.personIds?.includes(teller.id) && rng.next() < 0.5 ? 'witness' : 'hearsay';
   const opener = pick(rng, voice.openers[how][era]) ?? '';
-  const summary = beatRow(beat.id)?.summary ?? '';
+  const summary = beatInfo(beat).summary ?? '';
   // Someone else it names, from the teller's own town when there is one.
   const named = (beat.personIds ?? []).filter((id) => id !== teller.id && inp.people[id]?.name);
   const neighbours = named.filter((id) => inp.people[id]!.townId === teller.townId);
@@ -139,7 +153,8 @@ export function buildRetelling(inp: RetellInput): string {
   if (other && era !== 'deep' && rng.next() < 0.5) {
     coda = pick(rng, voice.codas.otherWitness)?.replace('{name}', shortName(inp.people[other]!));
   } else {
-    coda = pick(rng, (kind && voice.codas.kind[kind]) || voice.codas.fallback);
+    const own = kind ? voice.codas.kind[kind] ?? chronicleCodas(kind) : undefined;
+    coda = pick(rng, own?.length ? own : voice.codas.fallback);
   }
   return [opener, summary, coda].filter((s) => !!s).join(' ');
 }
@@ -147,7 +162,7 @@ export function buildRetelling(inp: RetellInput): string {
 /** Short noun phrase for a beat ("the week the mill burned"). */
 export function gistOf(beat: HistoryEvent, voice: HistoryVoice = VOICE): string {
   const kind = beatKind(beat);
-  return voice.gists[beat.id] ?? (kind ? voice.kindGists[kind] : undefined) ?? 'the old days';
+  return beat.gist ?? voice.gists[beat.id] ?? (kind ? voice.kindGists[kind] : undefined) ?? 'the old days';
 }
 
 /** The person tells their next untold beat; it is marked told. Null when they have nothing left to tell. */
