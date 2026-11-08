@@ -39,6 +39,7 @@ import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitan
 import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
 import { collectDawnLines } from '../sim/dawn-lines';
 import { kinStrainOf } from '../sim/social/kin-strain';
+import { attachRoads, type RoadsHandle } from './road-signs';
 import { featuresIn } from '../sim/map/ladder/features';
 import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
 
@@ -88,6 +89,7 @@ export class OverworldScene extends Phaser.Scene {
   private landTowns: LandTown[] = [];
   /** Drawn ground + prop types per tile of chunks the player tried to work (built on demand, dropped on edit). */
   private drawnCache = new Map<string, Map<string, { ground?: string; props: string[] }>>();
+  private roads!: RoadsHandle;
 
   constructor() {
     super('overworld');
@@ -140,6 +142,23 @@ export class OverworldScene extends Phaser.Scene {
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
     });
     this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav, (l) => this.say(l), () => this.room.active);
+    this.roads = attachRoads({
+      scene: this,
+      session: this.session,
+      settlements: this.layout.settlements,
+      nameOf: (id) => world.settlements?.find((s) => s.id === id)?.name ?? id,
+      arriveAt: (id) => this.arriveAt(id),
+      afterJourney: () => {
+        this.life.dawn();
+        this.people.sync();
+        this.people.settle();
+        this.goods.onDawn();
+        (this.registry.get('autosave') as (() => void) | undefined)?.();
+        this.syncSparkFromSession(false);
+      },
+      say: (t) => this.say(t),
+      setBusy: (b) => (this.resting = b),
+    });
     const headOf = (id: string): { x: number; y: number } | undefined =>
       this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined);
     const surface = attachSurface(this, this.session, this.layout.settlements, headOf);
@@ -214,6 +233,10 @@ export class OverworldScene extends Phaser.Scene {
         tile: (q: number, r: number) => ({ biome: this.terrain.biome(q, r), edit: this.terrain.edit(q, r) ?? null, passable: this.terrain.passable(q, r) }),
         /** Work the land in reach (as pressing X), optionally facing (dx, dy) first. */
         work: (dx?: number, dy?: number) => { if (dx !== undefined || dy !== undefined) this.facing = { dx: dx ?? 0, dy: dy ?? 0 }; return this.workLand(); },
+        /** Roads out of the player's town with today's travellers; a town's signpost tile; take a road (resolves on arrival). */
+        roads: () => this.session.roads(),
+        signpost: (townId: string) => this.roads.signpost(townId),
+        travel: (routeId: string, tradeId?: string) => this.roads.travel(routeId, tradeId),
         /** Last line shown by say(). */
         lastSay: () => this.hint.text,
         /** A person's 0..1 kin strain across the gap (city kin of a villager, or the reverse). */
@@ -299,7 +322,7 @@ export class OverworldScene extends Phaser.Scene {
 
   update(_time: number, delta: number): void {
     if (this.room.active) { this.updateRoom(_time, delta); return; }
-    if (this.goods.overlayOpen()) { this.tickLife(delta); return; }
+    if (this.goods.overlayOpen() || this.roads.isOpen()) { this.tickLife(delta); return; }
     let dx = 0;
     let dy = 0;
     if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
@@ -460,8 +483,8 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private interact(): void {
-    // The coal is out: no deeds or rest while the burnout plays and succession is pending.
-    if (this.resting || this.goods.overlayOpen() || isSuccessionOpen(this.session)) return;
+    // The coal is out: no deeds or rest while the burnout plays and succession is pending; nor while the road menu is open.
+    if (this.resting || this.goods.overlayOpen() || this.roads.isOpen() || isSuccessionOpen(this.session)) return;
     if (this.ring.isOpen()) return;
     if (this.room.active) {
       const who = this.room.interact();
@@ -469,6 +492,7 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
     if (this.goods.readBoard(this.player)) return;
+    if (this.roads.interact(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);

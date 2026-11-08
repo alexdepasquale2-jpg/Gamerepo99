@@ -56,7 +56,8 @@
     "status_gain": ["People look at you differently now.", "Something's changed in how folk see you."],
     "status_gain.civic_voice": ["They quiet down when you speak now.", "You stood up for us. Folk listen when you talk."],
     "dawn_inherited_dependence_held": ["{who} says you lean on people the way {prev} did.", "{who} says you still reach for a hand, like {prev} taught you."],
-    "dawn_inherited_dependence_resolved": ["{who} says you stand on your own now. {prev}'s need has let go of you.", "{who} says something in you steadied overnight. You don't need {prev}'s crutch anymore."]
+    "dawn_inherited_dependence_resolved": ["{who} says you stand on your own now. {prev}'s need has let go of you.", "{who} says something in you steadied overnight. You don't need {prev}'s crutch anymore."],
+    "road_encounter": ["You came in off the road? You look like it met you halfway.", "Long road? Sit. Tell me what you saw out there."]
   },
   "woundChemistry": {"note": "Method effectiveness vs a person's wound (methods.json). deepAtLeast matches genuine_growth's minMatrix.", "deepAtLeast": 1.2, "slidAtMost": 0.7},
   "notorietyLevels": [{"id": "whisper", "min": 0}, {"id": "talk", "min": 0.25}, {"id": "known", "min": 0.45}, {"id": "infamous", "min": 0.6}]

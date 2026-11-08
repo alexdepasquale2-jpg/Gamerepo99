@@ -95,6 +95,14 @@ const ownKeyed =
     return personId && line ? { kind: 'line', personId, tell, cue, line } : null;
   };
 
+/** A road encounter is told back to you by someone at the far end (quiet stretches stay quiet). */
+const road: Entry = (p, ctx) => {
+  if (p.quiet === true) return null;
+  const townId = str(p.townId);
+  const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
+  return personId ? { kind: 'line', personId, townId, tell: 'glance', cue: 'road', line: str(p.line) ?? pickFallback('road_encounter', personId + str(p.encounterId)) } : null;
+};
+
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
 /** A townsperson in `townKey`'s town says the line (payload text first, else a fallback). */
@@ -133,6 +141,7 @@ export const SURFACED: Record<string, Entry> = {
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
   'kin.birth': own('kin', 'kin_birth', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'kin.grown': own('kin', 'kin_grown', 'glance', (p) => str(p.personId), (p) => str(p.line)),
+  'encounter.spawn': road,
   'person.reignite': tint,
   'site.kindle': tint,
   // Unsilenced: the world's quieter news, always through someone nearby.
@@ -155,8 +164,6 @@ export const SURFACED: Record<string, Entry> = {
 export const SILENT: readonly string[] = [
   // Sender-side or VFX-only: the delivery/arrival side surfaces instead.
   'packet.emit', 'spark.spend', 'route.travel_step', 'stock.starve',
-  // Still waiting on their own systems' surfacing (roads, patrons, stash).
-  'encounter.spawn',
   'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
 ];
 
