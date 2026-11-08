@@ -19,6 +19,7 @@ import type { SaveBlob } from './save';
 import type { PacketState, SimState } from './types/runtime';
 import type { Flight, Pending } from './letters-scale';
 import type { LetterReply } from './letter-replies';
+import type { DistrictPolity } from './civic/district-relations';
 
 export type DistrictRef = { col: number; row: number };
 /** `lastTick` is the last dawn the away-tick drifted it (sim/realm-away); catch-up counts from there. */
@@ -32,6 +33,8 @@ export type RealmState = {
   recent: string[];
   /** Mail and news addressed to a district you are not in, applied when you next arrive (sim/realm-away). */
   inbox?: Record<string, InboxItem[]>;
+  /** Districts as polities: leaders, and peace / pact / war per neighbouring pair (sim/civic/district-relations). Lazy. */
+  polity?: DistrictPolity;
 };
 /** `due` is the day it would have landed; anything still on the road when you arrive goes back in flight. */
 export type InboxItem =

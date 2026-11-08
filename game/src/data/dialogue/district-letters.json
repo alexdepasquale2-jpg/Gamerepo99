@@ -1,0 +1,152 @@
+{
+  "_doc": "Leaders' letters between neighbouring districts and the news of their peace, pacts and wars (sim/civic/district-letters, sim/contrib/district-polity). Vars: fromLeader, toLeader, fromDistrict, toDistrict, other, otherLeader, speaker, leader, n, cost.",
+  "letters": {
+    "greeting": {
+      "title": "A letter from {fromDistrict}",
+      "body": [
+        "To {toLeader}, from {fromLeader} of {fromDistrict}. The roads between us are open and our hearths are no colder than yours. Write when you can; a quiet border is worth the ink.",
+        "{fromLeader} of {fromDistrict} to {toLeader}: our harvest was thin but honest. We hope yours was kinder. Let our riders keep finding each other.",
+        "From {fromLeader}, at the seat of {fromDistrict}. We heard your people kept their fires through the cold. Tell them they are spoken of well here."
+      ]
+    },
+    "trade": {
+      "title": "Word on the pact, from {fromDistrict}",
+      "body": [
+        "{fromLeader} to {toLeader}: the carts came through as promised. Our pact holds, and folk here have stopped asking whether it will.",
+        "To {toLeader}. The pact between {fromDistrict} and {toDistrict} keeps bread on tables that had none. {fromLeader} sends thanks, and a list of what we can spare next."
+      ]
+    },
+    "grievance": {
+      "title": "A sharp letter from {fromDistrict}",
+      "body": [
+        "{fromLeader} of {fromDistrict} to {toLeader}: your people preach against ours at the boundary stones. We will not be told how to keep our own fires. Mend this, or we will.",
+        "To {toLeader}. Our folk are hungry and they are looking across the border while they are hungry. {fromLeader} would rather write this than send something worse."
+      ]
+    },
+    "truce": {
+      "title": "Terms from {fromDistrict}",
+      "body": [
+        "{fromLeader} to {toLeader}: enough. Send our levies home and we will send yours. Let the road between us be a road again.",
+        "To {toLeader}, from {fromLeader}. There is no winning left in this. We lay it down, if you will."
+      ]
+    }
+  },
+  "gist": {
+    "greeting": [
+      "the border is quiet and they mean to keep it so",
+      "they ask after our harvest",
+      "they write as a neighbour writes"
+    ],
+    "trade": [
+      "the pact holds and the carts keep coming",
+      "they list what they can spare us"
+    ],
+    "grievance": [
+      "they will not be preached at across the border",
+      "they are hungry and they say it plainly",
+      "it reads like a warning"
+    ],
+    "truce": [
+      "they offer terms",
+      "they want their levies home"
+    ]
+  },
+  "dawn": {
+    "letter_in": [
+      "{leader} has a letter from {otherLeader} of {other}, and reads it out at the seat: {gist}.",
+      "A rider from {other} came in at first light. {leader} says {otherLeader} writes that {gist}."
+    ],
+    "pact": [
+      "{speaker} says {leader} and {otherLeader} of {other} have shaken on a pact. Carts will go both ways.",
+      "Word at the well: a trade pact with {other}. {speaker} says it is the first good news in weeks."
+    ],
+    "pact_broken": [
+      "{speaker} says the pact with {other} is off. Nobody agrees on whose fault it was.",
+      "The carts from {other} have stopped. {speaker} says {leader} tore up the pact, or {otherLeader} did."
+    ],
+    "war": [
+      "{speaker} says it is war with {other}. {leader} has called for levies.",
+      "Drums at the seat. {speaker} says {other} has crossed the boundary stones and {leader} means to answer."
+    ],
+    "levy": [
+      "{n} grown folk went with the levy this morning. {speaker} watched them go.",
+      "{speaker} says {n} of ours marched for the war with {other}. The fields will miss them."
+    ],
+    "war_food": [
+      "{speaker} says the war with {other} is eating the stores: the levy has to be fed.",
+      "The levy's wagons took grain again. {speaker} is counting what is left."
+    ],
+    "truce": [
+      "{speaker} says there is a truce with {other}. {held}",
+      "The war with {other} is over. {speaker} says {held}"
+    ],
+    "levy_home": [
+      "{n} of the levy came home at dusk. {speaker} says they do not talk about it.",
+      "The levy is back: {n} walked in. {speaker} says {fallen}"
+    ],
+    "far_war": [
+      "{speaker} heard from a carter that {a} and {b} are at war.",
+      "{speaker} says {a} and {b} have come to blows. The trunk road between them is closed."
+    ],
+    "far_truce": [
+      "{speaker} says {a} and {b} have made a truce."
+    ]
+  },
+  "held": {
+    "won": [
+      "we held the field, they say.",
+      "{other} gave ground first."
+    ],
+    "lost": [
+      "we gave ground, and it shows.",
+      "{other} held the field."
+    ],
+    "brokered": [
+      "terms were struck before either side broke.",
+      "the leaders wrote their way out of it."
+    ]
+  },
+  "fallen": {
+    "none": [
+      "every one of them came back.",
+      "none were lost."
+    ],
+    "some": [
+      "not all of them came back.",
+      "some stayed in {other} for good."
+    ]
+  },
+  "broker": {
+    "ask": [
+      "{leader} spreads a map on the table. \"{relations}\"",
+      "\"Our neighbours?\" {leader} counts them off. \"{relations}\""
+    ],
+    "peace_ok": [
+      "{leader} hears you out, then sends for ink. \"I will write to {otherLeader} tonight. If they are as tired as we are, the war is over.\"",
+      "\"For you, then.\" {leader} seals a letter of terms for {other}. By morning the levies are told to come home."
+    ],
+    "peace_no": [
+      "{leader} shakes their head. \"{otherLeader} would laugh at terms from us. Not yet.\"",
+      "\"You don't know {other} as I do. They will not stop because we ask.\""
+    ],
+    "pact_ok": [
+      "{leader} turns it over and nods. \"A pact with {other}, then. I'll put my name to it if {otherLeader} puts theirs.\" They do.",
+      "\"Carts both ways.\" {leader} writes to {otherLeader} while you wait. A pact with {other} is sealed."
+    ],
+    "pact_no": [
+      "{leader} frowns. \"{other} doesn't trust us enough for that. Letters first.\"",
+      "\"A pact? With {otherLeader}?\" {leader} laughs, not kindly. \"Give it time.\""
+    ],
+    "poor": [
+      "You haven't the spark left to move {leader} today ({cost} needed)."
+    ],
+    "done": [
+      "\"I have written once today on your word,\" {leader} says. \"Let it travel.\""
+    ]
+  },
+  "relation": {
+    "peace": "{other}: at peace",
+    "pact": "{other}: a pact",
+    "war": "{other}: at war"
+  }
+}
