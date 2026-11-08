@@ -11,7 +11,7 @@ import { createBrood, type BroodCtl } from './brood';
 import { createFauna, type FaunaCtl } from './fauna';
 import { createNameLayer, type NameLayer } from './name-layer';
 import { createPeople, type PeopleCtl } from './people';
-import { createPlayer, type PlayerCtl } from './player';
+import { createPlayer, watchPlayerPose, type PlayerCtl } from './player';
 import { createTownIndex } from './towns';
 import { createWagons, type WagonsCtl } from './wagons';
 import { createRoomFolk } from './room-folk';
@@ -36,7 +36,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
     people.sync();
     player.refreshLook();
   };
-  const offs = [ctx.events.on('state-replaced', sync)];
+  const offs = [ctx.events.on('state-replaced', sync), watchPlayerPose(ctx, player)];
   let time = 0;
 
   const teardown = (): void => {

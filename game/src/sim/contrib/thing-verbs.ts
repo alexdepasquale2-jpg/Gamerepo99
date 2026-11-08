@@ -32,7 +32,11 @@ type FaunaRow = { id: string; name: string; verbs?: ThingVerbRow[] };
 export const FAUNA: readonly FaunaRow[] = (faunaJson as { fauna: FaunaRow[] }).fauna;
 const FAUNA_VERBS = new Map(FAUNA.map((f) => [f.id, f.verbs ?? []]));
 
-type PropRow = { type: string; name: string; verbs: ThingVerbRow[] };
+/**
+ * linger: the prop's linger tag (sim/linger.ts); resting is standing still there, not a verb.
+ * scenery: drawn for the look of the place and used for nothing (uses-check lets it be).
+ */
+type PropRow = { type: string; name: string; linger?: string; scenery?: boolean; verbs: ThingVerbRow[] };
 export const PROPS: readonly PropRow[] = (propsJson as { props: PropRow[] }).props;
 const PROP_BY_TYPE = new Map(PROPS.map((p) => [p.type, p]));
 /** A wild prop's row (null for a type with no uses, like a critter, which acts as its animal). */
@@ -42,17 +46,18 @@ export const nodeVerbs = (kindId: string): readonly ThingVerbRow[] => NODE_VERBS
 export const faunaVerbs = (kindId: string): readonly ThingVerbRow[] => FAUNA_VERBS.get(kindId) ?? [];
 
 /**
- * Spark the wild can give in one day across every prop (rest is a balm, not a fuel line).
+ * Spark the wild can give in one day across every prop and all lingering (rest is a balm, not a fuel line).
  * Was 12. With the dawn now costing about 3 a day net (hooks/spark-recovery.json), 12 (and 4, when tried) let a
  * walker who only sat under trees stay full forever; at 2 the wild slows the fall (an idle walker burns out
  * in ~60-90 days instead of ~25) but cannot replace real deeds. See game/scripts/balance-probe.mts.
  */
 export const PROP_SPARK_PER_DAY = 2;
-const propSparkLeft = (state: SimState): number => {
+/** What is left of today's prop spark; lingering (sim/linger.ts) draws on the same cap. */
+export const propSparkLeft = (state: SimState): number => {
   const k = state.flags.propSpark as { day: number; got: number } | undefined;
   return PROP_SPARK_PER_DAY - (k && k.day === state.day ? k.got : 0);
 };
-const notePropSpark = (state: SimState, n: number): void => {
+export const notePropSpark = (state: SimState, n: number): void => {
   const k = state.flags.propSpark as { day: number; got: number } | undefined;
   state.flags.propSpark = { day: state.day, got: (k && k.day === state.day ? k.got : 0) + n };
 };

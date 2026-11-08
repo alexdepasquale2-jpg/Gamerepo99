@@ -153,9 +153,12 @@ export function checkUses(): UsesReport {
   for (const t of DRAWN) if (!propTypes.has(t)) errors.push(`prop ${t}: drawn in the world but has no uses in props.json`);
   for (const p of PROPS) {
     p.verbs.forEach((v) => thingVerb(`prop ${p.type}.${v.id}`, v));
-    if (p.verbs.length < 2) errors.push(`prop ${p.type}: ${p.verbs.length} use(s), needs at least 2`);
+    // Resting by a prop is a use too (its linger tag), just not a verb. Props lost their rest verbs to lingering,
+    // so one use is enough; a prop marked scenery (a sign, a farmstead whose work is a task) needs none.
+    const uses = p.verbs.length + (p.linger ? 1 : 0);
+    if (uses < 1 && !p.scenery) errors.push(`prop ${p.type}: no uses (a verb or a linger tag), and not marked scenery`);
     if (new Set(p.verbs.map((v) => v.id)).size !== p.verbs.length) errors.push(`prop ${p.type}: duplicate verb ids`);
-    rows.push({ kind: 'prop', id: p.type, uses: p.verbs.map((v) => v.label), supplies: p.verbs.filter((v) => supplies(v.effect)).map((v) => v.label) });
+    rows.push({ kind: 'prop', id: p.type, uses: [...p.verbs.map((v) => v.label), ...(p.linger ? [`Linger (${p.linger})`] : [])], supplies: [...p.verbs.filter((v) => supplies(v.effect)).map((v) => v.label), ...(p.linger ? ['spark, sitting there'] : [])] });
   }
 
   for (const a of LAND_RULES.acts) {

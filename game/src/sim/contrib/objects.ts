@@ -1,5 +1,5 @@
 /**
- * Verbs on the things of the world, one ring model with people: gather a node, work a shift at a facility,
+ * Verbs on the things of the world, one ring model with people: gather a node,
  * read a noticeboard, trade at a wagon, take a road at a signpost, enter (or leave) by a door, rest at a
  * hearth, pick up what lies on the ground. The stash chest's verbs live with the stash (contrib/stash.ts).
  *
@@ -9,7 +9,6 @@
  */
 import { entranceFor, entryLine, refusedDoorLine } from '../embodiment';
 import { ensureInhabitantParts } from '../inhabitant';
-import { facilityById, kindLabel, shiftWorkedToday, workShift } from '../economy/facilities';
 import { ITEM_BY_ID } from '../goods/inventory';
 import { pickUpItem } from '../goods/item-use';
 import { gatherNode, nodeCharges, nodeKind, type WorldNode } from '../goods/nodes';
@@ -45,22 +44,7 @@ registerTargetProvider({
   },
 });
 
-type FacilityData = { nameOf?: (townId: string) => string };
-
-registerTargetProvider({
-  id: 'facility',
-  kinds: ['facility'],
-  list(state, t) {
-    const place = facilityById(state, t.id);
-    if (!place) return [];
-    return one(t, 'work', shiftWorkedToday(state) ? 'Work a shift (your day is done)' : `Work a shift · ${kindLabel(place.kind).toLowerCase()}`, 'Work a shift', 'work');
-  },
-  act(state, actionId, t) {
-    if (verbOf(actionId) !== 'work' || !facilityById(state, t.id)) return false;
-    const r = workShift(state, t.id, (t.data as FacilityData | undefined)?.nameOf);
-    return { ok: r.ok, line: r.line, hours: r.ok ? (r.hours ?? 0) : 0 };
-  },
-});
+// Facilities have no ring verb: you work one by holding to work at its spot (sim/tasks, hold-to-work).
 
 registerTargetProvider({
   id: 'board',

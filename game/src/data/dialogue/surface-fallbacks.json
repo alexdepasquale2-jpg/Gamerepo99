@@ -514,6 +514,55 @@
         "core": ["You stood still so long, I thought you'd grown roots.", "Nice to see someone stop and look.", "You stood so still out there.", "It's good to see someone just look."]
       }
     },
+    "linger.shade": {
+      "frames": ["#sit# #feel#", "#feel#", "#sit#"],
+      "rules": {
+        "sit": ["You sit with your back to the trunk.", "You settle in the shade.", "You ease down among the roots.", "The shade takes the heat off your neck."],
+        "feel": ["The leaves move over you. For a moment nothing is asked of you.", "A bird goes about its business overhead.", "The light comes through in coins.", "Somewhere a woodpecker keeps time."]
+      }
+    },
+    "linger.seat": {
+      "frames": ["#sit# #feel#", "#feel#", "#sit#"],
+      "rules": {
+        "sit": ["You sit down. Your legs thank you.", "You take the weight off your feet.", "You sit and let your breath come back.", "You settle and stretch your legs out."],
+        "feel": ["It is warm from the sun.", "The road can wait a little.", "The wind goes over the grass.", "You watch the clouds move off."]
+      }
+    },
+    "linger.fire": {
+      "frames": ["#sit# #feel#", "#feel#", "#sit#"],
+      "rules": {
+        "sit": ["You sit close to the embers.", "You hold your hands out to the fire.", "You crouch by the fire.", "You settle where the warmth reaches."],
+        "feel": ["The warmth gets into your fingers.", "A log settles and sends up sparks.", "Smoke and the smell of pine.", "The cold lets go of you a little."]
+      }
+    },
+    "linger.shelter": {
+      "frames": ["#sit# #feel#", "#feel#", "#sit#"],
+      "rules": {
+        "sit": ["You duck under the canvas and sit.", "You sit in the lee of the canvas.", "You get in out of the wind."],
+        "feel": ["The canvas ticks in the wind.", "Out of the weather for a while.", "It smells of rope and old smoke."]
+      }
+    },
+    "linger.holy": {
+      "frames": ["#stand# #feel#", "#feel#", "#stand#"],
+      "rules": {
+        "stand": ["You stand still at the shrine.", "You stop before the stone and say nothing.", "You bow your head a moment."],
+        "feel": ["Something in you settles.", "The quiet here is older than the towns.", "Someone has left a flower. It is still fresh.", "You breathe out slow."]
+      }
+    },
+    "linger.spent": {
+      "frames": ["#rest# #road#", "#road#"],
+      "rules": {
+        "rest": ["You have rested all you can out here today.", "You're as rested as sitting will make you.", "Sitting longer won't help much today."],
+        "road": ["The road is waiting.", "There's work in town.", "Time to be on your feet."]
+      }
+    },
+    "linger.dawn": {
+      "frames": ["#saw# #aside#", "#saw#"],
+      "rules": {
+        "saw": ["the whole lane saw you {where} yesterday.", "you were {where} half the afternoon yesterday.", "you looked well, {where} yesterday."],
+        "aside": ["Good for you.", "No harm in it.", "Wish they'd had the time.", "Hope it did you good."]
+      }
+    },
     "prop_used": {
       "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
       "rules": {

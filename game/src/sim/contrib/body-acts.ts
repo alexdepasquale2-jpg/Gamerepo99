@@ -2,7 +2,8 @@
  * Verbs only some bodies have (A9). Each is gated on the inhabitant's embodiment trait fields
  * (embodiment.tags, allowedApproachTags; data/people/body-acts.json), never on who they are:
  *
- *   wagon  large bodies     Lift the stuck wheel free   (help)  a rolling wagon in a rut: up and on, the driver tips you
+ *   wagon  (a stuck wheel is no chip: it is lifted by holding to work at the wagon; stuck()/lift()
+ *          are its sim side, the `lift` tuning stays in body-acts.json)
  *          large bodies     Carry the heavy crates in   (work)  three crates off the back into the town's store
  *   board  ledger hand +    Read the town's ledger      (deal)  food cover, what is short, who owes; the town eases a little
  *          civic way in
@@ -71,7 +72,7 @@ const liftKey = (c: CaravanMobile) => `body.lift@${c.id}`;
 const carryKey = (c: CaravanMobile) => `body.carry@${c.id}`;
 
 /** A rolling wagon is in a rut today (seeded per wagon and day), or its road is broken. */
-function stuck(state: SimState, c: CaravanMobile): boolean {
+export function stuck(state: SimState, c: CaravanMobile): boolean {
   if (c.phase || usedToday(state, liftKey(c))) return false;
   if (state.economyRoutes?.find((r) => r.id === c.routeId)?.broken) return true;
   return deriveRng(state.seed, 'wagon-stuck', c.id, state.day).next() < FILE.lift.stuckChance;
@@ -83,7 +84,7 @@ const canCarry = (state: SimState, c: CaravanMobile, t: Target): boolean => {
   return c.qty >= 1 && !!town && !!state.towns?.[town] && !usedToday(state, carryKey(c));
 };
 
-function lift(state: SimState, c: CaravanMobile, t: Target): ActOutcome {
+export function lift(state: SimState, c: CaravanMobile, t: Target): ActOutcome {
   if (!stuck(state, c)) return { ok: false, line: 'The wheels are turning fine.' };
   c.progress01 = Math.min(0.98, c.progress01 + FILE.lift.progress);
   payTip(state, FILE.lift.tip);

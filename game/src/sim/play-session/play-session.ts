@@ -56,6 +56,7 @@ import type {
   PlayLastResolve,
   CreatePlaySessionOpts,
 } from './play-session-types';
+import { lingerAt } from '../linger';
 
 function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
   return {
@@ -325,6 +326,14 @@ function createPlayModeSession(defaults: {
     worldFile: (opts) => (state ? exportWorld(state, opts) : null),
     adoptState: (st) => adopt(st as TravelSimState),
     getState: () => state ?? undefined,
+    // Sitting by a linger prop (world/linger.ts): seconds in, spark gained out (sim/linger.ts).
+    linger(propKey, seconds) {
+      if (!state) return 0;
+      const beforeLen = state.bus?.lastIds?.length ?? 0;
+      const { gain } = lingerAt(state, propKey, seconds);
+      appendJuiceSince(beforeLen);
+      return gain;
+    },
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

@@ -1,4 +1,4 @@
-/** Deeds that move real items: gift, trade, carry, work alongside. Pure over SimState. */
+/** Deeds that move real items: gift, trade, carry. Pure over SimState. */
 
 import { deriveRng } from '../rng';
 import { encodeUnspokenForState } from '../social/unspoken';
@@ -11,7 +11,7 @@ import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 
 export type DeedGoodsResult = { ok: boolean; line: string; /** Item that changed hands (gift/trade), for presentation. */ itemId?: string };
-const GOODS_DEEDS = new Set(['gift_give', 'trade_fair', 'carry_goods', 'work_alongside']);
+const GOODS_DEEDS = new Set(['gift_give', 'trade_fair', 'carry_goods']);
 export const isGoodsDeed = (id: string): boolean => GOODS_DEEDS.has(id);
 
 const first = (id: string): string => {
@@ -109,7 +109,11 @@ function carry(state: SimState, personId: string): DeedGoodsResult {
   return { ok: true, line: `${first(personId)} hands you ${qty} ${itemName(itemId)} for someone in ${first(toTownId)}.` };
 }
 
-function work(state: SimState, personId: string): DeedGoodsResult {
+/**
+ * A share of someone's work yield (their job's yield table, seeded per day and person). No longer a ring
+ * deed (work_alongside is gone: helping is doing, hold-to-work on their task); kept for that path to pay out.
+ */
+export function workYield(state: SimState, personId: string): DeedGoodsResult {
   const rng = deriveRng(state.seed, 'work', state.day, personId);
   const got: string[] = [];
   const job = jobOf(state, personId);
@@ -127,6 +131,5 @@ export function applyDeedGoods(state: SimState, deedId: string, personId: string
   if (deedId === 'gift_give') return gift(state, personId, selected);
   if (deedId === 'trade_fair') return trade(state, personId, selected);
   if (deedId === 'carry_goods') return carry(state, personId);
-  if (deedId === 'work_alongside') return work(state, personId);
   return null;
 }

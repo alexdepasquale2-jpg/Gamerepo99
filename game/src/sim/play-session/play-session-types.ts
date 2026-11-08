@@ -91,6 +91,11 @@ export type PlaySession = {
   adoptState(state: SimState): void;
   /** Live sim state (render-side goods/nodes read + mutate through sim helpers). */
   getState(): SimState | undefined;
+  /**
+   * Count `seconds` sat (or stood quiet) by a linger prop (`prop:<type>@<q>,<r>`; sim/linger.ts). Returns the
+   * spark it gave: a trickle by the prop's tag, under the shared daily prop cap; 0 for a prop you can't rest at.
+   */
+  linger(propKey: string, seconds: number): number;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }
