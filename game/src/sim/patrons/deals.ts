@@ -1,4 +1,5 @@
 /** Patron deals: accept (reward), dawn obligations, breakage, betrayal. Reached only via interactions. */
+import { addStock } from '../economy/food-stock';
 import { addNotoriety, ensureHoard, notePeakCoin } from '../hoard';
 import { clamp01 } from '../hoard/state';
 import { enqueueLetter } from '../letters-scale';
@@ -43,7 +44,7 @@ export function acceptDeal(state: SimState, patronId: string, dealId: string): {
   if (offer.standing || offer.goods) {
     const town = ((state.towns ??= {})[seat] ??= { id: seat, economyOptIn: false, stock: {}, despair: 0 });
     if (offer.standing) town.standing = clamp01((town.standing ?? 0) + offer.standing);
-    for (const g of Object.keys(offer.goods ?? {}).sort()) town.stock[g] = (town.stock[g] ?? 0) + offer.goods![g]!;
+    for (const g of Object.keys(offer.goods ?? {}).sort()) addStock(state, seat, g, offer.goods![g]!); // food goes to the ledger
   }
   if (offer.travelSafeDays) state.flags.travelSafeDays = ((state.flags.travelSafeDays as number | undefined) ?? 0) + offer.travelSafeDays;
   deals(state)[dealId] = {

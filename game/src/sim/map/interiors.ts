@@ -8,12 +8,15 @@ import lines from '../../data/dialogue/interior-lines.json';
 import { TILE_PX } from './constants';
 import type { LayoutSettlement } from './world-layout';
 
-export type InteriorKind = 'house' | 'shop' | 'inn';
+export type InteriorKind = 'house' | 'shop' | 'inn' | 'office';
 export type Pt = { x: number; y: number };
 
 /** Overworld stamp type -> interior. Towers and decor are not enterable. */
 const KIND_OF: Record<string, InteriorKind | undefined> = { cottage: 'house', shop: 'shop', hall: 'inn' };
-export const interiorKindOf = (stampType: string): InteriorKind | null => KIND_OF[stampType] ?? null;
+const ROOM_KINDS = new Set<string>(['house', 'shop', 'inn', 'office']);
+/** A layout entry's room: its own `interior` (a shop stamp kept as a ledger office), else by stamp type. */
+export const interiorKindOf = (stampType: string, interior?: string): InteriorKind | null =>
+  (interior && ROOM_KINDS.has(interior) ? (interior as InteriorKind) : KIND_OF[stampType]) ?? null;
 
 /** How close (px) the player must be to a door to be offered "Enter". */
 export const DOOR_REACH = 44;
@@ -39,7 +42,7 @@ export function townBuildings(town: LayoutSettlement): Building[] {
   for (const c of town.id) sh = (sh * 31 + c.charCodeAt(0)) >>> 0;
   const out: Building[] = [];
   layout.forEach((b, i) => {
-    const kind = interiorKindOf(b.type);
+    const kind = interiorKindOf(b.type, (b as { interior?: string }).interior);
     if (!kind) return;
     out.push({ id: `${town.id}:${i}`, townId: town.id, kind, stampType: b.type, door: { x: fx + b.q * TILE_PX, y: fy + b.r * TILE_PX }, paletteIndex: (sh + i) % art.palettes.length });
   });
@@ -69,8 +72,8 @@ export function occupantOf(building: Building, townBuildingsList: Building[], to
   return [...townPeopleIds].sort()[idx];
 }
 
-export const OCCUPANT_ROLE: Record<InteriorKind, string> = { house: 'lives here', shop: 'keeps the shop', inn: 'keeps the inn' };
-export const INTERIOR_TITLE: Record<InteriorKind, string> = { house: 'Cottage', shop: 'General Store', inn: 'The Inn' };
+export const OCCUPANT_ROLE: Record<InteriorKind, string> = { house: 'lives here', shop: 'keeps the shop', inn: 'keeps the inn', office: 'keeps the ledgers' };
+export const INTERIOR_TITLE: Record<InteriorKind, string> = { house: 'Cottage', shop: 'General Store', inn: 'The Inn', office: 'Ledger Office' };
 
 // ── room plans ────────────────────────────────────────────────────────────
 
@@ -132,6 +135,18 @@ function base(kind: InteriorKind): Omit<InteriorPlan, 'mirrored' | 'accent'> {
         f('counter', 3, 2, 6, 1),
         rug(4, 4, 4, 2),
         f('crate', 1, 4), f('crate', 2, 4), f('crate', 1, 5), f('barrel', 10, 4), f('barrel', 10, 5), f('plant', 10, 2),
+      ],
+    };
+  }
+  if (kind === 'office') {
+    // The ledger office: shelves of books along the back, the clerk's counter, a reading table.
+    return {
+      kind, cols: 12, rows: 7, doorCol: 6, spawn: { col: 6, row: 6 }, npc: { col: 6, row: 1 },
+      furniture: [
+        deco('sign', 5, 2), deco('window', 2), deco('window', 9),
+        f('books', 1, 0, 3, 1), f('books', 8, 0, 3, 1), f('shelf', 4, 0, 1, 1),
+        f('counter', 4, 2, 5, 1), f('lantern', 9, 2),
+        rug(3, 4, 6, 2), f('table', 2, 4, 2, 1), f('stool', 1, 4), f('chest', 10, 5), f('crate', 10, 4), f('plant', 1, 2),
       ],
     };
   }

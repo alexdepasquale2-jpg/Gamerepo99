@@ -1,21 +1,36 @@
 /**
  * Embodiment and perception rules for the player's inhabitant. Everything here reads trait data on
- * the inhabitant (walk speed, size, blocked entrances, bodies, perception) — never the archetype id.
+ * the inhabitant (walk speed, size, ways in, bodies, perception) — never the archetype id. Entrances
+ * are data (data/world/entrances.json), read against embodiment.allowedApproachTags and blockedTileTags.
  * Pure: no Phaser/DOM.
  */
 
-import { canEnterTile } from './inhabitant';
+import entrancesJson from '../data/world/entrances.json';
+import fallbackJson from '../data/dialogue/surface-fallbacks.json';
+import { approachTags, canEnterTile } from './inhabitant';
 import { jobOf } from './goods/jobs';
 import type { BodyState, Inhabitant, SimState } from './types/runtime';
 
 export const WITH_YOU = 'with_you';
 
-/** How each interior can be entered. A body gets in if any one entrance's tags are all allowed. */
-export const ENTRANCES: Record<'house' | 'shop' | 'inn', string[][]> = {
-  house: [['door_front', 'interior_tight']],
-  shop: [['door_front', 'interior']],
-  inn: [['door_front', 'interior'], ['yard']],
-};
+/** One way into an interior (data/world/entrances.json). */
+export type Entrance = { id: string; tags: string[]; lineKey?: string };
+type EntrancesFile = { kinds: Record<string, Entrance[]>; refuseKey?: Record<string, string>; fallback: Entrance[] };
+const ENTRANCE_FILE = entrancesJson as EntrancesFile;
+/** How each interior kind can be entered (data). A body gets in through any one entrance it may use. */
+export const ENTRANCES: Readonly<Record<string, readonly Entrance[]>> = ENTRANCE_FILE.kinds;
+const LINES = (fallbackJson as { lines: Record<string, string[]> }).lines;
+
+/** May this body use this entrance: every tag allowed (when the body lists its ways in), none blocked. */
+function mayUse(inh: Inhabitant, e: Entrance): boolean {
+  const allowed = approachTags(inh);
+  return canEnterTile(inh, e.tags) && (!allowed || e.tags.every((t) => allowed.includes(t)));
+}
+
+/** The entrance this body comes in by (the first it may use), or null when none lets it in. */
+export function entranceFor(inh: Inhabitant, kind: string): Entrance | null {
+  return (ENTRANCES[kind] ?? ENTRANCE_FILE.fallback).find((e) => mayUse(inh, e)) ?? null;
+}
 
 export function walkSpeedMul(inh: Inhabitant): number {
   return inh.embodiment.walkSpeedMul ?? 1;
@@ -26,8 +41,33 @@ export function spriteScale(inh: Inhabitant): number {
 }
 
 /** Can this body get into an interior of this kind (through any of its entrances)? */
-export function canEnterBuilding(inh: Inhabitant, kind: keyof typeof ENTRANCES): boolean {
-  return (ENTRANCES[kind] ?? [['door_front']]).some((tags) => canEnterTile(inh, tags));
+export function canEnterBuilding(inh: Inhabitant, kind: string): boolean {
+  return entranceFor(inh, kind) !== null;
+}
+
+const pick = (key: string | undefined, salt: string): string | undefined => {
+  const pool = key ? LINES[key] : undefined;
+  if (!pool?.length) return undefined;
+  let h = 0;
+  for (const c of salt) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return pool[h % pool.length];
+};
+const activeBodyName = (inh: Inhabitant): string => inh.bodies?.find((b) => b.id === inh.activeBodyId)?.name ?? 'You';
+
+/** Said as the body comes in by a way other than the front door ("Ash slips in through the vent."), else undefined. */
+export function entryLine(inh: Inhabitant, e: Entrance, salt = ''): string | undefined {
+  return pick(e.lineKey, salt + e.id)?.replace(/\{body\}/g, activeBodyName(inh));
+}
+
+/**
+ * Why this body is kept out of a kind of room: its own blockedLine when a blocked tag stopped it (an ogre
+ * and a cottage door), else the room's refusal line (an office for people with business on paper).
+ */
+export function refusedDoorLine(inh: Inhabitant, kind: string): string {
+  const entrances = ENTRANCES[kind] ?? ENTRANCE_FILE.fallback;
+  const blocked = entrances.some((e) => !canEnterTile(inh, e.tags));
+  const room = pick(ENTRANCE_FILE.refuseKey?.[kind], kind);
+  return (blocked ? inh.embodiment.blockedLine : undefined) ?? room ?? blockedDoorLine(inh);
 }
 
 export function blockedDoorLine(inh: Inhabitant): string {
@@ -92,7 +132,10 @@ export function switchToBody(state: SimState, bodyId: string): string | null {
 /** What idle bodies overheard at dawn: the most despairing person in each town where one waits. */
 export function eavesdropReports(state: SimState): string[] {
   const out: string[] = [];
+  // A sibling set to watch a place reports what it saw there instead (sim/contrib/body-acts).
+  const watching = state.bodyActs?.watches ?? {};
   for (const b of bodiesElsewhere(state.player)) {
+    if (watching[b.id]?.townId === b.at) continue;
     const folk = Object.values(state.people).filter((p) => p.townId === b.at);
     if (!folk.length) continue;
     const low = folk.reduce((a, p) => (p.flame < a.flame ? p : a));

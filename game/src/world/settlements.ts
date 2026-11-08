@@ -9,6 +9,7 @@ import art from '../data/art/settlements.json';
 import { TILE_PX } from '../sim/map/constants';
 import type { LayoutSettlement } from '../sim/map/world-layout';
 import type { SimState } from '../sim/types/runtime';
+import { foodHave } from '../sim/economy/food-stock';
 import { ART_SCALE, strHash } from './art/px';
 import { buildingTex } from './art/building-art';
 import { thingTex } from './art/thing-art';
@@ -61,8 +62,8 @@ export function createSettlements(scene: Phaser.Scene, towns: LayoutSettlement[]
       for (const v of views) {
         const id = v.spots.town.id;
         v.smoke.setData('warm', (despair[id] ?? 0) < 0.5);
-        const stock = state?.towns?.[id]?.stock as Record<string, number> | undefined;
-        const stocked = (stock ? (stock.food_grain ?? 0) : STOCK_OK) >= STOCK_OK;
+        // The stall shows goods while the town's one food stock (the village ledger) holds enough.
+        const stocked = (state?.towns?.[id] ? foodHave(state, id) : STOCK_OK) >= STOCK_OK;
         v.goods.setData('stocked', stocked).setVisible(stocked && v.flame.visible);
       }
     },

@@ -25,10 +25,14 @@ export const LOGISTICS = {
   reserveDays: 5,
   /** Flat reserve for goods nobody consumes (raw materials). */
   reserveFlat: 2,
+  /** An escorted cart (you, or a watch hired at a waystation) faces this share of the road's hazard. */
+  escortHazardMul: 0.25,
 };
 
 export type CartRequest = { id: string; townId: string; itemId: string; qty: number; postedDay: number; status: 'open' | 'filled' | 'lapsed'; cartId?: string };
-export type Cart = { id: string; itemId: string; qty: number; fromTownId: string; toTownId: string; legs: RoadLeg[]; roadDays: number; daysLeft: number; requestId: string };
+export type Cart = { id: string; itemId: string; qty: number; fromTownId: string; toTownId: string; legs: RoadLeg[]; roadDays: number; daysLeft: number; requestId: string;
+  /** Who walks beside it: 'player', or `watch:<name>` (sim/economy/roads). Cuts the road's hazard. */
+  escortedBy?: string };
 /** `flow`: units delivered between town pairs since the last dawn tick of the polity layer. */
 export type Logistics = { requests: CartRequest[]; carts: Cart[]; next: number; lost: number; delivered: number; flow?: Record<string, number> };
 
@@ -68,7 +72,8 @@ export function tickLogistics(state: SimState): void {
     const req = log.requests.find((r) => r.id === cart.requestId);
     const broken = cart.legs.some((l) => (state.economyRoutes ?? []).find((r) => r.id === l.routeId)?.broken);
     const hazard = atWar(state, cart.fromTownId, cart.toTownId) ? 3 : broken ? 2 : safeRoads(state, cart.fromTownId, cart.toTownId) ? 0.5 : 1;
-    if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** hazard) {
+    const guarded = cart.escortedBy ? hazard * LOGISTICS.escortHazardMul : hazard;
+    if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** guarded) {
       log.carts.splice(log.carts.indexOf(cart), 1);
       log.lost += 1;
       if (req) delete req.cartId; // goods lost; the request stays open

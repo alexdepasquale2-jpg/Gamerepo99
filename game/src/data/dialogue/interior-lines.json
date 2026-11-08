@@ -38,5 +38,17 @@
       "People still come in, mostly to not be alone."
     ]
   },
+  "office": {
+    "calm": [
+      "Mind the ink. Every column here is somebody's winter.",
+      "You read the hand, not just the numbers. Good. Most don't.",
+      "Debts balance if someone bothers to add them up."
+    ],
+    "low": [
+      "Half these pages are owed and nobody's coming to pay.",
+      "I stopped writing the shortages down. It didn't help.",
+      "Sit. If you can make sense of the books, you're welcome to them."
+    ]
+  },
   "empty": "Nobody is home. The room still smells of woodsmoke."
 }

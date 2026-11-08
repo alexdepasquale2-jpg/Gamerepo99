@@ -16,6 +16,7 @@ import type { NameLayer } from './name-layer';
 import { hash } from './paint';
 import { safe } from './player';
 import { inRect, viewRect, type TownIndex } from './towns';
+import { visitorOf } from '../sim/visitors';
 
 const ROUTES_PER_FRAME = 4;
 const NEAR_NAME = 96;
@@ -39,10 +40,13 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
   const active = new Set<Folk>();
   let routes = 0;
 
+  // Visitors on a road are drawn by road-folk.ts; everyone else lives in a town.
   const rows = (): PersonRow[] => {
     const st = ctx.session.getState();
-    return ctx.session.listPeople().map((p) => ({ ...p, age: st?.people[p.id]?.age }));
+    return ctx.session.listPeople().filter((p) => !(st && visitorOf(st, p.id)?.legs)).map((p) => ({ ...p, age: st?.people[p.id]?.age }));
   };
+  /** Visitors never take a house. */
+  const passing = (id: string): boolean => { const st = ctx.session.getState(); return !!(st && visitorOf(st, id)); };
   const folkFor = (townId: string | undefined, id: string): Folk | undefined => {
     const t = (townId && towns.byId.get(townId)) || towns.all[hash(id) % Math.max(1, towns.all.length)];
     if (!t) return undefined;
@@ -155,7 +159,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       folk.people.push(nv);
       touched.add(folk);
     }
-    for (const f of touched) rehouse(f);
+    for (const f of touched) rehouse(f, passing);
     refreshMarks();
     for (const f of active) { settle(f); for (const v of f.people) show(v, f); }
   }

@@ -85,9 +85,9 @@ export function makeVillager(ctx: GameContext, row: PersonRow, folk: Folk, slot:
   };
 }
 
-/** Re-deal homes after arrivals and departures; housed folk wait at their own door. */
-export function rehouse(folk: Folk): void {
-  houseNewcomers(folk.homes, folk.buildings, folk.people.map((p) => p.id));
+/** Re-deal homes after arrivals and departures; housed folk wait at their own door. `passing` (visitors) never take one. */
+export function rehouse(folk: Folk, passing?: (id: string) => boolean): void {
+  houseNewcomers(folk.homes, folk.buildings, folk.people.map((p) => p.id).filter((id) => !passing?.(id)));
   for (const v of folk.people) {
     const b = folk.homes.get(v.id);
     if (b) v.home = doorStep(b);

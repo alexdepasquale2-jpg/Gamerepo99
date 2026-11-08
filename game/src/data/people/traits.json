@@ -48,6 +48,31 @@
         "lane",
         "door_front",
         "interior",
+        "yard"
+      ],
+      "mode": "single",
+      "bodySlots": 1,
+      "activeBodiesMax": 1,
+      "sharedSpark": true,
+      "walkSpeedMul": 1,
+      "spriteScale": 1
+    },
+    {
+      "id": "body_human_clerk",
+      "tags": [
+        "human",
+        "ledger_hand"
+      ],
+      "footprint": {
+        "w": 1,
+        "h": 1
+      },
+      "moveTicksPerTile": 1,
+      "blockedTileTags": [],
+      "allowedApproachTags": [
+        "lane",
+        "door_front",
+        "interior",
         "yard",
         "civic"
       ],
@@ -56,7 +81,8 @@
       "activeBodiesMax": 1,
       "sharedSpark": true,
       "walkSpeedMul": 1,
-      "spriteScale": 1
+      "spriteScale": 1,
+      "notes": "A human body with a clerk's hand: reads a town's ledger at the board, and offices let it in (civic)."
     },
     {
       "id": "body_basilisk_brood",

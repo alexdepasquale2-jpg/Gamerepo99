@@ -89,7 +89,7 @@ export function createWagons(ctx: GameContext): WagonsCtl {
     for (const c of st.logistics?.carts ?? []) {
       const rp = cartPosition(c);
       const a = rp && along(rp);
-      if (a) pos.set(`cart:${c.id}`, { kind: 'cart', x: a.p.x, y: a.p.y, dx: a.dx, label: `${c.qty} ${c.itemId.replace(/_/g, ' ')}` });
+      if (a) pos.set(`cart:${c.id}`, { kind: 'cart', x: a.p.x, y: a.p.y, dx: a.dx, label: `${c.qty} ${c.itemId.replace(/_/g, ' ')}${c.escortedBy ? ' · guarded' : ''}` });
     }
     for (const c of couriersOnRoad(st)) {
       const a = along(c.pos);
@@ -145,11 +145,13 @@ export function createWagons(ctx: GameContext): WagonsCtl {
     things(near, radius) {
       const out: Thing[] = [];
       for (const [id, p] of pos) {
-        if (p.kind !== 'wagon') continue;
+        // Trade wagons, and village carts (id `cart:<cartId>`: walk beside one to see it safe).
+        if (p.kind === 'courier') continue;
         const m = movers.get(id);
         const x = m?.x ?? p.x, y = m?.y ?? p.y;
         if (Math.hypot(x - near.x, y - near.y) > radius) continue;
-        out.push({ key: `wagon:${id}`, kind: 'wagon', id, x, y, label: 'Trader', target: { kind: 'wagon', id }, reach: 64 });
+        const label = p.kind === 'wagon' ? 'Trader' : `Cart · ${p.label ?? 'goods'}`;
+        out.push({ key: `wagon:${id}`, kind: 'wagon', id, x, y, label, target: { kind: 'wagon', id }, reach: p.kind === 'wagon' ? 64 : 48 });
       }
       return out;
     },

@@ -7,7 +7,8 @@
  * sheet or a scene change (read, trade, roads, enter, rest) only settle the sim side here (and refuse what
  * the body cannot do); the scene then opens the sheet or plays the fade.
  */
-import { blockedDoorLine, canEnterBuilding } from '../embodiment';
+import { entranceFor, entryLine, refusedDoorLine } from '../embodiment';
+import { ensureInhabitantParts } from '../inhabitant';
 import { facilityById, kindLabel, shiftWorkedToday, workShift } from '../economy/facilities';
 import { ITEM_BY_ID } from '../goods/inventory';
 import { pickUpItem } from '../goods/item-use';
@@ -100,9 +101,14 @@ registerTargetProvider({
     if (verb === 'leave' && t.id === EXIT_DOOR) return { ok: true };
     if (verb !== 'enter') return false;
     const kind = (t.data as DoorData | undefined)?.kind;
-    // Some bodies don't fit every door (an ogre and a cottage): the body's traits decide, not its name.
-    if (kind && !canEnterBuilding(state.player, kind)) return { ok: false, line: blockedDoorLine(state.player) };
-    return { ok: true };
+    if (!kind) return { ok: true };
+    // Some bodies don't fit every door (an ogre and a cottage) and some rooms want business (an office):
+    // the body's traits and ways in decide (data/world/entrances.json), not its name.
+    ensureInhabitantParts(state);
+    const way = entranceFor(state.player, kind);
+    if (!way) return { ok: false, line: refusedDoorLine(state.player, kind) };
+    const line = entryLine(state.player, way, `${t.id}:${state.day}`);
+    return line ? { ok: true, line } : { ok: true };
   },
 });
 
