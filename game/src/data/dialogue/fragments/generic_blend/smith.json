@@ -1,0 +1,354 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_smith_carry_burden_middle",
+      "text": "Hand it here. I lift worse at the anvil.",
+      "tags": [
+        "generic:gen_smith",
+        "method:carry_burden",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_smith_carry_burden_middle_spark_low",
+      "text": "Hand it here. Arms are slower than they were.",
+      "tags": [
+        "generic:gen_smith",
+        "method:carry_burden",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:spark_low",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_carry_burden_middle_trust_high",
+      "text": "Put it on my shoulder. I know you'd do the same.",
+      "tags": [
+        "generic:gen_smith",
+        "method:carry_burden",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:trust_high",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_carry_burden_middle_kin_strain",
+      "text": "I'll carry it. Can't carry my brother home from the city, can I.",
+      "tags": [
+        "generic:gen_smith",
+        "method:carry_burden",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:kin_strain",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_challenge_middle",
+      "text": "Hit it again, then. Iron only moves when it is hot.",
+      "tags": [
+        "generic:gen_smith",
+        "method:challenge",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_smith_challenge_middle_spark_low",
+      "text": "Strike if you like. The fire's low in me today.",
+      "tags": [
+        "generic:gen_smith",
+        "method:challenge",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:spark_low",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_challenge_middle_trust_high",
+      "text": "Go on, test me. You've earned the swing.",
+      "tags": [
+        "generic:gen_smith",
+        "method:challenge",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:trust_high",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_challenge_middle_kin_strain",
+      "text": "My own kin call my trade backward now. Your words are softer than theirs.",
+      "tags": [
+        "generic:gen_smith",
+        "method:challenge",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:kin_strain",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_inspire_middle",
+      "text": "Good stone holds. Maybe I do too.",
+      "tags": [
+        "generic:gen_smith",
+        "method:inspire",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_smith_inspire_middle_spark_low",
+      "text": "Bellows are weak this morning. Still. Maybe.",
+      "tags": [
+        "generic:gen_smith",
+        "method:inspire",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:spark_low",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_inspire_middle_trust_high",
+      "text": "You make it sound like I could make something new. I believe you.",
+      "tags": [
+        "generic:gen_smith",
+        "method:inspire",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:trust_high",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_inspire_middle_kin_strain",
+      "text": "My father's hammer, my hands. My son wants neither. Still, I'll keep at it.",
+      "tags": [
+        "generic:gen_smith",
+        "method:inspire",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:kin_strain",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_lie_middle",
+      "text": "Sound as a bell, is it? Bells crack too.",
+      "tags": [
+        "generic:gen_smith",
+        "method:lie",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_smith_lie_middle_spark_low",
+      "text": "Sure. It holds. Everything holds, till it doesn't.",
+      "tags": [
+        "generic:gen_smith",
+        "method:lie",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:spark_low",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_lie_middle_trust_high",
+      "text": "I'll take your word. You've not handed me a cracked one yet.",
+      "tags": [
+        "generic:gen_smith",
+        "method:lie",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:trust_high",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_lie_middle_kin_strain",
+      "text": "Tell it to my sister. She believes anything the city sells her.",
+      "tags": [
+        "generic:gen_smith",
+        "method:lie",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:kin_strain",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_shame_middle",
+      "text": "Say what you like. The anvil's heard worse from me.",
+      "tags": [
+        "generic:gen_smith",
+        "method:shame",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_smith_shame_middle_spark_low",
+      "text": "Aye. Maybe I'm slag. Leave it.",
+      "tags": [
+        "generic:gen_smith",
+        "method:shame",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:spark_low",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_shame_middle_trust_high",
+      "text": "From you, that stings. I'll think on it.",
+      "tags": [
+        "generic:gen_smith",
+        "method:shame",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:trust_high",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_gen_smith_shame_middle_kin_strain",
+      "text": "My own kin said as much, from the city. Different words, same ring.",
+      "tags": [
+        "generic:gen_smith",
+        "method:shame",
+        "dict:forge",
+        "shape:blunt",
+        "slot:middle",
+        "axis:kin_strain",
+        "generic_voice"
+      ],
+      "weight": 0.75,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    }
+  ]
+}
