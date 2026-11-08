@@ -14,17 +14,43 @@ export type Presentation = {
 };
 
 export type PresentCtx = {
-  /** Someone in (or near) the town to carry a town-level line. */
-  nearbyPersonId?: (townId?: string) => string | undefined;
+  /** Someone in (or near) the town to carry a town-level line; `excludeId` asks for someone else if possible. */
+  nearbyPersonId?: (townId?: string, excludeId?: string) => string | undefined;
 };
 
-const FALLBACK = (fallbackJson as { lines: Record<string, string[]> }).lines;
+type FallbackFile = {
+  lines: Record<string, string[]>;
+  woundChemistry: { deepAtLeast: number; slidAtMost: number };
+  notorietyLevels: { id: string; min: number }[];
+};
+const FILE = fallbackJson as FallbackFile;
+const FALLBACK = FILE.lines;
 
 function pickFallback(key: string, seed: string): string {
   const arr = FALLBACK[key] ?? [];
   let h = 0;
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return arr.length ? arr[h % arr.length]! : '';
+}
+
+/** `base.specific` when authored, else `base`. */
+const keyed = (base: string, specific: string | undefined): string =>
+  specific && FALLBACK[`${base}.${specific}`]?.length ? `${base}.${specific}` : base;
+
+/** Wound x method chemistry bucket: 'deep' / 'slid' when clearly off 1, else null (no line). */
+export function woundChemistry(mul: unknown): 'deep' | 'slid' | null {
+  if (typeof mul !== 'number' || !Number.isFinite(mul)) return null;
+  if (mul >= FILE.woundChemistry.deepAtLeast) return 'deep';
+  if (mul <= FILE.woundChemistry.slidAtMost) return 'slid';
+  return null;
+}
+
+/** Highest authored notoriety level whose min the value reaches (levels in surface-fallbacks.json). */
+export function notorietyLevel(n: unknown): string | null {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return null;
+  let at: string | null = null;
+  for (const l of FILE.notorietyLevels) if (n >= l.min) at = l.id;
+  return at;
 }
 
 type P = Record<string, unknown>;
@@ -47,6 +73,28 @@ const nearby =
     return personId ? { kind: 'line', personId, townId, tell, cue, line: pickFallback(fb, personId + fb) } : null;
   };
 
+/** A town-level line carried by someone in the crowd, not the person the act was about. */
+const crowd =
+  (cue: string, key: (p: P) => string | null, tell: Tell): Entry =>
+  (p, ctx) => {
+    const k = key(p);
+    if (!k) return null;
+    const townId = str(p.townId);
+    const personId = ctx.nearbyPersonId?.(townId, str(p.personId)) ?? str(p.personId);
+    const line = personId ? pickFallback(k, personId + k) : '';
+    return personId && line ? { kind: 'line', personId, townId, tell, cue, line } : null;
+  };
+
+/** The person's own line, from a fallback key chosen off the payload (null key = say nothing). */
+const ownKeyed =
+  (cue: string, key: (p: P) => string | null, tell: Tell): Entry =>
+  (p) => {
+    const personId = str(p.personId);
+    const k = key(p);
+    const line = personId && k ? pickFallback(k, personId + k + (str(p.interactionId) ?? '')) : '';
+    return personId && line ? { kind: 'line', personId, tell, cue, line } : null;
+  };
+
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
 /** Every juice id that surfaces. */
@@ -60,7 +108,15 @@ export const SURFACED: Record<string, Entry> = {
   'doctrine.suppressed': nearby('doctrine', 'doctrine_suppressed', 'none'),
   'doctrine.swap': nearby('doctrine', 'doctrine_swap', 'none'),
   'doctrine.collapse': nearby('doctrine', 'doctrine_collapse', 'none'),
-  'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
+  // Inner state, through the person: wound x method chemistry, the mark an act left, what the crowd now grants you.
+  'person.wound': ownKeyed('wound', (p) => {
+    const b = woundChemistry(p.woundMul);
+    return b ? keyed(`wound_${b}`, str(p.woundId)) : null;
+  }, 'none'),
+  'mark.applied': ownKeyed('mark', (p) => (str(p.markId) ? keyed('mark', str(p.markId)) : null), 'glance'),
+  'status.gain': crowd('status', (p) => keyed('status_gain', str(p.traitId)), 'glance'),
+  'notoriety.rise': crowd('notoriety', (p) => keyed('notoriety_rise', notorietyLevel(p.notoriety) ?? undefined), 'glance'),
+  'notoriety.fall': crowd('notoriety', () => 'notoriety_fall', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
   'person.reignite': tint,
@@ -69,7 +125,7 @@ export const SURFACED: Record<string, Entry> = {
 
 /** Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off. */
 export const SILENT: readonly string[] = [
-  'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
+  'packet.emit', 'packet.deliver', 'status.lose', 'spark.spend',
   'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
   'caravan.arrive', 'caravan.trade', 'caravan.depart', 'letter.reply',
   'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',

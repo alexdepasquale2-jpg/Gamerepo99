@@ -8,7 +8,7 @@
  *  marks     legacy method markWeights roll folded into runtime marks; new stacks → mark.applied
  *            + cross-town packet.emit
  *  sync out  runtime flame01/trust/marks/spark → person + player
- *  juice     person.reaction, person.reignite, site.kindle
+ *  juice     person.wound (method vs wound chemistry), person.reaction, person.reignite, site.kindle
  */
 
 import { recordActBond } from '../legacy/bonds';
@@ -28,7 +28,7 @@ import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
 
 type PlayEvent = { type: string; methodId?: string };
-type MethodRow = { id: string; family?: string };
+type MethodRow = { id: string; family?: string; effectiveness?: Record<string, number> };
 
 export type InteractionActExtras = {
   tickN: number;
@@ -112,6 +112,14 @@ export function actInteraction(
   runHooks(s, 'on_method_resolve', { data, rng: s.rng, methodId, targetId: personId, targetWoundId: person.woundId });
   noteActToday(s, methodId, rt.catalog.get(interactionId)?.kind);
 
+  // Wound x method chemistry: how this method sits against their wound (data: methods.json effectiveness).
+  const actDef = rt.catalog.get(interactionId);
+  const methodRow = ((data.methods ?? []) as MethodRow[]).find((m) => m.id === methodId);
+  const woundMul = person.woundId ? methodRow?.effectiveness?.[person.woundId] : undefined;
+  if (typeof woundMul === 'number' && woundMul !== 1 && !actDef?.stashAct && !actDef?.patronAccept && !actDef?.patronFulfil) {
+    pushJuice(s, 'person.wound', { personId, methodId, interactionId, woundId: person.woundId, woundMul });
+  }
+
   for (const { markId, stacks } of person.marks) {
     if (stacks <= (marksBefore[markId] ?? 0)) continue;
     pushJuice(s, 'mark.applied', { personId, markId, interactionId });
@@ -147,7 +155,7 @@ export function actInteraction(
     const traitsBefore = [...s.player.statusTraits];
     runHooks(s, 'on_interaction', { data, rng: s.rng, targetId: personId });
     for (const id of s.player.statusTraits) {
-      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, interactionId });
+      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, townId: person.townId, interactionId });
     }
   }
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.
