@@ -7,6 +7,7 @@ import art from '../../data/art/settlements.json';
 import lines from '../../data/dialogue/interior-lines.json';
 import { TILE_PX } from './constants';
 import type { LayoutSettlement } from './world-layout';
+import { paletteIndexOf, townPlan } from './town-plan';
 
 export type InteriorKind = 'house' | 'shop' | 'inn' | 'office';
 export type Pt = { x: number; y: number };
@@ -33,23 +34,25 @@ export type Building = {
   paletteIndex: number;
 };
 
-/** Enterable buildings of one settlement, in art-layout order. Mirrors paintSettlement's placement. */
+/**
+ * Enterable buildings of one settlement, in plan order (sim/map/town-plan — the same plan the
+ * overworld painter stamps, so every door is on a painted building). Towers are skipped but keep
+ * their index, so ids stay `${townId}:${planIndex}`.
+ */
 export function townBuildings(town: LayoutSettlement): Building[] {
-  const layout = art.layouts[town.kind ?? 'village'];
+  const plan = townPlan(town);
   const fx = town.q * TILE_PX + TILE_PX / 2;
   const fy = town.r * TILE_PX + TILE_PX;
-  let sh = 0;
-  for (const c of town.id) sh = (sh * 31 + c.charCodeAt(0)) >>> 0;
   const out: Building[] = [];
-  layout.forEach((b, i) => {
-    const kind = interiorKindOf(b.type, (b as { interior?: string }).interior);
+  plan.buildings.forEach((b, i) => {
+    const kind = interiorKindOf(b.type, b.interior);
     if (!kind) return;
-    out.push({ id: `${town.id}:${i}`, townId: town.id, kind, stampType: b.type, door: { x: fx + b.q * TILE_PX, y: fy + b.r * TILE_PX }, paletteIndex: (sh + i) % art.palettes.length });
+    out.push({ id: `${town.id}:${i}`, townId: town.id, kind, stampType: b.type, door: { x: Math.round(fx + b.q * TILE_PX), y: Math.round(fy + b.r * TILE_PX) }, paletteIndex: paletteIndexOf(town, i) });
   });
   return out;
 }
 
-export const allBuildings = (towns: LayoutSettlement[]): Building[] => towns.flatMap(townBuildings);
+export const allBuildings = (towns: LayoutSettlement[]): Building[] => towns.flatMap((t) => townBuildings(t));
 
 /** Nearest door within reach of a world position, or null. */
 export function nearestDoor(buildings: Building[], at: Pt, reach = DOOR_REACH): { building: Building; dist: number } | null {
