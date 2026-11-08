@@ -1,11 +1,13 @@
 /**
- * A caravan's stop at a town: halt, unload crate by crate into real town stock,
+ * A caravan's stop at a town: halt, unload crate by crate into real town stock (food into the village
+ * ledger, the one food stock: economy/food-stock),
  * trade surplus back onto the wagon, then turn around (or retire at its home depot).
  * Pure + deterministic. Used both live (overworld frame time) and at dawn (rest skips ahead).
  */
 
 import type { CaravanMobile, CaravanPhase } from './caravans-types';
 import { ITEMS } from './goods/inventory';
+import { addStock, isFoodRes, isShortOf, shortLine, shortfall, stockOf, stockedResources } from './economy/food-stock';
 import type { DataTables } from './load-data';
 import { pushJuice } from './packets';
 import type { SimState } from './types/runtime';
@@ -22,18 +24,17 @@ export const PHASE_DAYS: Record<CaravanPhase, number> = {
 
 export const isHalted = (m: CaravanMobile): boolean => m.phase !== undefined;
 
-/** True when the town is short of `resourceId` (same threshold the noticeboards use). */
+/** True when the town is short of `resourceId` (same threshold the noticeboards use; food by days of cover). */
 export function isShort(state: SimState, townId: string, resourceId: string): boolean {
-  return (state.towns?.[townId]?.stock[resourceId] ?? 0) < ITEMS.deeds.shortageBelow;
+  return isShortOf(state, townId, resourceId);
 }
 
 /** Resources currently under the shortage line in a town (what a delivery can measurably fix). */
 export function townShortages(state: SimState, townId: string): { resource: string; missing: number }[] {
-  const stock = state.towns?.[townId]?.stock ?? {};
-  return Object.keys(stock)
-    .filter((r) => stock[r]! < ITEMS.deeds.shortageBelow)
+  return stockedResources(state, townId)
+    .filter((r) => isShortOf(state, townId, r))
     .sort()
-    .map((resource) => ({ resource, missing: ITEMS.deeds.shortageBelow - stock[resource]! }));
+    .map((resource) => ({ resource, missing: shortfall(state, townId, resource) }));
 }
 
 function unitPrice(resourceId: string): number {
@@ -66,7 +67,7 @@ function unload(state: SimState, m: CaravanMobile, n: number): void {
   for (let i = 0; i < take; i++) {
     const short = isShort(state, v.townId, v.resourceId);
     if (town) {
-      town.stock[v.resourceId] = (town.stock[v.resourceId] ?? 0) + 1;
+      addStock(state, v.townId, v.resourceId, 1);
       // Opted-out towns still get the goods but their despair is not simulated.
       if (short && town.economyOptIn !== false) {
         town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief);
@@ -96,7 +97,7 @@ function unloadHold(state: SimState, m: CaravanMobile): void {
     if (n <= 0) continue;
     for (let i = 0; i < n; i++) {
       const short = isShort(state, v.townId, res);
-      town.stock[res] = (town.stock[res] ?? 0) + 1;
+      addStock(state, v.townId, res, 1);
       if (short && town.economyOptIn !== false) {
         town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief);
         v.relieved++;
@@ -115,18 +116,20 @@ function tradeBack(state: SimState, m: CaravanMobile): void {
   const town = state.towns?.[v.townId];
   if (!town || m.heading !== 'outbound') return;
   const cfg = CARAVAN_VISIT.trade;
+  // Surplus over the keep line; the town never sells its food below its shortage line.
+  const spare = (r: string): number => (stockOf(state, v.townId, r) ?? 0) - (isFoodRes(r) ? Math.max(cfg.surplusAbove, shortLine(state, v.townId, r)) : cfg.surplusAbove);
   let best: string | undefined;
-  for (const r of Object.keys(town.stock).sort()) {
+  for (const r of stockedResources(state, v.townId).sort()) {
     if (r === v.resourceId) continue; // never sell back what was just brought in
-    if (town.stock[r]! - cfg.surplusAbove < 1) continue;
-    if (!best || town.stock[r]! > town.stock[best]!) best = r;
+    if (spare(r) < 1) continue;
+    if (!best || (stockOf(state, v.townId, r) ?? 0) > (stockOf(state, v.townId, best) ?? 0)) best = r;
   }
   if (!best) return;
   m.coin ??= cfg.startingCoin;
   const price = unitPrice(best);
-  const qty = Math.min(cfg.backhaulQty, Math.floor(town.stock[best]! - cfg.surplusAbove), Math.floor(m.coin / price));
+  const qty = Math.min(cfg.backhaulQty, Math.floor(spare(best)), Math.floor(m.coin / price));
   if (qty < 1) return;
-  town.stock[best]! -= qty;
+  addStock(state, v.townId, best, -qty);
   m.coin -= qty * price;
   m.cargoResourceId = best;
   m.qty = qty;

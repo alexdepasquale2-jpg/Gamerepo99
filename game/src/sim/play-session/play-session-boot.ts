@@ -6,6 +6,7 @@ import { siteKindFromSiteId } from '../scenario/scenario-resolve';
 import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
 import { deriveRng } from '../rng';
+import { generatedVector, seedWounds, woundIdsOf, type VoiceVector } from '../social/seeded-wounds';
 import type { InhabitantParts, PersonState, SimState } from '../types/runtime';
 import { resolveStartTown } from '../start-rules';
 import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
@@ -96,7 +97,7 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   const out: Record<string, PersonState> = {};
   // Authored doctrine leaders are always seeded, even if world gen did not draft them.
   const doctrineRows = ((data as { doctrines?: { doctrines?: { leaderPersonId?: string | null }[] } }).doctrines?.doctrines ?? []);
-  const drafts: { id: string; anchor?: boolean }[] = [...world.people];
+  const drafts: { id: string; anchor?: boolean; vector?: VoiceVector }[] = [...world.people];
   const have = new Set(drafts.map((d) => d.id));
   for (const d of doctrineRows) {
     const id = d.leaderPersonId;
@@ -126,6 +127,9 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   }
   assignSettlementTowns(out, world);
   assignNames(out, world, data, seed);
+  // B12: everyone without an authored wound gets a seeded one, weighted by their worldgen voice.
+  const vectors = new Map(drafts.map((d) => [d.id, d.vector]));
+  seedWounds(out, seed, woundIdsOf(data), (id) => vectors.get(id) ?? generatedVector(id));
   return out;
 }
 

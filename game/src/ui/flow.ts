@@ -56,6 +56,19 @@ export function runTitleFlow(app: AppHooks): void {
     app.start(s, autosaveFor(s));
   }
 
+  /** The legends an imported world carried, spoken by the townsfolk once the new run's people are up. */
+  function speakOnArrival(s: PlaySession, legends: string[]): void {
+    if (!legends.length) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      const ctx = currentCtx();
+      if (session !== s || ++tries > 50) return clearInterval(timer);
+      if (!ctx || ctx.session !== s) return;
+      clearInterval(timer);
+      setTimeout(() => { if (currentCtx() === ctx) void ctx.voice.dawn(legends); }, 1500);
+    }, 200);
+  }
+
   function newGame(archetypeId: string, seed: number): void {
     const s = createPlaySession({ mode: 'play', seed, archetypeId }) as PlaySession;
     s.start({ seed, archetypeId });
@@ -138,7 +151,7 @@ export function runTitleFlow(app: AppHooks): void {
             }),
           ),
         onLoad: () => loadMenu(pause),
-        onWorldFile: () => open(openWorldFileMenu(s, { onImported: () => begin(s), onBack: pause })),
+        onWorldFile: () => open(openWorldFileMenu(s, { onImported: (legends) => (begin(s), speakOnArrival(s, legends)), onBack: pause })),
         onSound: () => {
           const next = !isMuted();
           setMuted(next, currentCtx());

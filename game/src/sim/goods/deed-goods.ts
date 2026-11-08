@@ -5,6 +5,7 @@ import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
 import { contributeToPlan } from '../economy/build-plans';
 import { scarcity as localScarcity, supplyTown } from '../economy/village-economy';
+import { isFoodRes, isShortOf, scarcityOf } from '../economy/food-stock';
 import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
@@ -22,10 +23,6 @@ function townOf(state: SimState, personId: string): string {
   return state.people[personId]?.townId ?? state.player.townId ?? '';
 }
 
-function townStock(state: SimState, townId: string): Record<string, number> | undefined {
-  return state.towns?.[townId]?.stock;
-}
-
 /** Coin value of an item at a town: base price, raised when the town is short of it. */
 export function priceAt(state: SimState, townId: string, itemId: string): number {
   const item = ITEM_BY_ID.get(itemId);
@@ -33,20 +30,22 @@ export function priceAt(state: SimState, townId: string, itemId: string): number
   const local = localScarcity(state, townId, itemId);
   if (local > 0) return Math.max(1, Math.round(item.price * (1 + local)));
   const res = item.economyResourceId;
-  const stock = res ? townStock(state, townId)?.[res] : undefined;
-  const below = ITEMS.deeds.shortageBelow;
-  const scarcity = stock === undefined ? 0 : Math.max(0, below - stock) / below;
+  const scarcity = res ? scarcityOf(state, townId, res) : 0;
   return Math.max(1, Math.round(item.price * (1 + scarcity)));
 }
 
-/** Bringing a good the town lacks: stock up, despair eases, a Blessing settles in. */
+/**
+ * Bringing a good the town lacks: stock up, despair eases, a Blessing settles in. The item goes into the
+ * village ledger; food is only there (the one food stock), other goods also count toward their LOD
+ * resource in town stock.
+ */
 export function deliverToTown(state: SimState, townId: string, itemId: string, qty: number, personId: string): boolean {
-  supplyTown(state, townId, itemId, qty);
   const res = ITEM_BY_ID.get(itemId)?.economyResourceId;
   const town = state.towns?.[townId];
+  const short = !!res && !!town && isShortOf(state, townId, res);
+  supplyTown(state, townId, itemId, qty);
   if (!res || !town) return false;
-  const short = (town.stock[res] ?? 0) < ITEMS.deeds.shortageBelow;
-  town.stock[res] = (town.stock[res] ?? 0) + qty;
+  if (!isFoodRes(res)) town.stock[res] = (town.stock[res] ?? 0) + qty;
   if (!short) return false;
   town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief * qty);
   encodeUnspokenForState(state, 'gift_give', personId, { tags: ['supply_relief', res] });

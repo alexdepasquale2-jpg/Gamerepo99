@@ -1,5 +1,6 @@
 /** World file export/import (M5 versioned files). Pure helpers first; DOM below. */
 import { importWorld, type Arrival } from '../../sim/legacy';
+import { keepImportedLegends } from '../../sim/contrib/legends';
 import type { PlaySession } from '../../sim/play-session/play-session-types';
 import { openMenu, type MenuHandle } from '../kit/menu';
 
@@ -32,6 +33,9 @@ export function importWorldText(
   }
   if ('error' in r) return { ok: false, error: r.error };
   session.adoptState(r.state);
+  // Keep the legends the file carried: townsfolk retell them at the first dawns (sim/contrib/legends).
+  const st = session.getState();
+  if (st) keepImportedLegends(st, r.legends);
   return { ok: true, legends: r.legends, arrival: r.arrival };
 }
 
@@ -64,7 +68,8 @@ export function openArrivalMenu(arrival: Arrival, onDone: () => void): MenuHandl
   return handle;
 }
 
-export function openWorldFileMenu(session: PlaySession, io: { onImported: () => void; onBack: () => void }): MenuHandle {
+/** `onImported` gets the legend lines the file carried, for the townsfolk to speak once the world is up. */
+export function openWorldFileMenu(session: PlaySession, io: { onImported: (legends: string[]) => void; onBack: () => void }): MenuHandle {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json,application/json';
@@ -77,8 +82,9 @@ export function openWorldFileMenu(session: PlaySession, io: { onImported: () => 
     if (res.ok) {
       handle.close();
       // A world that carried no one needs no ceremony; otherwise say who came across before walking on.
-      if (res.arrival.names.length) openArrivalMenu(res.arrival, io.onImported);
-      else io.onImported();
+      const go = () => io.onImported(res.legends);
+      if (res.arrival.names.length) openArrivalMenu(res.arrival, go);
+      else go();
     } else handle.setNote(res.error);
     input.value = '';
   });
