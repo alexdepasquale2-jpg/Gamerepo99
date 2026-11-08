@@ -13,7 +13,8 @@ import type { SettlementKind } from './world-layout';
 type Wound = { id: string; label: string; despair: [number, number]; epithet: string };
 type Style = { id: string; name: string; promise: string };
 type Land = { id: string; noun: string[] };
-type Culture = { id: string; roots: string[]; town: string[]; people: string[] };
+/** A naming culture: town roots + suffixes, and the given (`people`) and family names its folk carry (sim/names). */
+export type Culture = { id: string; roots: string[]; town: string[]; people: string[]; family: string[] };
 type Table = {
   grid: { cols: number; rows: number; homeCol: number; homeRow: number };
   districtTiles: number; marginTiles: number; minSpacingTiles: number;
@@ -59,6 +60,7 @@ export function districtOfTown(id: string): { col: number; row: number } | null 
   return m ? { col: Number(m[1]), row: Number(m[2]) } : null;
 }
 export const districtId = (col: number, row: number): string => `d${col}_${row}`;
+export const cultureById = (id: string): Culture | undefined => DISTRICTS.cultures.find((c) => c.id === id);
 export const isHome = (col: number, row: number): boolean => col === DISTRICTS.grid.homeCol && row === DISTRICTS.grid.homeRow;
 export const inGrid = (col: number, row: number): boolean => col >= 0 && row >= 0 && col < DISTRICTS.grid.cols && row < DISTRICTS.grid.rows;
 

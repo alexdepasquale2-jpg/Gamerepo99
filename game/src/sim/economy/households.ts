@@ -6,7 +6,7 @@
  * Sex is derived from the seed, not stored. Pure + deterministic.
  */
 
-import namesJson from '../../data/people/names.json';
+import { namePool } from '../names';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
@@ -41,7 +41,6 @@ export type Lineage = { surname: string; founders: string[]; founded: number; ge
 export type KinState = { households: Household[]; children: Child[]; lineages: Record<string, Lineage>; next: number };
 
 const kin = (state: SimState): KinState => (state.kin ??= { households: [], children: [], lineages: {}, next: 1 });
-const NAMES = namesJson as { given: string[]; family: string[] };
 
 export const sexOf = (state: SimState, id: string): 'm' | 'f' => (deriveRng(state.seed, 'sex', id).next() < 0.5 ? 'm' : 'f');
 /** The person a grown child becomes; their sex at birth is that person's, so it never changes on growing up. */
@@ -112,7 +111,9 @@ export function tickHouseholds(state: SimState): void {
       let surname = line?.surname;
       if (!surname) {
         const taken = new Set(Object.keys(k.lineages));
-        surname = [familyOf(state, m), familyOf(state, f)].find((n) => n && !taken.has(n)) ?? pick(NAMES.family, taken, deriveRng(state.seed, 'surname', m).int(0, NAMES.family.length));
+        // A district town's founders pick from its culture's family names (sim/names).
+        const family = namePool(state, townId).family;
+        surname = [familyOf(state, m), familyOf(state, f)].find((n) => n && !taken.has(n)) ?? pick(family, taken, deriveRng(state.seed, 'surname', m).int(0, family.length));
         k.lineages[surname] = { surname, founders: [m, f], founded: state.day, generation: 1 };
       } else k.lineages[surname]!.generation = Math.max(k.lineages[surname]!.generation, line!.generation + 1);
       k.households.push({ id: `hh${k.next++}`, townId, adults: [m, f], surname, generation: k.lineages[surname]!.generation, formed: state.day, kids: [] });
@@ -131,10 +132,13 @@ export function tickHouseholds(state: SimState): void {
     const gifted = rng.next() < (warm ? KIN.giftedChanceWarm : KIN.giftedChanceBase);
     const id = `kid${k.next++}`;
     rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
-    const used = new Set(k.children.filter((c) => c.householdId === h.id).map((c) => c.given));
+    // Not a sibling's name, nor one that would make a second "<given> <surname>" in town once grown.
+    const used = new Set(k.children.filter((c) => c.householdId === h.id || (c.townId === h.townId && c.surname === h.surname)).map((c) => c.given));
+    for (const p of Object.values(state.people)) if (p.townId === h.townId && p.name?.endsWith(` ${h.surname}`)) used.add(p.name.slice(0, -h.surname.length - 1));
+    const given = namePool(state, h.townId).given; // born in a district: its culture's names
     k.children.push({
       id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: [h.adults[0]!, h.adults[1]!],
-      given: pick(NAMES.given, used, deriveRng(state.seed, 'given', id).int(0, NAMES.given.length)),
+      given: pick(given, used, deriveRng(state.seed, 'given', id).int(0, given.length)),
       sex: sexOf(state, grownIdOf(id)), gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
     });
     h.kids.push(id);

@@ -4,7 +4,7 @@
  * the same role, the same quoted price and days. Only its tells differ. Pure: no Phaser/DOM/Math.random.
  */
 import tradesJson from '../../data/economy/travel-trades.json';
-import namesJson from '../../data/people/names.json';
+import { namePool } from '../names';
 import { deriveRng, type Rng } from '../rng';
 import type { TravelRoute, TravelSimState } from './travel-types';
 
@@ -63,7 +63,6 @@ export type RoadMemory = {
 };
 
 const doc = tradesJson as unknown as { trades: TravelTrade[]; voice: RoadVoice };
-const GIVEN = (namesJson as { given?: string[] }).given ?? ['Tam'];
 
 export const loadTravelTrades = (): TravelTrade[] => doc.trades;
 export const roadVoice = (): RoadVoice => doc.voice;
@@ -151,6 +150,8 @@ export function roadOffers(state: TravelSimState, route: TravelRoute, ctx: Offer
   const cheated = new Set(roadMemory(state).cheatedBy ?? []);
   const voice = doc.voice;
   const usedNames = new Set<string>();
+  // Folk met on a road into a district carry its culture's names (sim/names).
+  const GIVEN = namePool(state, [route.fromId, route.toId]).given;
   return shuffle(pool, rng)
     .slice(0, n)
     .map((trade) => {

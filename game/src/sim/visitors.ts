@@ -5,7 +5,7 @@
  * module walks them along their road, lets them arrive, and removes them cleanly when they go.
  * Runs on the 'late' dawn slot. Pure + deterministic (seed + day + ids).
  */
-import namesJson from '../data/people/names.json';
+import { namePool } from './names';
 import { registerDawnTick } from './dawn-ticks';
 import { deriveRng } from './rng';
 import { planRoad, positionOnLegs, type RoadLeg, type RoadPosition } from './road-journey';
@@ -83,7 +83,6 @@ export const ON_ROAD_TAG = 'on_road';
 export const MAX_ON_ROAD = 8;
 export const MAX_IN_TOWN = 3;
 
-const NAMES = namesJson as { given: string[]; family: string[] };
 const sources = new Map<string, VisitorSource>();
 
 /** Register (or replace) a visitor source by id. Sources spawn in registration order. */
@@ -139,7 +138,9 @@ export function carrierIn(state: SimState, townId: string | undefined, key: stri
   return folk.length ? folk[deriveRng(state.seed, 'visitor-carrier', state.day, key).int(0, folk.length)] : undefined;
 }
 
-function freshName(state: SimState, id: string): string {
+/** A visitor carries the names of where they come from (else where they are), so district folk sound local. */
+function freshName(state: SimState, id: string, townId: string | undefined): string {
+  const NAMES = namePool(state, townId);
   const taken = new Set(Object.values(state.people).map((p) => p.name));
   const rng = deriveRng(state.seed, 'visitor-name', id);
   for (let i = 0; i < 12; i++) {
@@ -168,7 +169,7 @@ export function spawnVisitor(state: SimState, spec: VisitorSpec): string | undef
   const rng = deriveRng(state.seed, 'visitor', id);
   const person: PersonState = {
     id,
-    name: freshName(state, id),
+    name: freshName(state, id, spec.homeTownId ?? spec.townId ?? spec.toTownId),
     flame: spec.flame ?? 30 + rng.int(0, 20),
     age: 18 + rng.int(0, 45),
     ...(legs ? {} : { townId: spec.townId }),
