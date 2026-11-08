@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createPlaySession, type PlaySession } from '../../src/sim';
 import { exportWorldFile, importWorldText } from '../../src/ui/menus/world-file-menu';
@@ -30,5 +31,14 @@ describe('world file menu helpers', () => {
       expect(!r.ok && r.error.length).toBeGreaterThan(5);
     }
     expect(s.snapshot().fingerprint).toBe(before);
+  });
+
+  it('imports an old v1 file and reports who came across', () => {
+    const s = fresh();
+    const r = importWorldText(s, readFileSync('tests/fixtures/world-v1.world.json', 'utf8'));
+    if (!r.ok) throw new Error(r.error);
+    expect(r.arrival.names.map((n) => n.name)).toEqual(['Elias Boone', 'Marrow']);
+    expect(r.arrival.lines[0]).toContain("Two names you don't know are spoken of in");
+    expect(s.snapshot().day).toBe(9);
   });
 });
