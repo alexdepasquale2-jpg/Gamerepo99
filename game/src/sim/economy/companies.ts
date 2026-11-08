@@ -2,13 +2,18 @@
  * Companies. A finished building with a trade becomes a company: the owner, a coin balance and
  * hired workers. Members work the company's trade at the workshop boost; sales bring in coin;
  * wages go to workers' purses; the owner draws profit. Unpaid workers quit. Idle villagers (no
- * trade of their own to make goods) or ones in the same trade take work. Pure + deterministic.
+ * trade of their own to make goods) or ones in the same trade take work.
+ *
+ * Civic sites (sim/civic) wrap companies: an NPC company's manager, wages, rations, quitting and hiring
+ * run in civic/staffing.ts at the people slot. This file founds companies, credits sales and pays the
+ * player's own workshop hands. A company whose site has no manager makes nothing: its hands go back to
+ * their own trade and it earns no sales until the post is filled. Pure + deterministic.
  */
 
 import { ITEM_BY_ID, addItem, inventoryOf } from '../goods/inventory';
-import { JOBS, jobOf } from '../goods/jobs';
+import { jobOf } from '../goods/jobs';
 import type { SimState } from '../types/runtime';
-import { BUILDING_BY_ID, PLAYER_OWNER, activePlans } from './build-plans';
+import { BUILDING_BY_ID, PLAYER_OWNER } from './build-plans';
 
 export const COMPANY = {
   startCoin: 10,
@@ -35,7 +40,15 @@ export type Companies = { list: Company[]; next: number; purse: Record<string, n
 const cs = (state: SimState): Companies => (state.companies ??= { list: [], next: 1, purse: {} });
 
 export const companiesIn = (state: SimState, townId?: string): Company[] => (state.companies?.list ?? []).filter((c) => !townId || c.townId === townId);
-export const companyOf = (state: SimState, personId: string): Company | undefined => (state.companies?.list ?? []).find((c) => c.ownerId === personId || c.workers.includes(personId));
+/** Id of the civic site for a build plan and the company it founds (the one place this key is spelled). */
+export const siteIdForPlan = (planId: string): string => `site_${planId}`;
+/** The civic site wrapping a company (sim/civic/sites; read inline so the economy does not import the civic layer). */
+const siteOf = (state: SimState, c: Company): { managerId?: string } | undefined =>
+  (state as { civic?: { sites: Record<string, { managerId?: string }> } }).civic?.sites[siteIdForPlan(c.planId)];
+/** A company makes and sells only while someone runs it. Saves from before sites (no registry yet) always do. */
+export const companyManaged = (state: SimState, c: Company): boolean => { const s = siteOf(state, c); return !s || !!s.managerId; };
+export const companyOf = (state: SimState, personId: string): Company | undefined =>
+  (state.companies?.list ?? []).find((c) => c.ownerId === personId || c.workers.includes(personId) || siteOf(state, c)?.managerId === personId);
 export const purseOf = (state: SimState, personId: string): number => state.companies?.purse[personId] ?? 0;
 /** The trade a company's building is for (only buildings with worker slots found companies). */
 const tradeOf = (c: Company): string => BUILDING_BY_ID.get(c.kind)!.jobs[0]!;
@@ -43,13 +56,13 @@ const tradeOf = (c: Company): string => BUILDING_BY_ID.get(c.kind)!.jobs[0]!;
 /** What a person actually makes goods as: their company's trade if they work for one, else their own job. */
 export function workJobId(state: SimState, personId: string): string {
   const c = companyOf(state, personId);
-  return c ? tradeOf(c) : jobOf(state, personId).id;
+  return c && companyManaged(state, c) ? tradeOf(c) : jobOf(state, personId).id;
 }
 
 /** Sales: the company earns a share of what its member just made. */
 export function creditCompany(state: SimState, personId: string, out: Record<string, number>, mul: number): void {
   const c = companyOf(state, personId);
-  if (!c) return;
+  if (!c || !companyManaged(state, c)) return;
   const v = Object.entries(out).reduce((n, [item, q]) => n + q * mul * (ITEM_BY_ID.get(item)?.price ?? 0), 0) * COMPANY.revenueShare;
   c.coin += v;
   c.revenue += v;
@@ -70,41 +83,14 @@ export function tickCompanies(state: SimState): void {
     if (plan.stage !== 'done' || co.list.some((c) => c.planId === plan.id)) continue;
     const def = BUILDING_BY_ID.get(plan.kind)!;
     const mine = plan.ownerId === PLAYER_OWNER;
-    if (!def.slots || (!mine && companyOf(state, plan.ownerId))) continue;
+    // One company per NPC owner or hand. Running someone else's site does not stop a person founding their own
+    // (they give that post up once theirs opens; civic/sites).
+    if (!def.slots || (!mine && co.list.some((c) => c.ownerId === plan.ownerId || c.workers.includes(plan.ownerId)))) continue;
     co.list.push({ id: `co${co.next++}`, planId: plan.id, name: mine ? `Your ${def.name}` : `${first(plan.ownerId, state)}'s ${def.name.replace(/^./, (ch) => ch.toUpperCase())}`, ownerId: plan.ownerId, townId: plan.townId, kind: plan.kind, workers: [], coin: COMPANY.startCoin, founded: state.day, revenue: 0, unpaid: {} });
   }
 
-  const residents = new Map<string, string[]>();
-  for (const [id, p] of Object.entries(state.people ?? {})) if (p.townId) (residents.get(p.townId) ?? residents.set(p.townId, []).get(p.townId)!).push(id);
-  const hasRecipes = (id: string): boolean => jobOf(state, id).recipes.length > 0;
-  const builders = new Set(activePlans(state).map((p) => p.ownerId));
-
-  for (const c of [...co.list].sort((a, z) => a.id.localeCompare(z.id))) {
-    const def = BUILDING_BY_ID.get(c.kind)!;
-    if (c.ownerId === PLAYER_OWNER) { payPlayerWages(state, c); continue; }
-    // Wages: paid in order; workers who go unpaid long enough quit.
-    for (const w of [...c.workers]) {
-      if (c.coin >= COMPANY.wage) {
-        c.coin -= COMPANY.wage;
-        co.purse[w] = (co.purse[w] ?? 0) + COMPANY.wage;
-        delete c.unpaid[w];
-      } else if ((c.unpaid[w] = (c.unpaid[w] ?? 0) + 1) >= COMPANY.quitAfterUnpaid) {
-        c.workers = c.workers.filter((x) => x !== w);
-        delete c.unpaid[w];
-      }
-    }
-    // Owner draws profit above the reserve.
-    if (c.coin > COMPANY.reserve) {
-      const draw = Math.floor((c.coin - COMPANY.reserve) * COMPANY.ownerDraw);
-      c.coin -= draw;
-      co.purse[c.ownerId] = (co.purse[c.ownerId] ?? 0) + draw;
-    }
-    // Hire one idle or same-trade villager per dawn while there is room and money for a week of wages.
-    if (1 + c.workers.length >= def.slots! || c.coin < COMPANY.wage * COMPANY.hireBufferDays * (c.workers.length + 1)) continue;
-    const pick = [...(residents.get(c.townId) ?? [])].sort().find((id) =>
-      !companyOf(state, id) && !builders.has(id) && !state.people[id]?.tags?.includes('retired') && (!hasRecipes(id) || def.jobs.includes(jobOf(state, id).id)));
-    if (pick) c.workers.push(pick);
-  }
+  // Player workshops pay here; every NPC company is paid, fed and staffed by civic/staffing.ts.
+  for (const c of [...co.list].sort((a, z) => a.id.localeCompare(z.id))) if (c.ownerId === PLAYER_OWNER) payPlayerWages(state, c);
 }
 
 /**

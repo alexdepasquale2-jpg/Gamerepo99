@@ -4,8 +4,11 @@
  * company and facility crew, and their trade passes to their heir); the old die. A death hands land,
  * plans, company and purse to the heir (households.inheritFrom), takes the dead out of every place that
  * names them, and lays a stone (legacy graves). The news is told at dawn by kin (contrib/lifecycle).
+ * Succession: a manager who dies or retires leaves their site's post empty (civic/staffing vacatePosts);
+ * "wanted: manager" goes up and the best fit in town is promoted at the next dawn.
  * Anchored residents (authored people, doctrine leaders) and legends never die. Pure + deterministic.
  */
+import { vacatePosts } from '../civic/staffing';
 import { registerDawnTick } from '../dawn-ticks';
 import { placeGrave } from '../legacy/npc';
 import { legacyTable } from '../legacy/state';
@@ -202,6 +205,7 @@ export function laidToRest(state: SimState, id: string): LifeEvent | null {
     else letLapse(state, id);
   }
   const name = p.name ?? id;
+  vacatePosts(state, id, 'died');
   const e: LifeEvent = { kind: 'died', personId: id, name, townId: p.townId, age: p.age ?? LIFE.adultAge, day: state.day, ...who, ...(heir ? { heir } : {}), ...(trade && heir ? { trade } : {}) };
   scrub(state, id, heir);
   placeGrave(state, { personId: id, name, townId: p.townId, epitaphId: legacyTable().graveEpitaphId, day: state.day });
@@ -216,6 +220,7 @@ export function retire(state: SimState, id: string): LifeEvent | null {
   const p = state.people[id];
   if (!p || isRetired(p)) return null;
   const heir = heirOf(state, id);
+  vacatePosts(state, id, 'retired');
   const trade = stepDown(state, id, heir);
   p.tags = [...(p.tags ?? []), 'retired'];
   const e: LifeEvent = { kind: 'retired', personId: id, name: p.name ?? id, townId: p.townId, age: p.age ?? LIFE.retireAge, day: state.day, ...teller(state, id), ...(heir && trade ? { heir, trade } : {}) };

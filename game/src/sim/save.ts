@@ -19,6 +19,7 @@ import { bootPlayState } from './play-session/play-session-state';
 import { rescalePoint } from './map/tile-edits';
 import { backfillSeededWounds } from './social/seeded-wounds';
 import { inventoryOf } from './goods/inventory';
+import { syncSites } from './civic/sites';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
 
@@ -27,6 +28,9 @@ import { inventoryOf } from './goods/inventory';
  * - 1: thin blob (seed, day, coin and a few top-level fields), no `sim`.
  * - 2: full sim in `sim`, on the old map scale.
  * - 3: full sim on the 40x world (WORLD_SCALE).
+ * - 4: the civic registry (`sim.civic`: sites wrapping companies, plans and crews, with managers) is part
+ *      of the save: a loaded world has its sites, posts and site history from the first moment, not from
+ *      the first dawn after loading.
  *
  * When to bump: only when the meaning or shape of something already saved changes (a field is renamed,
  * rescaled, split). Adding a new optional field to SimState never needs a bump: saveState writes every
@@ -34,7 +38,7 @@ import { inventoryOf } from './goods/inventory';
  * it lazily (`state.x ??= ...`), so older saves simply lack it. To bump: raise SAVE_VERSION, add
  * `saveMigrations[old]` (old -> old + 1), and add a fixture to game/scripts/save-fixtures.
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type SaveBlob = {
   /** See SAVE_VERSION. Older versions are upgraded step by step by `migrateSave` on load. */
@@ -120,6 +124,15 @@ export const saveMigrations: Record<number, (blob: SaveBlob, ctx: SaveMigrationC
     const settlements = sim.groundItems?.length ? (ctx.world().settlements ?? []) : [];
     for (const g of sim.groundItems ?? []) Object.assign(g, rescalePoint(settlements, blob.seed, g.x, g.y));
     return { ...blob, sim: sim as Record<string, unknown> };
+  },
+  // v3 -> v4: build the civic registry from what v3 ran (companies, build plans, facility crews), so every
+  // company keeps a manager (its owner, when they can still work) and the site's history starts today.
+  // Crew-run sites need the bound world's facility places, so they join at the first dawn.
+  3: (blob) => {
+    const sim = clone(blob.sim ?? {}) as Record<string, unknown>;
+    const state = { ...sim, seed: blob.seed, day: blob.tick, people: sim.people ?? {} } as unknown as SimState;
+    syncSites(state);
+    return { ...blob, sim: { ...sim, civic: (state as { civic?: unknown }).civic } };
   },
 };
 
