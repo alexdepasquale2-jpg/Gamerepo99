@@ -7,6 +7,11 @@
  *   warm_rock       open, dry, sun-warmed ground (hills and fields over wood and water), never the den
  *   mill_row        a settlement with a mill, else the most rural working village, never the den
  *
+ * The den is a role, not one authored id (denOf): the authored den (towns.json isDen) where the world has
+ * it; in a generated district (towns d<col>_<row>_t<i>) the most hill-sheltered village, a hollow a den
+ * could be dug in. Happenings read the same role for den-biased events (sim/happening-world denTown); the
+ * den fire you must bank each night stays at your home hearth, so a district den never goes cold on you.
+ *
  * Then the first spoken moment: on the run's first act or rest, someone in town greets the newcomer in
  * a way only that body would be greeted, and the inhabitant answers (moment.beat juice, lines in
  * data/dialogue/surface-fallbacks.json under start.<tag> and start.<tag>.self). Pure and deterministic.
@@ -15,7 +20,8 @@ import townsJson from '../data/world/towns.json';
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
 import type { FabricWorld } from './gen/world';
 import { jobOf } from './goods/jobs';
-import { placeSettlements, settlementKind } from './map/world-layout';
+import { districtOfTown } from './map/districts';
+import { placeSettlements, settlementKind, type SettlementKind } from './map/world-layout';
 import { biomeAt, type Biome } from './map/terrain';
 import { pushJuice } from './packets';
 import type { InhabitantParts, SimState } from './types/runtime';
@@ -32,7 +38,7 @@ type Cand = {
   ground: Record<Biome, number>;
 };
 
-const DEN = new Set(((townsJson as { towns: { id: string; isDen?: boolean }[] }).towns).filter((t) => t.isDen).map((t) => t.id));
+const AUTHORED_DEN = new Set(((townsJson as { towns: { id: string; isDen?: boolean }[] }).towns).filter((t) => t.isDen).map((t) => t.id));
 const RANK = { village: 0, town: 1, city: 2 } as const;
 /** Tiles out from a town's centre where its surroundings are sampled (outside the town's own meadow). */
 const RINGS = [22, 40, 64];
@@ -49,6 +55,29 @@ function groundAround(seed: number, q: number, r: number): Record<Biome, number>
   return n;
 }
 
+/** A settlement as the den role sees it: its kind and where it sits. */
+export type DenSite = { id: string; kind: SettlementKind; q: number; r: number };
+
+/**
+ * The den of a world: the authored den when present. Otherwise only a generated district gets one (a home
+ * world without its den keeps none, as before): its village with the most hills around it, ties by id; a
+ * district with no villages uses its smallest kind. Deterministic in (sites, seed).
+ */
+export function denOf(sites: DenSite[], seed: number): string | undefined {
+  const authored = sites.find((s) => AUTHORED_DEN.has(s.id));
+  if (authored) return authored.id;
+  const generated = sites.filter((s) => districtOfTown(s.id));
+  if (!generated.length) return undefined;
+  const low = Math.min(...generated.map((s) => RANK[s.kind]));
+  let best: { id: string; hills: number } | undefined;
+  for (const s of [...generated].sort((a, b) => a.id.localeCompare(b.id))) {
+    if (RANK[s.kind] !== low) continue;
+    const hills = groundAround(seed, s.q, s.r).hills;
+    if (!best || hills > best.hills) best = { id: s.id, hills };
+  }
+  return best?.id;
+}
+
 /** How well a settlement suits each start tag (higher is better). */
 const SCORE: Record<string, (c: Cand) => number> = {
   den_near_hills: (c) => (c.den ? 100 : 0) + c.ground.hills * 10 - c.gap01,
@@ -62,6 +91,10 @@ export function resolveStartTown(rule: StartRule | undefined, world: FabricWorld
   const score = rule ? SCORE[rule.tag] : undefined;
   if (!score || !eligible.length) return null;
   const placed = new Map(placeSettlements(world.settlements ?? [], seed).map((p) => [p.id, p]));
+  const den = denOf((world.settlements ?? []).flatMap((s) => {
+    const p = placed.get(s.id);
+    return p ? [{ id: s.id, kind: settlementKind(s), q: p.q, r: p.r }] : [];
+  }), seed);
   const mills = new Set((world.facilities ?? []).filter((f) => f.kind === 'mill' && f.townId).map((f) => f.townId!));
   let best: { id: string; s: number } | null = null;
   for (const s of [...(world.settlements ?? [])].sort((a, b) => a.id.localeCompare(b.id))) {
@@ -69,7 +102,7 @@ export function resolveStartTown(rule: StartRule | undefined, world: FabricWorld
     if (!p || !eligible.includes(s.id)) continue;
     const c: Cand = {
       id: s.id, rank: RANK[settlementKind(s)], size: s.politySize, gap01: s.gap01,
-      den: DEN.has(s.id), mill: mills.has(s.id), ground: groundAround(seed, p.q, p.r),
+      den: s.id === den, mill: mills.has(s.id), ground: groundAround(seed, p.q, p.r),
     };
     const v = score(c);
     if (!best || v > best.s) best = { id: s.id, s: v };
