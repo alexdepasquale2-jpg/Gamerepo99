@@ -2,6 +2,7 @@
 import { biomeAt, riverRow, terrainHash, type Biome } from './terrain';
 import { bresenhamLine, cellKey } from './corridor';
 import type { WorldLayout } from './world-layout';
+import { editAt, type TileEdits } from './tile-edits';
 import crossingCfg from '../../data/world/crossings.json';
 
 /** River fords: one candidate per FORD_SLOT columns, FORD_WIDTH columns wide. */
@@ -12,14 +13,25 @@ const LAKE = crossingCfg;
 /** A ford is only laid where the whole wet run is this short (a true shallow). */
 const FORD_MAX_RUN = 12;
 
-export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: Map<string, unknown>) {
+const BIOMES = new Set<string>(['forest', 'hills', 'water', 'fields', 'meadow']);
+
+/**
+ * `edits` (live SimState.tileEdits) changes the land the player has worked: an edited ford is
+ * passable water, an edited track is road-like ground, an edited biome replaces the natural one.
+ * Generated crossings (river fords, lake lanes) always come from the natural land.
+ */
+export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: Map<string, unknown>, edits?: () => TileEdits | undefined) {
   const roads = new Set(raster?.keys());
   if (!raster) for (const route of layout.routes) for (let i = 1; i < route.path.length; i++) {
     const a = route.path[i - 1]!, b = route.path[i]!;
     for (const c of bresenhamLine(Math.round(a.q), Math.round(a.r), Math.round(b.q), Math.round(b.r))) roads.add(cellKey(c.q, c.r));
   }
   const inTown = (q: number, r: number) => layout.settlements.some((t) => Math.abs(q - t.q) <= 13 && Math.abs(r - t.r) <= 13);
-  const biome = (q: number, r: number): Biome => inTown(q, r) ? 'meadow' : biomeAt(seed, q, r);
+  /** The land as generated, ignoring the player's edits. */
+  const natural = (q: number, r: number): Biome => inTown(q, r) ? 'meadow' : biomeAt(seed, q, r);
+  const biome = natural; // generation below (fords, lanes) reads only the natural land
+  // Hot path (A*, foot tests): nothing to look up until the first edit exists.
+  const edit = (q: number, r: number): string | undefined => { const e = edits?.(); return e ? editAt(e, q, r) : undefined; };
   const isBridge = (q: number, r: number) => roads.has(cellKey(q, r)) && biome(q, r) === 'water';
   const isDeck = (q: number, r: number): boolean => {
     if (biome(q, r) !== 'water') return false;
@@ -111,22 +123,43 @@ export function createTerrainAccess(layout: WorldLayout, seed: number, raster?: 
     }
     return lakeCells.get(cellKey(q, r));
   };
-  const isFord = (q: number, r: number): boolean =>
+  const naturalFord = (q: number, r: number): boolean =>
     biome(q, r) === 'water' && !isDeck(q, r) && (fordSlot(Math.floor(q / FORD_SLOT)).has(cellKey(q, r)) || lakeAt(q, r) === 'ford');
+  const isFord = (q: number, r: number): boolean => {
+    const e = edit(q, r);
+    return e !== undefined ? e === 'ford' : naturalFord(q, r);
+  };
   /** A ferry pontoon lane across a lake too wide to wade. */
   const isFerry = (q: number, r: number): boolean =>
-    biome(q, r) === 'water' && !isDeck(q, r) && !isFord(q, r) && lakeAt(q, r) === 'ferry';
+    edit(q, r) === undefined && biome(q, r) === 'water' && !isDeck(q, r) && !naturalFord(q, r) && lakeAt(q, r) === 'ferry';
+  /** Ground as it is now: an edited biome, edited fords read as (shallow) water, tracks keep the land under them. */
+  const biomeNow = (q: number, r: number): Biome => {
+    const e = edit(q, r);
+    if (e === undefined) return natural(q, r);
+    if (BIOMES.has(e)) return e as Biome;
+    // A track is cleared footing: over water or forest it reads as open ground.
+    const n = natural(q, r);
+    return e === 'ford' ? 'water' : n === 'water' || n === 'forest' ? 'meadow' : n;
+  };
+  /** A worked track (or any edited road tile): road-like footing. */
+  const isTrack = (q: number, r: number): boolean => edit(q, r)?.startsWith('road') ?? false;
+  /** A generated road or a worked track. */
+  const onRoad = (q: number, r: number): boolean => roads.has(cellKey(q, r)) || isTrack(q, r);
   // Broad deck accommodates diagonal road joins and the character's feet.
   const passable = (q: number, r: number): boolean => {
+    const e = edit(q, r);
+    if (e !== undefined) return e !== 'water';
     if (biome(q, r) !== 'water') return true;
-    return isDeck(q, r) || isFord(q, r) || isFerry(q, r);
+    return isDeck(q, r) || naturalFord(q, r) || isFerry(q, r);
   };
   /** Per-tile walking weight for the navigator: wading and the ferry are slower than dry land. */
   const stepCost = (q: number, r: number): number => {
+    const e = edit(q, r);
+    if (e !== undefined) return e === 'ford' ? LAKE.fordStepCost : 1;
     if (biome(q, r) !== 'water' || isDeck(q, r)) return 1;
-    return isFord(q, r) ? LAKE.fordStepCost : isFerry(q, r) ? LAKE.ferryStepCost : 1;
+    return naturalFord(q, r) ? LAKE.fordStepCost : isFerry(q, r) ? LAKE.ferryStepCost : 1;
   };
-  return { biome, isBridge, isDeck, isFord, isFerry, passable, stepCost };
+  return { biome: biomeNow, natural, edit, isTrack, onRoad, inTown, isBridge, isDeck, isFord, isFerry, passable, stepCost };
 }
 
 export type TerrainAccess = ReturnType<typeof createTerrainAccess>;
