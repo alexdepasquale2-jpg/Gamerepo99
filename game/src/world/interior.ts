@@ -6,7 +6,9 @@
 import Phaser from 'phaser';
 import art from '../data/art/settlements.json';
 import { TILE_PX } from '../sim/map/constants';
-import { EXIT_REACH, exitMat, interiorPlan, solidTiles, type Building, type Furniture, type InteriorPlan } from '../sim/map/interiors';
+import { EXIT_REACH, exitMat, interiorPlan, solidTiles, type Building, type Furniture, type InteriorPlan, type Occupant } from '../sim/map/interiors';
+import { jobOf } from '../sim/goods/jobs';
+import type { SimState } from '../sim/types/runtime';
 import { DECAL_DEPTH, GROUND_DEPTH, tileFoot, type Pt } from './depth';
 import { hexNum, shade } from './art/px';
 
@@ -35,8 +37,15 @@ export type Room = {
   destroy(): void;
 };
 
-export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean): Room {
-  const plan = interiorPlan(b.kind, b.id);
+/** What the room can show of a person: their job (seed derived), wound and flame. */
+export function roomOccupant(state: SimState, personId: string | undefined): Occupant {
+  const p = personId ? state.people[personId] : undefined;
+  if (!personId || !p) return {};
+  return { jobId: jobOf(state, personId).id, woundId: p.woundId, flame: p.flame };
+}
+
+export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean, occupant: Occupant = {}): Room {
+  const plan = interiorPlan(b.kind, b.id, occupant);
   const ox = ROOM_Q0 * T, oy = ROOM_R0 * T, w = plan.cols * T, h = plan.rows * T;
   const objs: Phaser.GameObjects.GameObject[] = [];
   const flames: Phaser.GameObjects.Ellipse[] = [];
@@ -80,7 +89,8 @@ export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean)
     const y = o.wall ? oy - WALL_ROWS * T + 10 : oy + o.row * T;
     const accent = ACCENTS[plan.accent]!;
     const pg = keep(scene.add.graphics());
-    pg.setDepth(o.wall ? DECAL_DEPTH + 2 : o.type === 'rug' ? DECAL_DEPTH + 1 : oy + (o.row + o.h) * T - 0.1);
+    // Candles share their table's footprint and sit just in front of it; rugs and litter lie flat.
+    pg.setDepth(o.wall ? DECAL_DEPTH + 2 : o.type === 'rug' || o.type === 'litter' ? DECAL_DEPTH + 1 : oy + (o.row + o.h) * T - (o.type === 'candle' ? 0.05 : 0.1));
     const r = (rx: number, ry: number, rw: number, rh: number, c: string, a = 1) => pg.fillStyle(hexNum(c), a).fillRect(x + rx, y + ry, rw, rh);
     const wood = '#8d6240', dark = '#654936', light = '#c4a06c';
     switch (o.type) {
@@ -91,7 +101,10 @@ export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean)
       case 'armchair': r(3, 4, T - 6, 22, shade(accent, 0.8)); r(6, 14, T - 12, 12, accent); r(1, 10, 5, 16, shade(accent, 0.7)); r(T - 6, 10, 5, 16, shade(accent, 0.7)); break;
       case 'hearth': {
         r(6, -WALL_ROWS * T + 10, pw - 12, WALL_ROWS * T - 6, '#8a8f86'); r(8, -WALL_ROWS * T + 10, pw - 16, WALL_ROWS * T - 10, '#a5a899');
-        r(0, 0, pw, T, '#777f79'); r(2, 2, pw - 4, 6, '#c6c3a5'); r(8, 10, pw - 16, T - 10, '#1d1511'); r(pw / 2 - 10, T - 6, 20, 4, '#5a3a24');
+        r(0, 0, pw, T, '#777f79'); r(2, 2, pw - 4, 6, '#c6c3a5'); r(8, 10, pw - 16, T - 10, '#1d1511');
+        // A cold hearth (its keeper has let go): grey logs in ash, no flame, no glow.
+        if (o.unlit) { r(pw / 2 - 10, T - 6, 20, 4, '#4a4440'); r(pw / 2 - 8, T - 9, 16, 3, '#6a6560'); break; }
+        r(pw / 2 - 10, T - 6, 20, 4, '#5a3a24');
         const cx = x + pw / 2, cy = y + T - 8;
         keep(scene.add.circle(cx, cy - 4, 26, 0xf2b84b, 0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(pg.depth + 0.2));
         flames.push(keep(scene.add.ellipse(cx, cy - 4, 12, 15, 0xf08a30).setDepth(pg.depth + 0.1)), keep(scene.add.ellipse(cx, cy - 2, 6, 9, 0xffe08a).setDepth(pg.depth + 0.11)));
@@ -121,6 +134,56 @@ export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean)
         lantern = { glow, shadeG, x: x + T / 2 - 4, y: y + 6 };
         break;
       }
+      // Trade pieces (the occupant's job).
+      case 'anvil':
+        r(8, 20, T - 16, 8, dark); r(11, 14, T - 22, 7, '#4a4a4a'); r(4, 8, T - 8, 7, '#6b6e6c'); r(4, 8, T - 8, 2, '#9a9d98'); r(0, 10, 5, 3, '#6b6e6c');
+        r(18, 2, 9, 4, '#4a4a4a'); r(21, 5, 2, 4, wood);
+        break;
+      case 'loom': {
+        r(2, -18, 4, T + 14, dark); r(pw - 6, -18, 4, T + 14, dark); r(2, -18, pw - 4, 4, wood);
+        r(8, -13, pw - 16, 22, accent);
+        for (let ix = 10; ix < pw - 9; ix += 4) r(ix, -13, 1, 22, shade(accent, 1.2));
+        r(2, 9, pw - 4, 4, wood); r(2, 9, pw - 4, 1, light); r(0, T - 6, pw, 4, dark);
+        break;
+      }
+      case 'sacks': r(5, 10, T - 10, T - 12, '#c9b48a'); r(5, 10, T - 10, 2, '#dccaa0'); r(8, 6, T - 16, 6, '#b39d74'); r(T / 2 - 3, 6, 6, 3, '#7a6448'); r(5, T - 4, T - 10, 2, '#a8936c'); break;
+      case 'pots': r(5, 12, 10, 15, '#a65f45'); r(4, 10, 12, 3, '#c27d59'); r(17, 16, 10, 11, '#b8704f'); r(16, 14, 12, 3, '#d08a65'); r(7, 16, 2, 6, '#c27d59'); break;
+      case 'tools':
+        r(0, 8, pw, 4, dark);
+        for (let i = 0, ix = 4; ix < pw - 8; i++, ix += 12) {
+          if (i % 3 === 0) { r(ix + 3, 12, 2, 20, wood); r(ix, 12, 8, 5, '#6b6e6c'); }
+          else if (i % 3 === 1) { r(ix + 1, 12, 2, 22, '#4a4a4a'); r(ix + 5, 12, 2, 22, '#4a4a4a'); }
+          else { r(ix + 3, 12, 2, 12, wood); r(ix, 24, 8, 8, '#8a8f86'); }
+        }
+        break;
+      case 'herbs':
+        r(0, 6, pw, 3, dark);
+        for (let i = 0, ix = 3; ix < pw - 6; i++, ix += 9) { r(ix + 2, 9, 2, 4, '#654936'); r(ix, 12, 6, 14, ['#547b3a', '#7fa54f', '#8a7a3a'][i % 3]!); }
+        break;
+      case 'net':
+        for (let iy = 4; iy <= 36; iy += 6) r(0, iy, pw, 1, '#b5a27a');
+        for (let ix = 2; ix < pw; ix += 6) r(ix, 4, 1, 32, '#b5a27a');
+        r(4, 30, 6, 6, '#b85a40'); r(pw - 10, 8, 6, 6, '#b85a40');
+        break;
+      // Wound tells (what the occupant carries shows in the room).
+      case 'shutters': {
+        r(0, 0, pw, 40, dark); r(3, 3, pw - 6, 34, wood);
+        for (let ix = 8; ix < pw - 4; ix += 6) r(ix, 3, 1, 34, dark);
+        r(-2, 17, pw + 4, 4, '#4a3a2c'); r(-2, 38, pw + 4, 4, light);
+        break;
+      }
+      case 'candle': {
+        // Stands on one tile of its table's top (which one follows the mirroring): dish, wax, then a wick or a small flame.
+        r(T / 2 - 4, 13, 8, 2, '#c6c3a5'); r(T / 2 - 2, 5, 4, 9, '#efe6cf');
+        if (o.unlit) { r(T / 2 - 1, 3, 1, 2, '#2a1f17'); break; }
+        keep(scene.add.circle(x + T / 2, y + 1, 8, 0xffd877, 0.12).setBlendMode(Phaser.BlendModes.ADD).setDepth(pg.depth + 0.02));
+        flames.push(keep(scene.add.ellipse(x + T / 2, y + 1, 4, 7, 0xffe08a).setDepth(pg.depth + 0.01)));
+        break;
+      }
+      case 'covered': r(4, 4, T - 8, 24, '#d8d2c2'); r(2, 14, T - 4, 14, '#cfc8b6'); r(9, 8, 2, 20, '#bdb5a1'); r(T - 11, 10, 2, 18, '#bdb5a1'); r(2, T - 6, T - 4, 3, '#bdb5a1'); break;
+      case 'clutter': r(4, 16, T - 8, 12, dark); r(6, 18, T - 12, 8, wood); r(6, 8, 11, 9, '#c9b48a'); r(16, 6, 10, 7, '#8a8f86'); r(12, 20, 16, 3, light); r(1, 24, 8, 4, '#a65f45'); break;
+      case 'litter': r(6, 18, 6, 3, '#8a8f86'); r(18, 11, 5, 2, light); r(14, 24, 7, 3, '#a65f45'); r(24, 20, 3, 2, '#e7e1d0'); break;
+      case 'stack': r(3, 22, 15, 5, '#b5524a'); r(5, 17, 13, 5, '#4f7a8a'); r(4, 12, 14, 5, '#c9a04e'); r(18, 21, 11, 6, '#7a8f4a'); r(16, 26, 12, 3, '#8a6aa0'); r(6, 13, 9, 1, '#e7e1d0'); break;
       case 'window': r(0, 0, pw, 40, dark); r(3, 3, pw - 6, 34, '#9ec7d8'); r(3, 3, pw - 6, 12, '#cfe3ec'); r(pw / 2 - 1, 3, 2, 34, dark); r(3, 19, pw - 6, 2, dark); r(-2, 38, pw + 4, 4, light); break;
       case 'sign': {
         r(pw / 2 - 22, 0, 2, 8, '#4a3a2c'); r(pw / 2 + 20, 0, 2, 8, '#4a3a2c'); r(pw / 2 - 28, 8, 56, 20, wood); r(pw / 2 - 26, 10, 52, 16, light);

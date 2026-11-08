@@ -16,7 +16,8 @@ import { createChunkLayer } from './chunk-layer';
 import { createSettlements } from './settlements';
 import { inTownBox } from './town-spots';
 import { createWorldThings } from './things';
-import { buildRoom, type Room } from './interior';
+import { buildRoom, roomOccupant, type Room } from './interior';
+import { occupantOf } from '../sim/map/interiors';
 import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
@@ -110,12 +111,21 @@ export function attachWorld(ctx: GameContext): WorldApi {
     ctx.events.emit('room-leave', { buildingId: left.id });
   };
 
+  const keeperSeen = new Map<string, string>();
   const enterRoom = (buildingId: string): boolean => {
     if (room) return false;
     const b = towns.spots.flatMap((s) => s.buildings).find((x) => x.id === buildingId);
     if (!b) return false;
     const s = st();
-    room = buildRoom(scene, b, !!s && lanternLit(s, b.id));
+    // Furnish for whoever is home now (the people layer's homes). An empty room shows the keeper last seen in
+    // it, so it does not change between visits; never seen yet, the building's dealt occupant stands in.
+    const home = ctx.actors?.residentsOf(b.id)[0];
+    if (home) keeperSeen.set(b.id, home);
+    const spot = towns.spots.find((x) => x.town.id === b.townId);
+    const seen = keeperSeen.get(b.id);
+    const who = home ?? (seen && s?.people[seen] ? seen : undefined)
+      ?? (s && spot ? occupantOf(b, spot.buildings, Object.values(s.people).filter((p) => p.townId === b.townId).map((p) => p.id)) : undefined);
+    room = buildRoom(scene, b, !!s && lanternLit(s, b.id), s ? roomOccupant(s, who) : {});
     returnTo = { x: b.door.x, y: b.door.y + 12 };
     setOutdoorsVisible(false);
     ctx.actors?.player.stop();
