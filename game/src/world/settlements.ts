@@ -1,11 +1,10 @@
 /**
- * Settlements: buildings from data/art/settlements.json (same placement the sim's interiors use),
+ * Settlements: buildings from the town's plan (sim/map/town-plan, the same plan the sim's doors use),
  * gardens, fences, the well, city walls, and each town's hearth (flame, glow, sparks), chimney smoke,
  * noticeboard, signpost and market stall. All foot-sorted. Smoke stops in a town that has given up;
  * the stall's goods show only while the town has food in stock.
  */
 import Phaser from 'phaser';
-import art from '../data/art/settlements.json';
 import { TILE_PX } from '../sim/map/constants';
 import type { LayoutSettlement } from '../sim/map/world-layout';
 import type { SimState } from '../sim/types/runtime';
@@ -16,6 +15,7 @@ import { thingTex } from './art/thing-art';
 import { FLAME_TEX } from './art/prop-art';
 import { PUFF_TEX } from './assets';
 import { townSpots, type TownSpots } from './town-spots';
+import { paletteIndexOf, townPlan } from '../sim/map/town-plan';
 import type { Pt } from './depth';
 
 const STOCK_OK = 4;
@@ -82,16 +82,15 @@ function drawTown(scene: Phaser.Scene, town: LayoutSettlement): TownView {
   const objects: Phaser.GameObjects.GameObject[] = [];
   const keep = <T extends Phaser.GameObjects.GameObject>(o: T): T => { objects.push(o); return o; };
   const h = strHash(town.id);
-  let hh = 0;
-  for (const c of town.id) hh = (hh * 31 + c.charCodeAt(0)) >>> 0; // same pick as sim/map/interiors
   const put = (key: string, dq: number, dr: number, bias = 0): Phaser.GameObjects.Image => {
     const x = s.centre.x + dq * TILE_PX, y = s.centre.y + dr * TILE_PX;
     return keep(scene.add.image(x, y, key).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(y + bias));
   };
-  const kind = town.kind ?? 'village';
-  art.layouts[kind].forEach((b, i) => put(buildingTex(b.type, (hh + i) % art.palettes.length), b.q, b.r));
-  for (const q of [-5, 5]) { put(buildingTex('garden', h), q, 1.1, -1); put(buildingTex('fence', h), q, 1.6); }
-  if (kind === 'city') for (const q of [-6, -2, 2, 6]) put(buildingTex('wall', h), q, -6);
+  const plan = townPlan(town);
+  plan.buildings.forEach((b, i) => put(buildingTex(b.type, paletteIndexOf(town, i)), b.q, b.r));
+  for (const g of plan.gardens) put(buildingTex('garden', h), g.q, g.r, -1);
+  for (const f of plan.fences) put(buildingTex('fence', h), f.q, f.r);
+  for (const w of plan.walls) put(buildingTex('wall', h), w.q, w.r);
   const at = (p: Pt, key: string, bias = 0) => keep(scene.add.image(p.x, p.y, key).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(p.y + bias));
   at(s.well, thingTex('well'));
   at(s.board, thingTex('board'));
@@ -108,7 +107,7 @@ function drawTown(scene: Phaser.Scene, town: LayoutSettlement): TownView {
     tint: [0xf2b84b, 0xf08a30], alpha: { start: 0.9, end: 0 }, frequency: 220, blendMode: 'ADD',
   }).setDepth(hp.y + 2));
   // Chimney smoke from the main building.
-  const main = art.layouts[kind].find((b) => b.type === 'hall') ?? art.layouts[kind][1] ?? art.layouts[kind][0]!;
+  const main = plan.buildings[plan.main] ?? { q: 0, r: -2 };
   const sx = s.centre.x + main.q * TILE_PX - 26, sy = s.centre.y + main.r * TILE_PX - TILE_PX * 3.4;
   const smoke = keep(scene.add.particles(sx, sy, PUFF_TEX, {
     speedY: { min: -14, max: -8 }, speedX: { min: 2, max: 8 }, lifespan: 3200, scale: { start: 0.5, end: 1.6 },
