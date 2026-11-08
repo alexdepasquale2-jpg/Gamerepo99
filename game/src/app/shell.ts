@@ -4,6 +4,7 @@ import type { PlaySession } from '../sim/play-session/play-session-types';
 import { layoutWorld } from '../sim/map/world-layout';
 import { collectDawnLines } from '../sim/dawn-lines';
 import { createEvents } from './events';
+import { attachGlue } from './glue';
 import { installDevHooks, registerDevHook } from './dev-hooks';
 import { attachWorld, preloadWorldAssets, createWorldAssets } from '../world';
 import { attachActors } from '../actors';
@@ -51,6 +52,8 @@ class WorldScene extends Phaser.Scene {
     ctx.ui = attachUi(ctx);
     ctx.panels = attachPanels(ctx);
     ctx.interact = attachInteract(ctx);
+    const offGlue = attachGlue(ctx);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, offGlue);
     installDevHooks(ctx);
     const town = session.snapshot().townId;
     ctx.actors.player.setPos(ctx.world.spawnPoint(town));

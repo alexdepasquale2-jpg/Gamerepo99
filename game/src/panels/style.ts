@@ -31,6 +31,9 @@ const CSS = `
 .hf-inbox .is-unread{border-color:var(--hf-accent,#F2B84B)}
 .hf-letter-read{margin:8px 0;white-space:pre-wrap}
 .hf-sheet-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hf-subhead{margin:12px 0 4px;font:600 .8em var(--hf-font-ui,Georgia,serif);letter-spacing:.06em;text-transform:uppercase;color:var(--hf-text-muted,#C8B898)}
+.hf-board-page{display:grid;gap:4px}
+.hf-trade-good{display:inline-flex;align-items:center;gap:6px}
 `;
 
 let injected = false;
