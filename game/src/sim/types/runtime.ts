@@ -29,6 +29,27 @@ export type EmbodimentState = {
   blockedLine?: string;
   /** Names for each body when mode is multi (bodySlots of them). */
   bodyNames?: string[];
+  /** The body's trait tags (ogre, large, multi, ledger_hand …): body-only verbs gate on these. */
+  tags?: string[];
+  /** Ways in this body may use (door_front, vent, yard, civic …): entrances read these (sim/embodiment). */
+  allowedApproachTags?: string[];
+};
+
+/** What an inhabitant is composed from (sim/inhabitant composeInhabitant): ids into traits.json and the hook tables. */
+export type InhabitantParts = {
+  embodimentTraitId: string;
+  perceptionTraitId: string;
+  methodModifierId: string;
+  sparkProfileId: string;
+  personalCostHookIds: string[];
+  refusalHookIds: string[];
+  legacyHookIds: string[];
+  /** Where and how this body starts (archetypes.json startRule; resolved in play-session-boot). */
+  startRule?: { tag: string; townId?: string; greeterTagsAny?: string[]; greeterJobsAny?: string[] };
+  /** Whose lines a hook's `lines` bag speaks in (lineVoiceFrom). */
+  voiceId?: string;
+  name?: string;
+  speciesTags?: string[];
 };
 
 /** One body of a multi-body inhabitant. `at` is 'with_you' (moves with the player) or the town it waits in. */
@@ -55,6 +76,8 @@ export type Inhabitant = {
   bodies?: BodyState[];
   /** Multi-body inhabitants only: the body the player controls. */
   activeBodyId?: string;
+  /** What this inhabitant was composed from; systems read these, never archetypeId. Older saves: filled lazily. */
+  parts?: InhabitantParts;
 };
 
 export type PersonState = {
@@ -164,8 +187,14 @@ export type SimState = {
   history?: import('../gen/world-types').HistoryEvent[];
   /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
   historyTold?: Record<string, string[]>;
+  /** Aging, retirements and deaths: recent life events (see sim/economy/mortality; created lazily). */
+  life?: import('../economy/mortality').LifeState;
+  /** Legends spoken of: arrived legend lines and today's retelling (see sim/contrib/legends; created lazily). */
+  legendTalk?: import('../contrib/legends').LegendTalk;
   /** Happenings in force and recently begun (see sim/happenings; saveable). */
   happenings?: import('../happenings').HappeningsState;
+  /** Body-only acts (sim/contrib/body-acts): siblings left watching a place (saveable). */
+  bodyActs?: import('../contrib/body-acts').BodyActsState;
   /** Road news, crews out, help hired at waystations, watches on the carts (sim/economy/roads; saveable). */
   roadway?: import('../economy/roads').Roadway;
 };

@@ -51,4 +51,6 @@ export type ArchetypeDef = {
   burnoutVignette?: string;
   /** Hex tint for the inhabitant's overworld sprite. */
   tint?: string;
+  /** How this body starts: a rule by tag (den_near_hills, ledger_office, warm_rock, mill_row). */
+  startRule?: { tag: string; townId?: string; greeterTagsAny?: string[]; greeterJobsAny?: string[] };
 };

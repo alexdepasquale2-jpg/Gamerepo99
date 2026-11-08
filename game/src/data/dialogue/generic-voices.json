@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "note": "C8/D7: the voice a generated villager speaks in (fragments tagged generic:<voice>). A grieving wound wins, then the job (sim/goods/jobs.ts), then a seeded hash over the voices present. Place lines (place:city|town|village) and openers bias by the settlement kind of the person's town.",
+  "byWound": {
+    "grief": "gen_widow"
+  },
+  "byJob": {
+    "farmer": "gen_grower",
+    "herbalist": "gen_grower",
+    "woodcutter": "gen_grower",
+    "miller": "gen_miller",
+    "baker": "gen_miller",
+    "fisher": "gen_ferry",
+    "ropemaker": "gen_ferry",
+    "innkeeper": "gen_ferry",
+    "shopkeeper": "gen_clerk",
+    "weaver": "gen_clerk",
+    "mason": "gen_smith",
+    "miner": "gen_smith",
+    "smith": "gen_smith",
+    "potter": "gen_smith"
+  },
+  "openerChance": 0.55,
+  "placeMatchBonus": 0.6,
+  "placeMismatchMul": 0.08,
+  "toneBias": 1.2,
+  "strainBonus": 3,
+  "sparkLowBelow": 0.2,
+  "trustHighAbove": 0.65
+}

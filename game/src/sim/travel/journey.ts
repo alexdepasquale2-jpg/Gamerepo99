@@ -4,6 +4,7 @@
  * encounters roll by encounter-density.json and apply their authored effects, and a crooked traveller can
  * overcharge, stray or rob you. Returns the lines the player hears on arrival. Pure sim: no Phaser/DOM.
  */
+import { addStock } from '../economy/food-stock';
 import { noteCoinSpend } from '../hoard/events';
 import { attractorRoadBonus } from '../hoard/notoriety';
 import { ensureHoard } from '../hoard/state';
@@ -163,8 +164,8 @@ export function applyEffects(state: TravelSimState, entry: EncounterEntry, route
     if (f.target === 'player.spark') state.player.spark = Math.max(0, Math.min(sparkMax, state.player.spark + f.value));
     else if (f.target.startsWith('town.stock.')) {
       const town = state.towns?.[f.townId ?? ''] ?? state.towns?.[toId];
-      const res = f.target.slice('town.stock.'.length);
-      if (town?.stock) town.stock[res] = Math.max(0, (town.stock[res] ?? 0) + f.value);
+      // town.stock.food_grain names the town's one food stock (the village ledger), like any other resource.
+      if (town) addStock(state, town.id, f.target.slice('town.stock.'.length), f.value);
     } else if (f.target === 'town.despair') {
       const town = state.towns?.[f.townId ?? ''] ?? state.towns?.[fromId];
       if (town) town.despair = clamp01(town.despair + f.value);

@@ -36,7 +36,7 @@ export function bootPlayState(seed: number, archetypeId: string, tables?: DataTa
   const world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
   const routes = toTravelRoutes(world.routes ?? []);
   const player = assembleInhabitant(data, archetypeId);
-  player.townId = pickTownId(player.townId, world);
+  player.townId = pickTownId(player.townId, world, player.parts?.startRule, seed);
   const bus = createEventBus();
   const state: TravelSimState = {
     day: 1,

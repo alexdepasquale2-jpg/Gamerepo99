@@ -6,7 +6,7 @@
   ],
   "layouts": {
     "village": [{"type":"cottage","q":-5,"r":-1},{"type":"cottage","q":0,"r":-2},{"type":"cottage","q":5,"r":-1}],
-    "town": [{"type":"shop","q":-5,"r":-1},{"type":"hall","q":0,"r":-2},{"type":"shop","q":5,"r":-1}],
-    "city": [{"type":"shop","q":-5,"r":-1},{"type":"hall","q":0,"r":-3},{"type":"shop","q":5,"r":-1},{"type":"tower","q":-8,"r":1},{"type":"tower","q":8,"r":1}]
+    "town": [{"type":"shop","q":-5,"r":-1},{"type":"hall","q":0,"r":-2},{"type":"shop","q":5,"r":-1,"interior":"office"}],
+    "city": [{"type":"shop","q":-5,"r":-1},{"type":"hall","q":0,"r":-3},{"type":"shop","q":5,"r":-1,"interior":"office"},{"type":"tower","q":-8,"r":1},{"type":"tower","q":8,"r":1}]
   }
 }
