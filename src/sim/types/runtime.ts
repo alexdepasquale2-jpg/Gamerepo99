@@ -142,6 +142,8 @@ export type SimState = {
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */
   cargo?: { itemId: string; qty: number; fromPersonId: string; toTownId: string }[];
+  /** Things a person lent the player when asked a favor; handed back with the return deed. */
+  loans?: { itemId: string; qty: number; fromPersonId: string; day: number }[];
   /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
   routeBreakJuiced?: Record<string, boolean>;
   /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */

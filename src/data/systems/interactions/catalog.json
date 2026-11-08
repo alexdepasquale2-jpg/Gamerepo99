@@ -350,6 +350,16 @@
       "ripple": "help"
     },
     {
+      "id": "return_item",
+      "kind": "errand",
+      "tags": ["return", "honest", "interaction:return_item"],
+      "baseStrain": 1,
+      "sparkGain": 1,
+      "touch": { "trust": 0.06, "flame01": 0.02 },
+      "bondDelta": 0.5,
+      "ripple": "help"
+    },
+    {
       "id": "stand_up",
       "doctrineAct": "act_become_voice",
       "kind": "stand_up",
