@@ -25,6 +25,10 @@ import { scatterProps } from './ladder/scatter';
 import { dressChunk } from './ladder/dress';
 import { ladderContexts } from './ladder/ctx';
 import { chunkEdits, type TileEdits } from './tile-edits';
+import landActs from '../../data/world/land-acts.json';
+
+/** Props cleared off worked ground (small growth, loose stones); structures stay where generation put them. */
+const CLEARED_BY_WORK = new Set<string>(landActs.clearsProps);
 
 const PROP_TYPES = ['field', 'mine', 'camp', 'waystation'] as const;
 /** Tiles between wilderness props along a corridor. */
@@ -116,10 +120,11 @@ export function createStampRasterSource(
 ): TileSource {
   const layout = layoutWorld(world, seed);
   const roads = buildRoads(layout);
-  const terrain = createTerrainAccess(layout, seed, roads);
+  const terrain = createTerrainAccess(layout, seed, roads, edits);
   const props = buildProps(roads, seed);
   const bbox = layoutBBox(layout);
-  const { scatter: scatterCtx, dress: dressCtx } = ladderContexts(layout, terrain, roads);
+  // Generation reads the natural land only; the player's edits are laid over the result per tile.
+  const { scatter: scatterCtx, dress: dressCtx } = ladderContexts(layout, { ...terrain, biome: terrain.natural }, roads);
   const fp = fingerprintHex([
     String(seed >>> 0),
     terrainMode(),
@@ -178,12 +183,20 @@ export function createStampRasterSource(
           p.position.y < tr1,
       );
 
-      const edited = chunkEdits(edits?.(), cx, cy);
-      if (edited) for (const t of tiles) { const b = edited[`${t.q},${t.r}`]; if (b) t.biomeId = b; }
       if (terrainMode() === 'ladder') {
         const dressed = dressChunk(seed, tq0, tr0, CHUNK_SIZE, dressCtx);
         for (const t of tiles) { const b = dressed.tiles.get(`${t.q},${t.r}`); if (b && t.biomeId !== 'road' && t.biomeId !== 'water') t.biomeId = b; }
         chunkProps.push(...scatterProps(seed, tq0, tr0, CHUNK_SIZE, scatterCtx), ...dressed.props);
+      }
+      // The player's edits win over generated and dressed ground (a cleared stream bank stays cleared).
+      const edited = chunkEdits(edits?.(), cx, cy);
+      if (edited) {
+        for (const t of tiles) { const b = edited[`${t.q},${t.r}`]; if (b) t.biomeId = b; }
+        // Small growth and loose stones (reeds, rocks, bushes) do not stay on worked ground.
+        for (let i = chunkProps.length - 1; i >= 0; i--) {
+          const p = chunkProps[i]!;
+          if (CLEARED_BY_WORK.has(p.type) && edited[`${p.position.x},${p.position.y}`]) chunkProps.splice(i, 1);
+        }
       }
       return { cx, cy, tiles, props: chunkProps };
     },

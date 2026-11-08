@@ -4,3 +4,4 @@
  */
 import './core';
 import './kin-strain';
+import './land';
