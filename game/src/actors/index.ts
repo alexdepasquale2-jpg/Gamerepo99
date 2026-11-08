@@ -14,6 +14,7 @@ import { createPeople, type PeopleCtl } from './people';
 import { createPlayer, type PlayerCtl } from './player';
 import { createTownIndex } from './towns';
 import { createWagons, type WagonsCtl } from './wagons';
+import { createRoomFolk } from './room-folk';
 
 type Internals = { player: PlayerCtl; people: PeopleCtl; fauna: FaunaCtl; wagons: WagonsCtl; brood: BroodCtl; names: NameLayer };
 const runs = new WeakMap<GameContext, Internals>();
@@ -26,6 +27,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
   const wagons = createWagons(ctx);
   const brood = createBrood(ctx, player);
   const names = createNameLayer(ctx.scene);
+  const roomFolk = createRoomFolk(ctx, people);
   runs.set(ctx, { player, people, fauna, wagons, brood, names });
 
   const sync = (): void => {
@@ -38,6 +40,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
   const teardown = (): void => {
     offs.forEach((off) => off());
     names.destroy();
+    roomFolk.destroy();
     people.destroy();
     fauna.destroy();
     wagons.destroy();
@@ -49,8 +52,9 @@ export function attachActors(ctx: GameContext): ActorsApi {
 
   return {
     player,
-    headOf: (id) => (id === 'player' ? player.head() : people.headOf(id)),
+    headOf: (id) => (id === 'player' ? player.head() : roomFolk.headOf(id) ?? people.headOf(id)),
     things(near: Pt, radius: number): Thing[] {
+      if (ctx.world.room()) return roomFolk.things(near, radius);
       const out = [...people.things(near, radius), ...fauna.things(near, radius), ...wagons.things(near, radius)];
       const d = (t: Thing) => (t.x - near.x) ** 2 + (t.y - near.y) ** 2;
       return out.sort((a, b) => d(a) - d(b));
@@ -65,6 +69,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
       people.update(dt, time, p, names);
       fauna.update(dt, time, p);
       wagons.update(dt, time, names);
+      roomFolk.update(names);
       names.end();
     },
     brood,

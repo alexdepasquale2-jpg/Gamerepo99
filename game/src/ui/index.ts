@@ -10,6 +10,7 @@
 import type { GameContext, UiApi } from '../app/contracts';
 import { registerDevHook } from '../app/dev-hooks';
 import { unreadReplies } from '../sim/letter-replies';
+import { inventoryOf } from '../sim/goods/inventory';
 import { uiLayer } from './kit/layer';
 import { openMenu } from './kit/menu';
 import { overlays } from './kit/overlay-stack';
@@ -67,7 +68,7 @@ export function attachUi(ctx: GameContext): UiApi {
     const unread = st ? unreadReplies(st) : 0;
     hud.letters(unread);
     touch.setLetters(unread);
-    hud.purse(st?.player.coin ?? 0);
+    hud.purse(st ? Math.max(0, inventoryOf(st).coin ?? 0) : 0);
     touch.setBrood(isBrood(ctx));
     const d = hud.status.dataset;
     d.fingerprint = snap.fingerprint;
