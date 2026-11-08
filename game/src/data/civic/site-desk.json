@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "spec": "The player at a site's ledger (civic slice 5). maxPosts: other folk's sites you may run at once. wageMin/wageMax bound the wage stepper. underpaidLeave: chance a dawn, per coin under the going wage (COMPANY.wage), that a hand walks out. hireList: candidates shown in the sheet. sellStep: goods sold per press, each priced at the town's price as it falls. newsKeep: the desk's own news kept for dawn lines and the sheet.",
+  "maxPosts": 2,
+  "wageMin": 1,
+  "wageMax": 8,
+  "underpaidLeave": 0.15,
+  "hireList": 5,
+  "sellStep": 5,
+  "newsKeep": 30
+}

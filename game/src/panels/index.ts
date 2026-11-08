@@ -20,6 +20,7 @@ import { createRoads } from './roads';
 import { COMPANY_ID, companySheet, watchCompanyVerbs } from './company';
 import { CRAFT_ID, watchCraftVerbs } from './craft';
 import { SHOP_ID, shopNav, shopSheet, watchShopVerbs } from './shop';
+import { SITE_ID, siteSheet, watchSiteVerbs } from './site';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -65,6 +66,7 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     map: { toggle: () => sheets.toggle(MAP_ID, openMap) },
     roads: { open: (townId) => sheets.open(roads.sheet(townId)) },
     company: { open: (townId, companyId) => sheets.open(companySheet(ctx, townId, companyId)) },
+    site: { open: (siteId) => sheets.open(siteSheet(ctx, siteId)) },
     dragging: () => hotbar.dragging(),
     closeAll() {
       hotbar.cancelDrag();
@@ -98,6 +100,9 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     ctx.events.on('dawn', () => { hotbar.sync(); hudSync(); sheets.refresh(COMPANY_ID); }),
     watchCompanyVerbs(ctx),
     watchCraftVerbs(ctx, (def) => sheets.open(def)),
+    watchSiteVerbs(ctx, (siteId) => api.site.open(siteId)),
+    ctx.events.on('dawn', () => sheets.refresh(SITE_ID)),
+    ctx.events.on('inventory', () => sheets.refresh(SITE_ID)),
     ctx.events.on('arrive', () => { hotbar.sync(); hudSync(); }),
     ctx.events.on('state-replaced', () => { sheets.close(); hotbar.reset(); map.reset(); hudSync(); }),
     ctx.events.on('inventory', () => sheets.refresh(SHOP_ID)),
