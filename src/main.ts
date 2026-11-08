@@ -5,6 +5,7 @@ import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
 import { SUCCESSION_GATE_KEY } from './render/spark-fx/session-fx';
+import { createHoardEndingScreen } from './ui/hoard-ending-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
 import { createDevMenu } from './ui/dev-menu';
@@ -77,6 +78,18 @@ setInterval(() => {
   const gate = game?.registry.get(SUCCESSION_GATE_KEY) as (() => boolean) | undefined;
   if (gate && !gate()) return;
   succession.screen.refresh();
+}, 250);
+
+// Hoard ending: a hoarder's legitimate end, polled the same way.
+let hoardEnding: { session: PlaySession; screen: ReturnType<typeof createHoardEndingScreen> } | undefined;
+setInterval(() => {
+  const session = game?.registry.get('playSession') as PlaySession | undefined;
+  if (!session) return;
+  if (hoardEnding?.session !== session) {
+    hoardEnding?.screen.el.remove();
+    hoardEnding = { session, screen: createHoardEndingScreen(session) };
+  }
+  hoardEnding.screen.refresh();
 }, 250);
 
 createDevMenu();

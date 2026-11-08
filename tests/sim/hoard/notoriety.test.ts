@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
 import { attractorRoadBonus, addNotoriety, ensureHoard, leverageDiscount, rollAttractors, tickNotorietyDawn } from '../../../src/sim/hoard';
-import { ensureStash } from '../../../src/sim/hoard/state';
+import { ensureStash, siteDefs } from '../../../src/sim/hoard/state';
 import { tickHoardDawn, applyAttractorEffects } from '../../../src/sim/hoard';
 import { startTravel } from '../../../src/sim/travel/travel';
 
@@ -17,7 +17,9 @@ describe('notoriety', () => {
     expect(s.hoard!.notoriety).toBeCloseTo(0.495);
     ensureStash(s, 'stash_ashford_cellar').coin = 60;
     s.player.townId = 'ashford';
-    const full = 60 / 100; // capacity 60 + 40
+    // Capacity of the stash sites in this world's towns (every town has one).
+    const cap = siteDefs(s).filter((d) => !s.towns || s.towns[d.townId]).reduce((a, d) => a + d.capacity, 0);
+    const full = 60 / cap;
     expect(tickNotorietyDawn(s).heat).toBeCloseTo(0.49005 * (0.5 + 0.5 * full));
   });
 

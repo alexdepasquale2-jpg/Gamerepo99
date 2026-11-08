@@ -157,6 +157,12 @@ export const SURFACED: Record<string, Entry> = {
   'patron.fulfilled': noticed('patron', 'patron_fulfilled', 'none'),
   'patron.broken': noticed('patron', 'patron_broken', 'glance'),
   'patron.betrayed': noticed('patron', 'patron_betrayed', 'glance'),
+  'stash.guard_left': nearby('notoriety', 'stash_guard_left', 'glance'),
+  'stash.decay': nearby('notoriety', 'stash_decay', 'none'),
+  'stash.hidden': own('stash', 'stash_hidden', 'none', (p) => str(p.personId)),
+  'stash.stored': own('stash', 'stash_stored', 'none', (p) => str(p.personId)),
+  'stash.guard_hired': own('stash', 'stash_guard_hired', 'none', (p) => str(p.personId)),
+  'stash.withdrawn': own('stash', 'stash_withdrawn', 'none', (p) => str(p.personId)),
   'person.reignite': tint,
   'site.kindle': tint,
   // Unsilenced: the world's quieter news, always through someone nearby.
@@ -175,11 +181,15 @@ export const SURFACED: Record<string, Entry> = {
   'grave.found': inTown('reaction', 'grave_found', 'none', 'townId', (p) => str(p.line)),
 };
 
-/** Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off. */
+/**
+ * Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off.
+ * hoard.ending_open has its own overlay (src/ui/hoard-ending-screen.ts).
+ */
 export const SILENT: readonly string[] = [
   // Sender-side or VFX-only: the delivery/arrival side surfaces instead.
   'packet.emit', 'spark.spend', 'route.travel_step', 'stock.starve',
-  'stash.guard_left',
+  // The hoard ending opens its own overlay.
+  'hoard.ending_open',
 ];
 
 export function presentJuice(id: string, payload: unknown, ctx: PresentCtx = {}): Presentation | null {

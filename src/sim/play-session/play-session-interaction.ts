@@ -154,7 +154,7 @@ export function actInteraction(
     s.player.coin = (s.player.coin ?? 0) + def0.coinGain;
     notePeakCoin(s);
   }
-  if (def0?.stashAct) applyStashAct(s, def0.stashAct);
+  if (def0?.stashAct) applyStashAct(s, def0.stashAct, personId);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
   recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited, marksChanged: person.marks.some((m) => m.stacks !== (marksBefore[m.markId] ?? 0)) });
   applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);

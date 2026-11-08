@@ -399,6 +399,20 @@
       "ripple": "none"
     },
     {
+      "id": "stash_store",
+      "stashAct": "stash_store",
+      "kind": "favor",
+      "tags": [
+        "hoard",
+        "stash",
+        "interaction:stash_store"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
       "id": "stash_guard_hire",
       "stashAct": "stash_guard_hire",
       "kind": "favor",

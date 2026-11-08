@@ -12,3 +12,4 @@ import './inner-state';
 import './power-page';
 import './facilities';
 import './patrons';
+import './stash';
