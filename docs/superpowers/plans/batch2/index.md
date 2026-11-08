@@ -29,11 +29,7 @@ Sources: `docs/DESIGN.md`, `docs/superpowers/plans/m6/{index,tangible-aesthetic}
 
 ## Unit contract (every unit, every wave)
 - **Branch and PR:** branch `claude/batch2-<wave><NN>-<name>`, cut from current main, with a PR to main. Never force-push.
-- **Tests first:**
-  - unit tests under `tests/` mirroring `src/`
-  - a 30-dawn deterministic test for any sim system: run it twice and compare with `toEqual` (pattern: `tests/sim/hoard/followups-e2e.test.ts`)
-  - one `tests/e2e/<unit>.spec.ts` that boots through `tests/e2e/support/game.ts`, drives the game with `window.__hearth.dev.*`, and asserts `errors` is empty
-- **Before the PR:** run `npm run validate`, `npx tsc --noEmit`, the unit's own vitest files, and its own e2e spec (`npm run build && npx playwright test tests/e2e/<spec> --trace off`). Don't run the full suites.
+- **No test writing or test runs** (Alex, 7 Nov: "No testing just get it working"). Before the PR, run only `npx tsc --noEmit` and `npm run build`. If an existing test file breaks because of your change, delete or update only the assertion that no longer applies; don't run suites.
 - **Seams instead of hotspot edits:**
   - Dawn systems: `registerDawnTick(slot, id, fn)`. Slots: season, people, relations, roads, prices, late.
   - Dev hooks: `registerDevHook(name, factory)` in a module imported from `src/render/dev/index.ts`.
@@ -47,15 +43,12 @@ Sources: `docs/DESIGN.md`, `docs/superpowers/plans/m6/{index,tangible-aesthetic}
   - Neglect and quitting are never shamed.
   - Use deterministic RNG through `deriveRng`.
 - **Own only the files listed for your unit.** If you must touch another unit's file, keep the edit to a few lines and say so in the PR body.
-- **PR body:** list the tree nodes delivered, what the player now sees, the tests added, and any cross-unit touches.
+- **PR body:** list the tree nodes delivered, what the player now sees and how to find it, and any cross-unit touches.
 
 ## After each wave (in the main session)
 1. Merge PRs in the order listed in the wave file. Resolve the one-line conflicts in the index files and `runtime.ts`.
-2. Run the gate on main: `npm run check && npm run build && npm run test:e2e`. Fix regressions in one follow-up PR.
-3. Revamp waves only: run `npm run qa:shots` at desktop size and at phone size (375×812). Check:
-   - no overlapping panels
-   - nothing modal except succession
-   - every action reachable by touch
+2. On main run `npx tsc --noEmit && npm run build`, play the build briefly in the browser, and fix anything visibly broken.
+3. Republish the game artifact (https://claude.ai/artifact/DLJdBXRYjMfUmQLpaQhhjw) from main.
 4. Update PLAN.md Status, `CLAUDE_HANDOFF.md`, and both tech-tree artifacts:
    - full tree: https://claude.ai/artifact/GJP1NERWGroi7VKmtgPUqU
    - Foundation: https://claude.ai/artifact/GxqQjXtkqueSb2m7AwHmoB
