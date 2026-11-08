@@ -30,7 +30,7 @@
 | Town warmth vignette | Soft full-screen | Average tile warmth → slight grade (presentation) |
 | Letter / rumor chip | Edge of screen | Envelope mote when transit active |
 
-Demo keys (WanderScene): `1` spark · `2` reignite · `3` refusal · `4` burnout.
+Live wiring (overworld): spark on any deed · reignite on `person.reignite`/`site.kindle` · refusal on `refusal.coal_flicker` (at the person's head) · burnout when succession opens (before the overlay). See `src/render/spark-fx/session-fx.ts`.
 
 ---
 

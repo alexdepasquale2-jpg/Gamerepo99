@@ -136,6 +136,8 @@ export type SimState = {
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Per-chunk tile edits ("cx,cy" -> "q,r" -> biomeId); generated tiles are never saved. */
   tileEdits?: import('../map/tile-edits').TileEdits;
+  /** Land the player worked (sim/land-acts): today's labour and a short log for townsfolk to notice. */
+  landWork?: import('../land-acts').LandWork;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */
@@ -154,4 +156,8 @@ export type SimState = {
   legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
+  /** The world's generated history beats, carried into play (rebuilt from the seed on boot/load). */
+  history?: import('../gen/world-types').HistoryEvent[];
+  /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
+  historyTold?: Record<string, string[]>;
 };

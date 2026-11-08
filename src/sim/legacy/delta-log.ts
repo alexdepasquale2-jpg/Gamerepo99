@@ -112,6 +112,13 @@ export function sanitizeDeltas(state: SimState, deltas: WorldDelta[]): WorldDelt
       if (!templateId || !fromPersonId || !toPersonId || !packetType || !state.people[fromPersonId] || !state.people[toPersonId]) continue;
       if (templateId !== 'rumor' && !templates.has(templateId)) continue;
       out.push({ t: 'letter', day: d.day, packet: { id: str(k.id) ?? `ltr_${out.length}`, kind: k.kind === 'rumor' ? 'rumor' : 'letter', templateId, packetType, fromPersonId, toPersonId, fromTownId: str(k.fromTownId), toTownId: str(k.toTownId), days } });
+    } else if (d.t === 'grave') {
+      // Grave names are shown on the import screen: keep only well-formed text.
+      const personId = str(d.personId);
+      if (!personId || typeof d.day !== 'number' || !Number.isFinite(d.day)) continue;
+      const [name, townId, epitaphId] = [str(d.name), str(d.townId), str(d.epitaphId)];
+      // Same key order as recordEnd writes, so a re-export hashes identically.
+      out.push({ t: 'grave', personId, ...(name && { name }), ...(townId && { townId }), ...(epitaphId && { epitaphId }), day: d.day });
     } else out.push(d);
   }
   return out;
@@ -120,11 +127,25 @@ export function sanitizeDeltas(state: SimState, deltas: WorldDelta[]): WorldDelt
 /** Imprint contents from a file: known refusal hooks only, tendencies/weights clamped to [0,1], stacks >= 0. */
 export function sanitizeImprint(state: SimState, im: ProtagonistImprint | null): ProtagonistImprint | null {
   if (!im || typeof im !== 'object') return null;
-  const hooks = (state.data as DataTables | undefined)?.hooksById;
+  const data = state.data as DataTables | undefined;
+  const hooks = data?.hooksById;
   const tend: Record<string, number> = {};
   for (const [k, v] of Object.entries(im.methodTendencies ?? {})) tend[k] = num01(v) ?? 0;
+  const { archetypeId, generation, ...rest } = im;
+  const homeTownId = str(im.homeTownId);
+  const choices = Array.isArray(im.notableChoices) ? im.notableChoices : [];
   return {
-    ...im,
+    ...rest,
+    displayName: str(im.displayName) ?? 'A stranger',
+    legendSeed: str(im.legendSeed) ?? 'legend',
+    speciesTags: (Array.isArray(im.speciesTags) ? im.speciesTags : []).filter((t) => str(t)),
+    homeTownId,
+    notableChoices: choices
+      .filter((c) => str(c?.kind) && str(c?.summary) && typeof c?.day === 'number' && Number.isFinite(c.day))
+      .slice(-12)
+      .map((c) => ({ day: c.day, kind: c.kind, summary: c.summary })),
+    ...(typeof archetypeId === 'string' && data?.archetypes.some((a) => a.id === archetypeId) ? { archetypeId } : {}),
+    ...(typeof generation === 'number' && Number.isFinite(generation) ? { generation: Math.min(999, Math.max(1, Math.round(generation))) } : {}),
     methodTendencies: tend,
     refusalHookIds: (Array.isArray(im.refusalHookIds) ? im.refusalHookIds : []).filter((h) => typeof h === 'string' && hooks?.get(h)?.kind === 'refusal'),
     bonds: (Array.isArray(im.bonds) ? im.bonds : []).filter((b) => str(b?.personId)).map((b) => ({ ...b, weight: num01(b.weight) ?? 0 })),

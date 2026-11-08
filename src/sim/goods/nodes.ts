@@ -83,8 +83,11 @@ export function wildNodesIn(seed: number, settlements: Place[], q0: number, r0: 
     out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
   }
   // Features carry their own resources: ore at outcrops, fish along streams, sheep on farms.
-  const inside = (p: { q: number; r: number }) => p.q >= q0 && p.q < q1 && p.r >= r0 && p.r < r1;
-  for (const f of featuresIn(seed, settlements, q0, r0, q1, r1)) {
+  // Clip to the same world box as the cell nodes: nothing collapses where the world is never drawn.
+  const fq0 = Math.max(q0, bq0), fr0 = Math.max(r0, br0), fq1 = Math.min(q1, bq1), fr1 = Math.min(r1, br1);
+  if (fq0 >= fq1 || fr0 >= fr1) return out;
+  const inside = (p: { q: number; r: number }) => p.q >= fq0 && p.q < fq1 && p.r >= fr0 && p.r < fr1;
+  for (const f of featuresIn(seed, settlements, fq0, fr0, fq1, fr1)) {
     if (f.kind === 'outcrop') {
       const p = { q: f.center.q + 1, r: f.center.r + 2 };
       if (inside(p)) out.push({ id: `${f.id}#ore`, kindId: f.hills ? 'ore_vein' : 'rock', ...p });

@@ -20,7 +20,18 @@ export function interactionRuntimeFromPeople(
   /** First-impression trust per person (from the inhabitant's perception); defaults to COMPAT_TRUST_DEFAULT. */
   trustOf?: (personId: string) => number,
 ): CompatRuntime {
-  const seeds = Object.values(people).map((p) => ({
+  const seeds = Object.values(people).map((p) => compatSeed(p, playerSpark, trustOf));
+  const rt = createCompatRuntime(
+    tables,
+    seeds[0] ?? { id: '__none__', flame01: 0, trust: 0, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: playerSpark },
+  );
+  if (!seeds[0]) rt.people.clear();
+  for (const s of seeds.slice(1)) rt.people.set(s.id, s);
+  return rt;
+}
+
+function compatSeed(p: PersonState, playerSpark: number, trustOf?: (personId: string) => number) {
+  return {
     id: p.id,
     flame01: Math.min(1, Math.max(0, p.flame / 100)),
     trust: typeof p.trust === 'number' ? p.trust : (trustOf?.(p.id) ?? COMPAT_TRUST_DEFAULT),
@@ -29,14 +40,17 @@ export function interactionRuntimeFromPeople(
     presence: 0,
     bond: 0,
     spark: playerSpark,
-  }));
-  const rt = createCompatRuntime(
-    tables,
-    seeds[0] ?? { id: '__none__', flame01: 0, trust: 0, marks: {}, touchScore: 0, presence: 0, bond: 0, spark: playerSpark },
-  );
-  if (!seeds[0]) rt.people.clear();
-  for (const s of seeds.slice(1)) rt.people.set(s.id, s);
-  return rt;
+  };
+}
+
+/** Seed anyone who joined `people` after the runtime was built (a child come of age, a newcomer) so they can be acted on. */
+export function admitNewPeople(
+  rt: CompatRuntime,
+  people: Record<string, PersonState>,
+  playerSpark: number,
+  trustOf?: (personId: string) => number,
+): void {
+  for (const p of Object.values(people)) if (!rt.people.has(p.id)) rt.people.set(p.id, compatSeed(p, playerSpark, trustOf));
 }
 
 /** Spread unset townIds across settlements so Fabric kin can be cross-town. */
