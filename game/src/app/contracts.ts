@@ -171,6 +171,12 @@ export interface InteractApi {
   isOpen(): boolean;
   /** Act a verb on a thing through session.act, then present the outcome. */
   act(thing: Thing, verbId: string): ActOutcome | undefined;
+  /**
+   * A hotbar item let go over the world at a viewport point (clientX/clientY). Over a person it is the gift
+   * verb, through the same act path as the ring. True when handled (given, or refused with a line); false
+   * over empty ground, so the panels may set it down instead.
+   */
+  dropItem(itemId: string, client: Pt): boolean;
 }
 
 export interface GameContext {
