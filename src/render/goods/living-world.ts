@@ -24,7 +24,11 @@ type Critter = { s: Phaser.GameObjects.Image; home: Pt; kind: string; seed: numb
 type Stall = { townId: string; goods: Phaser.GameObjects.Image };
 type Smoke = { townId: string; em: Phaser.GameObjects.Particles.ParticleEmitter };
 
-export type LivingWorld = { update: (time: number, dt: number) => void; caravanPositions: () => Pt[]; refresh: () => void; nearestCaravan: (p: Pt) => string | undefined };
+export type LivingWorld = {
+  update: (time: number, dt: number) => void; caravanPositions: () => Pt[]; refresh: () => void; nearestCaravan: (p: Pt) => string | undefined;
+  /** Each wagon on the roads with its id (world px), for the focus resolver. */
+  caravanSpots: () => (Pt & { id: string })[];
+};
 
 export function createLivingWorld(
   scene: Phaser.Scene, seed: number, towns: Town[], routes: LayoutRoute[],
@@ -94,6 +98,7 @@ export function createLivingWorld(
   return {
     refresh,
     nearestCaravan(p) { return [...wagons.entries()].find(([, w]) => Math.hypot(w.wagon.x - p.x, w.wagon.y - p.y) < 65)?.[0]; },
+    caravanSpots: () => [...wagons.entries()].map(([id, w]) => ({ id, x: w.wagon.x, y: w.wagon.y })),
     caravanPositions: () => [...wagons.values()].map((w) => ({ x: w.wagon.x, y: w.wagon.y })),
     update(time, dt) {
       const state = getState();
@@ -111,7 +116,7 @@ export function createLivingWorld(
             crates: Array.from({ length: MAX_CRATES }, () => scene.add.image(0, 0, texKey('crate')).setOrigin(0.5, 1).setScale(2).setVisible(false)),
             wagon: scene.add.image(0, 0, texKey('wagon')).setOrigin(0.5, 1).setScale(2),
             ox: scene.add.image(0, 0, texKey('ox')).setOrigin(0.5, 1).setScale(2),
-            label: scene.add.text(0, 0, 'Trader · E', { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 1) };
+            label: scene.add.text(0, 0, 'Trader', { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 1) };
           wagons.set(m.id, w);
         }
         // Fractional sim progress follows the actual curve; at a town the wagon halts, unloads and turns.
@@ -126,7 +131,7 @@ export function createLivingWorld(
         const halted = m.phase !== undefined;
         const bob = halted && m.phase !== 'departing' ? Math.sin(time / 120) * 1.2 : 0;
         w.wagon.setPosition(foot.x, foot.y + bob).setDepth(foot.y).setFlipX(dx < 0);
-        w.label.setText(`${caravanStatus(m)} · E`).setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
+        w.label.setText(caravanStatus(m)).setPosition(foot.x, foot.y - 32).setDepth(foot.y + 2);
         const oxx = foot.x + dx / length * 26, oxy = foot.y + dy / length * 26;
         w.ox.setPosition(oxx, oxy).setDepth(oxy).setFlipX(dx < 0);
         // Crates hop between wagon and the town's stall (unloading in, trading back aboard).

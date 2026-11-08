@@ -65,14 +65,14 @@ registerActionProvider({
     const out: ProvidedAction[] = [];
     const rows = catalog(state);
     for (const patron of patronsBrokeredBy(state, personId)) {
-      out.push({ id: `${HEAR}${patron.id}@${personId}`, label: `Hear the ${short(patron)} offer` });
+      out.push({ id: `${HEAR}${patron.id}@${personId}`, label: `Hear the ${short(patron)} offer`, short: `Hear the ${short(patron)}`, family: 'ask' });
       for (const dealId of openDeals(state, patron.id)) {
         const deal = patron.deals.find((d) => d.id === dealId)!;
-        for (const r of rows) if (r.patronAccept === dealId) out.push({ id: `${r.id}@${personId}`, label: `Accept the ${short(patron)} deal (${terms(deal)})` });
+        for (const r of rows) if (r.patronAccept === dealId) out.push({ id: `${r.id}@${personId}`, label: `Accept the ${short(patron)} deal (${terms(deal)})`, short: `Accept ${terms(deal)}`, family: 'deal' });
       }
       for (const deal of patron.deals) {
         if (!canFulfilDeal(state, deal.id)) continue;
-        for (const r of rows) if (r.patronFulfil === deal.id) out.push({ id: `${r.id}@${personId}`, label: `Deliver on the deal (${terms(deal)})` });
+        for (const r of rows) if (r.patronFulfil === deal.id) out.push({ id: `${r.id}@${personId}`, label: `Deliver on the deal (${terms(deal)})`, short: `Deliver ${terms(deal)}`, family: 'deal' });
       }
     }
     return out;

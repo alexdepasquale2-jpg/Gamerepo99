@@ -27,7 +27,7 @@ test.describe('burnout & refusal on screen', () => {
 
   test('refusing to shame a child flickers the coal at their head and speaks the refusal', async ({ page }) => {
     const errors = await boot(page);
-    // Find a child the ring offers "shame" on, stand beside them (the deed path is real: E opens the ring).
+    // Find a child the ring offers "Shame them" (talk_hard_shame, hosted by shame) on, stand beside them (the deed path is real: E opens the ring).
     const target = await page.evaluate(() => {
       const h = (window as any).__hearth;
       const sc = h.scene;
@@ -36,9 +36,8 @@ test.describe('burnout & refusal on screen', () => {
         const p = sc.people.byId.get(id);
         if (!p || p.inside) continue;
         const chips = sc.chipsFor(id) as { id: string }[];
-        const idx = chips.findIndex((c) => c.id === `shame@${id}`);
-        if (idx < 0 || idx > 7) continue;
-        return { id, idx };
+        if (!chips.some((c) => c.id === `talk_hard_shame@${id}`)) continue;
+        return { id };
       }
       return null;
     });
@@ -58,8 +57,16 @@ test.describe('burnout & refusal on screen', () => {
       if (sc.ringFor !== id) { sc.closeRing(); sc.openRing(sc.people.byId.get(id)); }
     }, target!.id);
     await expect.poll(() => page.evaluate(() => (window as any).__hearth.scene.ring.isOpen())).toBe(true);
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8'];
-    await page.keyboard.press(keys[target!.idx]!);
+    // The number keys: the Speak family, then Shame them (rings show at most six chips, never a page).
+    const want = `talk_hard_shame@${target!.id}`;
+    const view = () => page.evaluate(() => (window as any).__hearth.dev.ringView() as { chips: { id: string; verbs?: string[] }[] });
+    let v = await view();
+    if (!v.chips.some((c) => c.id === want)) {
+      await page.keyboard.press(String(v.chips.findIndex((c) => c.verbs?.includes(want)) + 1));
+      await page.waitForTimeout(120);
+      v = await view();
+    }
+    await page.keyboard.press(String(v.chips.findIndex((c) => c.id === want) + 1));
     await page.waitForTimeout(120);
     await page.screenshot({ path: `${OUT}/refusal.png` });
 

@@ -25,9 +25,14 @@ import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
 import { createPeopleLayer, firstName, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
 import { InteriorRoom, type InteriorEnterData } from './interior-room';
-import { allBuildings, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
-import { deedLabel } from '../sim/play-session/play-session-act';
+import { allBuildings, DOOR_REACH, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
+import { createInteractController, type InteractController } from './interact/interact-controller';
+import type { FocusCandidate } from './interact/focus';
+import { HEARTH_NEAR } from './world-life';
+import { TALK_NEAR } from './people-layer';
+import type { ActOutcome } from '../sim/play-session/action-providers';
+import type { Target, TargetKind } from '../sim/play-session/targets';
 import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
 import { attachSessionFx } from './spark-fx/session-fx';
@@ -36,7 +41,7 @@ import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 import { getWalkMul, setWalkMul } from '../dev/dev-flags';
 import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
-import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
+import { walkSpeedMul } from '../sim/embodiment';
 import { collectDawnLines } from '../sim/dawn-lines';
 import { kinStrainOf } from '../sim/social/kin-strain';
 import { attachRoads, type RoadsHandle } from './road-signs';
@@ -47,10 +52,6 @@ import { collectDevHooks } from './dev-hooks';
 import './dev';
 
 const CHUNK_MARGIN = 1;
-const VERB: Record<string, string> = {
-  inspire: 'Inspire', carry_burden: 'Carry burden', challenge: 'Challenge', shame: 'Shame',
-  lie: 'Lie', show_up: 'Show up', listen: 'Listen',
-};
 
 export class OverworldScene extends Phaser.Scene {
   private session!: PlaySession;
@@ -77,7 +78,8 @@ export class OverworldScene extends Phaser.Scene {
   private ring!: ActionRing;
   private life!: WorldLife;
   private bus = createEventBus();
-  private ringFor: string | null = null;
+  /** The one interaction model: focus, the world prompt, the verb ring on any thing. */
+  private interactions!: InteractController;
   private resting = false;
   /** Dawn lines still waiting to be said; a new rest drops the last morning's leftovers. */
   private dawnSays: Phaser.Time.TimerEvent[] = [];
@@ -85,7 +87,6 @@ export class OverworldScene extends Phaser.Scene {
   private goods!: OverworldGoods;
   private body!: InhabitantBody;
   private buildings: Building[] = [];
-  private doorPrompt!: Phaser.GameObjects.Text;
   private inside: Building | null = null;
   private entering = false;
   private room!: InteriorRoom;
@@ -135,7 +136,6 @@ export class OverworldScene extends Phaser.Scene {
       this.session,
       this.layout.settlements,
       (p) => this.openRing(p),
-      (id) => this.chipsFor(id).length > 0,
       this.nav,
     );
     this.buildings = allBuildings(this.layout.settlements);
@@ -154,6 +154,7 @@ export class OverworldScene extends Phaser.Scene {
       nameOf: (id) => world.settlements?.find((s) => s.id === id)?.name ?? id,
       arriveAt: (id) => this.arriveAt(id),
       afterJourney: () => {
+        this.interactions.invalidate();
         this.life.dawn();
         this.people.sync();
         this.people.settle();
@@ -164,6 +165,22 @@ export class OverworldScene extends Phaser.Scene {
       say: (t) => this.say(t),
       setBusy: (b) => (this.resting = b),
     });
+    this.interactions = createInteractController({
+      scene: this,
+      session: this.session,
+      ring: this.ring,
+      player: () => (this.room.active ? this.room.playerPos() : { x: this.player.x, y: this.player.y }),
+      facing: () => (this.room.active ? { dx: 0, dy: 0 } : this.facing),
+      candidates: () => this.targetsNear(),
+      blocked: () => this.resting || this.entering || this.goods.overlayOpen() || this.roads.isOpen() || isSuccessionOpen(this.session),
+      // Indoors the resident also murmurs about the room (the Chat verb, with the talk verbs).
+      extraVerbs: (t) => (this.room.active && t.kind === 'person' ? [{ id: '@chat', label: 'Chat', family: 'speak' }] : []),
+      actPerson: (id, chip) => this.actPerson(id, chip),
+      present: (kind, verb, target, out) => this.presentTarget(kind, verb, target, out),
+      onRingFor: (id) => this.people.freeze(id),
+      say: (t) => this.say(t),
+    });
+    this.goods.onTapTarget((c) => void this.interactions.tap(c));
     const headOf = (id: string): { x: number; y: number } | undefined =>
       this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined);
     const surface = attachSurface(this, this.session, this.layout.settlements, headOf);
@@ -221,8 +238,8 @@ export class OverworldScene extends Phaser.Scene {
         dawn: () => this.session.tick(),
         /** A real rest at a hearth: fade, dusk + dawn, dawn lines; resolves when the lines start. */
         rest: () => new Promise<string[]>((done) => this.rest(done)),
-        /** Ring chips on offer for a person (all pages): [{ id, label }]. */
-        chips: (personId: string) => this.chipsFor(personId).map((c) => ({ id: c.id, label: c.label })),
+        /** Every verb on offer for a person, families opened: [{ id, label (full), short, family }]. */
+        chips: (personId: string) => this.chipsFor(personId),
         /** Open the ring on a person as if E was pressed beside them (walks you there first). */
         ring: (personId: string) => {
           const p = this.people.byId.get(personId);
@@ -285,18 +302,17 @@ export class OverworldScene extends Phaser.Scene {
     const interact = (): void => this.interact();
     this.input.keyboard?.on('keydown-E', interact);
     this.input.keyboard?.on('keydown-ENTER', interact);
-    this.doorPrompt = this.add
-      .text(0, 0, 'E · Enter', { fontFamily: 'Georgia, serif', fontSize: '13px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
-      .setOrigin(0.5, 1)
-      .setDepth(998_500)
-      .setVisible(false);
-    // Esc closes whatever is open first (ring, satchel, map, letters); with nothing open it leaves the room.
+    // Esc closes whatever is open first (a family's verbs step back to the families; then ring, satchel,
+    // map, letters); with nothing open it leaves the room.
     this.input.keyboard?.on('keydown-ESC', () => {
+      if (this.ring.back()) return;
       const open = this.ring.isOpen() || this.goods.overlayOpen();
       this.closeRing();
       this.goods.closeOverlays();
       if (!open && this.room.active) this.room.leave();
     });
+    this.input.keyboard?.on('keydown-BACKSPACE', () => void this.ring.back());
+    // Number keys pick ring chips only while the ring is open; otherwise they pick a satchel slot.
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'].forEach((k, i) =>
       this.input.keyboard?.on(`keydown-${k}`, () => (this.ring.isOpen() ? this.ring.pickIndex(i) : this.goods.selectSlot(i))),
     );
@@ -316,12 +332,12 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
     this.input.keyboard?.on('keydown-B', () => { if (!this.resting && !this.room.active) this.body.openMenu(); });
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
-    this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
       else if (this.ring.isOpen()) {
         this.closeRing();
         this.uiTap = true;
-      }
+      } else if (this.interactions.tapAt({ x: p.worldX, y: p.worldY })) this.uiTap = true; // a tap on the thing in focus
     });
     this.input.on('pointerup', () => (this.uiTap = false));
     this.syncChunks(true);
@@ -408,8 +424,7 @@ export class OverworldScene extends Phaser.Scene {
     this.goods.update(this.time.now, delta, this.player);
     this.life.update(this.time.now, delta, this.player, false);
     this.people.setPrompt(null);
-    this.life.setPrompt(false);
-    this.doorPrompt.setVisible(false);
+    this.interactions.update(time);
     if (this.ringFor) {
       // Walking away from the resident closes the ring, like outdoors.
       if (dx !== 0 || dy !== 0) { if (this.room.distanceToResident() > 90) this.closeRing(); }
@@ -424,17 +439,16 @@ export class OverworldScene extends Phaser.Scene {
     this.people.update(t, delta, this.player);
     this.goods.update(t, delta, this.player);
     this.life.update(t, delta, this.player, this.moving);
-    const hearth = this.life.nearestHearth(this.player);
-    this.life.setPrompt(!!hearth && !this.ring.isOpen() && !this.resting, hearth?.pos);
-    const near = this.ring.isOpen() ? null : this.people.nearest(this.player);
-    this.people.setPrompt(near);
-    const door = this.doorTarget(near);
-    this.doorPrompt.setVisible(!!door);
-    if (door) this.doorPrompt.setPosition(door.door.x, door.door.y - 78 - Math.abs(Math.sin(this.time.now / 300)) * 3);
+    // An open ring owns Esc (back a level, then close) rather than the pause menu.
+    if (this.ring.isOpen()) document.body.dataset.hfLocalOverlay = 'true';
+    // One focus, one prompt: whatever is in front of you (person, node, door, board, hearth, …).
+    this.interactions.update(t);
+    const focus = this.interactions.focus();
+    this.people.setPrompt(focus?.kind === 'person' ? this.people.byId.get(focus.id) ?? null : null);
     if (this.ringFor && this.moving) {
       const p = this.people.byId.get(this.ringFor);
       if (!p || Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y) > 90) this.closeRing();
-    }
+    } else if (this.moving && this.interactions.ringTarget()) this.closeRing(); // walking off closes a thing's ring
   }
 
   /** A villager's given name as it shows over their head. */
@@ -442,16 +456,23 @@ export class OverworldScene extends Phaser.Scene {
     return firstName({ id, name: this.session.getState()?.people[id]?.name });
   }
 
-  private chipsFor(id: string): Chip[] {
-    return this.session
-      .listActions()
-      .filter((a) => a.id.endsWith('@' + id))
-      .map((a) => {
-        const m = a.id.slice(0, a.id.indexOf('@'));
-        return { id: a.id, label: a.label ?? deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
-      });
+  /** Every verb a person offers (families opened), built for that one person: [{ id, label, short, family }]. */
+  private chipsFor(id: string): { id: string; label: string; short?: string; family?: string }[] {
+    return this.session.listVerbs({ kind: 'person', id }).map((v) => ({ id: v.id, label: v.label, ...(v.short ? { short: v.short } : {}), ...(v.family ? { family: v.family } : {}) }));
   }
 
+  /** The person the ring is open on, if it is open on a person. */
+  private get ringFor(): string | null {
+    const t = this.interactions?.ringTarget();
+    return t?.kind === 'person' ? t.id : null;
+  }
+
+  private personCandidate(p: Person): FocusCandidate {
+    const h = this.people.headOf(p.id);
+    return { kind: 'person', id: p.id, x: p.sprite.x, y: p.sprite.y, reach: TALK_NEAR, anchor: { x: h.x, y: h.y - 6 } };
+  }
+
+  /** Open the ring on a person (a tap on them, dev.ring): same path as E. */
   private openRing(p: Person): void {
     if (this.resting || p.inside) return;
     const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y);
@@ -459,32 +480,83 @@ export class OverworldScene extends Phaser.Scene {
       this.say('Too far. Walk closer.');
       return;
     }
-    const chips = this.chipsFor(p.id);
-    if (!chips.length) return;
-    this.ringFor = p.id;
-    this.people.freeze(p.id);
-    this.people.setPrompt(null);
-    const h = this.people.headOf(p.id);
-    this.ring.open({ x: h.x, y: h.y - 6 }, chips, (c) => this.commit(p.id, p.sprite, () => this.people.headOf(p.id), c));
-  }
-
-  /** Same deeds, same interaction system, with the resident of the room you are standing in. */
-  private openRoomRing(id: string): void {
-    const sprite = this.room.residentSprite(id);
-    const head = this.room.residentHead(id);
-    if (!sprite || !head) return;
-    const chips: Chip[] = [...this.chipsFor(id), { id: '@chat', label: 'Chat', savage: false }];
-    this.ringFor = id;
-    this.ring.open({ x: head.x, y: head.y - 6 }, chips, (c) => {
-      if (c.id === '@chat') { this.closeRing(); this.room.chat(); return; }
-      this.commit(id, sprite, () => this.room.residentHead(id) ?? { x: sprite.x, y: sprite.y - 36 }, c);
-    });
+    this.interactions.openOn(this.personCandidate(p));
   }
 
   private closeRing(): void {
-    this.ring.close();
-    this.ringFor = null;
-    this.people.freeze(null);
+    this.interactions?.close();
+  }
+
+  /**
+   * Every interactable thing near the player (positions only): the focus resolver picks one.
+   * `all` lists every one loaded, wherever it is (QA: dev.focus(kind) walks to the nearest).
+   */
+  private targetsNear(all = false): FocusCandidate[] {
+    if (this.room.active) return this.room.focusCandidates();
+    const me = { x: this.player.x, y: this.player.y };
+    const near = (x: number, y: number, r: number): boolean => all || Math.hypot(x - me.x, y - me.y) <= r;
+    const out: FocusCandidate[] = [];
+    for (const p of this.people.people) {
+      if (p.inside || !p.sprite.visible || !(all || (Math.abs(p.sprite.x - me.x) <= TALK_NEAR && Math.abs(p.sprite.y - me.y) <= TALK_NEAR))) continue;
+      out.push(this.personCandidate(p));
+    }
+    out.push(...this.goods.targets(me, all));
+    for (const s of this.roads.spots()) {
+      if (near(s.x, s.y, s.reach)) out.push({ kind: 'signpost', id: s.id, x: s.x, y: s.y, reach: s.reach, anchor: { x: s.x, y: s.y - 54 } });
+    }
+    const door = (b: Building): FocusCandidate =>
+      ({ kind: 'door', id: b.id, x: b.door.x, y: b.door.y, reach: DOOR_REACH, data: { kind: b.kind }, anchor: { x: b.door.x, y: b.door.y - 78 } });
+    if (all) out.push(...this.buildings.map(door));
+    else {
+      const hit = nearestDoor(this.buildings, me);
+      if (hit) out.push(door(hit.building));
+    }
+    const hearths = all ? this.life.hearthSpots() : [this.life.nearestHearth(me)].filter((h) => !!h);
+    for (const h of hearths) out.push({ kind: 'hearth', id: h.town.id, x: h.pos.x, y: h.pos.y, reach: HEARTH_NEAR, anchor: { x: h.pos.x, y: h.pos.y - 26 } });
+    return out;
+  }
+
+  /** QA: stand beside the nearest thing of a kind, facing it, and let the resolver take it. */
+  debugFocusKind(kind: TargetKind): boolean {
+    if (this.room.active) return false;
+    const me = { x: this.player.x, y: this.player.y };
+    const best = this.targetsNear(true).filter((c) => c.kind === kind).sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
+    if (!best) return false;
+    this.player.setPosition(best.x, best.y + 12);
+    applySpriteSort(this.player);
+    this.facing = { dx: 0, dy: -1 };
+    this.cameras.main.centerOn(this.player.x, this.player.y);
+    this.syncChunks(true);
+    this.interactions.update(this.time.now);
+    return true;
+  }
+
+  /** A person's verb from the ring: the deed path (outdoors or with the room's resident). */
+  private actPerson(id: string, c: Chip): void {
+    if (this.room.active) {
+      if (c.id === '@chat') { this.room.chat(); return; }
+      const sprite = this.room.residentSprite(id);
+      if (sprite) this.commit(id, sprite, () => this.room.residentHead(id) ?? { x: sprite.x, y: sprite.y - 36 }, c);
+      return;
+    }
+    const p = this.people.byId.get(id);
+    if (p) this.commit(id, p.sprite, () => this.people.headOf(id), c);
+  }
+
+  /** After a thing's verb resolved in the sim: the sheet, the fade or the sprite that shows it. */
+  private presentTarget(kind: TargetKind, verb: string, target: Target, out: ActOutcome | undefined): void {
+    if (out && !out.ok && out.line && (kind === 'door' || kind === 'signpost' || kind === 'hearth')) return this.say(out.line);
+    if (kind === 'signpost') return this.roads.open(target.id);
+    if (kind === 'hearth') return this.rest();
+    if (kind === 'door') {
+      if (verb === 'leave') return this.room.leave();
+      const b = this.buildings.find((x) => x.id === target.id);
+      if (b) this.enterBuilding(b);
+      return;
+    }
+    this.goods.presentTarget(kind, verb, target, out);
+    this.goods.onAct();
+    this.syncSparkFromSession(true);
   }
 
   private say(text: string): void {
@@ -496,27 +568,10 @@ export class OverworldScene extends Phaser.Scene {
     // The coal is out: no deeds or rest while the burnout plays and succession is pending; nor while the road menu is open.
     if (this.resting || this.goods.overlayOpen() || this.roads.isOpen() || isSuccessionOpen(this.session)) return;
     if (this.ring.isOpen()) return;
-    if (this.room.active) {
-      const who = this.room.interact();
-      if (who) this.openRoomRing(who.id);
-      return;
-    }
-    if (this.goods.readBoard(this.player)) return;
-    if (this.roads.interact(this.player)) return;
-    if (this.goods.meetCaravan(this.player)) return;
-    if (this.goods.workFacility(this.player)) return this.syncSparkFromSession(true);
-    const p = this.people.nearest(this.player);
-    const door = this.doorTarget(p);
-    if (door) {
-      const me = this.session.getState()?.player;
-      // Some bodies don't fit every door (an ogre and a cottage): the body's traits decide, not its name.
-      if (me && !canEnterBuilding(me, door.kind)) return this.say(blockedDoorLine(me));
-      return this.enterBuilding(door);
-    }
-    if (p) return this.openRing(p);
-    const got = this.goods.gatherNear(this.player);
-    if (got) return this.say(got);
-    if (this.life.nearestHearth(this.player)) this.rest();
+    // The one thing in front of you: its ring, or its single verb (indoors: the resident or the exit).
+    if (this.interactions.interact()) return;
+    // An empty room says so.
+    if (this.room.active) this.room.interact();
   }
 
   /**
@@ -562,21 +617,11 @@ export class OverworldScene extends Phaser.Scene {
     return tiles.get(`${q},${r}`) ?? { props: [] };
   }
 
-  /** Door in reach, unless a villager you could talk to is standing closer. */
-  private doorTarget(talk: Person | null): Building | null {
-    if (this.resting || this.entering || this.goods.overlayOpen() || this.ring.isOpen()) return null;
-    const hit = nearestDoor(this.buildings, this.player);
-    if (!hit) return null;
-    if (talk && Phaser.Math.Distance.Between(this.player.x, this.player.y, talk.sprite.x, talk.sprite.y) < hit.dist) return null;
-    return hit.building;
-  }
-
   /** Walk through a door: fade, then the camera moves to the room. The world keeps running behind it. */
   private enterBuilding(b: Building, instant = false): void {
     if (this.inside || this.entering) return;
     this.entering = true;
     this.closeRing();
-    this.doorPrompt.setVisible(false);
     const town = this.session.getWorld()?.settlements?.find((s) => s.id === b.townId);
     const payload: InteriorEnterData = {
       buildingId: b.id,
@@ -698,6 +743,7 @@ export class OverworldScene extends Phaser.Scene {
     cam.fadeOut(700, 8, 8, 20);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
+      this.interactions.invalidate();
       this.life.dawn();
       // Children come of age and newcomers arrive: give them a body, a free house if there is one, then place everyone.
       this.people.sync();

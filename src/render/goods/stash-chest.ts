@@ -1,10 +1,10 @@
 /**
  * Stash chests: one small chest per stash site that holds coin or goods, with a small tally of what is
- * in it; click withdraws via the existing stash act (only works standing in that town).
+ * in it. A click (or E beside it) opens its ring of stash verbs, played through session.act (sim/contrib/stash).
  */
 
 import Phaser from 'phaser';
-import { applyStashAct, ensureHoard } from '../../sim/hoard';
+import { ensureHoard } from '../../sim/hoard';
 import { siteDefs, totalGoods } from '../../sim/hoard/state';
 import type { SimState } from '../../sim/types/runtime';
 import { tileFootWorld } from '../depth-sort';
@@ -38,7 +38,8 @@ export function createStashChests(
   scene: Phaser.Scene,
   getState: () => SimState | undefined,
   towns: { id: string; q: number; r: number }[],
-  onChange: () => void,
+  /** A click on a chest: the scene opens its ring (same path as E beside it). */
+  onTap: (siteId: string, at: { x: number; y: number }) => void,
 ): { refresh: () => void; views: Map<string, Phaser.GameObjects.Image> } {
   ensureGoodsTextures(scene);
   const views = new Map<string, Phaser.GameObjects.Image>();
@@ -65,10 +66,7 @@ export function createStashChests(
       const img = scene.add.image(f.x - 30, f.y + 6, texKey('chest')).setOrigin(0.5, 1).setScale(2).setDepth(f.y + 6)
         .setData('stashSite', c.siteId)
         .setInteractive({ useHandCursor: true });
-      img.on('pointerdown', () => {
-        const s = getState();
-        if (s && applyStashAct(s, 'stash_withdraw')) { onChange(); refresh(); }
-      });
+      img.on('pointerdown', () => onTap(c.siteId, { x: img.x, y: img.y }));
       views.set(c.siteId, img);
     }
   };

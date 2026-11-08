@@ -19,7 +19,7 @@ export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, lay
       g.fillStyle(0xe9d4a2).fillRect(p.x - 21 + i * 15, p.y - 40 + i % 2 * 4, 11, 20);
       g.lineStyle(1, 0x907951).lineBetween(p.x - 19 + i * 15, p.y - 34 + i % 2 * 4, p.x - 13 + i * 15, p.y - 34 + i % 2 * 4);
     }
-    scene.add.text(p.x, p.y + 5, 'Needs · E', { ...font, fontSize: '10px', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(p.y + 1);
+    scene.add.text(p.x, p.y + 5, 'Needs', { ...font, fontSize: '10px', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(p.y + 1);
     return { id: t.id, p };
   });
   const close = () => panel.setVisible(false);
@@ -53,6 +53,8 @@ export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, lay
   };
   return {
     close, isOpen: () => panel.visible,
+    /** Each town's board (foot, world px), for the focus resolver. */
+    spots: () => spots,
     interact(p: Pt) { const spot = spots.find((s) => Math.hypot(s.p.x - p.x, s.p.y - p.y) < 50); if (!spot) return false; open(spot.id); return true; },
     openNearest() { const p = getPlayer(); const spot = spots.find((s) => Math.hypot(s.p.x - p.x, s.p.y - p.y) < 90); if (spot) open(spot.id); },
     /** Open a town's board at a page (by index or page id) — for tests and dev. */

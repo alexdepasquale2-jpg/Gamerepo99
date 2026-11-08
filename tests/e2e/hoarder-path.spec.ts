@@ -39,7 +39,7 @@ test('hide coin, see the stash, and meet the hoard ending', async ({ page }) => 
   });
 
   const chips = await page.evaluate((p) => (window as Any).__hearth.dev.chips(p), pid);
-  expect(chips).toContainEqual({ id: `stash_hide@${pid}`, label: 'Hide coin here' });
+  expect(chips).toContainEqual(expect.objectContaining({ id: `stash_hide@${pid}`, label: 'Hide coin here' }));
 
   // Hide it through the ring, as a player would. Midday, so they are outdoors (at boot, before 0.12 of the
   // day, everyone with a house is still inside and the ring will not open on them).

@@ -4,7 +4,7 @@ import type { PlaySession } from '../../src/sim/play-session/play-session';
 import { registerActionProvider } from '../../src/sim/play-session/action-providers';
 import { collectDawnLines, registerDawnLines } from '../../src/sim/dawn-lines';
 import { boardPages, registerBoardPage } from '../../src/sim/board-pages';
-import { pageOf, RING_PAGE } from '../../src/render/action-ring';
+import { flattenChips, groupVerbs, RING_MAX } from '../../src/sim/play-session/verb-families';
 
 function session(): PlaySession {
   const s = createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' }) as PlaySession;
@@ -45,14 +45,12 @@ describe('shared seams', () => {
     expect(boardPages().at(-1)!.render(session().getState()!, 'x', (t) => t).lines).toEqual(['hello']);
   });
 
-  it('the ring pages long chip lists with a More… chip', () => {
-    const chips = Array.from({ length: 17 }, (_, i) => ({ id: `c${i}@p`, label: `c${i}`, savage: false }));
-    const first = pageOf(chips, 0);
-    expect(first.chips).toHaveLength(RING_PAGE);
-    expect(first.chips.at(-1)!.label).toBe('More… 1/3');
-    const last = pageOf(chips, 2);
-    expect(last.chips.slice(0, -1).map((c) => c.id)).toEqual(['c14@p', 'c15@p', 'c16@p']);
-    expect(last.next).toBe(0);
-    expect(pageOf(chips.slice(0, RING_PAGE), 0).chips).toHaveLength(RING_PAGE);
+  it('the ring folds long verb lists into families, never a More… page', () => {
+    const verbs = Array.from({ length: 17 }, (_, i) => ({ id: `c${i}@p`, label: `c${i}`, family: ['speak', 'help', 'give'][i % 3] }));
+    const top = groupVerbs(verbs);
+    expect(top.length).toBeLessThanOrEqual(RING_MAX);
+    expect(top.some((c) => /More…/.test(c.label))).toBe(false);
+    expect(flattenChips(top)).toHaveLength(17);
+    expect(groupVerbs(verbs.slice(0, RING_MAX))).toHaveLength(RING_MAX);
   });
 });

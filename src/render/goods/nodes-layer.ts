@@ -1,8 +1,8 @@
-/** Resource nodes in the overworld: sprites, depletion look, nearest-node prompt, gather pop. */
+/** Resource nodes in the overworld: sprites, depletion look, gather pop. Gather is the node's ring verb (sim/contrib/objects). */
 
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
-import { gatherNode, nodeCharges, placeNodes, wildNodesIn, type WorldNode } from '../../sim/goods/nodes';
+import { nodeCharges, placeNodes, wildNodesIn, type WorldNode } from '../../sim/goods/nodes';
 import { CHUNK_SIZE, TILE_PX } from '../../sim/map/constants';
 import type { MapPoint } from '../../sim/map/world-layout';
 import { tileFootWorld } from '../depth-sort';
@@ -15,7 +15,10 @@ export type NodeView = { node: WorldNode; sprite: Phaser.GameObjects.Image; pos:
 export type NodesLayer = {
   views: NodeView[];
   nearest: (p: Pt) => NodeView | null;
-  gather: (v: NodeView) => string | null;
+  /** Charged nodes within reach of a point (the focus resolver's candidates). */
+  inReach: (p: Pt, all?: boolean) => NodeView[];
+  /** After a gather act resolved: the node pops and its depleted look is redrawn. */
+  gathered: (nodeId: string, ok: boolean) => void;
   refresh: () => void;
   /** Nodes near a town, used as villager work spots. */
   workSpots: (townId: string) => Pt[];
@@ -59,9 +62,6 @@ export function createNodesLayer(
     views = [...fixed, ...[...wild.values()].flat()];
     refresh();
   };
-  const prompt = scene.add
-    .text(0, 0, 'E  gather', { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
-    .setOrigin(0.5, 1).setDepth(998_400).setVisible(false);
 
   function refresh(): void {
     const st = getState();
@@ -102,18 +102,17 @@ export function createNodesLayer(
         return d > 12 && d < 34;
       }).map((n) => { const f = tileFootWorld(n.q, n.r); return { x: f.x + 14, y: f.y + 4 }; });
     },
-    gather(v) {
+    inReach(p, all = false) {
       const st = getState();
-      if (!st) return null;
-      const line = gatherNode(st, v.node);
-      if (line) scene.tweens.add({ targets: v.sprite, scaleX: 2.2, scaleY: 1.8, duration: 90, yoyo: true, onComplete: refresh });
-      return line;
+      return st ? views.filter((v) => (all || Math.hypot(p.x - v.pos.x, p.y - v.pos.y) < NEAR) && nodeCharges(st, v.node) > 0) : [];
     },
-    update(player, time) {
+    gathered(id, ok) {
+      const v = views.find((x) => x.node.id === id);
+      if (v && ok) scene.tweens.add({ targets: v.sprite, scaleX: 2.2, scaleY: 1.8, duration: 90, yoyo: true, onComplete: refresh });
+      else refresh();
+    },
+    update(player) {
       observe(player);
-      const n = nearest(player);
-      prompt.setVisible(!!n);
-      if (n) prompt.setPosition(n.pos.x, n.pos.y - n.sprite.displayHeight - 2 - Math.abs(Math.sin(time / 300)) * 2);
     },
   };
 }

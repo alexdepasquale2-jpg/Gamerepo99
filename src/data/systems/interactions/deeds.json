@@ -1,60 +1,123 @@
 {
   "version": 1,
-  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags. Gates: oncePerDay (per person, resets by day number), minTrust, requiresTheirGoods (holding their cargo or a loan). lines: reaction templates ({name}); failLine: shown when the interaction's assertFailIfMarksAny trips; lend: favor_ask hands you one of their work goods tagged itemTagsAny, to return later.",
+  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags. Gates: oncePerDay (per person, resets by day number), minTrust, requiresTheirGoods (holding their cargo or a loan). lines: reaction templates ({name}); failLine: shown when the interaction's assertFailIfMarksAny trips; lend: favor_ask hands you one of their work goods tagged itemTagsAny, to return later. Families: the ring groups verbs into these (at most 6 chips per level); a deed names its family, or joins the family whose catalog choiceSet lists it (talk_choices → Speak). short: the chip text (≤16 chars) when label is longer; label stays the tip and the dev.chips label.",
+  "families": [
+    {
+      "id": "speak",
+      "label": "Speak",
+      "choiceSetId": "talk_choices"
+    },
+    {
+      "id": "help",
+      "label": "Help"
+    },
+    {
+      "id": "give",
+      "label": "Give"
+    },
+    {
+      "id": "promise",
+      "label": "Promise"
+    },
+    {
+      "id": "ask",
+      "label": "Ask"
+    },
+    {
+      "id": "deal",
+      "label": "Deal",
+      "aliases": [
+        "hoard",
+        "patron"
+      ]
+    }
+  ],
   "deeds": [
+    {
+      "id": "talk_gentle",
+      "label": "Speak gently",
+      "hostMethod": "inspire"
+    },
+    {
+      "id": "talk_hard",
+      "label": "Speak hard",
+      "hostMethod": "challenge"
+    },
+    {
+      "id": "talk_hard_shame",
+      "label": "Shame them",
+      "hostMethod": "shame",
+      "savage": true
+    },
     {
       "id": "favor_do",
       "label": "Do a favor",
-      "hostMethod": "carry_burden"
+      "hostMethod": "carry_burden",
+      "family": "help"
     },
     {
       "id": "work_alongside",
       "label": "Work alongside (mend, harvest)",
-      "hostMethod": "carry_burden"
+      "hostMethod": "carry_burden",
+      "family": "help",
+      "short": "Work alongside"
     },
     {
       "id": "gift_give",
       "label": "Give a gift",
-      "hostMethod": "inspire"
+      "hostMethod": "inspire",
+      "family": "give"
     },
     {
       "id": "trade_fair",
       "label": "Trade fairly",
-      "hostMethod": "carry_burden"
+      "hostMethod": "carry_burden",
+      "family": "give"
     },
     {
       "id": "carry_goods",
       "label": "Carry goods for them",
-      "hostMethod": "carry_burden"
+      "hostMethod": "carry_burden",
+      "family": "help",
+      "short": "Carry goods"
     },
     {
       "id": "promise_make",
       "label": "Make a promise",
-      "hostMethod": "inspire"
+      "hostMethod": "inspire",
+      "family": "promise"
     },
     {
       "id": "promise_keep",
       "label": "Keep your promise",
       "hostMethod": "inspire",
-      "requiresPendingPromise": true
+      "requiresPendingPromise": true,
+      "family": "promise",
+      "short": "Keep promise"
     },
     {
       "id": "promise_break",
       "label": "Break your promise",
       "hostMethod": "lie",
       "requiresPendingPromise": true,
-      "savage": true
+      "savage": true,
+      "family": "promise",
+      "short": "Break promise"
     },
     {
       "id": "stand_up",
       "label": "Stand up for them",
-      "hostMethod": "challenge"
+      "hostMethod": "challenge",
+      "family": "help",
+      "short": "Defend them"
     },
     {
       "id": "introduce",
       "label": "Introduce to someone you met",
       "hostMethod": "inspire",
-      "requiresOtherPerson": true
+      "requiresOtherPerson": true,
+      "family": "speak",
+      "short": "Introduce"
     },
     {
       "id": "favor_ask",
@@ -75,7 +138,8 @@
         "{name} brightens. \"Me? Of course I can.\"",
         "{name} straightens up. \"Glad someone asked.\"",
         "{name} nods slowly. \"It's good to be needed.\""
-      ]
+      ],
+      "family": "ask"
     },
     {
       "id": "show_up",
@@ -86,7 +150,8 @@
         "{name} notices you came. Neither of you says much.",
         "{name} makes room for you without a word.",
         "{name} glances over. \"You're here again.\""
-      ]
+      ],
+      "family": "help"
     },
     {
       "id": "talk_empty_cheer",
@@ -98,13 +163,16 @@
         "{name} says \"Sure,\" and looks away.",
         "{name} nods along. Nothing changes."
       ],
-      "failLine": "{name} hears how hollow it is and turns away."
+      "failLine": "{name} hears how hollow it is and turns away.",
+      "short": "Cheer them up"
     },
     {
       "id": "return_item",
       "label": "Return what's theirs",
       "hostMethod": "carry_burden",
-      "requiresTheirGoods": true
+      "requiresTheirGoods": true,
+      "family": "give",
+      "short": "Return theirs"
     }
   ]
 }

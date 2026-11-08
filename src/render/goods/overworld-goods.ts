@@ -17,7 +17,7 @@ import { townReach } from '../../sim/economy/borders';
 import { createInventoryUi } from './inventory-ui';
 import { createWorldMap } from './world-map';
 import { pointOnRoad } from '../../sim/map/world-layout';
-import { useItem, resolveDrop, dropItem, pickUpItem } from '../../sim/goods/item-use';
+import { useItem, resolveDrop, dropItem } from '../../sim/goods/item-use';
 import { ITEM_BY_ID } from '../../sim/goods/inventory';
 import { createNeedsBoards } from './needs-board';
 import { createCorrespondence } from './correspondence-ui';
@@ -30,6 +30,10 @@ import type { Navigator } from '../../sim/map/nav';
 import { townBuildings, type Building } from '../../sim/map/interiors';
 import { houseNewcomers, placeAt, residences } from '../../sim/map/residency';
 import { createFacilitiesLayer, type FacilitiesLayer } from './facilities-layer';
+import { chestCandidate, goodsCandidates, groundCandidate, presentGoodsVerb, type GoodsTargetParts } from './goods-targets';
+import type { FocusCandidate } from '../interact/focus';
+import type { ActOutcome } from '../../sim/play-session/action-providers';
+import type { Target, TargetKind } from '../../sim/play-session/targets';
 
 type Pt = { x: number; y: number };
 export type OverworldGoods = {
@@ -39,8 +43,12 @@ export type OverworldGoods = {
   onDawn: () => void;
   /** Call after any session.act: stash acts change chests and carried goods. */
   onAct: () => void;
-  /** Try gathering a nearby node. Returns a line when something happened. */
-  gatherNear: (player: Pt) => string | null;
+  /** Goods things in reach (nodes, facilities, boards, wagons, chests, ground items) for the focus resolver. */
+  targets: (player: Pt, all?: boolean) => FocusCandidate[];
+  /** After a goods thing's verb resolved: open its sheet, pop its sprite, say its line. False if not a goods kind. */
+  presentTarget: (kind: TargetKind, verb: string, target: Target, out: ActOutcome | undefined) => boolean;
+  /** Where a click on a chest or a ground item goes (the scene's ring). */
+  onTapTarget: (fn: (c: FocusCandidate) => void) => void;
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string, itemId?: string) => { ok: boolean; line?: string };
   useSelected: (indoors?: boolean) => string | null;
@@ -49,10 +57,6 @@ export type OverworldGoods = {
   /** Redraw the satchel/hotbar after the inventory changed outside it. */
   refreshInventory: () => void;
   letters: () => void;
-  readBoard: (player: Pt) => boolean;
-  meetCaravan: (player: Pt) => boolean;
-  /** Work a shift at the facility you stand at (moves the day on). True when one was in reach. */
-  workFacility: (player: Pt) => boolean;
   /** Placed facilities on the roads (dev/e2e). */
   facilities: FacilitiesLayer;
   closeOverlays: () => void;
@@ -92,6 +96,7 @@ export function attachOverworldGoods(
     litPrev = sp?.isTinted ? sp.tintTopLeft : undefined;
     sp?.setTint(0xffe38a);
   };
+  let tapTarget: (c: FocusCandidate) => void = () => {};
   const groundViews = new Map<string, Phaser.GameObjects.Arc>();
   const showGround = (): void => {
     const live = st()?.groundItems ?? [];
@@ -99,12 +104,8 @@ export function attachOverworldGoods(
     for (const g of live) {
       if (groundViews.has(g.id)) continue;
       const c = scene.add.circle(g.x, g.y, 5, parseInt((ITEM_BY_ID.get(g.itemId)?.color ?? '#f4e6c8').slice(1), 16)).setStrokeStyle(1, 0x1b1612).setDepth(g.y).setName('ground-item').setInteractive({ useHandCursor: true });
-      c.on('pointerdown', () => {
-        const s = st();
-        if (!s || Math.hypot(g.x - getPlayer().x, g.y - getPlayer().y) >= 70) { say('Too far to pick up.'); return; }
-        if (pickUpItem(s, g.id)) inv.refresh();
-        showGround();
-      });
+      // A click is the same as E beside it: the ground item's ring (Pick up), through session.act.
+      c.on('pointerdown', () => tapTarget(groundCandidate(g.id, g)));
       groundViews.set(g.id, c);
     }
   };
@@ -126,7 +127,7 @@ export function attachOverworldGoods(
     },
   });
   const mail = createCorrespondence(scene, st, () => inv.refresh());
-  const chests = createStashChests(scene, st, layout.settlements, () => inv.refresh());
+  const chests = createStashChests(scene, st, layout.settlements, (siteId, at) => tapTarget(chestCandidate(siteId, at)));
   const plots = createPlotMarkers(scene, st);
   const memories = new Map<string, Phaser.GameObjects.Text>();
   // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
@@ -199,6 +200,10 @@ export function attachOverworldGoods(
     return null;
   });
 
+  const parts: GoodsTargetParts = {
+    nodes, facilities, boards, wagons: () => living.caravanSpots(), chests: () => chests.views, ground: () => groundViews,
+    townName: (tid) => meta.get(tid)?.name ?? tid,
+  };
   let lastUnread = st() ? unreadReplies(st()!) : 0;
   scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
   showGround();
@@ -233,13 +238,18 @@ export function attachOverworldGoods(
       facilities.refresh();
       inv.refresh();
     },
-    gatherNear(player) {
-      const n = nodes.nearest(player);
-      if (!n) return null;
-      const line = nodes.gather(n);
-      inv.refresh();
-      return line;
-    },
+    targets: (player, all) => goodsCandidates(parts, player, all),
+    presentTarget: (kind, verb, target, out) => presentGoodsVerb(parts, {
+      say,
+      openBoard: (townId) => boards.openAt(townId),
+      openTrade: (id) => trader.open(id),
+      // A shift takes the hours it takes: the day moves on (never past dusk into the night).
+      shiftHours: (hours) => life.setPhase(Math.max(life.phase(), Math.min(0.7, life.phase() + hours / 24))),
+      refreshInventory: () => inv.refresh(),
+      refreshChests: () => { chests.refresh(); plots.refresh(); },
+      refreshGround: () => showGround(),
+    }, kind, verb, target, out),
+    onTapTarget: (fn) => { tapTarget = fn; },
     beforeDeed(methodId, personId, itemId) {
       const s = st();
       if (!s || !isGoodsDeed(methodId)) return { ok: true };
@@ -266,22 +276,7 @@ export function attachOverworldGoods(
     selectedItem: () => inv.selectedItem(),
     refreshInventory: () => inv.refresh(),
     letters: () => mail.open(),
-    readBoard: (player) => boards.interact(player),
     openBoard: (townId, page) => boards.openAt(townId, page),
-    meetCaravan(player) {
-      const id = living.nearestCaravan(player);
-      if (!id) return false;
-      trader.open(id); return true;
-    },
-    workFacility(player) {
-      const r = facilities.work(player);
-      if (!r) return false;
-      say(r.line);
-      // A shift takes the hours it takes: the day moves on (never past dusk into the night).
-      if (r.hours > 0) life.setPhase(Math.max(life.phase(), Math.min(0.7, life.phase() + r.hours / 24)));
-      inv.refresh();
-      return true;
-    },
     facilities,
     closeOverlays: () => { trader.close(); boards.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
     toggleInventory: () => inv.toggle(),

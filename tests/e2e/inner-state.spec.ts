@@ -1,9 +1,14 @@
 /** People's inner state, surfaced: wound x method chemistry, marks (line + body tell), civic voice, notoriety, inherited dependence. */
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
+import { pickVerb } from './support/game';
 
 const OUT = 'test-results/inner-state';
 const methods = JSON.parse(fs.readFileSync('src/data/systems/methods.json', 'utf8')) as { methods: { id: string; effectiveness?: Record<string, number> }[] };
+// Ring verbs are deeds hosted by a method (talk_gentle by inspire, …): the host carries the wound chemistry.
+const deeds = JSON.parse(fs.readFileSync('src/data/systems/interactions/deeds.json', 'utf8')) as { deeds: { id: string; hostMethod: string }[] };
+const TALK = /^(talk_gentle|talk_hard|talk_hard_shame|favor_do|stand_up)@/;
+const hostOf = (chipId: string): string | undefined => deeds.deeds.find((d) => chipId.startsWith(`${d.id}@`))?.hostMethod;
 const fallbacks = JSON.parse(fs.readFileSync('src/data/dialogue/surface-fallbacks.json', 'utf8')) as { lines: Record<string, string[]> };
 const linesFor = (prefix: string): string[] => Object.entries(fallbacks.lines).filter(([k]) => k === prefix || k.startsWith(`${prefix}.`)).flatMap(([, v]) => v);
 
@@ -57,22 +62,21 @@ test.describe('inner state through people', () => {
     // Find someone at home and a ring chip whose method clearly meets (or misses) their wound.
     const town = await page.evaluate(() => window.__hearth!.session.snapshot().townId);
     const folk = await page.evaluate((t) => window.__hearth!.session.listPeople().filter((p) => p.townId === t), town);
-    let pick: { pid: string; index: number; mul: number } | null = null;
+    let pick: { pid: string; chip: string; mul: number } | null = null;
     for (const p of folk) {
       const chips = await page.evaluate((id) => window.__hearth!.dev.chips(id), p.id);
-      chips.slice(0, 7).forEach((c, index) => {
-        const m = methods.methods.find((x) => c.id === `${x.id}@${p.id}`);
+      for (const c of chips.filter((x) => TALK.test(x.id))) {
+        const m = methods.methods.find((x) => x.id === hostOf(c.id));
         const mul = m?.effectiveness?.[p.woundId ?? ''];
-        if (!pick && mul !== undefined && (mul >= 1.2 || mul <= 0.7)) pick = { pid: p.id, index, mul };
-      });
+        if (!pick && mul !== undefined && (mul >= 1.2 || mul <= 0.7)) pick = { pid: p.id, chip: c.id, mul };
+      }
       if (pick) break;
     }
     expect(pick, 'a chip with clear wound chemistry').not.toBeNull();
-    const { pid, index, mul } = pick!;
+    const { pid, chip, mul } = pick!;
 
-    // Real keys: open the ring beside them, press the chip's number.
-    expect(await page.evaluate((id) => window.__hearth!.dev.ring(id), pid)).toBe(true);
-    await page.keyboard.press(`Digit${index + 1}`);
+    // Real keys: open the ring beside them, press the family's number, then the verb's.
+    await pickVerb(page, pid, chip);
     await expect.poll(() => juice(page, 'person.wound').then((j) => j.length)).toBeGreaterThan(0);
     const w = (await juice(page, 'person.wound'))[0]!;
     expect(w.p).toMatchObject({ personId: pid, woundMul: mul });
@@ -88,7 +92,7 @@ test.describe('inner state through people', () => {
         await page.evaluate((id) => {
           const h = window.__hearth!;
           h.session.getState().player.spark = 100;
-          const chip = h.dev.chips(id).find((c) => /^(challenge|carry_burden|inspire|shame|lie)@/.test(c.id));
+          const chip = h.dev.chips(id).find((c) => /^(talk_gentle|talk_hard|talk_hard_shame|favor_do|stand_up)@/.test(c.id));
           if (chip) h.session.act(chip.id);
         }, p.id);
         marked = (await juice(page, 'mark.applied'))[0];

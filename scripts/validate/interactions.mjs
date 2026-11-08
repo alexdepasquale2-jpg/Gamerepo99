@@ -335,6 +335,25 @@ export function validateInteractions(data, ctx) {
     for (const l of d.lines || []) req(typeof l === 'string' && l.length > 0, `deed ${d.id}: empty line`);
   }
 
+  // Ring families (deeds.json families): at most 6, short labels; every deed lands in one, and every chip
+  // text (short, else label) fits a ring chip (16 chars).
+  const fams = doc.families || [];
+  const famIds = new Set();
+  req(fams.length > 0 && fams.length <= 6, `deed families: 1..6 (got ${fams.length})`);
+  for (const f of fams) {
+    req(!!f.id && !famIds.has(f.id), `deed family dup/missing id ${f?.id}`);
+    famIds.add(f.id);
+    for (const a of f.aliases || []) famIds.add(a);
+    req(typeof f.label === 'string' && f.label.length > 0 && f.label.length <= 16, `deed family ${f.id}: label 1..16 chars`);
+    if (f.choiceSetId) req((doc.choiceSets || []).some((cs) => cs.id === f.choiceSetId), `deed family ${f.id}: unknown choiceSet ${f.choiceSetId}`);
+  }
+  for (const d of doc.deeds || []) {
+    const viaChoice = fams.some((f) => f.choiceSetId && (doc.choiceSets || []).find((cs) => cs.id === f.choiceSetId)?.options?.some((o) => o.interactionId === d.id));
+    req(d.family ? famIds.has(d.family) : viaChoice, `deed ${d.id}: no ring family (set family, or list it in a family's choiceSet)`);
+    const chip = d.short ?? d.label;
+    req(typeof chip === 'string' && chip.length <= 16, `deed ${d.id}: chip text "${chip}" over 16 chars (add short)`);
+  }
+
   // Choice set refs
   for (const cs of doc.choiceSets || []) {
     for (const opt of cs.options || []) {
