@@ -10,18 +10,28 @@ import type { SimState } from '../types/runtime';
 import { BUILDING_BY_ID, CELL_TILES, activePlans, claimsIn, type Claim } from './build-plans';
 import { companyOf, purseOf } from './companies';
 import { householdOf, security } from './households';
+import { WORLD_SCALE } from '../map/constants';
 
 export const LAND = {
   /** Tiles per plot cell side. */
   cellTiles: CELL_TILES,
-  /** A town's reach in tiles with nothing built, plus per built / claimed building, capped. */
-  baseReach: 12,
-  perBuilt: 2.5,
-  perClaimed: 1,
-  maxReach: 45,
+  /**
+   * A town's reach with nothing built, plus per built / claimed building, capped. Counted in
+   * original-map tiles and stretched by WORLD_SCALE, because the world grew while plots did not:
+   * at the old figures towns hundreds of tiles apart could never border.
+   */
+  baseReach: 12 * WORLD_SCALE,
+  perBuilt: 2.5 * WORLD_SCALE,
+  perClaimed: 1 * WORLD_SCALE,
+  maxReach: 70 * WORLD_SCALE,
+  /**
+   * Towns joined by a direct road measure their distance by it, not as the crow flies: a two-day road
+   * is a near neighbour whatever the map says. Tiles a road day counts for.
+   */
+  tilesPerRoadDay: 40 * WORLD_SCALE,
   /** Border tension: gain per dawn while overlapping (+ overlap/divisor), loss per dawn otherwise. */
   tensionBase: 1,
-  tensionDivisor: 5,
+  tensionDivisor: 5 * WORLD_SCALE,
   tensionDecay: 5,
   tensionMax: 100,
   /** Claim-jumping: how long a claim must stall, chance per dawn per town, savings needed, dawns to settle. */
@@ -87,9 +97,16 @@ export function tickBorders(state: SimState): void {
 
   // 1. Town borders: overlap of reach builds tension.
   const towns = Object.keys(state.towns ?? {}).filter((id) => origin(state, id)).sort();
+  // Shortest open direct road per pair, in days; a broken road brings nobody closer.
+  const roadDays = new Map<string, number>();
+  for (const r of state.economyRoutes ?? []) {
+    if (r.broken) continue;
+    const k = r.fromTownId < r.toTownId ? `${r.fromTownId}|${r.toTownId}` : `${r.toTownId}|${r.fromTownId}`;
+    roadDays.set(k, Math.min(roadDays.get(k) ?? Infinity, r.days));
+  }
   for (const [i, ta] of towns.entries()) for (const tb of towns.slice(i + 1)) {
     const oa = origin(state, ta)!, ob = origin(state, tb)!;
-    const dist = Math.hypot(oa.q - ob.q, oa.r - ob.r);
+    const dist = Math.min(Math.hypot(oa.q - ob.q, oa.r - ob.r), (roadDays.get(`${ta}|${tb}`) ?? Infinity) * LAND.tilesPerRoadDay);
     const reachA = townReach(state, ta), reachB = townReach(state, tb);
     const overlap = reachA + reachB - dist;
     const key = `${ta}|${tb}`;
