@@ -137,8 +137,10 @@ export interface ActorsApi {
   update(dt: number): void;
   /** The brood: siblings left in towns, call back, switch body. */
   brood: BroodApi;
-  /** People the schedule puts inside this building now (`${townId}:${index}`, sim/map/interiors ids). */
+  /** People the schedule puts inside this building now (`${townId}:${slot}`, sim/map/interiors ids). */
   residentsOf(buildingId: string): string[];
+  /** Who keeps / lives in this building (their home in the people layer), whether or not they are in now. */
+  keeperOf(buildingId: string): string | undefined;
   /** How a person looks, so an interior can draw the same figure: texture, standing frame, scale, tint. */
   lookOf(personId: string): { texture: string; frame: string; scale: number; tint: number } | undefined;
 }

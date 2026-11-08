@@ -18,6 +18,7 @@ import { inTownBox } from './town-spots';
 import { createWorldThings } from './things';
 import { buildRoom, roomOccupant, type Room } from './interior';
 import { occupantOf } from '../sim/map/interiors';
+import { adoptLegacyBuildingFlags } from '../sim/map/building-ids';
 import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
@@ -111,20 +112,32 @@ export function attachWorld(ctx: GameContext): WorldApi {
     ctx.events.emit('room-leave', { buildingId: left.id });
   };
 
+  // Old saves keyed per-building flags (lanterns) by plan index. Once per loaded state, on first use (a room
+  // entered, or the next poll), every town's keys move to the stable ids — while this build's plan still
+  // matches the one the save was made with, and before the next save writes them back out.
+  const adopted = new WeakSet<object>();
+  const adoptOnce = (): void => {
+    const s = st();
+    if (!s || adopted.has(s)) return;
+    adopted.add(s);
+    adoptLegacyBuildingFlags(s, towns.spots.flatMap((x) => x.buildings));
+  };
+
   const keeperSeen = new Map<string, string>();
   const enterRoom = (buildingId: string): boolean => {
     if (room) return false;
     const b = towns.spots.flatMap((s) => s.buildings).find((x) => x.id === buildingId);
     if (!b) return false;
+    adoptOnce();
     const s = st();
-    // Furnish for whoever is home now (the people layer's homes). An empty room shows the keeper last seen in
-    // it, so it does not change between visits; never seen yet, the building's dealt occupant stands in.
-    const home = ctx.actors?.residentsOf(b.id)[0];
-    if (home) keeperSeen.set(b.id, home);
     const spot = towns.spots.find((x) => x.town.id === b.townId);
-    const seen = keeperSeen.get(b.id);
-    const who = home ?? (seen && s?.people[seen] ? seen : undefined)
+    const alive = (id: string | undefined): string | undefined => (id && s?.people[id] ? id : undefined);
+    // Furnish for the building's keeper — the people layer's home for it, so the room matches who the
+    // street sees go in, through arrivals and departures. Nobody housed (no actors yet): the keeper this
+    // room was last furnished for, so it holds still between visits, else the building's dealt occupant.
+    const who = alive(ctx.actors?.keeperOf(b.id)) ?? alive(keeperSeen.get(b.id))
       ?? (s && spot ? occupantOf(b, spot.buildings, Object.values(s.people).filter((p) => p.townId === b.townId).map((p) => p.id)) : undefined);
+    if (who) keeperSeen.set(b.id, who);
     room = buildRoom(scene, b, !!s && lanternLit(s, b.id), s ? roomOccupant(s, who) : {});
     returnTo = { x: b.door.x, y: b.door.y + 12 };
     setOutdoorsVisible(false);
@@ -174,7 +187,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
       clock.advance(dt);
       tone.update(dt);
       poll += dt;
-      if (poll > POLL_S) { poll = 0; refresh('all'); }
+      if (poll > POLL_S) { poll = 0; adoptOnce(); refresh('all'); }
       const phase = clock.phase(), night = nightAt(phase), day = lightAt(phase);
       if (room) {
         room.update(time);
