@@ -9,6 +9,7 @@
  *  input.ts       E / Enter / 1–6 / Esc, tap a thing (walk there first when far)
  *  present.ts     session.act → line, cue, sheet, room, rest, world refresh, shift hours
  *  controller.ts  ties them together; verbs for the focused thing only, cached
+ *  hold.ts        hold E (or the A button) on a work spot to help: an arc fills, one effort unit to session.workAt
  */
 import Phaser from 'phaser';
 import type { GameContext, InteractApi, Thing } from '../app/contracts';
@@ -41,6 +42,8 @@ export function attachInteract(ctx: GameContext): InteractApi {
     isOpen: c.isOpen,
     act: (thing, verbId) => c.act(thing, verbId),
     dropItem: c.dropItem,
+    startHold: () => c.hold.start(),
+    endHold: () => c.hold.end(),
   };
 }
 

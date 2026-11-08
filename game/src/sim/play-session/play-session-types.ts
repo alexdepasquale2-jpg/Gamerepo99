@@ -105,6 +105,12 @@ export type PlaySession = {
   putDown(targetKey?: string): import('./action-providers').ActOutcome;
   /** Let the load fall at a world point (ground items); the B button. */
   dropCarried(at: { x: number; y: number }): import('./action-providers').ActOutcome;
+  /** Tasks (sim/tasks): what people in a town are working on today (the player's town by default). */
+  tasksNear(townId?: string): import('../tasks').Task[];
+  /** The task at a work spot (`prop:work@<taskId>`, `work@<taskId>` or the bare task id), or null. */
+  taskAt(spotKey: string): import('../tasks').Task | null;
+  /** Help by doing: put `effort` units (one per held E) into the task at a work spot. */
+  workAt(spotKey: string, effort?: number): import('../tasks').WorkResult;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }

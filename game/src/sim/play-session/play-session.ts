@@ -33,6 +33,7 @@ import { carryHistory } from '../history-voice';
 import '../contrib';
 import { carryTarget, dropCarried } from '../carry';
 import { targetActionId } from './targets';
+import { contribute, taskById, tasksNear } from '../tasks';
 import { beginMomentAct } from '../scenario/moments-live';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
@@ -349,6 +350,24 @@ function createPlayModeSession(defaults: {
     },
     dropCarried: (at) => (state ? dropCarried(state, at) : { ok: false }),
     // ---- end carrying ----
+    tasksNear: (townId) => (state ? tasksNear(state, townId ?? state.player.townId ?? '').map((t) => structuredClone(t)) : []),
+    taskAt(spotKey) {
+      const t = state ? taskById(state, spotKey) : undefined;
+      return t ? structuredClone(t) : null;
+    },
+    workAt(spotKey, effort = 1) {
+      if (!state) return { ok: false, line: 'Nothing here.' };
+      const st = state;
+      const rt = interactionRt;
+      const beforeLen = st.bus?.lastIds?.length ?? 0;
+      // Trust goes through the interaction runtime's mirror too, as every other act's does.
+      const res = contribute(st, spotKey, effort, {
+        trust: { get: (id) => rt?.people.get(id)?.trust ?? st.people[id]?.trust ?? firstTrust(st, id), set: (id, v) => { const ip = rt?.people.get(id); if (ip) ip.trust = v; } },
+      });
+      if (res.ok) eventLog.push({ type: 'task.work', methodId: res.task?.id ?? spotKey });
+      appendJuiceSince(beforeLen);
+      return res.task ? { ...res, task: structuredClone(res.task) } : res;
+    },
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

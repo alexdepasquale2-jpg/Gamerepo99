@@ -37,3 +37,4 @@ import './shop';
 import './site-verbs';
 import '../linger';
 import './carry';
+import './tasks';

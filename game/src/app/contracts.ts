@@ -230,6 +230,12 @@ export interface InteractApi {
    * over empty ground, so the panels may set it down instead.
    */
   dropItem(itemId: string, client: Pt): boolean;
+  /**
+   * Hold to work (interact/hold.ts): begin holding on the focused work spot (false when it is not one), and
+   * let go. The on-screen A button calls these on press and release; E does the same from the keyboard.
+   */
+  startHold?(): boolean;
+  endHold?(): void;
 }
 
 export interface GameContext {
