@@ -1,7 +1,8 @@
 import type { SimState } from '../types/runtime';
 import { rollAttractors, tickNotorietyDawn } from './notoriety';
 import { tickStashDawn } from './stash';
-import { notorietyTable } from './state';
+import { ensureHoard, notorietyTable } from './state';
+import { tickEndingDawn } from './neglect';
 import { syncRaiders, tickGuardUpkeep } from './events';
 import { pushJuice } from '../packets';
 import { applyEffect } from '../effects';
@@ -10,13 +11,15 @@ import type { DataTables } from '../load-data';
 
 export * from './state';
 export { addNotoriety, tickNotorietyDawn, rollAttractors, attractorRoadBonus, leverageDiscount, despairMul } from './notoriety';
-export { applyStashAct, tickStashDawn, theftP, unguarded, decayLoss } from './stash';
+export { applyStashAct, tickStashDawn, theftP, unguarded, decayLoss, storableGoods, stashRoom } from './stash';
 export { fireNotorietyEvent, noteCoinSpend, tickGuardUpkeep, syncRaiders, raidBonus } from './events';
-export { detectEnding } from './neglect';
+export { detectEnding, tickEndingDawn, hoardEndingOpen } from './neglect';
 
-/** Dawn beat: stash decay/theft, notoriety fade, dawn attractors (juice + authored effects scaled by notoriety). */
+/** Dawn beat: stash decay/theft, notoriety fade, dawn attractors (juice + authored effects scaled by notoriety), ending offer. */
 export function tickHoardDawn(state: SimState): void {
   if (!notorietyTable(state)) return;
+  // Yesterday's stash news is old news.
+  delete ensureHoard(state).news;
   tickGuardUpkeep(state);
   const fired = rollAttractors(state, 'dawn');
   syncRaiders(state, fired);
@@ -26,6 +29,7 @@ export function tickHoardDawn(state: SimState): void {
     pushJuice(state, 'notoriety.attractor', { attractorId: id });
     applyAttractorEffects(state, id);
   }
+  tickEndingDawn(state);
 }
 
 /** Apply a fired attractor's authored effects through the shared effect path. Deterministic per seed/day/attractor. */

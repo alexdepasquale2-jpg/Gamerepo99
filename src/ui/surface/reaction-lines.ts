@@ -63,16 +63,25 @@ export const SURFACED: Record<string, Entry> = {
   'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
+  'stash.guard_left': nearby('notoriety', 'stash_guard_left', 'glance'),
+  'stash.decay': nearby('notoriety', 'stash_decay', 'none'),
+  'stash.hidden': own('stash', 'stash_hidden', 'none', (p) => str(p.personId)),
+  'stash.stored': own('stash', 'stash_stored', 'none', (p) => str(p.personId)),
+  'stash.guard_hired': own('stash', 'stash_guard_hired', 'none', (p) => str(p.personId)),
+  'stash.withdrawn': own('stash', 'stash_withdrawn', 'none', (p) => str(p.personId)),
   'person.reignite': tint,
   'site.kindle': tint,
 };
 
-/** Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off. */
+/**
+ * Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off.
+ * hoard.ending_open has its own overlay (src/ui/hoard-ending-screen.ts).
+ */
 export const SILENT: readonly string[] = [
   'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
   'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
   'caravan.arrive', 'caravan.trade', 'caravan.depart', 'letter.reply',
-  'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
+  'hoard.ending_open', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
   'succession.carried', 'succession.rested', 'legend.heard', 'legend.act', 'grave.found',
 ];
 

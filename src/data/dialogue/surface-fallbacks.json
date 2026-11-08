@@ -12,6 +12,12 @@
     "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
     "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
     "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
+    "stash_hidden": ["Under the boards, then. I never saw a thing.", "It'll keep down there. I won't ask."],
+    "stash_stored": ["Down with the rest of it. Mind the damp.", "It'll keep, for a while."],
+    "stash_guard_hired": ["Someone's watching it now. They'll want paying every dawn.", "A guard, is it. Must be worth guarding."],
+    "stash_withdrawn": ["All of it? Then it's just a cellar again.", "Up it comes. Heavier than it looked."],
+    "stash_guard_left": ["Your guard's gone. Wages, they said.", "Nobody's watching the cellar now."],
+    "stash_decay": ["Something's spoiling down there. You can smell it.", "The damp gets into everything."]
   }
 }

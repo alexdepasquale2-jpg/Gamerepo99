@@ -4,6 +4,7 @@ import { OverworldScene } from './render/overworld-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
+import { createHoardEndingScreen } from './ui/hoard-ending-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
 import { createDevMenu } from './ui/dev-menu';
@@ -73,6 +74,18 @@ setInterval(() => {
   if (!session) return;
   if (succession?.session !== session) succession = { session, screen: createSuccessionScreen(session) };
   succession.screen.refresh();
+}, 250);
+
+// Hoard ending: a hoarder's legitimate end, polled the same way.
+let hoardEnding: { session: PlaySession; screen: ReturnType<typeof createHoardEndingScreen> } | undefined;
+setInterval(() => {
+  const session = game?.registry.get('playSession') as PlaySession | undefined;
+  if (!session) return;
+  if (hoardEnding?.session !== session) {
+    hoardEnding?.screen.el.remove();
+    hoardEnding = { session, screen: createHoardEndingScreen(session) };
+  }
+  hoardEnding.screen.refresh();
 }, 250);
 
 createDevMenu();
