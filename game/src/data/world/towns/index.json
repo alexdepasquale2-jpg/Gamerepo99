@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-fabric-variety-fix.md",
+  "files": [
+    "anchors.json",
+    "gap-poles.json"
+  ],
+  "forgeNote": "Until Task H, src imports towns.json (anchors). Validator merges folder."
+}

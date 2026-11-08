@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/plans/m4/task-a-economy-lod.md",
+  "description": "Off-screen dawn economy LOD: stock flows, broken-route despair, starve pressure. Deterministic; no spark spend beyond cost_town_despair.",
+  "tick": "dawn",
+  "invokeFrom": "advanceToDawn",
+  "optIn": {
+    "field": "town.economyOptIn",
+    "ashfordDefault": false,
+    "whenFalse": "noop",
+    "alsoTickWhenPlayerTravels": true,
+    "nonAbstractFallback": false
+  },
+  "flow": {
+    "formula": "sum(facility.output.qtyPerDawn * facility.staffedMul * route.condition) * receiveShare[townId]",
+    "skipWhenRouteBroken": true,
+    "receiveShareSource": "route.receiveShare",
+    "extractiveDefaults": {
+      "city": 0.7,
+      "village": 0.3,
+      "note": "Used only when route.extractive and receiveShare missing a town key"
+    }
+  },
+  "despair": {
+    "onRouteBroken": 0.05,
+    "onStarve": 0.05,
+    "maxAddPerDawn": 0.05,
+    "clamp": [
+      0,
+      1
+    ],
+    "starveWhenFoodBelow": 1,
+    "foodResourceId": "food_grain",
+    "doctrineRealDeliveryHitOnBroken": 0.05,
+    "doctrineRequiresSupplyPromise": true,
+    "keepMild": true,
+    "note": "Must not restore pre-pacing spark fuse; cost_town_despair stays -1",
+    "neglect": {
+      "enabled": true,
+      "onNeglect": 0.01,
+      "graceDawns": 1,
+      "neglectCap": 0.6,
+      "note": "Town untouched (no interaction/reignite there) for graceDawns adds onNeglect, never above neglectCap; never a fail state."
+    }
+  },
+  "juice": {
+    "deliver": "stock.deliver",
+    "starve": "stock.starve",
+    "routeBreak": "route.break"
+  },
+  "determinism": "same seed + same dawn sequence => same stock/despair vectors",
+  "acceptance": {
+    "despairAddFromStarveMax": 0.05,
+    "economyOffNoDespairFromStock": true
+  }
+}

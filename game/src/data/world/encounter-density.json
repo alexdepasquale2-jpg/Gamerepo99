@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md",
+  "realMinutesPerTravelDay": 1.25,
+  "targetEncountersPerRealMinute": 0.35,
+  "targetEncountersPerTravelDay": 0.44,
+  "minQuietWeightShare": 0.35,
+  "cooldownTravelDays": 1,
+  "pSpawnClamp": {
+    "min": 0.05,
+    "max": 0.85
+  },
+  "failChanceMul": 0.22,
+  "biomeWeightMul": {
+    "ash_wood": 1.1,
+    "mill_heath": 0.95,
+    "glare_approach": 1.15,
+    "brine_marsh": 1.05,
+    "river_margin": 1.0,
+    "peat_fen": 1.05,
+    "chalk_downs": 0.98,
+    "slag_verge": 1.12
+  },
+  "conditionWeightMul": {
+    "note": "badEntryWeight *= (1.15 - 0.5 * route.condition)",
+    "base": 1.15,
+    "conditionCoef": 0.5
+  },
+  "cooldownBlocksTags": [
+    "hostile",
+    "break",
+    "posed_ambush"
+  ]
+}

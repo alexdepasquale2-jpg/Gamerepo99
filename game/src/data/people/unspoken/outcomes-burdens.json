@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-social-graph/06-blessings-and-burdens.md",
+  "description": "ComeToPassOutcome rows with kind burden. Despair deltas stay mild (≤0.02).",
+  "outcomes": [
+    {
+      "id": "grudge_retold",
+      "kind": "burden",
+      "carrierPrefer": "friendship",
+      "fragmentIds": ["frag_unspoken_grudge_retold"],
+      "effects": {
+        "trust": -0.03,
+        "despair": 0.015,
+        "marksAdd": [{ "markId": "resentment", "stacks": 1 }],
+        "letterOrRumor": "rumor",
+        "edgeWeightDelta": -0.06
+      }
+    },
+    {
+      "id": "favor_called_bitter",
+      "kind": "burden",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_favor_called_bitter"],
+      "effects": {
+        "trust": -0.025,
+        "despair": 0.01,
+        "marksAdd": [{ "markId": "resentment", "stacks": 1 }],
+        "edgeWeightDelta": -0.04
+      }
+    },
+    {
+      "id": "rumor_twist",
+      "kind": "burden",
+      "carrierPrefer": "trade",
+      "fragmentIds": ["frag_unspoken_rumor_twist"],
+      "effects": {
+        "trust": -0.02,
+        "despair": 0.015,
+        "letterOrRumor": "rumor",
+        "edgeWeightDelta": -0.05
+      }
+    },
+    {
+      "id": "debt_called_in",
+      "kind": "burden",
+      "carrierPrefer": "trade",
+      "fragmentIds": ["frag_unspoken_debt_called_in"],
+      "effects": {
+        "trust": -0.03,
+        "despair": 0.02,
+        "edgeWeightDelta": -0.08
+      }
+    },
+    {
+      "id": "festival_cancelled",
+      "kind": "burden",
+      "carrierPrefer": "same_town",
+      "fragmentIds": ["frag_unspoken_festival_cancelled"],
+      "effects": {
+        "despair": 0.02,
+        "flame01": -0.01,
+        "letterOrRumor": "rumor"
+      }
+    },
+    {
+      "id": "cold_shoulder",
+      "kind": "burden",
+      "carrierPrefer": "same_town",
+      "fragmentIds": ["frag_unspoken_cold_shoulder"],
+      "effects": {
+        "trust": -0.02,
+        "marksAdd": [{ "markId": "hollowness", "stacks": 1 }],
+        "edgeWeightDelta": -0.04
+      }
+    },
+    {
+      "id": "letter_of_blame",
+      "kind": "burden",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_letter_of_blame"],
+      "effects": {
+        "trust": -0.03,
+        "despair": 0.015,
+        "marksAdd": [{ "markId": "resentment", "stacks": 1 }],
+        "letterOrRumor": "letter"
+      }
+    },
+    {
+      "id": "shift_dumped",
+      "kind": "burden",
+      "carrierPrefer": "friendship",
+      "fragmentIds": ["frag_unspoken_shift_dumped"],
+      "effects": {
+        "trust": -0.02,
+        "despair": 0.01,
+        "edgeWeightDelta": -0.05
+      }
+    },
+    {
+      "id": "sermon_pointed",
+      "kind": "burden",
+      "carrierPrefer": "influential",
+      "fragmentIds": ["frag_unspoken_sermon_pointed"],
+      "effects": {
+        "trust": -0.025,
+        "despair": 0.015,
+        "marksAdd": [{ "markId": "hollowness", "stacks": 1 }],
+        "letterOrRumor": "rumor"
+      }
+    },
+    {
+      "id": "bridge_burned",
+      "kind": "burden",
+      "carrierPrefer": "kin",
+      "fragmentIds": ["frag_unspoken_bridge_burned"],
+      "effects": {
+        "trust": -0.04,
+        "despair": 0.02,
+        "marksAdd": [{ "markId": "resentment", "stacks": 1 }],
+        "edgeWeightDelta": -0.1
+      }
+    }
+  ]
+}

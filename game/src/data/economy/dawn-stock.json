@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/plans/m4/task-a-economy-lod.md",
+  "description": "Dawn stock seeds, floors, and spoil application for economy LOD. Ashford stays economyOptIn:false.",
+  "foodResourceId": "food_grain",
+  "seedStockByTown": {
+    "ashford": {
+      "food_grain": 12,
+      "timber": 6,
+      "fuel_cord": 4,
+      "ore_iron": 0,
+      "wool": 2
+    },
+    "lowmere": {
+      "food_grain": 8,
+      "timber": 4,
+      "fuel_cord": 3,
+      "ore_iron": 0,
+      "wool": 3
+    },
+    "city_reach": {
+      "food_grain": 20,
+      "timber": 10,
+      "fuel_cord": 5,
+      "ore_iron": 15,
+      "wool": 8
+    }
+  },
+  "missingTownStock": "use_seed_or_empty",
+  "stockFloor": 0,
+  "spoil": {
+    "apply": true,
+    "source": "economy-resources.spoilPerDawn",
+    "order": "after_deliver_before_starve"
+  },
+  "deliverJuice": "stock.deliver",
+  "starveJuice": "stock.starve"
+}

@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "tuning": {
+    "note": "Dawn draw (sim/happenings.ts): from minDay, once minGapDays have passed since the last happening began, chancePerDawn to start one (at most maxActive at a time). (event, town) pairs are weighted by event.weight x town weight: 1, plus biasWeight for a townBias town (authored ids map to this world's settlements: the den to the player's home hearth, a missing town to the nearest gap), plus playerTownWeight where the player woke. townStrict events only happen in their bias towns. relapse.mul effects make burning people in that town lose relapseFlamePerDawn x (mul - 1) flame each dawn they last.",
+    "minDay": 2,
+    "chancePerDawn": 0.35,
+    "minGapDays": 3,
+    "maxActive": 1,
+    "biasWeight": 3,
+    "playerTownWeight": 2,
+    "relapseFlamePerDawn": 8
+  },
+  "events": [
+    {
+      "id": "grey_rain",
+      "name": "Grey Rain",
+      "weight": 12,
+      "durationDays": 1,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "The sky rinses color out of the streets. Even revived hands slow.",
+      "say": "Grey rain. Even the mended ones are slowing.",
+      "news": "Grey rain over {town}. {name} says even the mended ones are slowing.",
+      "effects": [
+        {
+          "id": "effect_rain_relapse",
+          "target": "relapse.mul",
+          "op": "mul",
+          "value": 1.25,
+          "durationDays": 1,
+          "tags": [
+            "weather",
+            "cold"
+          ]
+        },
+        {
+          "id": "effect_rain_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": -3,
+          "durationDays": null,
+          "tags": [
+            "drain"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stranger_embers",
+      "name": "Stranger with Embers",
+      "weight": 8,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "A traveler cups a dying coal and asks if you still know how.",
+      "say": "A stranger came through cupping a coal. Asked after someone who still knows how.",
+      "news": "A stranger with embers passed through {town}. {name} says they were asking after someone who still knows how.",
+      "newsHere": "A stranger cups a dying coal by the {town} hearth and asks if you still know how. You do. {name} watches it catch.",
+      "effects": [
+        {
+          "id": "effect_stranger_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": 8,
+          "durationDays": null,
+          "tags": [
+            "gift"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bad_news_rider",
+      "name": "Bad News Rider",
+      "weight": 10,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Hoofbeats. A letter. Someone's almost-healed crack splits.",
+      "say": "A rider came at first light. {target} read the letter twice.",
+      "news": "A rider brought bad news to {town}. {name} says {target} took it hard.",
+      "effects": [
+        {
+          "id": "effect_rider_force_relapse",
+          "target": "person.flame",
+          "op": "add",
+          "value": -12,
+          "durationDays": null,
+          "tags": [
+            "crisis"
+          ],
+          "pick": "random_burning"
+        },
+        {
+          "id": "effect_rider_fragile",
+          "target": "person.mark",
+          "op": "grant_mark",
+          "value": 1,
+          "markId": "fragile_hope",
+          "durationDays": 2,
+          "tags": [
+            "crisis"
+          ],
+          "pick": "same"
+        }
+      ]
+    },
+    {
+      "id": "market_ghost",
+      "name": "Market Ghost",
+      "weight": 9,
+      "durationDays": 1,
+      "townBias": [
+        "ashford"
+      ],
+      "blurb": "Stalls stand like ribs. Trade feels like a rumor.",
+      "say": "Stalls standing like ribs. Nobody's buying.",
+      "news": "The market in {town} stood empty this morning. {name} says trade feels like a rumor.",
+      "effects": [
+        {
+          "id": "effect_market_vit",
+          "target": "town.vitality",
+          "op": "add",
+          "value": -5,
+          "durationDays": 1,
+          "tags": [
+            "economy"
+          ]
+        },
+        {
+          "id": "effect_market_inspire",
+          "target": "method.effectiveness",
+          "op": "mul",
+          "value": 0.85,
+          "methodId": "inspire",
+          "durationDays": 1,
+          "tags": [
+            "economy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "child_laugh",
+      "name": "A Child Laughs",
+      "weight": 6,
+      "durationDays": 0,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Short. Bright. Unreasonable. It helps more than it should.",
+      "say": "Did you hear that? A child, laughing.",
+      "news": "A child laughed in {town}, short and bright. {name} says it helped {target} more than it should.",
+      "newsHere": "Somewhere in {town} a child laughs. Short. Bright. {name} looks up, and so does {target}.",
+      "effects": [
+        {
+          "id": "effect_laugh_spark",
+          "target": "player.spark",
+          "op": "add",
+          "value": 5,
+          "durationDays": null,
+          "tags": [
+            "warm"
+          ]
+        },
+        {
+          "id": "effect_laugh_flame",
+          "target": "person.flame",
+          "op": "add",
+          "value": 4,
+          "durationDays": null,
+          "tags": [
+            "warm"
+          ],
+          "pick": "random_stalled_or_burning"
+        }
+      ]
+    },
+    {
+      "id": "hill_rumor",
+      "name": "Rumor of the Hill",
+      "weight": 7,
+      "durationDays": 1,
+      "townBias": [
+        "ashford",
+        "lowmere"
+      ],
+      "blurb": "Children say the hill walks. A shutter unlatches from the wrong side — a breach for something large.",
+      "say": "The little ones say the hill walks. I don't laugh at it.",
+      "news": "Children in {town} say the hill walks. {name} found a shutter unlatched from the wrong side.",
+      "effects": [
+        {
+          "id": "effect_hill_fear",
+          "target": "town.fear",
+          "op": "add",
+          "value": -0.15,
+          "durationDays": 1,
+          "tags": [
+            "ogre",
+            "access"
+          ]
+        },
+        {
+          "id": "effect_hill_breach",
+          "target": "town.vitality",
+          "op": "add",
+          "value": 0,
+          "durationDays": 1,
+          "tags": [
+            "breach_open"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "den_cold",
+      "name": "Den Goes Cold",
+      "weight": 8,
+      "durationDays": 0,
+      "townBias": [
+        "marrow_den"
+      ],
+      "blurb": "You pushed through the night without banking the den fire. Morning takes its cut.",
+      "say": "Nobody banked the den fire. It's cold in here.",
+      "news": "The den fire went out while you were away. {name} says the hollow in {town} is cold this morning.",
+      "effects": [
+        {
+          "id": "effect_den_cold",
+          "target": "player.spark",
+          "op": "add",
+          "value": -6,
+          "durationDays": null,
+          "tags": [
+            "den",
+            "neglect"
+          ],
+          "requireSkippedDenRest": true
+        }
+      ],
+      "townStrict": true
+    }
+  ]
+}

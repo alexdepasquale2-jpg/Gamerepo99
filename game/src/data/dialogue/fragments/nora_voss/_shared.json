@@ -1,0 +1,79 @@
+{
+  "fragments": [
+    {
+      "id": "frag_nora_voss_mark_dependence_alone_migration_verbatim",
+      "text": "If the ferry fails again I need you on the rope.",
+      "tags": [
+        "person:nora_voss",
+        "mark:dependence",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_mark_hollowness_alone_migration_verbatim",
+      "text": "I'll deliver. Don't ask what I feel.",
+      "tags": [
+        "person:nora_voss",
+        "mark:hollowness",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_mark_genuine_growth_alone_migration_verbatim",
+      "text": "Bag's heavy. Good.",
+      "tags": [
+        "person:nora_voss",
+        "mark:genuine_growth",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_mark_resentment_alone_migration_verbatim",
+      "text": "You treated my grief like a lesson.",
+      "tags": [
+        "person:nora_voss",
+        "mark:resentment",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_mark_fragile_hope_alone_migration_verbatim",
+      "text": "One call. One dawn.",
+      "tags": [
+        "person:nora_voss",
+        "mark:fragile_hope",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+{
+  "fragments": [
+    {
+      "id": "frag_marta_ellison_challenge_alone",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_opener",
+      "text": "Flour on my wrists. Say it.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:opener",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_middle",
+      "text": "The oven doesn't flinch. I might.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:middle",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_closer",
+      "text": "If you're done proving something, knead or leave.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:closer",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_spark_low",
+      "text": "I'm too empty to spar. The dough will outlast both of us.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:spark_low"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "spark:low"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_spark_high",
+      "text": "Come on then—I've got heat to spare and a peel with your name on it.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:spark_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "spark:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_trust_low",
+      "text": "You don't get my recipes. You get the door.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:trust_low"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "trust:low"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_trust_high",
+      "text": "Push if you must. I'll push back and still feed you after.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:trust_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "trust:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_mark_dependence",
+      "text": "Don't lean on me like a shelf. Shelves crack.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:mark_dependence"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:dependence"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_kin_strain",
+      "text": "Family talk tastes like burnt crust today. Spit it out.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:kin_strain"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_notoriety_high",
+      "text": "Heard your name on the road. Bring coin or quiet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:notoriety_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "notoriety:high"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_doctrine_skeptic",
+      "text": "Mill promises don't rise. Bread does. Pick.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "axis:doctrine_skeptic"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "doctrine:skeptic"
+      ]
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_mark_shame_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. That word already lives in my mouth.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_mark_hollowness_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. There's a hole where the answer was.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_mark_resentment_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. Keep talking. I'm filing this.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_mark_grief_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. Grief isn't done with me yet.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_doctrine_follower_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. The notice says so. I keep the notice.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_doctrine_skeptic_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. I'll need better ink than their oath.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_trust_low_boost",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. You get the door. Not the soft room.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_challenge_alone_spark_high_boost2",
+      "text": "You want a fight with yeast? Fine. Heat's a kind of argument. I've got heat left—use it carefully.",
+      "tags": [
+        "person:marta_ellison",
+        "method:challenge",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

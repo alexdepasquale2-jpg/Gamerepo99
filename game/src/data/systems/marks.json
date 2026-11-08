@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "marks": [
+    {
+      "id": "dependence",
+      "name": "Dependence",
+      "description": "They burn when you stand near. Alone, they gutter.",
+      "maxStacks": 3,
+      "relapseMul": 1.35,
+      "vitalityMul": 0.85,
+      "rippleHelpDisabled": true,
+      "carryCostMul": 0.8,
+      "clingSparkDrainChance": 0.2,
+      "clingSparkDrain": 2,
+      "effects": [
+        {
+          "id": "effect_dep_relapse",
+          "target": "relapse.mul",
+          "op": "mul",
+          "value": 1.35,
+          "durationDays": null,
+          "tags": ["mark"]
+        }
+      ]
+    },
+    {
+      "id": "hollowness",
+      "name": "Hollowness",
+      "description": "They look fine. The light does not reach their eyes.",
+      "maxStacks": 2,
+      "relapseMul": 1.25,
+      "vitalityMul": 0.5,
+      "rippleHarmBonus": 1.2,
+      "effects": [
+        {
+          "id": "effect_hollow_vit",
+          "target": "person.vitalityMul",
+          "op": "mul",
+          "value": 0.5,
+          "durationDays": null,
+          "tags": ["mark"]
+        }
+      ]
+    },
+    {
+      "id": "genuine_growth",
+      "name": "Genuine Growth",
+      "description": "They chose it. The fire is theirs now.",
+      "maxStacks": 2,
+      "relapseMul": 0.55,
+      "vitalityMul": 1.15,
+      "rippleHelpBonus": 1.4,
+      "playerRecoveryOnWitness": true,
+      "effects": [
+        {
+          "id": "effect_growth_relapse",
+          "target": "relapse.mul",
+          "op": "mul",
+          "value": 0.55,
+          "durationDays": null,
+          "tags": ["mark", "kind"]
+        }
+      ]
+    },
+    {
+      "id": "resentment",
+      "name": "Resentment",
+      "description": "They remember how you pushed. It still bruises.",
+      "maxStacks": 2,
+      "relapseMul": 1.1,
+      "vitalityMul": 0.9,
+      "sameMethodFamilyMul": 0.7,
+      "rippleHarmBonus": 1.3,
+      "effects": [
+        {
+          "id": "effect_resent_method",
+          "target": "method.effectiveness",
+          "op": "mul",
+          "value": 0.7,
+          "durationDays": null,
+          "tags": ["mark", "family_gate"]
+        }
+      ]
+    },
+    {
+      "id": "fragile_hope",
+      "name": "Fragile Hope",
+      "description": "A thin flame. Wind will tell the truth.",
+      "maxStacks": 2,
+      "relapseMul": 1.5,
+      "vitalityMul": 1.0,
+      "durationDaysDefault": 2,
+      "effects": [
+        {
+          "id": "effect_fragile_relapse",
+          "target": "relapse.mul",
+          "op": "mul",
+          "value": 1.5,
+          "durationDays": 2,
+          "tags": ["mark", "temp"]
+        }
+      ]
+    }
+  ]
+}

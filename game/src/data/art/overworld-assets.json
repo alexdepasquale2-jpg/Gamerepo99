@@ -1,0 +1,655 @@
+{
+  "grid": {
+    "kind": "square_ortho",
+    "q": "x",
+    "r": "y",
+    "pendingLoomLock": false,
+    "note": "Loom locked square ortho: q=x (column), r=y (row)."
+  },
+  "spriteSort": {
+    "originX": 0.5,
+    "originY": 1,
+    "note": "bottom-center origin; sortY = foot/contact world y"
+  },
+  "bakedSheets": {
+    "ground": "assets/sprites/sheet-ground.png",
+    "cliff": "assets/sprites/sheet-cliff.png",
+    "buildings": "assets/sprites/sheet-buildings.png",
+    "buildingsSide": "assets/sprites/sheet-buildings-side.png",
+    "biomes": "assets/sprites/sheet-biomes.png",
+    "fauna": "assets/sprites/sheet-fauna.png",
+    "crops": "assets/sprites/sheet-crops.png",
+    "ores": "assets/sprites/sheet-ores.png",
+    "caravans": "assets/sprites/sheet-caravans.png"
+  },
+  "dataIds": {
+    "biomes": [
+      "river_margin",
+      "ash_wood",
+      "mill_heath",
+      "glare_approach",
+      "peat_fen",
+      "chalk_downs",
+      "brine_marsh",
+      "slag_verge"
+    ],
+    "facilities": [
+      "mill",
+      "lumber_camp",
+      "waystation",
+      "mine"
+    ],
+    "resources": [
+      "food_grain",
+      "timber",
+      "ore_iron",
+      "wool",
+      "fuel_cord",
+      "coin",
+      "ore_copper",
+      "ore_slag_tin"
+    ],
+    "ores": [
+      "ore_iron",
+      "ore_copper",
+      "ore_slag_tin"
+    ],
+    "fauna": [
+      "rabbit",
+      "deer",
+      "bird",
+      "pig",
+      "fox",
+      "fish",
+      "heron",
+      "rat"
+    ],
+    "crops": [
+      "crop_wheat",
+      "crop_barley",
+      "crop_root",
+      "crop_reed",
+      "crop_flax"
+    ],
+    "caravanRoles": [
+      "carter",
+      "caravaner",
+      "ferryman",
+      "mount",
+      "guide",
+      "courier",
+      "smuggler",
+      "gouger",
+      "scammer",
+      "highwayman"
+    ]
+  },
+  "proposed": {
+    "farm": {
+      "states": [
+        "idle",
+        "working",
+        "abandoned"
+      ],
+      "sheet": "josehzz-farming-crops",
+      "notes": "Not a facilities.json kind. Field stamps use crop.<id>; cargo uses food_grain / wool / timber."
+    }
+  },
+  "assets": {
+    "biome.river_margin": {
+      "key": "biome.river_margin",
+      "sheet": "sheet-biomes",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "Tiny Town grass/cobble + reed props; pastoral wet verge",
+      "despairHint": "grey mud, still water",
+      "aliveHint": "teal water, green reeds"
+    },
+    "biome.ash_wood": {
+      "key": "biome.ash_wood",
+      "sheet": "sheet-biomes",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "Tiny Town trees 15-16, 27-28",
+      "despairHint": "bare canopy",
+      "aliveHint": "full green"
+    },
+    "biome.mill_heath": {
+      "key": "biome.mill_heath",
+      "sheet": "sheet-biomes",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "open heath + autumn trees; pastoral grass",
+      "despairHint": "dead scrub",
+      "aliveHint": "golden heath, flowers"
+    },
+    "biome.glare_approach": {
+      "key": "biome.glare_approach",
+      "sheet": "sheet-biomes",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "dirt 39-42 + stone verge",
+      "despairHint": "dust bleach",
+      "aliveHint": "cobble verge"
+    },
+    "biome.peat_fen": {
+      "key": "biome.peat_fen",
+      "sheet": "sheet-biomes",
+      "frame": 8,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported pastoral-overworld db32; kit-biomes frame TBD",
+      "despairHint": "brown peat, dead reed",
+      "aliveHint": "wet moss, alive reed beds"
+    },
+    "biome.chalk_downs": {
+      "key": "biome.chalk_downs",
+      "sheet": "sheet-biomes",
+      "frame": 10,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Pastoral pale grass / chalk soil",
+      "despairHint": "bleached chalk, sparse scrub",
+      "aliveHint": "short green turf, wildflowers"
+    },
+    "biome.brine_marsh": {
+      "key": "biome.brine_marsh",
+      "sheet": "sheet-biomes",
+      "frame": 12,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Pastoral wet + Tiny Town water tiles",
+      "despairHint": "salt crust, grey flats",
+      "aliveHint": "tidal green, shimmering pools"
+    },
+    "biome.slag_verge": {
+      "key": "biome.slag_verge",
+      "sheet": "sheet-biomes",
+      "frame": 14,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported Kenney caves/dungeons rock + slag props",
+      "despairHint": "ash slag, cold cinder",
+      "aliveHint": "warm cinder, sparse green reclaim"
+    },
+    "road.track": {
+      "key": "road.track",
+      "sheet": "sheet-ground",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "1 cell dirt"
+    },
+    "road.road": {
+      "key": "road.road",
+      "sheet": "sheet-ground",
+      "frame": 5,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "2 cell dirt+cobble"
+    },
+    "road.highway": {
+      "key": "road.highway",
+      "sheet": "sheet-ground",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "3 cell cobble"
+    },
+    "facility.mill.idle": {
+      "key": "facility.mill.idle",
+      "sheet": "sheet-buildings",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "cold panes"
+    },
+    "facility.mill.working": {
+      "key": "facility.mill.working",
+      "sheet": "sheet-buildings",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "lit windows + render smoke"
+    },
+    "facility.mill.abandoned": {
+      "key": "facility.mill.abandoned",
+      "sheet": "sheet-buildings",
+      "frame": 2,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
+    },
+    "facility.lumber_camp.idle": {
+      "key": "facility.lumber_camp.idle",
+      "sheet": "sheet-buildings",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "cold panes"
+    },
+    "facility.lumber_camp.working": {
+      "key": "facility.lumber_camp.working",
+      "sheet": "sheet-buildings",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "lit windows + render smoke"
+    },
+    "facility.lumber_camp.abandoned": {
+      "key": "facility.lumber_camp.abandoned",
+      "sheet": "sheet-buildings",
+      "frame": 5,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
+    },
+    "facility.waystation.idle": {
+      "key": "facility.waystation.idle",
+      "sheet": "sheet-buildings",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "cold panes"
+    },
+    "facility.waystation.working": {
+      "key": "facility.waystation.working",
+      "sheet": "sheet-buildings",
+      "frame": 7,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "lit windows + render smoke"
+    },
+    "facility.waystation.abandoned": {
+      "key": "facility.waystation.abandoned",
+      "sheet": "sheet-buildings",
+      "frame": 8,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
+    },
+    "facility.mine.idle": {
+      "key": "facility.mine.idle",
+      "sheet": "sheet-buildings",
+      "frame": 9,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "cold panes"
+    },
+    "facility.mine.working": {
+      "key": "facility.mine.working",
+      "sheet": "sheet-buildings",
+      "frame": 10,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "lit windows + render smoke"
+    },
+    "facility.mine.abandoned": {
+      "key": "facility.mine.abandoned",
+      "sheet": "sheet-buildings",
+      "frame": 11,
+      "variant": "swap",
+      "heading": "none",
+      "status": "ready",
+      "notes": "broken overlay + warmth floor"
+    },
+    "ore.ore_iron": {
+      "key": "ore.ore_iron",
+      "sheet": "sheet-ores",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported Kenney Roguelike Caves & Dungeons \u2014 frame bake TBD"
+    },
+    "ore.ore_copper": {
+      "key": "ore.ore_copper",
+      "sheet": "sheet-ores",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Caves pack ore tint / DCSS supplemental copper"
+    },
+    "ore.ore_slag_tin": {
+      "key": "ore.ore_slag_tin",
+      "sheet": "sheet-ores",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Slag/tin from caves rock + ash tint"
+    },
+    "crop.crop_wheat": {
+      "key": "crop.crop_wheat",
+      "sheet": "sheet-crops",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Imported josehzz FarmingCrops16x16 \u2014 wheat stages",
+      "despairHint": "wilted stalks",
+      "aliveHint": "golden heads"
+    },
+    "crop.crop_barley": {
+      "key": "crop.crop_barley",
+      "sheet": "sheet-crops",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "josehzz rice/corn stand-in until barley row mapped",
+      "despairHint": "grey chaff",
+      "aliveHint": "ripe barley"
+    },
+    "crop.crop_root": {
+      "key": "crop.crop_root",
+      "sheet": "sheet-crops",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "josehzz potato/cassava",
+      "despairHint": "shrivelled tops",
+      "aliveHint": "leafy root mash"
+    },
+    "crop.crop_reed": {
+      "key": "crop.crop_reed",
+      "sheet": "sheet-crops",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "No reed in josehzz \u2014 pastoral wet prop / Tiny Town reed until dedicated",
+      "despairHint": "broken stems",
+      "aliveHint": "tall green reed"
+    },
+    "crop.crop_flax": {
+      "key": "crop.crop_flax",
+      "sheet": "sheet-crops",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "No flax in josehzz \u2014 sunflower/blue flower stand-in",
+      "despairHint": "dry fibre",
+      "aliveHint": "blue flax bloom"
+    },
+    "cargo.food_grain": {
+      "key": "cargo.food_grain",
+      "sheet": "josehzz-farming-crops",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub",
+      "notes": "Resource pile; field art uses crop.* keys"
+    },
+    "cargo.timber": {
+      "key": "cargo.timber",
+      "sheet": "kenney-tiny-town",
+      "frame": 93,
+      "variant": "palette",
+      "heading": "none",
+      "status": "ready",
+      "notes": "Tiny Town log tile_0093"
+    },
+    "cargo.wool": {
+      "key": "cargo.wool",
+      "sheet": "vendor-jetrel-items",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.fuel_cord": {
+      "key": "cargo.fuel_cord",
+      "sheet": "vendor-jetrel-items",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "cargo.coin": {
+      "key": "cargo.coin",
+      "sheet": "vendor-jetrel-items",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "none",
+      "status": "stub"
+    },
+    "caravan.carter": {
+      "key": "caravan.carter",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "8",
+      "status": "ready",
+      "notes": "cart tile; walker overlay uses Tiny Dungeon"
+    },
+    "caravan.caravaner": {
+      "key": "caravan.caravaner",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "8",
+      "status": "stub",
+      "notes": "multi-cart wagon stub"
+    },
+    "caravan.guild": {
+      "key": "caravan.guild",
+      "sheet": "kenney-tiny-town",
+      "frame": 57,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.caravaner"
+    },
+    "caravan.ferryman": {
+      "key": "caravan.ferryman",
+      "sheet": "sheet-caravans",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready",
+      "notes": "Prism procedural boat+figure CC0; 4-way N,E,S,W sheet-caravans row0",
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "caravan.ferry": {
+      "key": "caravan.ferry",
+      "sheet": "sheet-caravans",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "none",
+      "status": "alias",
+      "aliasOf": "caravan.ferryman"
+    },
+    "caravan.mount": {
+      "key": "caravan.mount",
+      "sheet": "sheet-caravans",
+      "frame": 8,
+      "variant": "palette",
+      "heading": "8",
+      "status": "ready",
+      "notes": "Prism procedural mule CC0; 8-way N..NW sheet-caravans row1 frames 8-15",
+      "frames": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    "caravan.guide": {
+      "key": "caravan.guide",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 100,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready",
+      "notes": "Elder stub; replace with 8-way walk sheet"
+    },
+    "caravan.courier": {
+      "key": "caravan.courier",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.smuggler": {
+      "key": "caravan.smuggler",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 87,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready",
+      "notes": "Rogue recolor"
+    },
+    "caravan.gouger": {
+      "key": "caravan.gouger",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 96,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.scammer": {
+      "key": "caravan.scammer",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.highwayman": {
+      "key": "caravan.highwayman",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 96,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.worker": {
+      "key": "caravan.worker",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 100,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "caravan.traveler": {
+      "key": "caravan.traveler",
+      "sheet": "kenney-tiny-dungeon",
+      "frame": 99,
+      "variant": "palette",
+      "heading": "4",
+      "status": "ready"
+    },
+    "fauna.rabbit": {
+      "key": "fauna.rabbit",
+      "sheet": "sheet-fauna",
+      "frame": 0,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "Imported gaymoo 50 monochrome 32\u00d732; recolor for warmth"
+    },
+    "fauna.deer": {
+      "key": "fauna.deer",
+      "sheet": "sheet-fauna",
+      "frame": 1,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "Imported AndHeGames more-creatures-32"
+    },
+    "fauna.bird": {
+      "key": "fauna.bird",
+      "sheet": "sheet-fauna",
+      "frame": 2,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "Imported davidcrybao all-sheet"
+    },
+    "fauna.pig": {
+      "key": "fauna.pig",
+      "sheet": "sheet-fauna",
+      "frame": 3,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "Imported Pig_Look 32\u00d732 anim sheet"
+    },
+    "fauna.fox": {
+      "key": "fauna.fox",
+      "sheet": "sheet-fauna",
+      "frame": 4,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "AndHeGames / gaymoo recolor"
+    },
+    "fauna.fish": {
+      "key": "fauna.fish",
+      "sheet": "sheet-fauna",
+      "frame": 5,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "davidcrybao water critters"
+    },
+    "fauna.heron": {
+      "key": "fauna.heron",
+      "sheet": "sheet-fauna",
+      "frame": 6,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "davidcrybao tall wader stand-in; dedicated heron TBD"
+    },
+    "fauna.rat": {
+      "key": "fauna.rat",
+      "sheet": "sheet-fauna",
+      "frame": 7,
+      "variant": "palette",
+      "heading": "4",
+      "status": "stub",
+      "notes": "gaymoo / sardonic grey-roguelike rat"
+    }
+  }
+}

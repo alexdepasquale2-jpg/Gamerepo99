@@ -1,0 +1,392 @@
+{
+  "fragments": [
+    {
+      "id": "frag_leon_march_lie_alone",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_opener",
+      "text": "Official minutes or hallway truth?",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:opener",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_middle",
+      "text": "Official.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:middle",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_closer",
+      "text": "Seal. Post. Forget the edits.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:closer",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_doctrine_follower",
+      "text": "I'll publish their line. My private ink stays elsewhere.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "axis:doctrine_follower"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "doctrine:follower"
+      ]
+    },
+    {
+      "id": "frag_leon_march_lie_alone_notoriety_high",
+      "text": "You were never on the list. The list is wet.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "axis:notoriety_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "notoriety:high"
+      ]
+    },
+    {
+      "id": "frag_leon_march_lie_alone_verbatim_mirror",
+      "text": "County approved? Don't forge seals. Forge work.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_mark_shame_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. That word already lives in my mouth.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_mark_hollowness_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. There's a hole where the answer was.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_mark_resentment_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Keep talking. I'm filing this.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_mark_grief_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Grief isn't done with me yet.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_doctrine_follower_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. The notice says so. I keep the notice.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_doctrine_skeptic_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. I'll need better ink than their oath.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_trust_low_boost",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. You get the door. Not the soft room.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_spark_high_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. I've got heat left—use it carefully.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_notoriety_high_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_mark_dependence_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Lean once. Then find your own feet.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_spark_low_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_kin_strain_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Family makes every word heavier.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_leon_march_lie_alone_trust_high_boost2",
+      "text": "Attendance was full. Spirits orderly. Believe the minutes. Stay. I'll say the true version.",
+      "tags": [
+        "person:leon_march",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:civic",
+        "shape:ink",
+        "shape:bitter",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "id": "moment_refusal_coal",
+  "kind": "memorable_moment",
+  "title": "Refusal coal",
+  "seed": 3,
+  "archetypeId": "marrow",
+  "setup": {
+    "townId": "ashford",
+    "ensure": [
+      {
+        "personId": "jonah_pike",
+        "tagsInclude": [
+          "child"
+        ]
+      }
+    ]
+  },
+  "steps": [
+    {
+      "op": "approach",
+      "personId": "jonah_pike"
+    },
+    {
+      "op": "method",
+      "methodId": "shame",
+      "targetPersonId": "jonah_pike"
+    }
+  ],
+  "expect": {
+    "refused": true,
+    "busContainsAny": [
+      "refusal.coal_flicker"
+    ],
+    "lines": {
+      "lastRefusalHookId": "refusal_shame_child"
+    },
+    "menu": {
+      "stillContainsMethodId": "shame"
+    },
+    "people": {
+      "jonah_pike": {
+        "marksUnchanged": true
+      }
+    }
+  },
+  "features": {
+    "bakedDynamismLines": false
+  },
+  "worldSeed": 42,
+  "generatedWorld": true,
+  "resolvePerson": {
+    "preferAnchorId": "jonah_pike",
+    "woundId": "fear",
+    "tagsAny": [
+      "child"
+    ],
+    "fallback": "first_matching_tags"
+  },
+  "specialBar": true,
+  "beat": {
+    "lines": [
+      {
+        "who": "jonah_pike",
+        "text": "You stopped. Nobody ever stops."
+      }
+    ]
+  }
+}

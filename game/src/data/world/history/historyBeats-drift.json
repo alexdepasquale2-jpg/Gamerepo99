@@ -1,0 +1,111 @@
+{
+  "historyBeats": [
+    {
+      "id": "hb_drift_gap",
+      "kind": "drift",
+      "summary": "City words stopped meaning village weather.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.gapAxis",
+          "value": 0.05
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "gap_drift"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill",
+        "hb_founding_desk"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "hb_drift_hunger",
+      "kind": "drift",
+      "summary": "People stopped being hungry for tomorrow.",
+      "preconditions": [
+        {
+          "tag": "gap_drift"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.despair",
+          "value": 0.05
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "tomorrow_thin"
+        }
+      ],
+      "chainsFrom": [
+        "hb_drift_gap"
+      ],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "ashford_seed_finch_boots",
+      "kind": "drift",
+      "summary": "Harold joked the floor asked less than the boots.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "finch_boots"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "hb_drift_salt",
+      "kind": "drift",
+      "summary": "Salt crept inland; old wells tasted like regret.",
+      "preconditions": [
+        {
+          "tag": "hitch_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "salt_drift"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_hitch"
+      ],
+      "arc": "brine_rise"
+    },
+    {
+      "id": "hb_drift_chalk",
+      "kind": "drift",
+      "summary": "Chalk dust whitened every threshold until names blurred.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "chalk_drift"
+        }
+      ],
+      "chainsFrom": [],
+      "arc": "chalk_quiet"
+    }
+  ]
+}

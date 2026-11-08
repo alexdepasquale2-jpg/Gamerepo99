@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
+  "chainRule": "A beat with chainsFrom may only fire after at least one listed prior beat is in town.historyTags/effects; ordering assertions fail if violated.",
+  "files": [
+    "roles.json",
+    "woundWeights.json",
+    "settlementSizes.json",
+    "historyBeats-founding.json",
+    "historyBeats-drift.json",
+    "historyBeats-loss.json",
+    "historyBeats-feud.json",
+    "historyBeats-miracle.json",
+    "historyBeats-departure.json",
+    "historyBeats-doctrine_arrival.json"
+  ],
+  "historyBeatsFiles": [
+    "historyBeats-founding.json",
+    "historyBeats-drift.json",
+    "historyBeats-loss.json",
+    "historyBeats-feud.json",
+    "historyBeats-miracle.json",
+    "historyBeats-departure.json",
+    "historyBeats-doctrine_arrival.json"
+  ],
+  "notes": "Beats grouped by kind/topic; branching arcs via chainsFrom + arc tags (variety fix)."
+}

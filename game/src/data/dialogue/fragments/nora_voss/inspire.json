@@ -1,0 +1,392 @@
+{
+  "fragments": [
+    {
+      "id": "frag_nora_voss_inspire_alone",
+      "text": "Breathe with me. Birth or no birth—breath first.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_opener",
+      "text": "Look at me. Not the fear.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:opener",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_middle",
+      "text": "Warmth is a skill. You still have hands.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:middle",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_closer",
+      "text": "Again. Slower. Good.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:closer",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_spark_high",
+      "text": "I'll walk every house tonight if the lamps need lighting.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "axis:spark_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "spark:high"
+      ]
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_kin_strain",
+      "text": "Tell Tom I don't blame the rope. Tell him to come in.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "axis:kin_strain"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_verbatim_mirror",
+      "text": "Someone else answered a door. I can hate that and still go.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_mark_shame_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. That word already lives in my mouth.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_mark_hollowness_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. There's a hole where the answer was.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_mark_resentment_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. Keep talking. I'm filing this.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_mark_grief_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. Grief isn't done with me yet.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_doctrine_follower_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. The notice says so. I keep the notice.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_doctrine_skeptic_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. I'll need better ink than their oath.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_trust_low_boost",
+      "text": "Breathe with me. Birth or no birth—breath first. You get the door. Not the soft room.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_spark_high_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. I've got heat left—use it carefully.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_notoriety_high_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_mark_dependence_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. Lean once. Then find your own feet.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_spark_low_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_kin_strain_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. Family makes every word heavier.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_nora_voss_inspire_alone_trust_high_boost2",
+      "text": "Breathe with me. Birth or no birth—breath first. Stay. I'll say the true version.",
+      "tags": [
+        "person:nora_voss",
+        "method:inspire",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:midwife",
+        "shape:soft",
+        "shape:practical",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

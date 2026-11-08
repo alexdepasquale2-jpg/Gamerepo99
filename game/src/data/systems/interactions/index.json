@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "Interaction model data (Alex pivot 2026-11-06). Spark is courage meter; interactions touch the world.",
+  "spec": "docs/superpowers/specs/2026-11-06-interaction-model.md",
+  "files": [
+    "catalog.json",
+    "scoring.json",
+    "rules.json",
+    "migration.json",
+    "examples.json",
+    "deeds.json"
+  ]
+}

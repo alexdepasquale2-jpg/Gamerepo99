@@ -1,0 +1,46 @@
+{
+  "fragments": [
+    {
+      "id": "frag_marta_ellison_shame_alone_kin_strain_boost2",
+      "text": "Say it. Call me lazy. The bread still won't rise for spite. Family makes every word heavier.",
+      "tags": [
+        "person:marta_ellison",
+        "method:shame",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_marta_ellison_shame_alone_trust_high_boost2",
+      "text": "Say it. Call me lazy. The bread still won't rise for spite. Stay. I'll say the true version.",
+      "tags": [
+        "person:marta_ellison",
+        "method:shame",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:kitchen",
+        "shape:blunt",
+        "shape:short",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "moment_chalk_after_the_cut",
+  "kind": "memorable_moment",
+  "title": "Chalk after the cut",
+  "seed": 13,
+  "archetypeId": "ivy_quill",
+  "setup": {
+    "townId": "ashford",
+    "ensure": [
+      {
+        "personId": "ruth_calder",
+        "flame": 35,
+        "marks": []
+      },
+      {
+        "personId": "jonah_pike",
+        "burning": true,
+        "flame": 55
+      }
+    ]
+  },
+  "steps": [
+    {
+      "op": "approach",
+      "personId": "ruth_calder"
+    },
+    {
+      "op": "method",
+      "methodId": "shame",
+      "targetPersonId": "ruth_calder"
+    },
+    {
+      "op": "record",
+      "as": "flameAfterResolve",
+      "path": "people.ruth_calder.flame"
+    },
+    {
+      "op": "advance",
+      "to": "dawn"
+    },
+    {
+      "op": "advance",
+      "to": "dawn"
+    }
+  ],
+  "expect": {
+    "people": {
+      "ruth_calder": {
+        "hasMark": "hollowness",
+        "flameLessThanRecord": "flameAfterResolve"
+      }
+    },
+    "busContainsAnyOptional": [
+      "ripple.harm"
+    ]
+  },
+  "features": {
+    "bakedDynamismLines": false
+  },
+  "worldSeed": 13,
+  "generatedWorld": true,
+  "specialBar": true,
+  "resolvePerson": {
+    "preferAnchorId": "ruth_calder",
+    "woundId": "disillusionment",
+    "fallback": "first_matching_tags"
+  },
+  "beat": {
+    "lines": [
+      {
+        "who": "ruth_calder",
+        "text": "I wrote your words on the board. Then I wiped the board."
+      }
+    ],
+    "dawnLine": "Someone chalked a line under {name}'s name on the school door.",
+    "archetypeOnly": true
+  }
+}

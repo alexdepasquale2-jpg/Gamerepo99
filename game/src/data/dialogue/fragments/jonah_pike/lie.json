@@ -1,0 +1,392 @@
+{
+  "fragments": [
+    {
+      "id": "frag_jonah_pike_lie_alone",
+      "text": "I didn't see. I was counting bricks.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "dict:child",
+        "shape:precise",
+        "shape:soft"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_opener",
+      "text": "…Do you want the true quiet or the useful quiet?",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:opener",
+        "dict:child",
+        "shape:precise",
+        "shape:soft"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_middle",
+      "text": "Useful quiet, then.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:middle",
+        "dict:child",
+        "shape:precise",
+        "shape:soft"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_closer",
+      "text": "I was never here. The chalk was.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:closer",
+        "dict:child",
+        "shape:precise",
+        "shape:soft"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_notoriety_high",
+      "text": "People say your name. I say weather.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "axis:notoriety_high"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "notoriety:high"
+      ]
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_kin_strain",
+      "text": "I'll tell Aunt I slept. That's the kind lie.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "axis:kin_strain"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_verbatim_mirror",
+      "text": "Nobody will laugh? People always laugh. But— okay.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_mark_shame_boost",
+      "text": "I didn't see. I was counting bricks. That word already lives in my mouth.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_mark_hollowness_boost",
+      "text": "I didn't see. I was counting bricks. There's a hole where the answer was.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_mark_resentment_boost",
+      "text": "I didn't see. I was counting bricks. Keep talking. I'm filing this.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_mark_grief_boost",
+      "text": "I didn't see. I was counting bricks. Grief isn't done with me yet.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_doctrine_follower_boost",
+      "text": "I didn't see. I was counting bricks. The notice says so. I keep the notice.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_doctrine_skeptic_boost",
+      "text": "I didn't see. I was counting bricks. I'll need better ink than their oath.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_trust_low_boost",
+      "text": "I didn't see. I was counting bricks. You get the door. Not the soft room.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_spark_high_boost2",
+      "text": "I didn't see. I was counting bricks. I've got heat left—use it carefully.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_notoriety_high_boost2",
+      "text": "I didn't see. I was counting bricks. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_mark_dependence_boost2",
+      "text": "I didn't see. I was counting bricks. Lean once. Then find your own feet.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_spark_low_boost2",
+      "text": "I didn't see. I was counting bricks. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_kin_strain_boost2",
+      "text": "I didn't see. I was counting bricks. Family makes every word heavier.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_jonah_pike_lie_alone_trust_high_boost2",
+      "text": "I didn't see. I was counting bricks. Stay. I'll say the true version.",
+      "tags": [
+        "person:jonah_pike",
+        "method:lie",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:child",
+        "shape:precise",
+        "shape:soft",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

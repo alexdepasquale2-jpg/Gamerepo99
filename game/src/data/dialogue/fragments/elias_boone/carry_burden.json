@@ -1,0 +1,392 @@
+{
+  "fragments": [
+    {
+      "id": "frag_elias_boone_carry_burden_alone",
+      "text": "Give me the weight. My arms already miss the old load.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_opener",
+      "text": "Hand it over. Careful of the edge.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:opener",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_middle",
+      "text": "Carrying is a kind of prayer I still know.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_closer",
+      "text": "Go. I'll finish the piece.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:closer",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_dependence",
+      "text": "Don't make me your new brother. I'm a bad understudy.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "axis:mark_dependence"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:dependence"
+      ]
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_kin_strain",
+      "text": "Family iron bends. I'll straighten what I can.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "axis:kin_strain"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_verbatim_mirror",
+      "text": "Haul the iron. I'll find his rhythm or invent a worse one.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_shame_boost",
+      "text": "Give me the weight. My arms already miss the old load. That word already lives in my mouth.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_hollowness_boost",
+      "text": "Give me the weight. My arms already miss the old load. There's a hole where the answer was.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_resentment_boost",
+      "text": "Give me the weight. My arms already miss the old load. Keep talking. I'm filing this.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_grief_boost",
+      "text": "Give me the weight. My arms already miss the old load. Grief isn't done with me yet.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_doctrine_follower_boost",
+      "text": "Give me the weight. My arms already miss the old load. The notice says so. I keep the notice.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_doctrine_skeptic_boost",
+      "text": "Give me the weight. My arms already miss the old load. I'll need better ink than their oath.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_trust_low_boost",
+      "text": "Give me the weight. My arms already miss the old load. You get the door. Not the soft room.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_spark_high_boost2",
+      "text": "Give me the weight. My arms already miss the old load. I've got heat left—use it carefully.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_notoriety_high_boost2",
+      "text": "Give me the weight. My arms already miss the old load. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_mark_dependence_boost2",
+      "text": "Give me the weight. My arms already miss the old load. Lean once. Then find your own feet.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_spark_low_boost2",
+      "text": "Give me the weight. My arms already miss the old load. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_kin_strain_boost2",
+      "text": "Give me the weight. My arms already miss the old load. Family makes every word heavier.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_carry_burden_alone_trust_high_boost2",
+      "text": "Give me the weight. My arms already miss the old load. Stay. I'll say the true version.",
+      "tags": [
+        "person:elias_boone",
+        "method:carry_burden",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}
