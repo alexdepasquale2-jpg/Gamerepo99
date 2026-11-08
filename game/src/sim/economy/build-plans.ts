@@ -5,18 +5,24 @@
  * the building stands and boosts its trade in that town. The player helps by gifting the owner a
  * needed item. Plots are abstract cells around the town centre; the map places them later.
  * The player can own a plan too (ownerId PLAYER_OWNER, see economy/workshops): its goods come only from
- * what the player brings or buys, and it never stalls out. Pure + deterministic.
+ * what the player brings or buys, and it never stalls out.
+ * Zoning (civic/zoning): plot cells fall into zoned lots, and a claim must sit in its kind's zone; an
+ * ambition turned away for want of ground is counted for the council. Tiers (civic/tiers) gate the civic
+ * kinds (granary, market, barracks, town hall; data/civic/zones.json). Pure + deterministic.
  */
 
 import buildingsJson from '../../data/items/buildings.json';
 import { jobOf } from '../goods/jobs';
 import { biomeAt } from '../map/terrain';
 import { deriveRng } from '../rng';
+import { civicOf, fitsZone, zoneFor, zoneName, ZONES, type TownCivic } from '../civic/zoning';
+import { tierNeeded, unlockedIn } from '../civic/tiers';
 import type { SimState } from '../types/runtime';
 
 export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Record<string, number>; labor: number; w: number; h: number; slots?: number };
 const T = buildingsJson as unknown as { workshopMul: number; buildings: BuildingDef[] };
-export const BUILDINGS = T.buildings;
+/** The trades' buildings plus the civic kinds a tier unlocks. */
+export const BUILDINGS: BuildingDef[] = [...T.buildings, ...ZONES.civicBuildings.filter((c) => !T.buildings.some((b) => b.id === c.id))];
 export const BUILDING_BY_ID = new Map(BUILDINGS.map((b) => [b.id, b]));
 
 /** Tiles per plot cell side (borders map plots to tiles with this). */
@@ -38,13 +44,22 @@ export const PLANS = {
   maxRing: 11,
 };
 
-export type Claim = { id: string; planId: string; ownerId: string; townId: string; dx: number; dy: number; w: number; h: number; kind: string; status: 'claimed' | 'built' };
+export type Claim = { id: string; planId: string; ownerId: string; townId: string; dx: number; dy: number; w: number; h: number; kind: string; status: 'claimed' | 'built';
+  /** The zone the claim was staked in (older saves lack it; civic/zoning can work it out from dx, dy). */
+  zone?: string;
+};
 export type BuildPlan = {
   id: string; ownerId: string; townId: string; kind: string; claimId: string;
   stage: 'gathering' | 'building' | 'done' | 'abandoned';
   have: Record<string, number>; laborDone: number; startDay: number; stalledDays: number; doneDay?: number;
+  /** Staked by the council for the town (its levy pays the builders; contrib/civic-zoning). */
+  council?: boolean;
 };
-export type BuildState = { plans: BuildPlan[]; claims: Claim[]; next: number };
+export type BuildState = {
+  plans: BuildPlan[]; claims: Claim[]; next: number;
+  /** Each town's zoning overrides, tax, treasury and civic news (civic/zoning). */
+  civic?: Record<string, TownCivic>;
+};
 
 /** ownerId of a plan, claim or company the player owns. */
 export const PLAYER_OWNER = 'player';
@@ -82,8 +97,18 @@ export function contributeToPlan(state: SimState, personId: string, itemId: stri
   return `It goes toward ${p.ownerId === PLAYER_OWNER ? 'your' : 'their'} ${BUILDING_BY_ID.get(p.kind)!.name}.`;
 }
 
-/** First free spot, nearest the centre ring by ring, outside the town-centre reserve. */
-export function findPlot(state: SimState, townId: string, w: number, h: number): { dx: number; dy: number } | null {
+/** Why a kind cannot be staked in this town yet (its tier), or null. */
+export function claimBlocked(state: SimState, townId: string, kind: string): string | null {
+  const need = tierNeeded(kind);
+  if (!need || unlockedIn(state, townId, kind)) return null;
+  return `A ${BUILDING_BY_ID.get(kind)?.name ?? kind} wants a ${need.name}; this place is not one yet.`;
+}
+
+/**
+ * First free spot, nearest the centre ring by ring, outside the town-centre reserve. With a kind, the
+ * claim's corner must also sit in that kind's zone.
+ */
+export function findPlot(state: SimState, townId: string, w: number, h: number, kind?: string): { dx: number; dy: number } | null {
   const taken = claimsIn(state, townId);
   const R = PLANS.centerRadius;
   const o = state.towns?.[townId];
@@ -97,6 +122,7 @@ export function findPlot(state: SimState, townId: string, w: number, h: number):
     return false;
   };
   const hit = (dx: number, dy: number): boolean => {
+    if (kind && !fitsZone(state, townId, kind, dx, dy, w, h)) return true;
     if (unbuildable(dx, dy)) return true;
     if (dx <= R && dx + w > -R && dy <= R && dy + h > -R) return true;
     return taken.some((c) => dx < c.dx + c.w && dx + w > c.dx && dy < c.dy + c.h && dy + h > c.dy);
@@ -108,6 +134,41 @@ export function findPlot(state: SimState, townId: string, w: number, h: number):
   }
   return null;
 }
+
+/**
+ * Stake a plot for a kind and open its plan: the one path ambitions, the council and founding share. A kind
+ * the tier has not unlocked, or no ground left in its zone, stakes nothing (the latter is counted as wanted
+ * for the council). `built` places a finished building, `day` dates it, `founding` (a generated town's
+ * pre-aged buildings, which its tier already implies) skips the tier gate and the council's count.
+ */
+export function stakePlan(
+  state: SimState, ownerId: string, townId: string, kind: string,
+  opts: { built?: boolean; day?: number; founding?: boolean; council?: boolean } = {},
+): { plan: BuildPlan; claim: Claim } | null {
+  const def = BUILDING_BY_ID.get(kind);
+  if (!def || (!opts.founding && claimBlocked(state, townId, kind))) return null;
+  const plot = findPlot(state, townId, def.w, def.h, kind);
+  const zone = zoneFor(kind);
+  if (!plot) {
+    if (opts.founding) return null;
+    const c = civicOf(state, townId);
+    c.wanted[zone] = (c.wanted[zone] ?? 0) + 1;
+    return null;
+  }
+  const b = bs(state);
+  const day = opts.day ?? state.day;
+  const planId = `plan${b.next++}`, claimId = `claim${b.next++}`;
+  const claim: Claim = { id: claimId, planId, ownerId, townId, dx: plot.dx, dy: plot.dy, w: def.w, h: def.h, kind, status: opts.built ? 'built' : 'claimed', zone };
+  const plan: BuildPlan = opts.built
+    ? { id: planId, ownerId, townId, kind, claimId, stage: 'done', have: { ...def.cost }, laborDone: def.labor, startDay: day - def.labor, stalledDays: 0, doneDay: day }
+    : { id: planId, ownerId, townId, kind, claimId, stage: 'gathering', have: {}, laborDone: 0, startDay: day, stalledDays: 0, ...(opts.council ? { council: true } : {}) };
+  b.claims.push(claim);
+  b.plans.push(plan);
+  return { plan, claim };
+}
+
+/** What zone a kind needs, in words (for lines). */
+export const zoneWords = (kind: string): string => zoneName(zoneFor(kind));
 
 export function tickBuildPlans(state: SimState): void {
   const ve = state.villageEconomy;
@@ -161,15 +222,12 @@ export function tickBuildPlans(state: SimState): void {
       const rng = deriveRng(state.seed, 'ambition', state.day, id);
       if (rng.next() >= PLANS.ambitionChance) continue;
       const job = jobOf(state, id).id;
-      const kinds = BUILDINGS.filter((k) => k.jobs.includes(job));
+      // Only kinds the town's tier allows (a granary waits for a village, a market for a town).
+      const kinds = BUILDINGS.filter((k) => k.jobs.includes(job) && unlockedIn(state, townId, k.id));
       const def = (kinds.length ? kinds : [BUILDING_BY_ID.get('house')!])[rng.int(0, kinds.length || 1)]!;
       const have = b.plans.filter((p) => p.townId === townId && p.kind === def.id && p.stage !== 'abandoned').length;
       if (have >= Math.ceil(ids.length / PLANS.residentsPerBuilding)) continue;
-      const plot = findPlot(state, townId, def.w, def.h);
-      if (!plot) continue;
-      const planId = `plan${b.next++}`, claimId = `claim${b.next++}`;
-      b.claims.push({ id: claimId, planId, ownerId: id, townId, dx: plot.dx, dy: plot.dy, w: def.w, h: def.h, kind: def.id, status: 'claimed' });
-      b.plans.push({ id: planId, ownerId: id, townId, kind: def.id, claimId, stage: 'gathering', have: {}, laborDone: 0, startDay: state.day, stalledDays: 0 });
+      stakePlan(state, id, townId, def.id);
     }
   }
 }
