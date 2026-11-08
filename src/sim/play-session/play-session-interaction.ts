@@ -8,7 +8,7 @@
  *  marks     legacy method markWeights roll folded into runtime marks; new stacks → mark.applied
  *            + cross-town packet.emit
  *  sync out  runtime flame01/trust/marks/spark → person + player
- *  juice     person.reaction, person.reignite, site.kindle
+ *  juice     person.wound (method vs wound chemistry), person.reaction, person.reignite, site.kindle
  */
 
 import { recordActBond } from '../legacy/bonds';
@@ -23,12 +23,13 @@ import { fireNotorietyEvent } from '../hoard/events';
 import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
 import { applyPatronInteraction } from '../patrons';
 import { runHooks } from '../hooks';
+import { happeningMethodMul } from '../happenings';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
 
 type PlayEvent = { type: string; methodId?: string };
-type MethodRow = { id: string; family?: string };
+type MethodRow = { id: string; family?: string; effectiveness?: Record<string, number> };
 
 export type InteractionActExtras = {
   tickN: number;
@@ -50,14 +51,18 @@ function marksList(marks: Record<string, number>): { markId: string; stacks: num
     .map(([markId, stacks]) => ({ markId, stacks }));
 }
 
-/** Resolve an interaction for a legacy method act and emit play juice. Caller checks rt has personId. */
+/**
+ * Resolve an interaction for a legacy method act and emit play juice. Caller checks rt has personId.
+ * `line` replaces the host method's reaction line; `failLine` is said when the interaction's
+ * assertFailIfMarksAny trips (it then does not resolve). Returns whether it resolved.
+ */
 export function actInteraction(
   state: SimState,
   rt: CompatRuntime,
-  args: { personId: string; methodId: string; interactionId: string },
+  args: { personId: string; methodId: string; interactionId: string; line?: string; failLine?: string },
   eventLog: PlayEvent[],
   extras?: InteractionActExtras,
-): void {
+): 'resolved' | 'refused' {
   const { personId, methodId, interactionId } = args;
   const s = state as MethodSimState;
   const person = s.people[personId];
@@ -88,11 +93,22 @@ export function actInteraction(
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: refusal.line });
     fireNotorietyEvent(s, 'refusal');
     finish({ kind: 'refused', flameDelta: 0, sparkCost: sparkBefore - s.player.spark, personId, methodId });
-    return;
+    return 'refused';
+  }
+
+  // Assert-fail (e.g. empty cheer on someone hollowed out): they see through it; nothing resolves.
+  const assertMarks = (rt.catalog.get(interactionId) as { assertFailIfMarksAny?: string[] } | undefined)?.assertFailIfMarksAny;
+  if (assertMarks?.some((m) => (marksBefore[m] ?? 0) > 0)) {
+    pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: args.failLine ?? 'They see straight through it.' });
+    finish({ kind: 'refused', flameDelta: 0, sparkCost: 0, personId, methodId });
+    return 'refused';
   }
 
   // The inhabitant's body and habits bend every act: method modifiers, status traits, ember zone.
-  const res = resolveInteraction(rt, interactionId, personId, actMuls(s, methodId));
+  const muls = actMuls(s, methodId);
+  // A happening in the person's town can blunt a method for the day (e.g. the market ghost and inspire).
+  muls.powerMul *= happeningMethodMul(s, person.townId, methodId);
+  const res = resolveInteraction(rt, interactionId, personId, muls);
   // Compat: burn the draw legacy commitMethod spent on flame fuzz so seeded mark rolls stay identical.
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
@@ -112,6 +128,14 @@ export function actInteraction(
   runHooks(s, 'on_method_resolve', { data, rng: s.rng, methodId, targetId: personId, targetWoundId: person.woundId });
   noteActToday(s, methodId, rt.catalog.get(interactionId)?.kind);
 
+  // Wound x method chemistry: how this method sits against their wound (data: methods.json effectiveness).
+  const actDef = rt.catalog.get(interactionId);
+  const methodRow = ((data.methods ?? []) as MethodRow[]).find((m) => m.id === methodId);
+  const woundMul = person.woundId ? methodRow?.effectiveness?.[person.woundId] : undefined;
+  if (typeof woundMul === 'number' && woundMul !== 1 && !actDef?.stashAct && !actDef?.patronAccept && !actDef?.patronFulfil) {
+    pushJuice(s, 'person.wound', { personId, methodId, interactionId, woundId: person.woundId, woundMul });
+  }
+
   for (const { markId, stacks } of person.marks) {
     if (stacks <= (marksBefore[markId] ?? 0)) continue;
     pushJuice(s, 'mark.applied', { personId, markId, interactionId });
@@ -125,7 +149,7 @@ export function actInteraction(
     state: s,
     features: { bakedDynamismLines: (data.player as { features?: { bakedDynamismLines?: boolean } }).features?.bakedDynamismLines ?? false },
   });
-  pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
+  pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: args.line ?? reaction.text, source: args.line ? 'deed' : reaction.source });
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
   encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
@@ -134,7 +158,7 @@ export function actInteraction(
     s.player.coin = (s.player.coin ?? 0) + def0.coinGain;
     notePeakCoin(s);
   }
-  if (def0?.stashAct) applyStashAct(s, def0.stashAct);
+  if (def0?.stashAct) applyStashAct(s, def0.stashAct, personId);
   if (res.reignited) ensureHoard(s).reigniteCount += 1;
   recordActBond(s, { personId, methodId, interactionId, flameBefore, reignited: res.reignited, marksChanged: person.marks.some((m) => m.stacks !== (marksBefore[m.markId] ?? 0)) });
   applyPatronInteraction(s, personId, def0?.patronAccept, def0?.patronFulfil);
@@ -147,7 +171,7 @@ export function actInteraction(
     const traitsBefore = [...s.player.statusTraits];
     runHooks(s, 'on_interaction', { data, rng: s.rng, targetId: personId });
     for (const id of s.player.statusTraits) {
-      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, interactionId });
+      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, townId: person.townId, interactionId });
     }
   }
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.
@@ -177,4 +201,5 @@ export function actInteraction(
     methodId,
   });
   eventLog.push({ type: 'interaction', methodId: interactionId });
+  return 'resolved';
 }

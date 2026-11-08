@@ -28,8 +28,20 @@ export type ProtagonistImprint = {
   ending?: string;
   /** Extension: where the legend lives on. */
   homeTownId?: string;
+  /**
+   * World file v2: the archetype this life was assembled from. Recorded for the arrival
+   * summary only (names it); systems never branch on it. Absent when a v1 file could not tell.
+   */
+  archetypeId?: string;
+  /** World file v2: 1 for the first life of a line, 2 for its heir, and so on. */
+  generation?: number;
 };
 
+/**
+ * World file format history (CURRENT_WORLD_VERSION in state.ts; upgrades in world-file.ts `migrations`):
+ * - v1: seed, content packs, delta log, last imprint, contentHash (seed+packs+deltas) and worldDigest.
+ * - v2: the imprint also records `archetypeId` and `generation`. Hash and digest cover the same fields as v1.
+ */
 export type HearthWorldFile = {
   format: 'hearthfall.world';
   version: number;
@@ -78,6 +90,8 @@ export type LegacyState = {
   playerName?: string;
   /** Genuine-growth acts by the current life since succession (inherited_dependence decay). */
   growthSinceSuccession: number;
+  /** Day inherited_dependence last faded (dawn line names the moment). Optional: older saves lack it. */
+  dependenceResolvedDay?: number;
   /** Last recorded route state, so dawn route changes are logged once. */
   routeSeen?: Record<string, { broken: boolean; condition: number }>;
 };

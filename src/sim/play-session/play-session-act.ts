@@ -17,8 +17,8 @@ import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
 import deedsJson from '../../data/systems/interactions/deeds.json';
 import { handleProvidedAction, providedActions } from './action-providers';
+import { deedVerbAllowed, noteDeedUsed, planDeed, type DeedRow } from './deed-verbs';
 
-type DeedRow = { id: string; label: string; hostMethod: string; requiresPendingPromise?: boolean; requiresOtherPerson?: boolean; savage?: boolean };
 export const DEEDS: readonly DeedRow[] = (deedsJson as { deeds: DeedRow[] }).deeds;
 const DEED_BY_ID = new Map(DEEDS.map((d) => [d.id, d]));
 export const deedLabel = (id: string): string | undefined => DEED_BY_ID.get(id)?.label;
@@ -32,7 +32,7 @@ function deedAllowed(state: SimState, d: DeedRow, personId: string, rt?: CompatR
     const other = state.flags?.lastTouchedPersonId as string | undefined;
     if (!other || other === personId || !state.people[other]) return false;
   }
-  return true;
+  return deedVerbAllowed(state, d, personId, rt);
 }
 
 type PlayAction = { id: string; family?: string; label?: string };
@@ -158,7 +158,10 @@ export function actMethod(
     if (op && typeof op.bond === 'number') op.bond += intro?.otherBondDelta ?? 0;
   }
   if (deed) {
-    actInteraction(state, compat!, { ...parsed, methodId: deed.hostMethod, interactionId: deed.id }, eventLog, extras);
+    const plan = planDeed(state, deed, parsed.personId);
+    const out = actInteraction(state, compat!, { ...parsed, methodId: deed.hostMethod, interactionId: deed.id, line: plan.line, failLine: plan.failLine }, eventLog, extras);
+    if (out === 'resolved') plan.after();
+    noteDeedUsed(state, deed, parsed.personId);
     return;
   }
   const interactionId = stash || patron ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;

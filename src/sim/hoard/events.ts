@@ -4,7 +4,7 @@ import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { addNotoriety } from './notoriety';
-import { actDefs, ensureHoard, notorietyTable, siteDefs, totalGoods } from './state';
+import { actDefs, ensureHoard, notorietyTable, shiftCarriedCoin, siteDefs, totalGoods } from './state';
 
 /** Fire every notoriety.json trigger row for `event` whose conditions hold. */
 export function fireNotorietyEvent(state: SimState, event: string, ctx: { guards?: number; townId?: string } = {}): void {
@@ -38,11 +38,13 @@ export function tickGuardUpkeep(state: SimState): void {
     const s = h.stash[d.id];
     if (!s) continue;
     for (let g = s.guardsHired; g > 0; g--) {
-      if ((state.player.coin ?? 0) >= per) state.player.coin = (state.player.coin ?? 0) - per;
+      if ((state.player.coin ?? 0) >= per) shiftCarriedCoin(state, -per);
       else if (s.coin >= per) s.coin -= per;
       else {
         s.guardsHired -= 1;
-        pushJuice(state, 'stash.guard_left', { siteId: d.id, townId: d.townId });
+        const personId = Object.keys(state.people).sort().find((id) => state.people[id]!.townId === d.townId);
+        pushJuice(state, 'stash.guard_left', { siteId: d.id, townId: d.townId, personId });
+        (h.news ??= []).push({ day: state.day, kind: 'guard_left', siteId: d.id, townId: d.townId, personId });
         continue;
       }
       noteCoinSpend(state, per);

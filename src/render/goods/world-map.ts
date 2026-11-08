@@ -10,7 +10,11 @@ type Town = { id: string; q: number; r: number; name: string; size: number; kind
 type Pt = { x: number; y: number };
 /** Economy overlay: village carts (world px), treaty/war lines between towns, and each town's reach in tiles. */
 export type MapEconomyFeed = { carts: Pt[]; links: { a: string; b: string; kind: 'trade' | 'alliance' | 'war' }[]; reach: Record<string, number> };
-export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number>; economy?: () => MapEconomyFeed };
+/** A facility on the roads (world px): mill, wood camp, quarry, waystation. */
+export type MapFacility = Pt & { kind: string; name: string; idle: boolean };
+export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number>; economy?: () => MapEconomyFeed; facilities?: () => MapFacility[] };
+
+const FACILITY_COLOR: Record<string, number> = { mill: 0xe8d27a, lumber_camp: 0x9a6a3a, mine: 0xa0a0b0, waystation: 0xd98a5a };
 export type WorldMap = { toggle: () => void; isOpen: () => boolean; update: (time: number) => void };
 
 const D = 1_000_200;
@@ -76,6 +80,12 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
       g.fillStyle(0xf09a3a);
       for (const c of eco.carts) { const p = tx(c); g.fillRect(p.x - (big ? 2.5 : 1.5), p.y - (big ? 2.5 : 1.5), big ? 5 : 3, big ? 5 : 3); }
     }
+    // Facilities: a small diamond beside the road, greyed when it stands idle.
+    for (const f of feed.facilities?.() ?? []) {
+      const p = tx(f), d = big ? 4 : 2;
+      g.fillStyle(f.idle ? 0x6a6a6a : (FACILITY_COLOR[f.kind] ?? 0xd9c79a)).fillTriangle(p.x - d, p.y, p.x, p.y - d, p.x + d, p.y).fillTriangle(p.x - d, p.y, p.x, p.y + d, p.x + d, p.y);
+      if (big) g.lineStyle(1, 0x1b1612).strokeTriangle(p.x - d, p.y, p.x, p.y - d, p.x + d, p.y).strokeTriangle(p.x - d, p.y, p.x, p.y + d, p.x + d, p.y);
+    }
     const desp = feed.despair();
     for (const t of towns) {
       const p = tx(pos.get(t.id)!);
@@ -109,7 +119,11 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
       const d = desp[t.id] ?? 0;
       labels.add(scene.add.text(p.x, p.y + 6, `${t.name} · ${sizeClass(t).label}${d > 0.4 ? ' (despairing)' : ''}`, font).setOrigin(0.5, 0));
     }
-    labels.add(scene.add.text(40, H - 46, 'Forest · hills · blue water · golden fields | red: you · pale: caravans · orange: village carts | rings: land · green line: allies · red: war', font));
+    for (const f of feed.facilities?.() ?? []) {
+      const p = tx(f);
+      labels.add(scene.add.text(p.x + 6, p.y - 5, `${f.name}${f.idle ? ' (idle)' : ''}`, { ...font, fontSize: '9px', color: f.idle ? '#a8a8a8' : '#e8d8a8' }).setName('map-facility'));
+    }
+    labels.add(scene.add.text(40, H - 58, 'Forest · hills · blue water · golden fields | red: you · pale: caravans · orange: village carts\ndiamonds: mills, wood camps, quarries, waystations (grey: idle) | rings: land · green line: allies · red: war', font));
   };
 
   return {

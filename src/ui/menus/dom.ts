@@ -12,7 +12,9 @@ const STYLE = `
 .hf-item[disabled]{opacity:.45;cursor:default}
 .hf-hint{display:block;font-size:13px;color:#a89068}
 .hf-note{min-height:1.4em;margin-top:10px;font-size:14px;color:#84b8b0}
-@media (max-height:420px){.hf-menu{font-size:15px}.hf-panel{padding:12px 20px}.hf-panel h1{font-size:18px;margin-bottom:6px}.hf-hint{font-size:12px}}
+.hf-arrival{margin:0 0 12px;padding:0 0 0 18px;max-width:520px;font-size:15px}
+.hf-arrival li{margin:4px 0}
+@media (max-height:420px){.hf-menu{font-size:15px}.hf-panel{padding:12px 20px}.hf-panel h1{font-size:18px;margin-bottom:6px}.hf-hint{font-size:12px}.hf-arrival{font-size:13px}}
 `;
 
 function ensureStyle(): void {

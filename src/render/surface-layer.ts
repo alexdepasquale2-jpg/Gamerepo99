@@ -18,6 +18,8 @@ export type SurfaceHandle = {
   /** Test/QA hook: feed a juice event through the adapter as if the sim had emitted it. */
   feed: (id: string, payload: unknown) => void;
   tintOf: (townId: string) => number;
+  /** QA: bubbles showing right now ({ personId, line }). */
+  bubbles: () => { personId: string; line: string }[];
 };
 
 export function attachSurface(
@@ -37,10 +39,26 @@ export function attachSurface(
     for (const p of session.listPeople()) if (p.townId) townOf.set(p.id, p.townId);
   };
   refreshPeople();
+  const lookedUp = new Set<string>();
 
+  // Town-level lines go to someone the player can see: in that town (default: the player's), nearest the camera.
   const ctx = {
-    nearbyPersonId: (townId?: string): string | undefined =>
-      [...townOf].find(([, t]) => t === townId)?.[0] ?? [...townOf.keys()][0],
+    nearbyPersonId: (townId?: string, excludeId?: string): string | undefined => {
+      const town = townId ?? session.snapshot().townId;
+      const folk = [...townOf].filter(([, t]) => t === town).map(([id]) => id);
+      const pool = folk.filter((id) => id !== excludeId);
+      const pick = pool.length ? pool : folk;
+      if (!pick.length) return [...townOf.keys()][0];
+      const mid = scene.cameras.main.midPoint;
+      let best = pick[0]!;
+      let bd = Infinity;
+      for (const id of pick) {
+        const at = positionOf?.(id);
+        const d = at ? Math.hypot(at.x - mid.x, at.y - mid.y) : Infinity;
+        if (d < bd) { bd = d; best = id; }
+      }
+      return best;
+    },
   };
   const retint = (): void => {
     const d = session.townDespair();
@@ -58,6 +76,8 @@ export function attachSurface(
   const anchor = (personId: string): { x: number; y: number } => {
     const live = positionOf?.(personId);
     if (live) return live;
+    // Someone who came of age or arrived after boot: look them up once.
+    if (!townOf.has(personId) && !lookedUp.has(personId)) { lookedUp.add(personId); refreshPeople(); }
     const town = settlements.find((s) => s.id === townOf.get(personId)) ?? settlements[0];
     if (!town) return { x: 0, y: 0 };
     let h = 0;
@@ -118,5 +138,6 @@ export function attachSurface(
     },
     feed: handle,
     tintOf: (townId) => anims.get(townId)?.value ?? 1,
+    bubbles: () => queue.active().map((b) => ({ personId: b.personId, line: b.line })),
   };
 }

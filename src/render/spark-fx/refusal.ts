@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import { FEEL } from '../feel';
-import { emitBurst, type RefusalPayload } from './shared';
+import { emitBurst, FX_DEPTH, type RefusalPayload } from './shared';
 
 export function playRefusal(scene: Phaser.Scene, p: RefusalPayload): void {
   const { x, y } = p;
   const flash = scene.add.circle(x, y, 20, FEEL.refusal.colorDim, FEEL.refusal.flashAlpha);
-  flash.setDepth(18);
+  flash.setDepth(FX_DEPTH + 18);
   scene.tweens.add({
     targets: flash,
     alpha: 0,

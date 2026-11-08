@@ -1,8 +1,8 @@
 /** M6 Task A: surfacing — reaction lines over people, per-town despair desaturation, succession screen. */
 import { test, expect, type Page } from '@playwright/test';
-import fs from 'node:fs';
+import { pickInhabitant, shotsDir } from './support/game';
 
-const OUT = 'docs/qa/reports/m6';
+let OUT = '';
 
 type Hearth = {
   session: { tick(): void; listPeople(): { id: string; townId?: string }[]; townDespair(): Record<string, number> };
@@ -22,11 +22,7 @@ declare global {
 
 async function boot(page: Page): Promise<void> {
   await page.goto('/');
-  await page.locator('[data-id=new]').click();
-  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
-  await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => !!window.__hearth, null, { timeout: 20_000 });
+  await pickInhabitant(page);
 }
 
 /** Mean HSV saturation of a PNG, computed in-page. */
@@ -53,7 +49,7 @@ async function meanSaturation(page: Page, png: Buffer): Promise<number> {
 }
 
 test.describe('M6 surfacing', () => {
-  test.beforeAll(() => fs.mkdirSync(OUT, { recursive: true }));
+  test.beforeAll(() => { OUT = shotsDir('m6-surfacing', 'docs/qa/reports/m6'); });
 
   test('despair desaturates one town and reverses on reignite', async ({ page }) => {
     await boot(page);

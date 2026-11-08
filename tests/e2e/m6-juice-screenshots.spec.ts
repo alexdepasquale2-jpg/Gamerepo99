@@ -1,20 +1,10 @@
 /** M6 step 8: reignite flash + despair desaturation screenshots (docs/qa/screenshots). */
 import { test, expect } from '@playwright/test';
-import fs from 'node:fs';
-
-const OUT = 'docs/qa/screenshots';
+import { shotsDir, startGame } from './support/game';
 
 test('capture reignite + despair', async ({ page }) => {
-  fs.mkdirSync(OUT, { recursive: true });
-  await page.goto('/');
-  const nw = page.locator('[data-id=new]');
-  if (await nw.count()) {
-    await nw.click();
-    await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-    await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
-  }
-  await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => !!(window as any).__hearth, null, { timeout: 20_000 });
+  const OUT = shotsDir('juice', 'docs/qa/screenshots');
+  await startGame(page);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${OUT}/baseline.png` });
   await page.evaluate(() => {

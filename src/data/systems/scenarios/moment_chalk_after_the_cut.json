@@ -64,5 +64,15 @@
     "preferAnchorId": "ruth_calder",
     "woundId": "disillusionment",
     "fallback": "first_matching_tags"
+  },
+  "beat": {
+    "lines": [
+      {
+        "who": "ruth_calder",
+        "text": "I wrote your words on the board. Then I wiped the board."
+      }
+    ],
+    "dawnLine": "Someone chalked a line under {name}'s name on the school door.",
+    "archetypeOnly": true
   }
 }

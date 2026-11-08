@@ -1,15 +1,11 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-
-const OUT = path.join('artifacts', '25d');
+import { shotsDir, startGame } from './support/game';
 
 test('capture continuous overworld screenshots', async ({ page }) => {
-  fs.mkdirSync(OUT, { recursive: true });
-  await page.goto('/');
-  await page.locator('[data-id=new]').click(); // title menu first (M6)
-  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
+  const OUT = shotsDir('25d', path.join('artifacts', '25d'));
+  await startGame(page);
   const canvas = page.locator('#game canvas');
   await expect(canvas).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(1000);

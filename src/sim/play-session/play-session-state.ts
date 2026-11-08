@@ -8,6 +8,7 @@ import { assembleInhabitant } from '../inhabitant';
 import { firstTrust } from '../embodiment';
 import type { CompatRuntime } from '../interaction';
 import { dataForSeed, loadData, type DataTables } from '../load-data';
+import { carryHistory } from '../history-voice';
 import { createRng } from '../rng';
 import {
   loadBiomeTerrainMuls,
@@ -52,6 +53,7 @@ export function bootPlayState(seed: number, archetypeId: string, tables?: DataTa
     encounterTables: loadEncounterTables(),
     biomeTerrainMuls: loadBiomeTerrainMuls(),
     sizeTravelMuls: loadSizeTravelMuls(),
+    history: carryHistory(world.history),
   };
   // Home hearth: the spark profile's home town when this world has it, else wherever the run starts.
   if (!player.homeTownId || !world.settlements?.some((s) => s.id === player.homeTownId)) player.homeTownId = player.townId;

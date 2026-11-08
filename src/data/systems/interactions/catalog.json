@@ -350,6 +350,16 @@
       "ripple": "help"
     },
     {
+      "id": "return_item",
+      "kind": "errand",
+      "tags": ["return", "honest", "interaction:return_item"],
+      "baseStrain": 1,
+      "sparkGain": 1,
+      "touch": { "trust": 0.06, "flame01": 0.02 },
+      "bondDelta": 0.5,
+      "ripple": "help"
+    },
+    {
       "id": "stand_up",
       "doctrineAct": "act_become_voice",
       "kind": "stand_up",
@@ -382,6 +392,20 @@
         "hoard",
         "stash",
         "interaction:stash_hide"
+      ],
+      "baseStrain": 1,
+      "sparkGain": 0,
+      "touch": {},
+      "ripple": "none"
+    },
+    {
+      "id": "stash_store",
+      "stashAct": "stash_store",
+      "kind": "favor",
+      "tags": [
+        "hoard",
+        "stash",
+        "interaction:stash_store"
       ],
       "baseStrain": 1,
       "sparkGain": 0,

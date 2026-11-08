@@ -1,0 +1,164 @@
+{
+  "format": "hearthfall.world",
+  "version": 1,
+  "createdAt": "2026-10-02T19:41:07.000Z",
+  "exporterName": "Wren",
+  "seed": 42,
+  "contentHash": "263f3763",
+  "contentPackIds": [
+    "core@1"
+  ],
+  "deltas": [
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "carry_burden",
+      "marks": [
+        "dependence:1"
+      ],
+      "flame": 12,
+      "day": 1
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "inspire",
+      "marks": [
+        "dependence:1",
+        "genuine_growth:1"
+      ],
+      "flame": 15,
+      "day": 1
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "carry_burden",
+      "marks": [
+        "dependence:2",
+        "genuine_growth:1"
+      ],
+      "flame": 21,
+      "day": 2
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "inspire",
+      "marks": [
+        "dependence:2",
+        "genuine_growth:2"
+      ],
+      "flame": 27,
+      "day": 2
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "carry_burden",
+      "marks": [
+        "dependence:3",
+        "genuine_growth:2"
+      ],
+      "flame": 33,
+      "day": 3
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "inspire",
+      "marks": [
+        "dependence:3",
+        "fragile_hope:1",
+        "genuine_growth:2"
+      ],
+      "flame": 39,
+      "day": 3
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "carry_burden",
+      "marks": [
+        "dependence:4",
+        "fragile_hope:1",
+        "genuine_growth:2"
+      ],
+      "flame": 45,
+      "day": 4
+    },
+    {
+      "t": "reignite",
+      "personId": "elias_boone",
+      "methodId": "inspire",
+      "marks": [
+        "dependence:4",
+        "fragile_hope:1",
+        "genuine_growth:3"
+      ],
+      "flame": 51,
+      "day": 4
+    },
+    {
+      "t": "grave",
+      "personId": "legacy_marrow_42_5_marrow",
+      "name": "Marrow",
+      "townId": "marrow_den",
+      "epitaphId": "epi_remembered",
+      "day": 5
+    },
+    {
+      "t": "grave",
+      "personId": "legacy_elias_boone_42_9_elias_boone",
+      "name": "Elias Boone",
+      "townId": "marrow_den",
+      "epitaphId": "epi_remembered",
+      "day": 9
+    },
+    {
+      "t": "day",
+      "day": 9
+    }
+  ],
+  "imprint": {
+    "slot": "reserved",
+    "displayName": "Elias Boone",
+    "speciesTags": [
+      "human",
+      "clerk"
+    ],
+    "embodimentTraitId": "body_human_standard",
+    "methodTendencies": {
+      "carry_burden": 1,
+      "inspire": 1
+    },
+    "refusalHookIds": [
+      "refusal_burn_ledger",
+      "refusal_shame_child"
+    ],
+    "notableChoices": [
+      {
+        "day": 8,
+        "kind": "reignite",
+        "summary": "inspire@clara_whitby"
+      }
+    ],
+    "bonds": [
+      {
+        "personId": "clara_whitby",
+        "weight": 33,
+        "lastMethod": "inspire"
+      }
+    ],
+    "marksLeft": [
+      {
+        "personId": "clara_whitby",
+        "markId": "genuine_growth",
+        "stacks": 3
+      }
+    ],
+    "legendSeed": "42:9:elias_boone",
+    "homeTownId": "marrow_den"
+  },
+  "worldDigest": "2315450f"
+}
