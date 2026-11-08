@@ -5,6 +5,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { hearth, startGame } from './support/game';
 
 const OUT = path.join('tests', 'e2e', 'artifacts', 'interiors');
 type Hook = {
@@ -22,20 +23,9 @@ type Hook = {
   scene: { player: { x: number; y: number } };
 };
 
-const hook = <T,>(page: Page, fn: (h: Hook) => T): Promise<T> =>
-  page.evaluate((src) => (new Function('h', `return (${src})(h)`))((window as unknown as { __hearth: Hook }).__hearth), fn.toString());
+const hook = <T,>(page: Page, fn: (h: Hook) => T): Promise<T> => hearth<T, Hook>(page, fn);
 
-async function boot(page: Page, archetypeId = 'marrow'): Promise<string[]> {
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await page.goto('/');
-  await page.locator('[data-id=new]').click();
-  await page.locator(`[data-id=arch-${archetypeId}]`).click(); // pick who you are
-  await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
-  return errors;
-}
+const boot = (page: Page, archetype = 'marrow'): Promise<string[]> => startGame(page, { archetype });
 
 test('enter and leave houses, shop and inn', async ({ page }) => {
   fs.mkdirSync(OUT, { recursive: true });

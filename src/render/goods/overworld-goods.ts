@@ -43,6 +43,10 @@ export type OverworldGoods = {
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string, itemId?: string) => { ok: boolean; line?: string };
   useSelected: (indoors?: boolean) => string | null;
+  /** Item id in the selected satchel slot, if any. */
+  selectedItem: () => string | undefined;
+  /** Redraw the satchel/hotbar after the inventory changed outside it. */
+  refreshInventory: () => void;
   letters: () => void;
   readBoard: (player: Pt) => boolean;
   meetCaravan: (player: Pt) => boolean;
@@ -251,6 +255,8 @@ export function attachOverworldGoods(
       const message = useItem(s, id, indoors ? undefined : life.nearestHearth(getPlayer())?.town.id);
       inv.refresh(); return message;
     },
+    selectedItem: () => inv.selectedItem(),
+    refreshInventory: () => inv.refresh(),
     letters: () => mail.open(),
     readBoard: (player) => boards.interact(player),
     openBoard: (townId, page) => boards.openAt(townId, page),

@@ -19,6 +19,8 @@ const BUILDS_PER_SYNC = 1;
 export type ChunkLayer = {
   /** Mount `coords` (nearest first); returns true while some are still pending. `all` skips the budget. */
   sync: (coords: ChunkCoord[], all?: boolean) => boolean;
+  /** Unmount chunks (all when omitted) so the next sync rebuilds them from the source (after a tile edit). */
+  invalidate: (coords?: ChunkCoord[]) => void;
   destroy: () => void;
 };
 
@@ -46,17 +48,20 @@ export function createChunkLayer(
     paintTownCliff(host, townMarkers[0]);
   }
 
+  const unmount = (k: string): void => {
+    mounted.get(k)?.destroy(true);
+    mounted.delete(k);
+    for (const o of chunkProps.get(k) ?? []) o.destroy();
+    chunkProps.delete(k);
+  };
+
   return {
+    invalidate(coords?: ChunkCoord[]) {
+      for (const k of coords ? coords.map(keyOf) : [...mounted.keys()]) unmount(k);
+    },
     sync(coords: ChunkCoord[], all = false) {
       const want = new Set(coords.map(keyOf));
-      for (const [k, container] of mounted) {
-        if (!want.has(k)) {
-          container.destroy(true);
-          mounted.delete(k);
-          for (const o of chunkProps.get(k) ?? []) o.destroy();
-          chunkProps.delete(k);
-        }
-      }
+      for (const k of [...mounted.keys()]) if (!want.has(k)) unmount(k);
       const mid = coords[coords.length >> 1];
       const todo = coords.filter((c) => !mounted.has(keyOf(c)))
         .sort((a, b) => (mid ? Math.hypot(a.cx - mid.cx, a.cy - mid.cy) - Math.hypot(b.cx - mid.cx, b.cy - mid.cy) : 0));
