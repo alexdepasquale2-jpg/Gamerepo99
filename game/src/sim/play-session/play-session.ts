@@ -9,7 +9,8 @@ import {
   type InspectSession,
 } from '../fabric/world-dump';
 import type { CompatRuntime } from '../interaction';
-import { generateWorld } from '../fabric/fabric-bake';
+import { activeDistrict, arrivalTown, catchUp, freezeBlob, noteLeft, realmOf, refId, settleFresh, summarize, trunkRoads, withCarried, worldFor } from '../realm';
+import { CHRONICLE_TAG } from '../chronicle';
 import { loadData, type DataTables } from '../load-data';
 import { exportWorld } from '../legacy/world-file';
 import { loadState, saveState } from '../save';
@@ -120,10 +121,10 @@ function createPlayModeSession(defaults: {
     state = next;
     connectJuice();
     seed = next.seed;
-    world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
+    world = worldFor(seed, activeDistrict(next));
     bindWorldEconomy(next, world);
-    // History is the seed's: always the regenerated world's beats (older saves never carried them).
-    next.history = carryHistory(world.history);
+    // History is the seed's beats (regenerated), then what was lived (the chronicle loadState carried).
+    next.history = [...carryHistory(world.history), ...(next.history ?? []).filter((h) => h.tags?.includes(CHRONICLE_TAG))];
     routes = toTravelRoutes(world.routes ?? []);
     next.routes = routes;
     if (!world.settlements?.some((s) => s.id === next.player.townId)) next.player.townId = world.settlements?.[0]?.id;
@@ -213,6 +214,55 @@ function createPlayModeSession(defaults: {
       session.journey(routeId);
     },
     roads: () => (state ? roadViews(state) : []),
+    trunkRoads: () => (state ? trunkRoads(seed, activeDistrict(state)) : []),
+    district: () => activeDistrict(state ?? undefined),
+    journeyDistrict(to) {
+      if (!state) return null;
+      const road = trunkRoads(seed, activeDistrict(state)).find((r) => r.to.col === to.col && r.to.row === to.row);
+      if (!road) return null;
+      // The trunk road takes real days: the district you leave lives them before it freezes.
+      for (let i = 0; i < road.days; i++) {
+        advanceToDawn(state);
+        tickPackets(state);
+        regrowNodes(state);
+        tickN += 1;
+      }
+      const townId = session.enterDistrict(to);
+      return townId ? { ok: true, days: road.days, townId, name: road.name } : null;
+    },
+    enterDistrict(to) {
+      if (!state) return null;
+      const cur = state;
+      const realm = realmOf(cur);
+      const from = realm.active;
+      if (from.col === to.col && from.row === to.row) return cur.player.townId ?? null;
+      // Leave: the district folds (whole if recent, a summary always); the player's parts travel on.
+      noteLeft(realm, refId(from), summarize(cur), { day: cur.day, blob: freezeBlob(saveState(cur), cur) });
+      realm.active = to;
+      const carried = saveState(cur);
+      const toId = refId(to);
+      const frozen = realm.frozen[toId];
+      const archetype = cur.player.archetypeId ?? archetypeId;
+      let next: TravelSimState;
+      if (frozen) {
+        next = loadState(withCarried(frozen.blob, carried), undefined, archetype) as TravelSimState;
+        catchUp(next, cur.day - frozen.day);
+      } else {
+        const fresh = bootPlayState(seed, archetype, undefined, to).state;
+        next = loadState(withCarried(saveState(fresh), carried), undefined, archetype) as TravelSimState;
+        const known = realm.summaries[toId];
+        if (known) {
+          for (const t of Object.values(next.towns ?? {}) as { despair: number }[]) t.despair = known.despair;
+          catchUp(next, cur.day - known.day);
+        } else settleFresh(next, to);
+      }
+      delete realmOf(next).frozen[toId];
+      adopt(next);
+      const arrive = arrivalTown(world!, to, next.player.homeTownId);
+      if (arrive) next.player.townId = arrive;
+      eventLog.push({ type: 'travel', methodId: `district:${toId}` });
+      return next.player.townId ?? null;
+    },
     journey(routeId, tradeId, plan) {
       if (!state) return null;
       const st = state;

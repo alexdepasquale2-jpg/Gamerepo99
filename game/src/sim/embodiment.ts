@@ -5,6 +5,7 @@
  * Pure: no Phaser/DOM.
  */
 
+import { prettyTownId } from './map/districts';
 import entrancesJson from '../data/world/entrances.json';
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
 import { approachTags, canEnterTile } from './inhabitant';
@@ -147,7 +148,7 @@ export function eavesdropReports(state: SimState): string[] {
 }
 
 function townName(id: string): string {
-  return id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return prettyTownId(id);
 }
 
 // ---------- perception ----------

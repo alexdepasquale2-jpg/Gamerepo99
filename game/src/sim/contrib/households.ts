@@ -2,6 +2,7 @@
  * Households on the shared surfaces: births and children coming of age reach you at dawn through a
  * parent, and each noticeboard has a Families page (households, their children, who has just grown).
  */
+import { prettyTownId } from '../map/districts';
 import { registerBoardPage } from '../board-pages';
 import { registerDawnLines } from '../dawn-lines';
 import { householdsIn, KIN, voiceOf, type Household } from '../economy/households';
@@ -10,7 +11,7 @@ import type { SimState } from '../types/runtime';
 /** At most this many household lines per dawn. */
 export const MAX_HOUSEHOLD_LINES = 3;
 
-const townLabel = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const townLabel = (id: string): string => prettyTownId(id);
 const nameOf = (state: SimState, id: string): string => state.people[id]?.name ?? townLabel(id);
 const firstOf = (state: SimState, id: string): string => nameOf(state, id).split(' ')[0]!;
 

@@ -6,6 +6,7 @@
  * letter. Pure, deterministic (deriveRng + sorted iteration); saveable (plain JSON on state.letters).
  */
 
+import { prettyTownId } from './map/districts';
 import repliesJson from '../data/dialogue/letter-replies.json';
 import { pushJuice } from './packets';
 import { deriveRng } from './rng';
@@ -63,7 +64,7 @@ export const REPLY_TAGS = ['letter_arrived', 'show_up_day'] as const;
 
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 const nameOf = (state: SimState, id: string): string => state.people[id]?.name ?? id;
-export const prettyTown = (id: string): string => id.split('_').map((w) => (w ? w[0]!.toUpperCase() + w.slice(1) : w)).join(' ');
+export const prettyTown = (id: string): string => prettyTownId(id);
 const pick = <X>(arr: X[], rng: { int(lo: number, hi: number): number }): X => arr[rng.int(0, arr.length)]!;
 const fill = (text: string, slots: Record<string, string>): string => text.replace(/\{(\w+)\}/g, (m, k: string) => slots[k] ?? m);
 

@@ -3,6 +3,7 @@
  * towns you care about (where you stand, then home). The family's own grief follows as their bubble
  * (juice kin.death). Importing this module also registers the mortality dawn tick (economy/mortality).
  */
+import { prettyTownId } from '../map/districts';
 import { registerDevHook } from '../../app/dev-hooks';
 import { registerDawnLines } from '../dawn-lines';
 import { laidToRest, lifeEvents, retire, type LifeEvent } from '../economy/mortality';
@@ -11,7 +12,7 @@ import type { SimState } from '../types/runtime';
 /** At most this many life lines per dawn. */
 export const MAX_LIFE_LINES = 3;
 
-const townLabel = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const townLabel = (id: string): string => prettyTownId(id);
 const nameOf = (state: SimState, id: string): string => state.people[id]?.name ?? townLabel(id);
 const first = (name: string): string => name.split(' ')[0] ?? name;
 

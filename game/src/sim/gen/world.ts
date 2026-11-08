@@ -1,5 +1,6 @@
 /** Seeded Fabric worldgen: history + gap + kin + geo + facilities/biomes. Pure; no dyn/. */
 
+import { districtAt, isHome } from '../map/districts';
 import { createRng } from '../rng';
 import { generatePeople, type PersonDraft } from './society/people';
 import { loadHistoryTables } from './load/load-history';
@@ -93,12 +94,19 @@ function worldFingerprint(
  * includeAnchors merges authored people.json anchors; peopleCount path unchanged when false/omitted.
  * Settlements/routes/doctrines/facilities/biomes use a separate RNG stream so Probe fields stay stable.
  */
+/** Folk simulated in a district at once (its towns' head count, capped so a visit stays light). */
+export const DISTRICT_PEOPLE_CAP = 72;
+const GAP_OF = { village: 0.15, town: 0.45, city: 0.8 } as const;
+
 export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const seed = opts.seed >>> 0;
-  const peopleCount = Math.max(3, opts.peopleCount ?? 3);
-  const procedural = generatePeople({ seed, count: peopleCount });
+  // A district other than home: its own towns (fixed spots), its own folk (a people seed of its own), no authored cast.
+  const district = opts.district && !isHome(opts.district.col, opts.district.row) ? districtAt(seed, opts.district.col, opts.district.row) : null;
+  const peopleSeed = district ? (seed ^ Math.imul(district.col * 31 + district.row + 1, 0x9e3779b1)) >>> 0 : seed;
+  const peopleCount = district ? Math.max(6, Math.min(DISTRICT_PEOPLE_CAP, district.population)) : Math.max(3, opts.peopleCount ?? 3);
+  const procedural = generatePeople({ seed: peopleSeed, count: peopleCount });
   const people =
-    opts.includeAnchors === true
+    opts.includeAnchors === true && !district
       ? [...loadAuthoredAnchors(), ...procedural]
       : procedural;
 
@@ -108,19 +116,21 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const shape = pickWorldShape(metaRng, worldTables.shapes);
   const kinPattern = pickKinPattern(metaRng, worldTables.kinPatterns);
 
-  const rng = createRng(seed ^ 0xc0ffee);
+  const rng = createRng(peopleSeed ^ 0xc0ffee);
   const history = generateHistoryEvents(rng, tables, people, shape);
   const gapSites = generateGapSites(rng, tables.settlementSizes, shape?.gapBias);
   const kinEdges = generateKinEdges(rng, people, kinPattern);
   const lines = people.flatMap((p) => p.lines ?? []);
 
   const geoRng = createRng(seed ^ 0x5e771e);
-  const settlements = generateSettlements(
-    geoRng,
-    worldTables.towns,
-    worldTables.doctrines,
-    shape,
-  );
+  const settlements = district
+    ? district.towns.map((t) => ({ id: t.id, name: t.name, gap01: GAP_OF[t.kind], politySize: t.people * 40, at: { q: t.q, r: t.r } }))
+    : generateSettlements(
+      geoRng,
+      worldTables.towns,
+      worldTables.doctrines,
+      shape,
+    );
   const routes: RouteGen[] = geographicRoads(settlements, seed).map((r) => ({
     id: r.id, fromId: r.from, toId: r.to,
     days: Math.max(1, Math.ceil(r.path.slice(1).reduce((len, p, i) => len + Math.hypot(p.q - r.path[i]!.q, p.r - r.path[i]!.r), 0) / (120 * WORLD_SCALE))),

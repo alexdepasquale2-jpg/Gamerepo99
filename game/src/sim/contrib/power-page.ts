@@ -6,6 +6,7 @@
  * Builders are pure over SimState; the dawn source keeps a small "already heard" memory on the state.
  */
 
+import { prettyTownId } from '../map/districts';
 import { registerBoardPage } from '../board-pages';
 import { registerDawnLines } from '../dawn-lines';
 import { ensureDoctrines, type DoctrineState } from '../doctrine-tick';
@@ -33,7 +34,7 @@ const rowsOf = (state: SimState): DoctrineRow[] =>
 /** A town's spoken name: authored name without any "(…)" aside, else its id in title case. */
 export function townLabel(state: SimState, townId: string, nameOf?: (id: string) => string): string {
   const authored = nameOf?.(townId) ?? ((state.data as DataTables | undefined)?.towns as { id: string; name?: string }[] | undefined)?.find((t) => t.id === townId)?.name;
-  const n = (authored && authored !== townId ? authored : townId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())).replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  const n = (authored && authored !== townId ? authored : prettyTownId(townId)).replace(/\s*\([^)]*\)\s*/g, ' ').trim();
   return n || townId;
 }
 

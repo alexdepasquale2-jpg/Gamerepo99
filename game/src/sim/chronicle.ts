@@ -7,6 +7,7 @@
  * Templates in data/dialogue/chronicle.json. Pure, deterministic (seeded by seed/kind/day/key).
  */
 import table from '../data/dialogue/chronicle.json';
+import { prettyTownId } from './map/districts';
 import type { HistoryEvent } from './gen/world-types';
 import { deriveRng } from './rng';
 import type { SimState } from './types/runtime';
@@ -23,7 +24,7 @@ const title = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c)
 function townName(state: SimState, id: string | undefined): string {
   if (!id) return 'the next town';
   const row = ((state.data as { towns?: { id: string; name?: string }[] } | undefined)?.towns ?? []).find((t) => t.id === id);
-  return (row?.name ?? title(id)).replace(/\s*\(.*\)\s*$/, '');
+  return (row?.name ?? prettyTownId(id)).replace(/\s*\(.*\)\s*$/, '');
 }
 function personName(state: SimState, id: string | undefined, fallback = 'someone'): string {
   const p = id ? state.people[id] : undefined;

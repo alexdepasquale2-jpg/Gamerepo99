@@ -15,6 +15,7 @@ import { parseTargetAction } from '../sim/play-session/targets';
 import { coinOf } from '../sim/travel/journey';
 import { unreadReplies } from '../sim/letter-replies';
 import { button, el, townNamer } from './dom';
+import { districtAt } from '../sim/map/districts';
 
 export const ROADS_ID = 'roads';
 const days = (n: number): string => `${n} day${n === 1 ? '' : 's'}`;
@@ -28,9 +29,43 @@ export type Roads = {
   views(): RoadView[];
 };
 
+/** Lines to tell once the rebuilt world is up after a district crossing (the game restarts around the session). */
+let arrivalLines: string[] = [];
+
 export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
   const nameOf = townNamer(ctx);
   let travelling = false;
+  if (arrivalLines.length) {
+    const lines = arrivalLines;
+    arrivalLines = [];
+    lines.forEach((line, i) => window.setTimeout(() => ctx.voice?.tell(line, 'player'), 1800 + 2600 * i));
+  }
+
+  /** Take a trunk road into another district: its days pass, the district swaps, the world is rebuilt. */
+  const crossDistrict = async (to: { col: number; row: number }): Promise<void> => {
+    if (travelling) return;
+    closeSheet();
+    travelling = true;
+    ctx.actors.player.setFrozen(true);
+    await fade(true);
+    const res = ctx.session.journeyDistrict(to);
+    if (!res) {
+      ctx.actors.player.setFrozen(false);
+      travelling = false;
+      await fade(false);
+      ctx.voice?.tell('The trunk road is closed to you today.', 'player');
+      return;
+    }
+    const d = districtAt(ctx.seed, to.col, to.row);
+    arrivalLines = [
+      `Day ${ctx.session.snapshot().day}. ${res.days} days on the trunk road, and you come down into ${d.name}.`,
+      d.home ? 'Home. The hearths you left are still here, for better or worse.' : `A ${d.character.woundLabel} land. The ${d.character.doctrine.name} rules here, and promises ${d.character.doctrine.promise}.`,
+    ];
+    ctx.autosave();
+    const restart = ctx.scene.registry.get('restart') as (() => void) | undefined;
+    if (restart) restart();
+    else { ctx.actors.player.setFrozen(false); travelling = false; }
+  };
 
   const views = (): RoadView[] => {
     try { return ctx.session.roads(); } catch (err) { console.error('roads failed', err); return []; }
@@ -85,7 +120,7 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
       const st = ctx.session.getState();
       const roads = views();
       if (!st) return;
-      if (!roads.length) { body.append(el('p', 'hf-muted', 'No road leaves here.')); return; }
+      if (!roads.length) body.append(el('p', 'hf-muted', 'No road leaves this town for another in the district.'));
       const spark = st.player.spark, coin = coinOf(st);
       body.append(el('p', 'hf-muted hf-small', `You have ${Math.floor(spark)} spark and ${coin} coin.`));
       const list = el('div', 'hf-roads');
@@ -117,6 +152,20 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
         list.append(sec);
       }
       body.append(list);
+      // Trunk roads: seat to seat into the neighbouring districts of the realm.
+      const trunks = ctx.session.trunkRoads();
+      if (trunks.length) {
+        const beyond = el('section', 'hf-road', undefined, { 'aria-label': 'Beyond this district', 'data-id': 'trunk-roads' });
+        beyond.append(el('h3', '', 'Beyond this district'));
+        for (const t of trunks) {
+          const d = districtAt(ctx.seed, t.to.col, t.to.row);
+          const what = d.home ? 'your home district' : `${d.character.woundLabel}, ruled by the ${d.character.doctrine.name}`;
+          beyond.append(button(`The trunk road to ${t.name}: ${days(t.days)}`, () => void crossDistrict(t.to), {
+            id: `trunk-${t.id}`, title: `${what}. The days pass on the road; the district you leave goes quiet until you come back.`,
+          }));
+        }
+        body.append(beyond);
+      }
       body.append(el('p', 'hf-note hf-small', 'Short of coin, they take two spark a coin. Watch their hands, not their words.'));
       body.append(button('Stay a while', closeSheet, { id: 'roads-stay' }));
     },

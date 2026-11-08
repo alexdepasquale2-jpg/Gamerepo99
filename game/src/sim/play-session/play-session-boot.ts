@@ -1,5 +1,6 @@
 /** Play-session boot helpers: people index + town pick + snapshot. */
 
+import { districtOfTown } from '../map/districts';
 import type { FabricWorld } from '../gen/world';
 import type { DataTables } from '../load-data';
 import { siteKindFromSiteId } from '../scenario/scenario-resolve';
@@ -100,7 +101,9 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   const doctrineRows = ((data as { doctrines?: { doctrines?: { leaderPersonId?: string | null }[] } }).doctrines?.doctrines ?? []);
   const drafts: { id: string; anchor?: boolean; vector?: VoiceVector }[] = [...world.people];
   const have = new Set(drafts.map((d) => d.id));
-  for (const d of doctrineRows) {
+  // Only in the home world: a generated district has its own folk, not the authored cast.
+  const generatedDistrict = (world.settlements ?? []).some((s) => districtOfTown(s.id));
+  for (const d of generatedDistrict ? [] : doctrineRows) {
     const id = d.leaderPersonId;
     if (id && !have.has(id) && data.peopleById[id]) {
       have.add(id);
