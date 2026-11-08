@@ -7,6 +7,7 @@ import type { GameContext, Pt, Thing } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
 import type { LayoutRoute } from '../sim/map/world-layout';
 import { roadPositionOf, roadVisitors } from '../sim/visitors';
+import { countVisual } from '../dev/visual-counts';
 import { Figure } from './figure';
 import { headHeight, villagerLook, type PersonLook } from './looks';
 import type { NameLayer } from './name-layer';
@@ -105,6 +106,9 @@ export function createRoadFolk(ctx: GameContext): RoadFolk {
           names.put(`r:${w.id}`, w.x, w.y - headHeight(w.pl.scale) - 1, { text: w.first, alpha: 0.85, muted: true });
         }
       }
+      let drawn = 0;
+      for (const w of walkers.values()) if (w.fig) drawn++;
+      countVisual('roadFolk', drawn);
     },
     things(near, radius) {
       const out: Thing[] = [];

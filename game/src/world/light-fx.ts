@@ -19,6 +19,7 @@ uniform vec3 uLights[${MAX_LIGHTS}];
 uniform vec3 uDay;
 uniform float uNight;
 uniform vec2 uTownR;
+uniform vec3 uSeason;
 void main() {
   vec4 col = texture2D(uMainSampler, outTexCoord);
   vec2 w = vec2(uView.x + outTexCoord.x * uView.z, uView.y + (1.0 - outTexCoord.y) * uView.w);
@@ -32,6 +33,13 @@ void main() {
     warm = max(warm, k * t.w);
   }
   vec3 c = col.rgb;
+  // The season on the land: only greenery (green above red and blue) turns, so roofs, paths and people keep
+  // their colour. x: snow lying, y: autumn rust, z: summer's dry gold.
+  float green = clamp((c.g - max(c.r, c.b)) * 4.0, 0.0, 1.0);
+  c = mix(c, vec3(0.80, 0.50, 0.22) * (0.55 + c.g * 0.7), green * uSeason.y * 0.75);
+  c = mix(c, c * vec3(1.08, 1.0, 0.82), green * uSeason.z * 0.5);
+  float ls = dot(c, vec3(0.299, 0.587, 0.114));
+  c = mix(c, vec3(0.86, 0.9, 0.97) * (0.75 + ls * 0.35), green * uSeason.x * 0.85);
   float l = dot(c, vec3(0.299, 0.587, 0.114));
   vec3 cool = vec3(l) * vec3(0.9, 0.96, 1.1);
   c = mix(c, cool, desp * 0.82);
@@ -56,6 +64,7 @@ class WorldLightPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline 
   day: [number, number, number] = [1, 1, 1];
   night = 0;
   townR: [number, number] = [320, 260];
+  season: [number, number, number] = [0, 0, 0];
   constructor(game: Phaser.Game) {
     super({ game, name: 'WorldLightFX', fragShader: FRAG });
   }
@@ -67,6 +76,7 @@ class WorldLightPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline 
     this.set3f('uDay', this.day[0], this.day[1], this.day[2]);
     this.set1f('uNight', this.night);
     this.set2f('uTownR', this.townR[0], this.townR[1]);
+    this.set3f('uSeason', this.season[0], this.season[1], this.season[2]);
   }
 }
 
@@ -78,6 +88,8 @@ export type LightFrame = {
   lights: { x: number; y: number; radius: number }[];
   /** Inner radius and falloff of a town's tone (px). */
   townR?: [number, number];
+  /** Snow lying, autumn rust, summer gold, each 0..1 (world/season-fx). Indoors: omit. */
+  season?: [number, number, number];
 };
 export type LightFx = { apply(frame: LightFrame): void; destroy(): void };
 
@@ -110,6 +122,7 @@ export function createLightFx(scene: Phaser.Scene): LightFx | null {
       fx.day = f.day;
       fx.night = f.night;
       if (f.townR) fx.townR = f.townR;
+      fx.season = f.season ?? [0, 0, 0];
     },
     destroy() { cam.removePostPipeline('WorldLightFX'); },
   };

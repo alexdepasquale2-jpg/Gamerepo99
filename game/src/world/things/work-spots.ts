@@ -12,6 +12,9 @@ import { pointOnRoad, type LayoutRoute, type MapPoint, type WorldLayout } from '
 import { ART_SCALE, makeTex, type Px } from '../art/px';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
+import { placeAt } from '../../sim/map/residency';
+import { countVisual } from '../../dev/visual-counts';
+import { destroyWorkFx, drawWorkBar, makeWorkFx, placeWorkFx, type WorkFx } from './work-fx';
 
 const REACH = 44;
 /** Beside the wheel, behind the wagon's own focus point; beside the hearth, clear of it. */
@@ -61,7 +64,8 @@ const texOf = (scene: Phaser.Scene, look: string): string => {
 export type WorkSpotsLayer = {
   things(near: Pt, radius: number): Thing[];
   refresh(): void;
-  update(): void;
+  /** Per frame: wagons' wheels follow them; spots near the camera show their work in working hours. */
+  update(phase?: number): void;
   /** Every work spot drawn now (dev). */
   list(): { key: string; taskId: string; kind: string; goal: string; x: number; y: number; workers: string[] }[];
   setVisible(on: boolean): void;
@@ -85,7 +89,7 @@ export function createWorkSpots(o: {
     const p = (o.roadPoint ?? pointOnRoad)(r.path, Math.max(0, Math.min(1, f)));
     return tileFoot(Math.round(p.q), Math.round(p.r));
   };
-  const views = new Map<string, { task: Task; img: Phaser.GameObjects.Image; pos: Pt }>();
+  const views = new Map<string, { task: Task; img: Phaser.GameObjects.Image; pos: Pt; fx?: WorkFx }>();
   let visible = true;
 
   /** Where a task's spot stands now (wagons roll, so they are placed every frame). */
@@ -111,11 +115,31 @@ export function createWorkSpots(o: {
       if (!pos) continue;
       live.add(t.id);
       const v = views.get(t.id);
-      if (v) { v.task = t; v.pos = pos; v.img.setPosition(pos.x, pos.y).setDepth(pos.y); continue; }
+      if (v) { v.task = t; v.pos = pos; v.img.setPosition(pos.x, pos.y).setDepth(pos.y); if (v.fx) placeWorkFx(v.fx, t.spot.look, pos.x, pos.y); continue; }
       const img = scene.add.image(pos.x, pos.y, texOf(scene, t.spot.look)).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(pos.y).setVisible(visible);
       views.set(t.id, { task: t, img, pos });
     }
-    for (const [id, v] of views) if (!live.has(id)) { v.img.destroy(); views.delete(id); }
+    for (const [id, v] of views) if (!live.has(id)) { v.img.destroy(); if (v.fx) destroyWorkFx(v.fx); views.delete(id); }
+  };
+
+  /** Work you can see: emitters for spots on screen only, running while their people are at it. */
+  const showWork = (phase: number | undefined): void => {
+    const view = scene.cameras.main.worldView;
+    const working = phase === undefined || placeAt(phase) === 'work';
+    let fxOn = 0, bars = 0;
+    for (const v of views.values()) {
+      const near = visible && v.pos.x > view.x - 64 && v.pos.x < view.right + 64 && v.pos.y > view.y - 64 && v.pos.y < view.bottom + 96;
+      if (!near) { if (v.fx) { destroyWorkFx(v.fx); delete v.fx; } continue; }
+      v.fx ??= makeWorkFx(scene, v.task.spot.look, v.pos.x, v.pos.y);
+      // A stuck wagon has no one you know at it, but its driver still heaves at the wheel.
+      const on = working && (v.task.workers.length > 0 || !!v.task.spot.wagon);
+      if (v.fx.emitter.emitting !== on) v.fx.emitter.emitting = on;
+      drawWorkBar(v.fx, v.pos.x, v.pos.y, v.task.progress);
+      if (on) fxOn++;
+      bars++;
+    }
+    countVisual('workFx', fxOn);
+    countVisual('workBars', bars);
   };
 
   return {
@@ -129,16 +153,17 @@ export function createWorkSpots(o: {
       return out;
     },
     refresh,
-    update() {
+    update(phase) {
       // Wagons roll between the slow refreshes: their wheel goes with them.
       for (const v of views.values()) {
         if (!v.task.spot.wagon) continue;
         const p = place(v.task);
-        if (p) { v.pos = p; v.img.setPosition(p.x, p.y).setDepth(p.y); }
+        if (p) { v.pos = p; v.img.setPosition(p.x, p.y).setDepth(p.y); if (v.fx) placeWorkFx(v.fx, v.task.spot.look, p.x, p.y); }
       }
+      showWork(phase);
     },
     list: () => [...views.values()].map((v) => ({ key: v.task.spot.key, taskId: v.task.id, kind: v.task.kind, goal: v.task.goal, x: Math.round(v.pos.x), y: Math.round(v.pos.y), workers: [...v.task.workers] })),
-    setVisible(on) { visible = on; for (const v of views.values()) v.img.setVisible(on); },
-    destroy() { for (const v of views.values()) v.img.destroy(); views.clear(); },
+    setVisible(on) { visible = on; for (const v of views.values()) { v.img.setVisible(on); if (!on && v.fx) { destroyWorkFx(v.fx); delete v.fx; } } },
+    destroy() { for (const v of views.values()) { v.img.destroy(); if (v.fx) destroyWorkFx(v.fx); } views.clear(); },
   };
 }

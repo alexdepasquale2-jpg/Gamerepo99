@@ -13,6 +13,7 @@ import type { Figure } from './figure';
 import { villagerLook, type PersonLook } from './looks';
 import type { MarkTell } from './marks';
 import { hash } from './paint';
+import { haulAim, haulRoles, type HaulRole } from './haulers';
 import { footOf } from './towns';
 
 export type Villager = {
@@ -34,6 +35,8 @@ export type Villager = {
   moving: boolean;
   tell: MarkTell | null;
   leader: boolean;
+  /** Fallen sick (civic staffing's `sick` tag): walks pale and slow. */
+  sick?: boolean;
   fig?: Figure;
 };
 
@@ -50,6 +53,8 @@ export type Folk = {
   gather: Pt | null;
   /** Where this person's task (sim/tasks) is today, when it is in town; set by findSpots. */
   taskSpot?: (personId: string) => Pt | null;
+  /** This person's hauling trip today, when they haul for a working site (actors/haulers); set by findSpots. */
+  haul?: (personId: string) => HaulRole | undefined;
 };
 
 export type PersonRow = { id: string; name?: string; townId?: string; age?: number; tags?: string[] };
@@ -109,6 +114,14 @@ export function findSpots(ctx: GameContext, folk: Folk): void {
       return memo.get(id) ?? null;
     };
   }
+  if (!folk.haul) {
+    let roles = new Map<string, HaulRole>(), at = -1e9;
+    folk.haul = (id) => {
+      const now = performance.now();
+      if (now - at > 1000) { roles = haulRoles(ctx, folk.town.id); at = now; }
+      return roles.get(id);
+    };
+  }
   if (folk.gather) return;
   let things: { kind: string; x: number; y: number }[] = [];
   try { things = ctx.world.things(folk.centre, TILE_PX * 16); } catch { things = []; }
@@ -133,6 +146,9 @@ export const wantInside = (folk: Folk, v: Villager, phase: number): Building | n
 export function scheduleSpot(folk: Folk, v: Villager, phase: number): Pt {
   const place = placeAt(phase);
   const h = hash(v.id);
+  // A hauler's work is the walk between their site and the town's stores.
+  const haul = haulAim(folk.haul?.(v.id), v.id, phase);
+  if (haul) return haul;
   const task = place === 'work' ? folk.taskSpot?.(v.id) : null;
   if (task) {
     // At their own task: stand just beside the spot (left or right), so the spot itself stays in reach.

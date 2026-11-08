@@ -14,6 +14,7 @@ import { TILE_PX } from '../../sim/map/constants';
 import type { SimState } from '../../sim/types/runtime';
 import { ART_SCALE, makeTex, type Px } from '../art/px';
 import { DECAL_DEPTH, tileFoot, type Pt } from '../depth';
+import { countVisual } from '../../dev/visual-counts';
 import type { TownSpots } from '../town-spots';
 
 const REACH = 36;
@@ -104,13 +105,17 @@ export function createPiles(scene: Phaser.Scene, getState: () => SimState | unde
       views.clear();
       for (const a of all) views.set(a.key, { key: a.key, pos: a.pos, objs: [], sig: '#', p: null });
     }
+    const cam = scene.cameras.main.worldView;
+    let shown = 0;
     for (const v of views.values()) {
       v.p = pileView(s, v.key);
+      if (visible && (v.p?.have ?? 0) > 0 && Math.abs(v.pos.x - cam.centerX) < cam.width / 2 + 64 && Math.abs(v.pos.y - cam.centerY) < cam.height / 2 + 64) shown++;
       const next = `${v.p?.itemId ?? ''}:${Math.min(MAX_STACK, Math.ceil((v.p?.have ?? 0) / 2))}:${(v.p?.have ?? 0) > 0}`;
       if (next === v.sig) continue;
       v.sig = next;
       draw(v);
     }
+    countVisual('storePiles', shown);
   };
 
   return {
