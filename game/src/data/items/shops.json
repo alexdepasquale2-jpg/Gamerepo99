@@ -1,0 +1,53 @@
+{
+  "spec": "Real shops (sim/goods/shop.ts). A town shop sells out of its town's ledger (data never invents goods) and buys only what its kind takes, with a finite purse that drifts back toward `purse` each new day by `restock` of the gap. Prices are priceAt x market buyFactor/sellFactor x the kind's markup; the price chip compares against base price x factor (cheap below `tone.cheap`, dear above `tone.dear`). `jobKind` picks a keeper's shop from their work; a market-square stall is `produce`. `reserveDays` of the town's own daily need is kept back off the shelf.",
+  "kinds": {
+    "general": {
+      "name": "General store",
+      "sells": ["wood", "kindling", "rope", "nails", "cloth", "pots", "flour", "herbs", "tools", "clay"],
+      "buys": ["wood", "stone", "timber", "wool", "flax", "clay", "herbs", "rope", "cloth", "pots", "berries", "fish", "keepsake"],
+      "markup": 1,
+      "purse": 30
+    },
+    "baker": {
+      "name": "Bakery",
+      "sells": ["bread", "flour", "grain"],
+      "buys": ["grain", "flour", "berries", "wood", "kindling"],
+      "markup": 0.95,
+      "purse": 18
+    },
+    "smith": {
+      "name": "Smithy",
+      "sells": ["tools", "nails", "axe", "mallet"],
+      "buys": ["ore", "wood", "timber", "stone", "tools"],
+      "markup": 1.05,
+      "purse": 26
+    },
+    "produce": {
+      "name": "Market stall",
+      "sells": ["bread", "berries", "fish", "grain", "herbs", "wool", "flax"],
+      "buys": ["berries", "fish", "herbs", "grain", "wool", "flax"],
+      "markup": 1,
+      "purse": 14
+    },
+    "pedlar": {
+      "name": "Pedlar's pack",
+      "sells": [],
+      "buys": ["herbs", "keepsake", "rope", "cloth", "pots", "berries"],
+      "markup": 1.1,
+      "purse": 10
+    }
+  },
+  "jobKind": { "baker": "baker", "miller": "baker", "smith": "smith", "miner": "smith", "shopkeeper": "general" },
+  "stallJobs": ["farmer", "fisher", "herbalist", "weaver"],
+  "keeperJobs": ["shopkeeper", "baker", "smith"],
+  "maxStock": 9,
+  "reserveDays": 1,
+  "restock": 0.5,
+  "wagonCoin": 20,
+  "tone": { "cheap": 0.9, "dear": 1.12 },
+  "lines": {
+    "bought": ["Mind how you carry the {item}.", "There's good {item} in that.", "That {item} won't last long on my shelf anyway.", "Use it well."],
+    "sold": ["I'll find a home for the {item}.", "Fair enough. {item} always sells.", "That'll fill a gap on the shelf.", "Good. We were short."],
+    "both": ["A fair swap, I'd say.", "Come again when your pack is full.", "That's us square, then.", "Pleasure doing business."]
+  }
+}

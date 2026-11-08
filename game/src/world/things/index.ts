@@ -27,6 +27,7 @@ import { createChests, type ChestsLayer } from './chests';
 import { createGroundItems, type GroundLayer } from './ground';
 import { createPlots, type PlotsLayer } from './plots';
 import { createGraves, type GravesLayer } from './graves';
+import { stallThings } from './stalls';
 
 /** What a `tile:<q>,<r>` Thing carries: the faced workable tile and everything sim/land-acts needs to work it. */
 export type TileData = {
@@ -153,7 +154,7 @@ export function createWorldThings(o: {
   return {
     nodes, facilities, chests, ground, plots, graves,
     things(near, radius, facing) {
-      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...wild(near, radius)];
+      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...wild(near, radius), ...stallThings(o.towns, near, radius)];
       if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }
       return out;
     },
