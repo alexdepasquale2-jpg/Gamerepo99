@@ -15,15 +15,27 @@ import { installPlayReactions } from './play-session/play-session-act';
 import { bootPlayState } from './play-session/play-session-state';
 import { rescalePoint } from './map/tile-edits';
 import { backfillSeededWounds } from './social/seeded-wounds';
+import { inventoryOf } from './goods/inventory';
 
 /** Pure save blob helpers — no DOM I/O (persistence adapter lives in ui/). */
 
-/** 3 = 40x world (WORLD_SCALE); v2 world positions are migrated on load. */
-export const SAVE_VERSION = 3 as const;
+/**
+ * Save format version. History (each step has an entry in `saveMigrations`):
+ * - 1: thin blob (seed, day, coin and a few top-level fields), no `sim`.
+ * - 2: full sim in `sim`, on the old map scale.
+ * - 3: full sim on the 40x world (WORLD_SCALE).
+ *
+ * When to bump: only when the meaning or shape of something already saved changes (a field is renamed,
+ * rescaled, split). Adding a new optional field to SimState never needs a bump: saveState writes every
+ * non-transient key, loadState restores whatever keys `sim` holds, and the code that owns the field creates
+ * it lazily (`state.x ??= ...`), so older saves simply lack it. To bump: raise SAVE_VERSION, add
+ * `saveMigrations[old]` (old -> old + 1), and add a fixture to game/scripts/save-fixtures.
+ */
+export const SAVE_VERSION = 3;
 
 export type SaveBlob = {
-  /** 3/2 = full sim in `sim` (2 = old map scale); 1 = legacy thin blob (still parsed, loaded best-effort). */
-  version: 1 | 2 | 3;
+  /** See SAVE_VERSION. Older versions are upgraded step by step by `migrateSave` on load. */
+  version: number;
   seed: number;
   tick: number;
   npcs: Array<{ id: string; x: number; y: number }>;
@@ -36,9 +48,9 @@ export type SaveBlob = {
   imprint?: ProtagonistImprint | null;
   legacy?: LegacyState;
   patronDeals?: Record<string, import('./patrons/types').PatronDeal>;
-  /** v2: every other persisted runtime field of SimState (player, people, flags, towns, ...). */
+  /** v2+: every other persisted runtime field of SimState (player, people, flags, towns, ...). */
   sim?: Record<string, unknown>;
-  /** v2: main rng stream position. */
+  /** v2+: main rng stream position. */
   rngState?: number;
 };
 
@@ -75,37 +87,78 @@ export function saveState(state: SimState): SaveBlob {
   };
 }
 
-/** The one load path: blob (+ static data) -> SimState with derived parts rebuilt. */
-export function loadState(blob: SaveBlob, data: DataTables = loadData(), archetypeId = 'marrow'): SimState {
-  let state: TravelSimState;
-  // The save's own world: its social web follows its seed, whatever world `data` came from.
-  data = dataForSeed(data, blob.seed);
-  if (blob.sim) {
-    const world = generateWorld({ seed: blob.seed, includeAnchors: true, peopleCount: 60 });
-    state = {
-      ...(clone(blob.sim) as unknown as TravelSimState),
-      seed: blob.seed,
-      data,
-      bus: { lastIds: [], ...createEventBus() },
-      rng: createRng(blob.seed),
-      routes: toTravelRoutes(world.routes ?? []),
-      kinEdges: world.kinEdges ?? [],
-      encounterTables: loadEncounterTables(),
-      biomeTerrainMuls: loadBiomeTerrainMuls(),
-      sizeTravelMuls: loadSizeTravelMuls(),
-      history: carryHistory(world.history),
-    };
-    if (blob.version === 2) {
-      for (const g of state.groundItems ?? []) Object.assign(g, rescalePoint(world.settlements ?? [], blob.seed, g.x, g.y));
-    }
-    state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
-    installPlayReactions(state);
-  } else {
-    // v1 thin blob: fresh boot, overlay what v1 carried.
-    state = bootPlayState(blob.seed, archetypeId, data).state;
-    state.day = blob.tick > 0 ? blob.tick : state.day;
-    if (blob.coin !== undefined) state.player.coin = blob.coin;
+type GeneratedWorld = ReturnType<typeof generateWorld>;
+
+/** What a migration may need besides the blob: the static tables, the inhabitant, and the save's world (built once, lazily). */
+export type SaveMigrationContext = { data: DataTables; archetypeId: string; world: () => GeneratedWorld };
+
+/**
+ * Stepwise migrations: saveMigrations[v] upgrades a version-v blob to v + 1 (migrateSave stamps the version).
+ * Each step takes and returns a JSON-safe blob and must not mutate its input.
+ */
+export const saveMigrations: Record<number, (blob: SaveBlob, ctx: SaveMigrationContext) => SaveBlob> = {
+  // v1 -> v2: the thin blob becomes a full sim. Boot the seed's world fresh and overlay what v1 carried
+  // (day, coin; the top-level fields ride along untouched). A fresh boot has no ground items, so the
+  // v2 -> v3 rescale that follows has nothing to move.
+  1: (blob, ctx) => {
+    const state = bootPlayState(blob.seed, ctx.archetypeId, ctx.data).state;
+    if (blob.tick > 0) state.day = blob.tick;
+    if (typeof blob.coin === 'number') state.player.coin = inventoryOf(state).coin = blob.coin;
+    const fresh = saveState(state);
+    const carried = Object.fromEntries(Object.entries(blob).filter(([, v]) => v !== undefined)) as Partial<SaveBlob>;
+    return { ...fresh, ...carried, sim: fresh.sim, rngState: fresh.rngState, tick: state.day, coin: state.player.coin };
+  },
+  // v2 -> v3: the world grew 40x (WORLD_SCALE). Things set down on the ground move with their nearest settlement.
+  2: (blob, ctx) => {
+    const sim = clone(blob.sim ?? {}) as { groundItems?: { x: number; y: number }[] };
+    const settlements = sim.groundItems?.length ? (ctx.world().settlements ?? []) : [];
+    for (const g of sim.groundItems ?? []) Object.assign(g, rescalePoint(settlements, blob.seed, g.x, g.y));
+    return { ...blob, sim: sim as Record<string, unknown> };
+  },
+};
+
+/** Upgrade a blob to SAVE_VERSION one step at a time. Throws on a newer or unknown version (validateSave words it for players). */
+export function migrateSave(blob: SaveBlob, ctx: SaveMigrationContext): SaveBlob {
+  if (blob.version > SAVE_VERSION) throw new Error(`Save version ${blob.version} is newer than this game (${SAVE_VERSION}).`);
+  let out = blob;
+  for (let v = blob.version; v < SAVE_VERSION; v++) {
+    const step = saveMigrations[v];
+    if (!step) throw new Error(`No save migration from version ${v}.`);
+    out = { ...step(out, ctx), version: v + 1 };
   }
+  return out;
+}
+
+/** True when every step from `version` up to SAVE_VERSION exists. */
+function hasMigrationPath(version: number): boolean {
+  for (let v = version; v < SAVE_VERSION; v++) if (!saveMigrations[v]) return false;
+  return true;
+}
+
+/** The one load path: blob (+ static data) -> migrated to SAVE_VERSION -> SimState with derived parts rebuilt. */
+export function loadState(raw: SaveBlob, data: DataTables = loadData(), archetypeId = 'marrow'): SimState {
+  // The save's own world: its social web follows its seed, whatever world `data` came from.
+  data = dataForSeed(data, raw.seed);
+  let world: GeneratedWorld | undefined;
+  const worldOf = (): GeneratedWorld => (world ??= generateWorld({ seed: raw.seed, includeAnchors: true, peopleCount: 60 }));
+  const blob = migrateSave(raw, { data, archetypeId, world: worldOf });
+  const w = worldOf();
+  // Keys in `sim` this build does not know (fields from a newer branch) are carried as they are.
+  const state: TravelSimState = {
+    ...(clone(blob.sim ?? {}) as unknown as TravelSimState),
+    seed: blob.seed,
+    data,
+    bus: { lastIds: [], ...createEventBus() },
+    rng: createRng(blob.seed),
+    routes: toTravelRoutes(w.routes ?? []),
+    kinEdges: w.kinEdges ?? [],
+    encounterTables: loadEncounterTables(),
+    biomeTerrainMuls: loadBiomeTerrainMuls(),
+    sizeTravelMuls: loadSizeTravelMuls(),
+    history: carryHistory(w.history),
+  };
+  state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
+  installPlayReactions(state);
   for (const k of ['unspoken', 'hoard', 'legacy', 'patronDeals'] as const) {
     if (blob[k] !== undefined) (state as Record<string, unknown>)[k] = clone(blob[k]);
   }
@@ -131,13 +184,13 @@ export function parseSave(raw: string): SaveBlob | null {
 
 export type SaveCheck = { ok: true; blob: SaveBlob } | { ok: false; error: string };
 
-/** Friendly validation: rejects non-objects and unknown versions; v1 optional fields stay optional. */
+/** Friendly validation: rejects non-objects, newer versions and versions with no migration path; v1 optional fields stay optional. */
 export function validateSave(raw: unknown): SaveCheck {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return { ok: false, error: 'That save could not be read.' };
   const b = raw as Record<string, unknown>;
   if (typeof b.version !== 'number') return { ok: false, error: 'That save has no version and cannot be read.' };
   if (b.version > SAVE_VERSION) return { ok: false, error: `That save is from a newer version (${b.version}) than this game understands.` };
-  if (b.version !== 1 && b.version !== 2 && b.version !== 3) return { ok: false, error: 'That save has an unknown version.' };
+  if (!Number.isInteger(b.version) || b.version < 1 || !hasMigrationPath(b.version)) return { ok: false, error: 'That save has an unknown version.' };
   if (typeof b.seed !== 'number' || typeof b.tick !== 'number') return { ok: false, error: 'That save is missing its world.' };
   if (b.version >= 2 && (typeof b.sim !== 'object' || b.sim === null)) return { ok: false, error: 'That save is missing its world state.' };
   return { ok: true, blob: { ...(b as unknown as SaveBlob), npcs: Array.isArray(b.npcs) ? (b.npcs as SaveBlob['npcs']) : [] } };
