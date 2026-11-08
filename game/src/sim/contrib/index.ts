@@ -4,7 +4,6 @@
  */
 import './core';
 import './kin-strain';
-import './land';
 import './history';
 import './moments';
 import './households';
