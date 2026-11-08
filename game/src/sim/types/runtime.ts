@@ -164,6 +164,10 @@ export type SimState = {
   history?: import('../gen/world-types').HistoryEvent[];
   /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
   historyTold?: Record<string, string[]>;
+  /** Aging, retirements and deaths: recent life events (see sim/economy/mortality; created lazily). */
+  life?: import('../economy/mortality').LifeState;
+  /** Legends spoken of: arrived legend lines and today's retelling (see sim/contrib/legends; created lazily). */
+  legendTalk?: import('../contrib/legends').LegendTalk;
   /** Happenings in force and recently begun (see sim/happenings; saveable). */
   happenings?: import('../happenings').HappeningsState;
 };
