@@ -43,6 +43,8 @@ import { attachRoads, type RoadsHandle } from './road-signs';
 import { featuresIn } from '../sim/map/ladder/features';
 import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
 import { DEFAULT_SOCIAL_SEED } from '../sim/social/social-web-build';
+import { collectDevHooks } from './dev-hooks';
+import './dev';
 
 const CHUNK_MARGIN = 1;
 const VERB: Record<string, string> = {
@@ -177,7 +179,8 @@ export class OverworldScene extends Phaser.Scene {
       say: (line) => this.say(line),
     });
     // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
-    (window as unknown as { __hearth?: unknown }).__hearth = {
+    // New systems add hooks with registerDevHook (src/render/dev-hooks.ts) instead of editing this block.
+    const hearth = {
       session: this.session,
       scene: this,
       surface,
@@ -267,6 +270,8 @@ export class OverworldScene extends Phaser.Scene {
         state: () => this.room.state(),
       },
     };
+    Object.assign(hearth.dev, collectDevHooks({ session: this.session, scene: this }, hearth.dev));
+    (window as unknown as { __hearth?: unknown }).__hearth = hearth;
     this.createSparkHud();
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;

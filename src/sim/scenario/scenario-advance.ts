@@ -16,6 +16,7 @@ import { tickBorders } from '../economy/borders';
 import { tickPolity } from '../economy/polity';
 import { tickUnspokenDawn } from '../social/unspoken';
 import { runHooks } from '../hooks';
+import { runDawnSlot } from '../dawn-ticks';
 import { rollDayFlags, setBodyFlags } from '../embodiment';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
@@ -105,14 +106,20 @@ export function advanceToDawn(state: SimState): void {
   if (data && rng) {
     runHooks(state, 'dawn', { data, rng });
   }
+  // New systems register into a slot (src/sim/dawn-ticks.ts) instead of adding a line here.
+  runDawnSlot(state, 'season');
   tickEconomyLod(state);
   tickVillageEconomy(state);
   tickBuildPlans(state);
   tickCompanies(state);
   tickHouseholds(state);
+  runDawnSlot(state, 'people');
+  runDawnSlot(state, 'relations');
   tickBorders(state);
   tickPolity(state);
   tickLogistics(state);
+  runDawnSlot(state, 'roads');
+  runDawnSlot(state, 'prices');
   if (state.towns) tickDoctrines(state);
   tickLetters(state);
   tickUnspokenDawn(state);
@@ -120,6 +127,7 @@ export function advanceToDawn(state: SimState): void {
   tickLegacyDawn(state);
   tickPatronDawn(state);
   tickHappenings(state);
+  runDawnSlot(state, 'late');
   clampPlayerSpark(state);
 }
 
