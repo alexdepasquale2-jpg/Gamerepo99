@@ -1,0 +1,118 @@
+{
+  "_doc": "Wild spots (features.json spot) as places with a past. layouts: per spot type, 1-3 prop arrangements around the centre, one picked per spot by seed (ops: put type dq dr state?; ring type n rad salt state?; scatter type n rad salt state?; walls type rad keep salt; pool tile qrad rrad). Only prop types with a props.json row. named: the types that get a seeded name (names templates; {root}/{person} from the district's culture in districts.json, {land} from its land, {grim}/{soft}/{saint} from words) and a one-line story (history: {gist} is a beat of the world's history, else plain). heart: the prop types that ARE the spot (labelled by its name; the others read '<prop> by <name>'). verb: the story verb on its props. See sim/map/ladder/spot-lore.ts.",
+  "layouts": {
+    "camp": [
+      [["put", "campfire", 0, 0], ["put", "tent", -2, -1], ["put", "log", 2, 0], ["put", "log", 0, 2]],
+      [["put", "campfire", 0, 0], ["put", "tent", -2, -1], ["put", "tent", 2, -1], ["put", "log", 0, 2]],
+      [["put", "campfire", 0, 0], ["put", "cart", 2, 1], ["put", "tent", -2, -1], ["put", "hay", 3, 2]]
+    ],
+    "ruin": [
+      [["walls", "ruin_wall", 2, 0.6, 60], ["put", "stump", 0, 0]],
+      [["walls", "ruin_wall", 3, 0.42, 60], ["put", "boulder", 0, 0], ["scatter", "rock", 2, 1, 30]],
+      [["put", "ruin_wall", -1, 0], ["put", "ruin_wall", 0, 0], ["put", "ruin_wall", 1, 0], ["put", "ruin_wall", 1, -1], ["scatter", "rock", 3, 2, 30], ["scatter", "bush", 2, 3, 20]]
+    ],
+    "shrine": [
+      [["put", "shrine", 0, 0], ["ring", "flowers", 5, 2, 3]],
+      [["put", "shrine", 0, 0], ["ring", "rock", 6, 2, 3], ["put", "flowers", 0, 1]],
+      [["put", "shrine", 0, 0], ["put", "tree", 0, -2, "1"], ["scatter", "flowers", 3, 2, 20]]
+    ],
+    "thicket": [
+      [["scatter", "bush", 8, 3, 10]],
+      [["scatter", "bush", 5, 3, 10], ["scatter", "tree", 2, 2, 20, "1"]]
+    ],
+    "deer": [[["scatter", "critter", 3, 3, 10, "deer"]]],
+    "foxes": [[["scatter", "critter", 2, 2, 10, "fox"]]],
+    "rabbits": [[["scatter", "critter", 4, 3, 10, "rabbit"]]],
+    "birds": [[["scatter", "critter", 5, 3, 10, "bird"]]],
+    "pond": [
+      [["pool", "stream", 3, 2], ["ring", "reeds", 6, 4, 5]],
+      [["pool", "stream", 2, 2], ["ring", "reeds", 4, 3, 5], ["put", "log", 3, 1]],
+      [["pool", "stream", 4, 2], ["ring", "reeds", 8, 5, 5], ["put", "boulder", -5, 0]]
+    ],
+    "cart": [
+      [["put", "cart", 0, 0], ["put", "hay", 2, 1], ["put", "log", -2, 1]],
+      [["put", "cart", 0, 0], ["put", "rock", 1, 1], ["put", "hay", -2, 0]],
+      [["put", "cart", 0, 0], ["put", "tent", 2, -1], ["scatter", "log", 2, 2, 20]]
+    ],
+    "flowers": [
+      [["scatter", "flowers", 9, 3, 10]],
+      [["ring", "flowers", 7, 2, 3], ["put", "bush", 0, 0]]
+    ],
+    "haystacks": [
+      [["scatter", "hay", 3, 3, 10]],
+      [["put", "hay", -1, 0], ["put", "hay", 1, 0], ["put", "log", 0, 2]]
+    ],
+    "clearing": [
+      [["scatter", "stump", 5, 3, 10], ["put", "log", 1, 0], ["put", "campfire", -1, 1]],
+      [["ring", "stump", 6, 3, 4], ["put", "boulder", 0, 0]],
+      [["scatter", "stump", 3, 3, 10], ["put", "log", 1, 0], ["put", "log", -1, 1], ["put", "flowers", 0, -1]]
+    ],
+    "cairn": [
+      [["put", "boulder", 0, 0], ["ring", "rock", 4, 1, 3]],
+      [["put", "rock", 0, 0], ["ring", "rock", 6, 2, 3]],
+      [["put", "boulder", 0, 0], ["put", "boulder", 2, 1], ["ring", "rock", 3, 1, 3]]
+    ]
+  },
+  "named": {
+    "ruin": {
+      "heart": ["ruin_wall"],
+      "names": ["the Old {root} Ruin", "{person}'s Fall", "the {grim} Walls", "the {land} Ruin", "the {root}stead Ruin"],
+      "history": ["The stones are scratched with tallies, and a few words that still tell of {gist}.", "A line is cut over the door, half worn away. Folk who pass say it speaks of {gist}.", "Someone wrote on the lintel in charcoal, so the walls would remember {gist}."],
+      "plain": ["{person} kept a hearth here once, before the Dimming. The ash is still under the moss.", "The walls were a waystation when the roads were busier. Now only foxes keep it.", "It burned one winter and nobody had the timber to raise it again."]
+    },
+    "shrine": {
+      "heart": ["shrine"],
+      "names": ["{person}'s Shrine", "the Shrine of {saint}", "the {root} Shrine", "the {soft} Shrine", "the {land} Shrine"],
+      "history": ["Small marks on the stone, one for every soul who still remembers {gist}.", "The carving shows a little flame. Folk set it here so the light would remember {gist}.", "Someone has left a ribbon, and a word scratched beside it about {gist}."],
+      "plain": ["{person} raised it for a child who did not come home from the fields. Flowers are left even now.", "Travellers touch it for luck. The stone is worn smooth where their hands go.", "It was here before the towns. Nobody knows who first lit a candle at it."]
+    },
+    "camp": {
+      "heart": ["campfire", "tent"],
+      "names": ["{person}'s Camp", "the Drovers' Camp", "the {root} Camp", "the {grim} Camp", "the {land} Camp"],
+      "history": ["The drovers who stop here still argue over the coals about {gist}.", "Burned into the log by the fire: a mark, and a few words about {gist}.", "Old {person} camped here for years, and would talk all night of {gist}."],
+      "plain": ["{person} the tinker sleeps here between towns, when the weather lets them.", "Carters stop here because it is a day's walk from anywhere. The fire ring has never been cold long.", "Someone left the tent pitched, as if they meant to come back."]
+    },
+    "cairn": {
+      "heart": ["boulder", "rock"],
+      "names": ["{grim} Cairn", "{person}'s Cairn", "the {root} Cairn", "the {land} Cairn"],
+      "history": ["One stone for each who walked out; the shepherds say the pile is all about {gist}.", "A flat stone at the top is scratched with a few words about {gist}.", "Shepherds add a stone when they pass, and tell their children of {gist}."],
+      "plain": ["{person} is under here, they say, who carried the last spark over these hills.", "It marks the old boundary. Nobody remembers between which places.", "Every walker adds a stone. Nobody remembers who set the first one."]
+    },
+    "clearing": {
+      "heart": ["stump"],
+      "names": ["{person}'s Clearing", "the {soft} Clearing", "{root} Glade", "the {land} Glade"],
+      "history": ["Woodcutters who rest here still tell of {gist}.", "They held a gathering here once, to remember {gist}. You can still see the fire ring.", "The stumps are carved with marks. The oldest ones are about {gist}."],
+      "plain": ["{person} felled these trees for a house that was never built.", "Charcoal burners worked here once. The ground is still black under the grass.", "Lovers from the towns come here, they say. Someone has carved two letters in a stump."]
+    },
+    "cart": {
+      "heart": ["cart"],
+      "names": ["{person}'s Cart", "the Tinker's Cart", "the {grim} Cart", "the {root} Wagon"],
+      "history": ["The carter's tally is carved in its boards, and the last words are about {gist}.", "Folk who borrow from it say its owner never stopped talking of {gist}.", "Someone painted on the tailboard, so nobody would forget {gist}."],
+      "plain": ["{person} the carter lost a wheel here and walked on. The cart stayed.", "Nobody owns it, so everyone borrows from it. There is always a little hay.", "It belonged to a pedlar who sold ribbons. One is still tied to the shaft."]
+    },
+    "pond": {
+      "heart": ["reeds"],
+      "names": ["{person}'s Pond", "the {soft} Pool", "{root}mere", "the {land} Pool"],
+      "history": ["Fishers say the pond remembers {gist}: on still days you can see the old fence posts under the water.", "Children are told a story here about {gist}. Nobody tells it the same way twice.", "The old folk sit by the water and talk of {gist}, and the herons listen."],
+      "plain": ["{person} drowned a ring here to forget someone. Nobody has found it.", "The herons come back every year, whatever the towns do.", "Drovers water their beasts here. The bank is trodden to mud."]
+    }
+  },
+  "verb": {
+    "ruin": { "label": "Read the old marks", "short": "Read the marks" },
+    "shrine": { "label": "Read the old marks", "short": "Read the marks" },
+    "cairn": { "label": "Read the old marks", "short": "Read the marks" },
+    "default": { "label": "Remember the story", "short": "Recall the story" }
+  },
+  "words": {
+    "grim": ["Gallows", "Widow's", "Crow", "Hollow", "Broken", "Black", "Hanging"],
+    "soft": ["Quiet", "Bright", "Lark", "Bramble", "Low", "Mild", "Clover"],
+    "saint": ["the Kindled", "the Last Light", "the Warden", "the Small Flame", "the Lantern"],
+    "land": {
+      "forest": ["Oak", "Holly", "Alder", "Holt"],
+      "hills": ["Crag", "Tor", "Fell", "High"],
+      "fields": ["Barley", "Furrow", "Hedge", "Long Acre"],
+      "meadow": ["Clover", "Mead", "Lark", "Green"],
+      "water": ["Reed", "Sedge", "Heron", "Mere"]
+    }
+  }
+}

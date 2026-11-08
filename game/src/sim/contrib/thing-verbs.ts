@@ -6,11 +6,17 @@
  *          once per animal per verb per day                                       → `fauna.<verb>@fauna:<id>`
  *   prop   each wild prop type's verbs in data/world/props.json (trees, rocks, camps, ruins, shrines …),
  *          once per prop type per verb per day                                     → `prop.<verb>@prop:<id>`
+ *          plus, on a prop of a named spot (data/world/spots.json), its story once per spot per day
+ *                                                                                  → `prop.story@prop:<id>`
  * Effects are bundles (contrib/use-effects). Pure: no Phaser/DOM.
  */
 import faunaJson from '../../data/world/fauna.json';
 import propsJson from '../../data/world/props.json';
+import { CHRONICLE_TAG } from '../chronicle';
 import { hasItem, itemName, removeItem } from '../goods/inventory';
+import { gistOf } from '../history-voice';
+import { isNamedSpot, spotStory, spotVerb, type SpotTag } from '../map/ladder/spot-lore';
+import { deriveRng } from '../rng';
 import { NODES, nodeCharges, type NodeKind } from '../goods/nodes';
 import { pushJuice } from '../packets';
 import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '../play-session/action-providers';
@@ -128,14 +134,46 @@ export function propTypeOf(t: Target): string | undefined {
   return typeof d === 'string' && d ? d : t.id.split('@')[0] || undefined;
 }
 
+/** The named spot a prop stands in (data.spot from the scene: its id and type; the sim re-derives the rest). */
+export function propSpotOf(t: Target): SpotTag | undefined {
+  if (t.kind !== 'prop' || !t.data || typeof t.data !== 'object') return undefined;
+  const s = (t.data as { spot?: { id?: unknown; type?: unknown } }).spot;
+  return s && typeof s.id === 'string' && typeof s.type === 'string' && isNamedSpot(s.type) ? { id: s.id, type: s.type } : undefined;
+}
+
+/** Once a day per spot (not per prop), however many of its stones you stand beside. */
+export const spotStoryKey = (s: SpotTag): string => `prop.story@${s.id}`;
+
+/**
+ * A spot's story: tied to a beat of the world's generated past (seeded per spot, so a place keeps its
+ * story), else a plain one. Chronicle beats are left out: they grow in play and would shift the pick.
+ */
+export function spotStoryLine(state: SimState, s: SpotTag): string | null {
+  const beats = (state.history ?? []).filter((h) => !h.tags?.includes(CHRONICLE_TAG)).map((h) => gistOf(h)).filter((g) => g !== 'the old days').sort();
+  const gist = beats.length ? beats[deriveRng(state.seed, 'spot-story', s.id).int(0, beats.length)] : undefined;
+  return spotStory(state.seed, s.id, s.type, gist);
+}
+
 registerTargetProvider({
   id: 'prop-uses',
   kinds: ['prop'],
   list(state, t) {
     const row = propRow(propTypeOf(t) ?? '');
-    return row ? listRows(state, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`) : [];
+    const out = row ? listRows(state, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`) : [];
+    const spot = propSpotOf(t);
+    if (spot && !usedToday(state, spotStoryKey(spot))) out.push({ id: targetActionId('prop.story', t), ...spotVerb(spot.type), family: 'work' });
+    return out;
   },
   act(state, actionId, t) {
+    const spot = propSpotOf(t);
+    if (spot && verbOf(actionId) === 'prop.story') {
+      if (usedToday(state, spotStoryKey(spot))) return { ok: false, line: 'You know this place\'s story already. It will keep till tomorrow.' };
+      const line = spotStoryLine(state, spot);
+      if (!line) return false;
+      markUsed(state, spotStoryKey(spot));
+      pushJuice(state, 'prop.used', { verb: 'story', target: t.kind, id: t.id, line });
+      return { ok: true, line };
+    }
     const row = propRow(propTypeOf(t) ?? '');
     return row ? actRow(state, actionId, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`, 'prop.used') : false;
   },

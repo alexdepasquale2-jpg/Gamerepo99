@@ -3,33 +3,37 @@ import { bresenhamLine } from '../corridor';
 import type { Biome } from '../terrain';
 import type { FacilityRenderView } from '../types';
 import { featuresIn, fhash, FEATURES as F, inRect, type Pt } from './features';
+import { isNamedSpot, spotLayout, type SpotTag } from './spot-lore';
 
 type Put = (type: string, q: number, r: number, state?: string) => void;
 type Tile = (q: number, r: number, id: string) => void;
 
-/** What each kind of wild spot looks like (props around its centre). */
+/** Salt of the layout-variant roll: clear of every op salt (walls of rad 3 at salt 60 reach 108). */
+const VARIANT_SALT = 500;
+
+/**
+ * Lay out one wild spot from its data arrangement (spots.json layouts; variant 0 of each type is the
+ * old fixed one). The salts are the old ones, so variant 0 places exactly what it always did.
+ */
 function dressSpot(type: string, c: Pt, h: (i: number) => number, put: Put, tile: Tile): void {
+  const S = (v: string | number | undefined) => (v === undefined ? undefined : String(v));
   const ring = (n: number, rad: number, kind: string, salt: number, state?: string) => {
     for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + h(salt) * 6; put(kind, Math.round(c.q + Math.cos(a) * rad), Math.round(c.r + Math.sin(a) * rad), state); }
   };
   const scatter = (n: number, rad: number, kind: string, salt: number, state?: string) => {
     for (let i = 0; i < n; i++) put(kind, c.q + Math.round((h(salt + i) - 0.5) * 2 * rad), c.r + Math.round((h(salt + 40 + i) - 0.5) * 2 * rad), state);
   };
-  switch (type) {
-    case 'camp': put('campfire', c.q, c.r); put('tent', c.q - 2, c.r - 1); put('log', c.q + 2, c.r); put('log', c.q, c.r + 2); break;
-    case 'ruin': for (let d = -2; d <= 2; d++) for (const [dq, dr] of [[d, -2], [d, 2], [-2, d], [2, d]] as const) if (h(60 + (dq + 2) * 5 + dr + 2) < 0.6) put('ruin_wall', c.q + dq, c.r + dr); put('stump', c.q, c.r); break;
-    case 'shrine': put('shrine', c.q, c.r); ring(5, 2, 'flowers', 3); break;
-    case 'thicket': scatter(8, 3, 'bush', 10); break;
-    case 'deer': scatter(3, 3, 'critter', 10, 'deer'); break;
-    case 'foxes': scatter(2, 2, 'critter', 10, 'fox'); break;
-    case 'rabbits': scatter(4, 3, 'critter', 10, 'rabbit'); break;
-    case 'birds': scatter(5, 3, 'critter', 10, 'bird'); break;
-    case 'pond': for (let dr = -2; dr <= 2; dr++) for (let dq = -3; dq <= 3; dq++) if ((dq * dq) / 9 + (dr * dr) / 4 <= 1) tile(c.q + dq, c.r + dr, 'stream'); ring(6, 4, 'reeds', 5); break;
-    case 'cart': put('cart', c.q, c.r); put('hay', c.q + 2, c.r + 1); put('log', c.q - 2, c.r + 1); break;
-    case 'flowers': scatter(9, 3, 'flowers', 10); break;
-    case 'haystacks': scatter(3, 3, 'hay', 10); break;
-    case 'clearing': scatter(5, 3, 'stump', 10); put('log', c.q + 1, c.r); put('campfire', c.q - 1, c.r + 1); break;
-    case 'cairn': put('boulder', c.q, c.r); ring(4, 1, 'rock', 3); break;
+  for (const op of spotLayout(type, h(VARIANT_SALT)).ops) {
+    const [what, kind, a, b, d, e] = op as [string, string, number, number, number?, (string | number)?];
+    if (what === 'put') put(kind, c.q + a, c.r + b, S(d));
+    else if (what === 'ring') ring(a, b, kind, d ?? 0, S(e));
+    else if (what === 'scatter') scatter(a, b, kind, d ?? 0, S(e));
+    else if (what === 'walls') {
+      // The ring of tiles `a` out, each kept with chance `b` (a tumbled-down square of wall).
+      for (let k = -a; k <= a; k++) for (const [dq, dr] of [[k, -a], [k, a], [-a, k], [a, k]] as const) if (h((d ?? 0) + (dq + a) * (2 * a + 1) + dr + a) < b) put(kind, c.q + dq, c.r + dr);
+    } else if (what === 'pool') {
+      for (let dr = -b; dr <= b; dr++) for (let dq = -a; dq <= a; dq++) if ((dq * dq) / (a * a) + (dr * dr) / (b * b) <= 1) tile(c.q + dq, c.r + dr, kind);
+    }
   }
 }
 
@@ -42,8 +46,13 @@ export type DressCtx = {
 };
 export type Dressing = { props: FacilityRenderView[]; tiles: Map<string, string> };
 
-const prop = (type: string, q: number, r: number, state = 'idle'): FacilityRenderView =>
-  ({ id: `dress_${type}_${q}_${r}`, type, state, warmth: 0.4, position: { x: q, y: r } });
+/** A dressed prop; one of a named spot's carries its tag, so the scene can label it and offer its story. */
+export type DressedProp = FacilityRenderView & { spot?: SpotTag };
+const prop = (type: string, q: number, r: number, state = 'idle', spot?: SpotTag): DressedProp =>
+  ({ id: `dress_${type}_${q}_${r}`, type, state, warmth: 0.4, position: { x: q, y: r }, ...(spot ? { spot } : {}) });
+
+/** The spot a prop belongs to, when it is one of a named spot's. */
+export const spotTagOf = (p: FacilityRenderView): SpotTag | undefined => (p as DressedProp).spot;
 
 export function dressChunk(seed: number, q0: number, r0: number, size: number, ctx: DressCtx): Dressing {
   const q1 = q0 + size, r1 = r0 + size;
@@ -53,7 +62,8 @@ export function dressChunk(seed: number, q0: number, r0: number, size: number, c
   const nearRoad = (q: number, r: number) => { for (let dr = -RC; dr <= RC; dr++) for (let dq = -RC; dq <= RC; dq++) if (ctx.isRoad(q + dq, r + dr)) return true; return false; };
   const free = (q: number, r: number) => inRect({ q, r }, q0, r0, q1, r1) && !used.has(`${q},${r}`) && ctx.biome(q, r) !== 'water' && !tiles.has(`${q},${r}`) && !nearRoad(q, r);
   const reserve = (c: Pt, rad: number) => { for (let dr = -rad; dr <= rad; dr++) for (let dq = -rad; dq <= rad; dq++) if (dq * dq + dr * dr <= rad * rad) used.add(`${c.q + dq},${c.r + dr}`); };
-  const put = (type: string, q: number, r: number, state?: string) => { if (!free(q, r)) return; used.add(`${q},${r}`); props.push(prop(type, q, r, state)); };
+  const putAs = (spot?: SpotTag): Put => (type, q, r, state) => { if (!free(q, r)) return; used.add(`${q},${r}`); props.push(prop(type, q, r, state, spot)); };
+  const put = putAs();
   const tile = (q: number, r: number, id: string) => { if (inRect({ q, r }, q0, r0, q1, r1) && !ctx.isRoad(q, r) && ctx.biome(q, r) !== 'water' && !used.has(`${q},${r}`)) tiles.set(`${q},${r}`, id); };
 
   for (const f of featuresIn(seed, ctx.towns, q0, r0, q1, r1)) {
@@ -64,7 +74,9 @@ export function dressChunk(seed: number, q0: number, r0: number, size: number, c
       f.rocks.forEach((p, i) => put(i === 0 ? 'boulder' : 'rock', p.q, p.r));
       if (f.hills) put('stump', f.center.q + 2, f.center.r + 3);
     } else if (f.kind === 'spot') {
-      dressSpot(f.type, f.center, (i) => fhash(seed ^ 0x5b07, f.center.q, f.center.r, 100 + i), put, tile);
+      // Critters of a herd spot are fauna, not part of a place: only named spots tag their props.
+      const tag = isNamedSpot(f.type) ? { id: f.id, type: f.type } : undefined;
+      dressSpot(f.type, f.center, (i) => fhash(seed ^ 0x5b07, f.center.q, f.center.r, 100 + i), putAs(tag), tile);
       reserve(f.center, 3);
     } else {
       const { house, field, gate } = f;
