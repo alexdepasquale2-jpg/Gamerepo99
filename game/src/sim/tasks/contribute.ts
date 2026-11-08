@@ -16,6 +16,7 @@ import { noteRoadNews, ROADS, routeById } from '../economy/roads';
 import { civicIfAny, siteById, SITE_KIND_BY_ID } from '../civic/sites';
 import { put } from '../civic/store';
 import type { SimState } from '../types/runtime';
+import { noteActToday } from '../embodiment';
 import { helpOf, helpIfAny, nameOf, pickLine, taskById, TASKS, verbOfTask, fillTaskLine, wagonStuck, type Task } from './tasks';
 
 export type WorkResult = {
@@ -134,6 +135,8 @@ export function contribute(state: SimState, taskId: string, effort = 1, opts: Co
   const turn = `${t.id}|${h.byTask[t.id]}`;
   const line = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
   const thanks = lead ? { personId: lead, line: pickLine(state, TASKS.thanks, `${turn}|thanks`, vars) } : undefined;
+  // Spark hooks (personal-cost, spark-recovery) still key on the old work_alongside kind: real help counts as it.
+  noteActToday(state, 'carry_burden', 'work_alongside');
   return { ok: true, line, ...(thanks ? { thanks } : {}), task: taskById(state, t.id), effort: e, sparkDelta };
 }
 

@@ -183,6 +183,8 @@ export function createBindings(ctx: GameContext, io: PadIo): Bindings {
 
   /** B with nothing open: put down a carried load (carry API when present), else lower the held item. */
   const putDown = (): void => {
+    // Let the load fall at your feet (sim/carry); the ring's put-down verbs place it on a pile, plot or wagon.
+    if (ctx.session.carrying()) { ctx.session.dropCarried(ctx.actors.player.pos()); ctx.events.emit('inventory', {}); return; }
     const s = ctx.session as unknown as { putDown?: () => unknown; drop?: () => unknown };
     const dev = (window as unknown as { __hearth?: { dev?: Record<string, unknown> } }).__hearth?.dev;
     const carry = dev?.carry as { putDown?: () => unknown; drop?: () => unknown } | undefined;

@@ -17,6 +17,7 @@ import { parseTargetAction } from '../sim/play-session/targets';
 import { button, el, isTyping } from './dom';
 import { itemIcon } from './icons';
 import { ensureShopStyles } from './style';
+import { registerSheetNav } from '../ui/pad/bindings';
 
 export const SHOP_ID = 'shop';
 type Side = 'theirs' | 'yours';
@@ -290,3 +291,5 @@ registerDevHook('shopSettle', (ctx) => (r: string | ShopRef, basket: Partial<Bas
 });
 /** `dev.shopNav.moveFocus('down')` etc.: the gamepad's handle on the open sheet. */
 registerDevHook('shopNav', () => shopNav);
+// The gamepad drives the open shop through its own nav (the wagon's sheet keeps the `trade` id).
+for (const id of [SHOP_ID, 'trade']) registerSheetNav(`hf-sheet-${id}`, shopNav);
