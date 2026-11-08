@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "spec": "The realm as a grid of districts (sim/map/districts.ts). The home district (homeCol, homeRow) holds the hand-made world as generated today; every other district is generated from the seed when something needs it. districtTiles = side of one district in tiles (the grid is cols x rows of them, centred so the home district is centred on the origin). settlements = how many towns and villages a district holds; kinds weights pick each one's size (the first, the district seat, is at least a town). Each district takes a character from the game's own ideas: a wound the place carries (despair range), where it sits between village and city (gapAxis), a doctrine that rules it, a land, and a naming culture.",
+  "grid": { "cols": 10, "rows": 10, "homeCol": 4, "homeRow": 4 },
+  "districtTiles": 9500,
+  "marginTiles": 900,
+  "minSpacingTiles": 1100,
+  "settlements": [3, 7],
+  "kinds": { "village": 0.5, "town": 0.35, "city": 0.15 },
+  "peoplePerKind": { "village": 9, "town": 16, "city": 26 },
+  "wounds": [
+    { "id": "grief", "label": "grieving", "despair": [0.35, 0.6], "epithet": "Mourning" },
+    { "id": "apathy", "label": "listless", "despair": [0.3, 0.55], "epithet": "Grey" },
+    { "id": "fear", "label": "afraid", "despair": [0.3, 0.6], "epithet": "Shuttered" },
+    { "id": "exhaustion", "label": "worn out", "despair": [0.25, 0.5], "epithet": "Weary" },
+    { "id": "disillusionment", "label": "disillusioned", "despair": [0.35, 0.65], "epithet": "Hollow" },
+    { "id": "shame_wound", "label": "ashamed", "despair": [0.3, 0.55], "epithet": "Bowed" }
+  ],
+  "doctrineStyles": [
+    { "id": "compact", "name": "Compact", "promise": "bread for obedience" },
+    { "id": "pact", "name": "Pact", "promise": "safe roads for silence" },
+    { "id": "creed", "name": "Creed", "promise": "progress at any cost" },
+    { "id": "tithe", "name": "Tithe", "promise": "protection for a tenth" },
+    { "id": "quiet", "name": "Quiet", "promise": "peace if nobody hopes too loud" },
+    { "id": "quota", "name": "Quota", "promise": "work until the numbers are met" }
+  ],
+  "doctrineWords": ["Mill", "Lamp", "Iron", "Salt", "Furrow", "Bell", "Ledger", "Hearth", "Gate", "Ash", "Well", "Spindle"],
+  "lands": [
+    { "id": "forest", "noun": ["Weald", "Holt", "Wood"] },
+    { "id": "hills", "noun": ["Downs", "Fells", "Heights"] },
+    { "id": "fields", "noun": ["Vale", "Shires", "Acres"] },
+    { "id": "meadow", "noun": ["Heath", "Leas", "Meads"] },
+    { "id": "water", "noun": ["Fens", "Mere", "Strand"] }
+  ],
+  "cultures": [
+    { "id": "old_hearth", "roots": ["Ash", "Ember", "Cinder", "Kettle", "Brand", "Coal", "Soot", "Hearth"], "town": ["ford", "well", "stead", "hollow", "cote", "by"], "people": ["Wyn", "Tam", "Cass", "Bram", "Nell", "Odo", "Ivy", "Pell"] },
+    { "id": "marsh", "roots": ["Reed", "Sedge", "Mire", "Eel", "Heron", "Brack", "Moss", "Tide"], "town": ["mere", "wick", "fleet", "holm", "ey", "strand"], "people": ["Ewan", "Moll", "Dun", "Teal", "Wren", "Osk", "Lorn", "Sall"] },
+    { "id": "stone", "roots": ["Crag", "Flint", "Scar", "Tor", "Slate", "Grit", "Cairn", "Ridge"], "town": ["stone", "gate", "scar", "law", "hope", "side"], "people": ["Hob", "Agna", "Rudd", "Kell", "Bryn", "Sev", "Mag", "Torv"] },
+    { "id": "orchard", "roots": ["Apple", "Pear", "Hazel", "Bramble", "Elder", "Plum", "Damson", "Rowan"], "town": ["field", "ley", "ham", "worth", "garth", "den"], "people": ["Pip", "Rosa", "Hal", "Bett", "Jory", "Lark", "Mabs", "Ned"] },
+    { "id": "salt", "roots": ["Salt", "Gull", "Kelp", "Wrack", "Grey", "Spray", "Shingle", "Brine"], "town": ["haven", "mouth", "ness", "hithe", "point", "cove"], "people": ["Gale", "Fen", "Corra", "Skel", "Mara", "Bow", "Tess", "Aud"] }
+  ]
+}

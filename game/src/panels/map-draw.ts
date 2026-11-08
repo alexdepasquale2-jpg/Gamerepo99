@@ -29,11 +29,16 @@ export function mapModel(ctx: GameContext): MapModel {
   const towns = ctx.layout.settlements.map((t) => ({ id: t.id, name: nameOf(t.id), q: t.q, r: t.r, kind: t.kind ?? 'village' }));
   const qs = towns.map((t) => t.q), rs = towns.map((t) => t.r);
   for (const r of ctx.layout.routes) for (const p of r.path) { qs.push(p.q); rs.push(p.r); }
-  const range = (v: number[]): number => (v.length ? Math.max(...v) - Math.min(...v) : 0);
-  const span = Math.max(1, range(qs), range(rs));
+  // Loops, not Math.min(...xs): a long road has too many points to spread into one call.
+  let qMin = Infinity, qMax = -Infinity, rMin = Infinity, rMax = -Infinity;
+  for (const q of qs) { if (q < qMin) qMin = q; if (q > qMax) qMax = q; }
+  for (const r of rs) { if (r < rMin) rMin = r; if (r > rMax) rMax = r; }
+  if (!Number.isFinite(qMin)) { qMin = qMax = 0; }
+  if (!Number.isFinite(rMin)) { rMin = rMax = 0; }
+  const span = Math.max(1, qMax - qMin, rMax - rMin);
   const pad = Math.max(40, Math.round(span * 0.06));
-  const q0 = Math.min(...(qs.length ? qs : [0])) - pad, r0 = Math.min(...(rs.length ? rs : [0])) - pad;
-  const w = Math.max(...(qs.length ? qs : [0])) + pad - q0, h = Math.max(...(rs.length ? rs : [0])) + pad - r0;
+  const q0 = qMin - pad, r0 = rMin - pad;
+  const w = qMax + pad - q0, h = rMax + pad - r0;
   return { towns, routes: ctx.layout.routes, q0, r0, w: Math.max(1, w), h: Math.max(1, h) };
 }
 

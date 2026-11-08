@@ -11,8 +11,8 @@ import { DECAL_DEPTH, GROUND_DEPTH, tileFoot, type Pt } from './depth';
 import { hexNum, shade } from './art/px';
 
 const T = TILE_PX;
-/** Room floor's top-left tile: far from any world (tile aligned). */
-export const ROOM_Q0 = 12500, ROOM_R0 = 9375;
+/** Room floor's top-left tile: past the realm's edge (districts end near q 52k), tile aligned. */
+export const ROOM_Q0 = 150000, ROOM_R0 = 9375;
 const WALL_ROWS = 2;
 const ACCENTS = ['#b5524a', '#4f7a8a', '#7a8f4a'];
 const FLOOR: Record<string, [string, string]> = { house: ['#b88d5a', '#a87f50'], shop: ['#c9a56e', '#b8955f'], inn: ['#9c6f45', '#8d633e'], office: ['#8a7a62', '#7d6e58'] };

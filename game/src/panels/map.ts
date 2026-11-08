@@ -4,6 +4,8 @@
  */
 import type { GameContext, SheetDef } from '../app/contracts';
 import { button, el } from './dom';
+import { districtAtPoint, districtLine, drawRealm, playerDistrict } from './realm-draw';
+import { realm, type District } from '../sim/map/districts';
 import { CART_COLOR, LINK_COLOR, PLAYER_COLOR, WAGON_COLOR, drawMap, mapModel, despairColor, type MapModel } from './map-draw';
 
 export const MAP_ID = 'map';
@@ -28,6 +30,9 @@ export function createWorldMap(ctx: GameContext, layer: HTMLElement, openMap: ()
   layer.append(mini);
 
   let big: HTMLCanvasElement | null = null;
+  /** Which view the big map shows: this district's towns and roads, or the whole realm of districts. */
+  let view: 'local' | 'realm' = 'local';
+  let picked: District | null = null;
   let lastMini = -1e9, lastBig = -1e9;
 
   const sizeBig = (c: HTMLCanvasElement): void => {
@@ -63,6 +68,13 @@ export function createWorldMap(ctx: GameContext, layer: HTMLElement, openMap: ()
     onClose: () => { big = null; },
     render(body) {
       body.replaceChildren();
+      const tabs = el('div', 'hf-row', undefined, { role: 'tablist', 'aria-label': 'Map view' });
+      tabs.append(
+        button('This district', () => { view = 'local'; rerender(body); }, { id: 'map-view-local', pressed: view === 'local' }),
+        button('The realm', () => { view = 'realm'; rerender(body); }, { id: 'map-view-realm', pressed: view === 'realm' }),
+      );
+      body.append(tabs);
+      if (view === 'realm') return renderRealm(body);
       const c = el('canvas', 'hf-map-canvas', undefined, { role: 'img', 'aria-label': 'Map of the known world', 'data-id': 'world-map' });
       body.append(c, legend());
       const desp = ctx.session.townDespair();
@@ -75,6 +87,30 @@ export function createWorldMap(ctx: GameContext, layer: HTMLElement, openMap: ()
       requestAnimationFrame(() => { if (big === c) { sizeBig(c); drawMap(c, ctx, model, true); } });
     },
   });
+
+  const rerender = (body: HTMLElement): void => sheet().render(body);
+
+  /** The realm: a grid of districts; tap one to read about it. */
+  const renderRealm = (body: HTMLElement): void => {
+    big = null;
+    const c = el('canvas', 'hf-map-canvas', undefined, { role: 'img', 'aria-label': 'Map of the realm: every district', 'data-id': 'realm-map' });
+    const w = Math.max(200, Math.min(640, Math.floor(body.clientWidth || 320)));
+    c.width = w; c.height = w;
+    const info = el('p', 'hf-small', undefined, { 'aria-live': 'polite', 'data-id': 'realm-info' });
+    const here = playerDistrict(ctx);
+    const show = (d: District | null): void => {
+      picked = d;
+      drawRealm(c, ctx, d);
+      const desp = Object.values(ctx.session.townDespair());
+      info.textContent = d ? districtLine(d, desp.length ? desp.reduce((a, b) => a + b, 0) / desp.length : undefined) : 'Tap a district to read about it.';
+    };
+    c.addEventListener('click', (e) => { const r = c.getBoundingClientRect(); show(districtAtPoint(c, ctx, e.clientX - r.left, e.clientY - r.top)); });
+    const all = realm(ctx.seed);
+    const towns = all.reduce((a, d) => a + d.towns.length, 0) + model.towns.length;
+    body.append(c, el('p', 'hf-small hf-muted', `${all.length} districts and ${towns} towns and villages. Gold outline: your home district. Grey: despair has the upper hand.`), info,
+      button('Close map', () => ctx.panels.map.toggle(), { id: 'map-close' }));
+    show(picked ?? all.find((d) => here && d.col === here.col && d.row === here.row) ?? null);
+  };
 
   return {
     sheet,

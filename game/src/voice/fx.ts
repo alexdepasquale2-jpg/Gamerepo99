@@ -19,7 +19,8 @@ const FEEL = {
 };
 
 /** Above every y-sorted sprite (depth = foot y); below nothing the voice layer cares about (bubbles are DOM). */
-const FX_DEPTH = 998_600;
+/** Above every foot-y sorted sprite in the realm (world y reaches about 1.7M px), under the sky layer. */
+const FX_DEPTH = 40_000_000;
 
 const TEX = { gold: 'hfv-fx-gold', cyan: 'hfv-fx-cyan', warm: 'hfv-fx-warm', dim: 'hfv-fx-dim' } as const;
 
