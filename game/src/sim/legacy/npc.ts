@@ -5,6 +5,7 @@ import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { legendDeeds } from './arrival';
 import { assembleFromImprint } from './imprint';
 import { ensureLegacy, fill, legacyTable, pushDelta } from './state';
 import type { Grave, ProtagonistImprint } from './types';
@@ -20,7 +21,11 @@ export function placeLegend(state: SimState, imprint: ProtagonistImprint): strin
   const townId = imprint.homeTownId;
   state.people[npc.id] = { id: npc.id, name: imprint.displayName, flame: 40, flameStart: 40, townId, tags: [...npc.tags], marks: [] };
   const t = legacyTable();
-  const lines = t.legendLines.map((l) => fill(l, imprint.displayName));
+  // Generic lines, plus lines built from what they actually did (their methods, who they rekindled, who they stood by).
+  const deeds = legendDeeds(state, imprint);
+  const frames = (t as { deedLegendLines?: string[] }).deedLegendLines ?? [];
+  const deedLines = deeds.map((deed, i) => fill(frames[(i + deriveRng(state.seed, 'legend-deed', npc.id).int(0, Math.max(1, frames.length))) % Math.max(1, frames.length)] ?? '{legacyName} {deed}.', imprint.displayName).replace('{deed}', deed));
+  const lines = [...deedLines, ...t.legendLines.map((l) => fill(l, imprint.displayName))];
   for (const l of lines) if (!lg.legends.includes(l)) lg.legends.push(l);
   pushJuice(state, 'legend.heard', { legacyName: imprint.displayName, personId: npc.id, lines });
   return lines;

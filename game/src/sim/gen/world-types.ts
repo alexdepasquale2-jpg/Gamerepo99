@@ -14,6 +14,13 @@ export type HistoryEvent = {
   at?: number;
   tags?: string[];
   personIds?: string[];
+  /** Chronicle entries (sim/chronicle) carry their own words; authored beats look theirs up by id. */
+  summary?: string;
+  gist?: string;
+  kind?: string;
+  townId?: string;
+  /** The game day it happened (chronicle entries). */
+  day?: number;
 };
 export type AssertionResult = {
   ok: boolean;

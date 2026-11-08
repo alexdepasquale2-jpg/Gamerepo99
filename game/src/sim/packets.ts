@@ -1,5 +1,6 @@
 /** Cross-town packet emit/deliver along Fabric kin edges. Pure; no Phaser/DOM. */
 
+import { chronicleJuice } from './chronicle';
 import type { DataTables } from './load-data';
 import type { PacketState, PersonState, SimState } from './types/runtime';
 
@@ -27,6 +28,7 @@ export function pushJuice(state: SimState, eventId: string, payload?: unknown): 
     emit?: (e: string, p: unknown) => void;
   };
   (bus.lastIds ??= []).push(eventId);
+  chronicleJuice(state, eventId, payload);
   bus.emit?.(eventId, payload);
 }
 

@@ -40,7 +40,8 @@ function townNameOf(state: SimState, townId: string | undefined, c: Copy): strin
   return row?.name ?? townId.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
-function legendDeeds(state: SimState, im: ProtagonistImprint, c: Copy): string[] {
+/** What a former carrier is remembered for: their strongest methods, someone they rekindled, someone they stayed close to. */
+export function legendDeeds(state: SimState, im: ProtagonistImprint, c: Copy = legacyTable().arrival): string[] {
   const out: string[] = [];
   const methodDeeds = c.methodDeeds as Record<string, string>;
   const methods = ((state.data as DataTables | undefined)?.methods ?? []) as { id?: string; name?: string }[];

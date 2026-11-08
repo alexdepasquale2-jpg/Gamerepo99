@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "spec": "The living chronicle (sim/chronicle.ts): what happens in play becomes history people retell, through the same voice as the old beats (history-voice.ts). Each kind has summary templates (one is picked per event, seeded) and a gist (the noun phrase a dawn line uses). Slots: {name} the person, {town} the town, {heir}, {doctrine}, {challenger}, {incumbent}, {event}, {age}. keep = how many entries of each kind live at once (oldest of that kind drop out, so a run of happenings cannot push out a death); onlyFirstPerPerson = kinds recorded once per key (a second reignite of the same person, or the same happening in the same town, is not news). events = how each happening is named in a sentence.",
+  "keep": 6,
+  "onlyFirstPerPerson": [
+    "reignite",
+    "happening",
+    "betrayal",
+    "succession"
+  ],
+  "kinds": {
+    "reignite": {
+      "gist": "the day {name} came back to life",
+      "summaries": [
+        "{name} had gone grey as ash, and then one day in {town} they were laughing again. Nobody knows quite what did it.",
+        "Everyone had given up on {name}. Then a stranger kept coming by, and the fire took again.",
+        "{name} sat by a cold hearth in {town} for a season. Now you can't keep them indoors.",
+        "They say it was a small thing that brought {name} back. Someone just kept showing up."
+      ]
+    },
+    "death": {
+      "gist": "when we lost {name}",
+      "summaries": [
+        "{name} was laid to rest in {town}. Half the place came out, more than you'd think.",
+        "We buried {name} at {age}. The house still sounds wrong without them.",
+        "{name} went quiet in the night, in {town}. Someone kept the lamp lit till morning."
+      ]
+    },
+    "collapse": {
+      "gist": "the week the {doctrine} fell",
+      "summaries": [
+        "The {doctrine} fell apart in {town}. The notices came down in a day, and nobody admitted they'd believed it.",
+        "For a while everyone in {town} swore by the {doctrine}. Then it promised one thing too many.",
+        "The {doctrine} went the way of all such things in {town}: loud, then quiet, then gone."
+      ]
+    },
+    "swap": {
+      "gist": "when the {challenger} pushed out the {incumbent}",
+      "summaries": [
+        "In {town} the {challenger} pushed the {incumbent} aside. Same promises, new paint.",
+        "The {incumbent} lost {town} to the {challenger}. People still argue whether anything changed."
+      ]
+    },
+    "succession": {
+      "gist": "how {heir} took up the spark",
+      "summaries": [
+        "The one who carried the spark burned out at last. {heir} took it up, and kept walking.",
+        "When the old carrier's fire went out, it was {heir} who stood up. Nobody asked them to.",
+        "There was a carrier before {heir}. You can see some of them in how {heir} listens."
+      ]
+    },
+    "happening": {
+      "gist": "{event}",
+      "summaries": [
+        "{event} came to {town}. Folk still date things by it: before, and after.",
+        "Remember {event}? {town} talked of nothing else for weeks.",
+        "That was the season of {event} in {town}. Odd days."
+      ]
+    },
+    "theft": {
+      "gist": "the hoard that went missing",
+      "summaries": [
+        "Someone had coin buried out by {town}. One morning the hole was empty, and nobody said a word.",
+        "A hidden purse near {town} went walking. Everyone looked at everyone else for a month."
+      ]
+    },
+    "betrayal": {
+      "gist": "the patron who turned",
+      "summaries": [
+        "A patron made fine promises in {town}, then turned on the one who trusted them. It was talked about for a long while.",
+        "Never shake hands with a patron, they say in {town}. They have a story to go with it."
+      ]
+    }
+  },
+  "codas": {
+    "reignite": [
+      "Gives you hope, that one.",
+      "Makes you think anybody could come back."
+    ],
+    "death": [
+      "Light a candle if you pass the stone.",
+      "We say their name at the hearth still."
+    ],
+    "collapse": [
+      "Don't trust a notice that promises bread.",
+      "Folk are slower to believe now."
+    ],
+    "swap": [
+      "Masters change. The work doesn't.",
+      "Watch who's painting the next sign."
+    ],
+    "succession": [
+      "The spark doesn't die with the hand that held it.",
+      "Someone always takes it up."
+    ],
+    "happening": [
+      "Strange times.",
+      "I don't expect we'll see the like again."
+    ],
+    "theft": [
+      "Bury it deeper, is the lesson.",
+      "Coin draws eyes."
+    ],
+    "betrayal": [
+      "Keep your own counsel.",
+      "Promises from the city weigh nothing."
+    ]
+  },
+  "events": {
+    "grey_rain": "the grey rain",
+    "stranger_embers": "the stranger with embers",
+    "bad_news_rider": "the bad-news rider",
+    "market_ghost": "the market ghost",
+    "child_laugh": "the morning a child laughed",
+    "hill_rumor": "the rumour on the hill",
+    "den_cold": "the cold in the den"
+  }
+}
