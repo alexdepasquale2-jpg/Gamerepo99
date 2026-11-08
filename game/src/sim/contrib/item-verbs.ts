@@ -233,7 +233,7 @@ export function actItemVerb(state: SimState, actionId: string, t: Target, eventL
 
 registerTargetProvider({
   id: 'item-verbs',
-  kinds: ['person', 'node', 'facility', 'board', 'wagon', 'signpost', 'door', 'hearth', 'chest', 'ground-item', 'plot', 'tile', 'fauna', 'grave'],
+  kinds: ['person', 'node', 'facility', 'board', 'wagon', 'signpost', 'door', 'hearth', 'chest', 'ground-item', 'plot', 'tile', 'fauna', 'grave', 'prop'],
   list: (state, t) => heldItemVerbs(state, t),
   act: (state, actionId, t, ctx) => actItemVerb(state, actionId, t, ctx.eventLog, ctx.rt),
 });

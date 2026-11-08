@@ -1,6 +1,6 @@
 /**
  * Every interactable world Thing in one place: town fixtures (noticeboard, signpost, hearth, doors),
- * nodes, facilities, stash chests, ground items, plots, graves.
+ * nodes, facilities, stash chests, ground items, plots, graves, and the wild props (trees, rocks, camps, critters …).
  * Keys are `${kind}:${id}`; each target carries what its sim provider (sim/contrib/objects, stash) needs.
  */
 import type Phaser from 'phaser';
@@ -10,6 +10,9 @@ import type { WorldLayout } from '../../sim/map/world-layout';
 import type { TerrainAccess } from '../../sim/map/terrain-access';
 import { DOOR_REACH, INTERIOR_TITLE } from '../../sim/map/interiors';
 import { TILE_PX } from '../../sim/map/constants';
+import type { FacilityRenderView } from '../../sim/map/types';
+import { FAUNA, propRow } from '../../sim/contrib/thing-verbs';
+import { usedToday } from '../../sim/contrib/use-effects';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
 import type { DrawnTile } from '../chunk-layer';
@@ -20,7 +23,7 @@ import { createGroundItems, type GroundLayer } from './ground';
 import { createPlots, type PlotsLayer } from './plots';
 import { createGraves, type GravesLayer } from './graves';
 
-const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44;
+const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44, PROP_REACH = 40, CRITTER_REACH = 56;
 
 export type WorldThings = {
   nodes: NodesLayer; facilities: FacilitiesLayer; chests: ChestsLayer; ground: GroundLayer; plots: PlotsLayer; graves: GravesLayer;
@@ -38,6 +41,8 @@ export function createWorldThings(o: {
   nameOf: (townId: string) => string;
   terrain: TerrainAccess;
   drawn: (q: number, r: number) => DrawnTile;
+  /** Wild props standing near a point (chunk-layer), so each can be used. */
+  propsNear?: (near: Pt, radius: number) => { prop: FacilityRenderView; x: number; y: number }[];
 }): WorldThings {
   const { scene, getState } = o;
   const byTown = new Map(o.towns.map((t) => [t.town.id, t]));
@@ -65,11 +70,33 @@ export function createWorldThings(o: {
     return out;
   };
 
+  const faunaName = new Map(FAUNA.map((f) => [f.id, f.name]));
+  /** Every wild prop in reach as a Thing: critters act as their animal, the rest by props.json; a prop spent for today drops out. */
+  const wild = (near: Pt, radius: number): Thing[] => {
+    const st = getState();
+    const out: Thing[] = [];
+    for (const { prop, x, y } of o.propsNear?.(near, radius) ?? []) {
+      const q = prop.position.x, r = prop.position.y;
+      if (prop.type === 'critter') {
+        const kind = prop.state && faunaName.has(prop.state) ? prop.state : 'rabbit';
+        const id = `${kind}#${q},${r}`;
+        out.push({ key: `fauna:${id}`, kind: 'fauna', id, x, y, reach: CRITTER_REACH, label: faunaName.get(kind) ?? 'Animal', target: { kind: 'fauna', id, data: { kindId: kind } } });
+        continue;
+      }
+      const row = propRow(prop.type);
+      if (!row) continue;
+      if (st && row.verbs.every((v) => usedToday(st, `prop.${v.id}@${row.type}`))) continue;
+      const id = `${prop.type}@${q},${r}`;
+      out.push({ key: `prop:${id}`, kind: 'prop', id, x, y, reach: PROP_REACH, label: row.name, target: { kind: 'prop', id, data: { type: prop.type } } });
+    }
+    return out;
+  };
+
   const all = [nodes, facilities, chests, ground, plots, graves];
   return {
     nodes, facilities, chests, ground, plots, graves,
     things(near, radius, facing) {
-      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius)];
+      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...wild(near, radius)];
       return out;
     },
     setVisible(on) { for (const l of all) l.setVisible(on); },

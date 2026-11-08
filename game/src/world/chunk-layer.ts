@@ -6,12 +6,12 @@
  */
 import type Phaser from 'phaser';
 import type { TileSource } from '../sim/map/tile-source';
-import type { ChunkCoord, ChunkTiles } from '../sim/map/types';
+import type { ChunkCoord, ChunkTiles, FacilityRenderView } from '../sim/map/types';
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { chunksAround } from '../sim/map/chunks-around';
 import { chunkEdits, type TileEdits } from '../sim/map/tile-edits';
 import { paintGround } from './ground-paint';
-import { mountProps } from './props';
+import { mountProps, propFoot } from './props';
 import { GROUND_DEPTH } from './depth';
 import { ART_SCALE } from './art/px';
 
@@ -34,6 +34,8 @@ export type ChunkLayer = {
   refreshEdits(edits: TileEdits | undefined): number;
   /** What is drawn on a tile: its ground id and the props standing there (land acts read this). */
   drawn(q: number, r: number): DrawnTile;
+  /** The props standing in mounted chunks within `radius` px of a point, with where each stands (px). */
+  propsNear(near: { x: number; y: number }, radius: number): { prop: FacilityRenderView; x: number; y: number }[];
   /** Hide or show every mounted chunk (interiors hide the world). */
   setVisible(on: boolean): void;
   count(): number;
@@ -137,6 +139,20 @@ export function createChunkLayer(
     },
     drawn(q, r) {
       return drawnOf(Math.floor(q / CHUNK_SIZE), Math.floor(r / CHUNK_SIZE)).get(`${q},${r}`) ?? { props: [] };
+    },
+    propsNear(near, radius) {
+      const out: { prop: FacilityRenderView; x: number; y: number }[] = [];
+      const span = CHUNK_SIZE * TILE_PX;
+      for (const m of mounted.values()) {
+        const [cx, cy] = m.key.split(',').map(Number) as [number, number];
+        // Skip chunks the circle cannot touch.
+        if (near.x < cx * span - radius || near.x > (cx + 1) * span + radius || near.y < cy * span - radius || near.y > (cy + 1) * span + radius) continue;
+        for (const prop of m.chunk.props) {
+          const at = propFoot(prop);
+          if (Math.hypot(at.x - near.x, at.y - near.y) <= radius) out.push({ prop, ...at });
+        }
+      }
+      return out;
     },
     setVisible(on) {
       visible = on;

@@ -9,7 +9,7 @@
  *          and ≥ 1 supply (what Gather yields).
  *   fauna  ≥ 2 uses (its own verbs in fauna.json + held-item verbs aimed at it), and ≥ 1 that supplies
  *          something (spark, items, town goods, regrowth or a resident's thanks).
- *   every verb (items, nodes, fauna, deeds) has a full label and a chip ≤ SHORT_MAX characters,
+ *   every verb (items, nodes, fauna, props, deeds) has a full label and a chip ≤ SHORT_MAX characters,
  *          and points at things that exist (items, node and fauna kinds, jobs, stash acts).
  * Run: `npx vite-node game/scripts/uses-check.mts` (exits 1 on any error).
  */
@@ -20,10 +20,10 @@ import { ITEMS } from '../goods/inventory';
 import { NODES } from '../goods/nodes';
 import { SHORT_MAX } from '../play-session/verb-families';
 import { allItemVerbs, type ItemVerbRow } from './item-verbs';
-import { FAUNA, faunaVerbs, nodeVerbs, type ThingVerbRow } from './thing-verbs';
+import { FAUNA, faunaVerbs, nodeVerbs, PROPS, type ThingVerbRow } from './thing-verbs';
 import type { Bundle } from './use-effects';
 
-export type UsesRow = { kind: 'item' | 'node' | 'fauna'; id: string; uses: string[]; supplies: string[] };
+export type UsesRow = { kind: 'item' | 'node' | 'fauna' | 'prop'; id: string; uses: string[]; supplies: string[] };
 export type UsesReport = { ok: boolean; errors: string[]; rows: UsesRow[] };
 
 type Job = { id: string; yield: { itemId: string }[]; recipes: { out: Record<string, number> }[] };
@@ -137,6 +137,17 @@ export function checkUses(): UsesReport {
     const giving = [...own, ...heldRows].filter((v) => supplies(v.effect));
     if (!giving.length) errors.push(`fauna ${f.id}: no use supplies anything`);
     rows.push({ kind: 'fauna', id: f.id, uses, supplies: giving.map((v) => v.label) });
+  }
+
+  // Every prop the world draws (ladder/dress.ts, stamp-raster road props) needs a row; critters use fauna.json.
+  const DRAWN = ['tree', 'bush', 'rock', 'boulder', 'log', 'stump', 'sign', 'hay', 'flowers', 'reeds', 'fence_h', 'fence_v', 'field', 'farmstead', 'build_site', 'campfire', 'tent', 'ruin_wall', 'shrine', 'cart', 'mine', 'camp', 'waystation'];
+  const propTypes = new Set(PROPS.map((p) => p.type));
+  for (const t of DRAWN) if (!propTypes.has(t)) errors.push(`prop ${t}: drawn in the world but has no uses in props.json`);
+  for (const p of PROPS) {
+    p.verbs.forEach((v) => thingVerb(`prop ${p.type}.${v.id}`, v));
+    if (p.verbs.length < 2) errors.push(`prop ${p.type}: ${p.verbs.length} use(s), needs at least 2`);
+    if (new Set(p.verbs.map((v) => v.id)).size !== p.verbs.length) errors.push(`prop ${p.type}: duplicate verb ids`);
+    rows.push({ kind: 'prop', id: p.type, uses: p.verbs.map((v) => v.label), supplies: p.verbs.filter((v) => supplies(v.effect)).map((v) => v.label) });
   }
 
   const families = new Set((deedsJson as { families: { id: string; aliases?: string[] }[] }).families.flatMap((f) => [f.id, ...(f.aliases ?? [])]));

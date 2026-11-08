@@ -10,6 +10,14 @@ import { ART_SCALE, ihash } from './art/px';
 import { FLAME_TEX, propTex } from './art/prop-art';
 import { tileFoot } from './depth';
 
+/** Where a prop stands in the world (px): its tile foot plus the same sub-tile jitter it is drawn with. */
+export function propFoot(prop: FacilityRenderView): { x: number; y: number } {
+  const q = prop.position.x, r = prop.position.y;
+  const f = tileFoot(q, r);
+  if (prop.type.startsWith('fence')) return f;
+  return { x: f.x + Math.round((ihash(q, r, 7) - 0.5) * TILE_PX * 0.5), y: f.y + Math.round((ihash(q, r, 9) - 0.5) * 6) };
+}
+
 export function mountProps(scene: Phaser.Scene, props: FacilityRenderView[]): Phaser.GameObjects.GameObject[] {
   const out: Phaser.GameObjects.GameObject[] = [];
   for (const prop of props) {
