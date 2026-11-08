@@ -14,6 +14,7 @@ import { asClause, fallbackLine } from './fallback-lines';
 import { notePropSpark, propRow, propSparkLeft } from './contrib/thing-verbs';
 import { firstName, residentOf } from './contrib/use-effects';
 import { pushJuice } from './packets';
+import { noteUse } from './data-use-world';
 import type { SimState } from './types/runtime';
 
 export type LingerTag = 'shade' | 'seat' | 'fire' | 'shelter' | 'holy';
@@ -76,6 +77,7 @@ export function lingerAt(state: SimState, propKey: string, seconds: number): Lin
   if (gain > 0) {
     state.player.spark += gain;
     notePropSpark(state, gain);
+    noteUse('props.linger', tag);
     pushJuice(state, 'prop.lingered', { type, tag, gain, id: propKey });
   }
   return { gain, tag, type, capped: lingerSpent(state) };

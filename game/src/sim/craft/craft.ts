@@ -12,6 +12,7 @@ import { toolAtHand, toolsText } from '../land-acts';
 import type { Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
 import { recipeById, recipeHours, recipesAt, STATIONS, stationForBuilding, stationForFacility, type Recipe, type StationId } from './recipes';
+import { noteUse } from '../data-use-world';
 
 export type StationAt = { station: StationId; townId: string; name: string };
 export type RecipeView = { recipe: Recipe; ok: boolean; short: string[] };
@@ -71,6 +72,9 @@ export function craft(state: SimState, recipeId: string, at: StationAt): CraftRe
     addItem(state, id, n);
     if (id !== 'coin') for (let k = 0; k < n; k++) mintInstance(state, id, state.player.id, at.townId);
   }
+  noteUse('recipes', r.id); noteUse('stations', at.station);
+  const tool = toolAtHand(state, r.tool);
+  if (tool) noteUse('items.use', tool);
   return { ok: true, line: `You work at the ${STATIONS[at.station].name.toLowerCase()}. Made by your own hands: ${goodsText(r.out)}.`, hours: recipeHours(r) };
 }
 

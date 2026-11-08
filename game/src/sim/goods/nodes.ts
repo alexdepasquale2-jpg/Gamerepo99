@@ -7,6 +7,7 @@ import { featuresIn, FEATURES } from '../map/ladder/features';
 import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
+import { noteUse } from '../data-use-world';
 
 type Yield = { itemId: string; min: number; max: number; chance?: number };
 export type NodeKind = { id: string; name: string; yields: Yield[]; charges: number; regrowDawns: number; weight: number; nearTown: number };
@@ -127,6 +128,7 @@ export function gatherNode(state: SimState, n: WorldNode): string | null {
     got.push(`+${q} ${itemName(y.itemId)}`);
   }
   cur.charges -= 1;
+  noteUse('resource-nodes', k.id);
   if (cur.charges <= 0) cur.regrowIn = k.regrowDawns;
   nodes[n.id] = cur;
   return got.join(' ');

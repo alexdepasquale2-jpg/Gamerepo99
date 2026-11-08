@@ -5,6 +5,7 @@
  * in data/art/settlements.json; everything here is tile offsets from the centre tile's foot.
  */
 import art from '../../data/art/settlements.json';
+import { noteUse } from '../data-use-world';
 import { deriveRng, type Rng } from '../rng';
 import { bresenhamLine } from './corridor';
 import type { LayoutRoute, LayoutSettlement } from './world-layout';
@@ -73,7 +74,9 @@ export function graveOff(plan: TownPlan, n: number): TileOff {
 export function paletteIndexOf(town: LayoutSettlement, i: number): number {
   let h = 0;
   for (const c of town.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return (h + i) % art.palettes.length;
+  const pick = (h + i) % art.palettes.length;
+  noteUse('settlements.palettes', String(pick));
+  return pick;
 }
 
 /** Clear verge kept either side of a road tile, so a track runs into town between buildings, not under them. */
@@ -125,6 +128,7 @@ function makePlan(town: LayoutSettlement, seed: number): TownPlan {
   const rng = deriveRng(seed, 'town-plan', town.id);
   const kind = ((town.kind ?? 'village') in art.rules ? town.kind ?? 'village' : 'village') as Kind;
   const rule = art.rules[kind];
+  noteUse('settlements.rules', kind);
   const axis: StreetAxis = (['h', 'v', 'd'] as const)[rng.int(0, 3)]!;
   const tall = axis === 'v';
   const flip = rng.next() < 0.5 ? -1 : 1;

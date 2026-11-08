@@ -20,6 +20,10 @@
             "loneliness"
           ]
         }
+      ],
+      "felt": [
+        "You did right by someone yesterday, and came home to nobody burning near you. It sat cold in your chest all night.",
+        "You gave kindness away yesterday and had no fire close by to warm your hands at after. The night was long."
       ]
     },
     {
@@ -51,6 +55,10 @@
             "reputation"
           ]
         }
+      ],
+      "felt": [
+        "Your tongue still tastes of yesterday's lie. Ink remembers what the mouth forgets.",
+        "You wake with the lie still written in you. The page will not let you forget it."
       ]
     },
     {
@@ -71,6 +79,10 @@
             "brood"
           ]
         }
+      ],
+      "felt": [
+        "Your bodies slept in different towns. You woke stretched thin between them.",
+        "You were split across the roads last night, and every one of you woke tired."
       ]
     },
     {
@@ -93,6 +105,11 @@
             "cling"
           ]
         }
+      ],
+      "universal": true,
+      "felt": [
+        "You carried nobody yesterday, and the one before you would have. It nags at you.",
+        "You lifted no burden yesterday. Whoever you were chosen for will have noticed."
       ]
     },
     {
@@ -114,6 +131,11 @@
           ],
           "scaleBy": "town.despair"
         }
+      ],
+      "universal": true,
+      "felt": [
+        "You feel the town's gloom come in through the shutters. You wake heavier for it.",
+        "Your chest is heavy this morning. Despair hangs over the rooftops, and some of it settled on you."
       ]
     },
     {
@@ -126,13 +148,15 @@
           "id": "fx_collapse_despair",
           "target": "town.despair",
           "op": "add",
-          "value": 0.2,
+          "value": 0.05,
           "tags": [
             "collapse",
             "doctrine"
           ]
         }
-      ]
+      ],
+      "universal": true,
+      "notes": "Read by sim/doctrine-tick collapseDespair when a creed collapses: the town it held darkens by this much (was a hard-coded 0.05 there; 0.2 was never live)."
     },
     {
       "id": "cost_road_labor",
@@ -150,6 +174,11 @@
             "road"
           ]
         }
+      ],
+      "universal": true,
+      "felt": [
+        "Your back remembers the road stones you shifted.",
+        "Your hands are raw from the road work. You feel it this morning."
       ]
     },
     {
@@ -171,26 +200,11 @@
           ],
           "scaleBy": "player.notoriety"
         }
-      ]
-    },
-    {
-      "id": "cost_stash_unguarded_decay",
-      "kind": "personal_cost",
-      "trigger": "dawn",
-      "when": {
-        "hasUnguardedStash": true
-      },
-      "effects": [
-        {
-          "id": "fx_stash_decay",
-          "target": "player.stash.goods",
-          "op": "mul",
-          "value": 0.97,
-          "tags": [
-            "hoard",
-            "decay"
-          ]
-        }
+      ],
+      "universal": true,
+      "felt": [
+        "You notice people looking a beat too long now. Being known wears on you.",
+        "Your name walks ahead of you. You felt every glance at the well."
       ]
     },
     {
@@ -214,7 +228,11 @@
           ]
         }
       ],
-      "notes": "A day without working beside anyone: Bren hears the empty row. Balance (game/scripts/balance-probe.mts): was -2; with the dawn now -6 and no unconditional comfort, -2 burned an idle Bren out in about 10 days, three times faster than anyone else."
+      "notes": "A day without working beside anyone: Bren hears the empty row. Balance (game/scripts/balance-probe.mts): was -2; with the dawn now -6 and no unconditional comfort, -2 burned an idle Bren out in about 10 days, three times faster than anyone else.",
+      "felt": [
+        "You worked beside no one yesterday. The row feels emptier for it.",
+        "You miss the row's company more than you'd say. Nobody to work beside yesterday."
+      ]
     }
   ]
 }

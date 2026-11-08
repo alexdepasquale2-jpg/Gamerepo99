@@ -2,9 +2,36 @@
   "version": 1,
   "spec": "Verbs only some bodies have (sim/contrib/body-acts.ts). Each is gated on the inhabitant's embodiment trait fields, never on who they are: tagsAny matches embodiment.tags, approachAny matches embodiment.allowedApproachTags (both when given). target: the thing kinds that offer it. family: the ring family (deeds.json). Lines live in data/dialogue/surface-fallbacks.json under body.<id>.",
   "acts": [
-    { "id": "read_ledger", "targets": ["board"], "family": "deal", "label": "Read the town's ledger", "short": "Read ledger", "tagsAny": ["ledger_hand"], "approachAny": ["civic"] },
-    { "id": "watch_place", "targets": ["board", "hearth"], "family": "work", "label": "Leave a sibling to watch", "short": "Leave to watch", "tagsAny": ["multi"] }
+    {
+      "id": "read_ledger",
+      "targets": [
+        "board"
+      ],
+      "family": "deal",
+      "label": "Read the town's ledger",
+      "short": "Read ledger",
+      "tagsAny": [
+        "ledger_hand"
+      ],
+      "approachAny": [
+        "civic"
+      ]
+    },
+    {
+      "id": "watch_place",
+      "targets": [
+        "board",
+        "hearth"
+      ],
+      "family": "work",
+      "label": "Leave a sibling to watch",
+      "short": "Leave to watch",
+      "tagsAny": [
+        "multi"
+      ]
+    }
   ],
-  "lift": { "stuckChance": 0.45, "progress": 0.08, "tip": 2 },
-  "ledger": { "despairRelief": 0.02 }
+  "ledger": {
+    "despairRelief": 0.02
+  }
 }

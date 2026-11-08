@@ -16,9 +16,11 @@ import { createTownIndex } from './towns';
 import { createWagons, type WagonsCtl } from './wagons';
 import { createRoomFolk } from './room-folk';
 import { createRoadFolk, type RoadFolk } from './road-folk';
+import { createDistrictCourier } from './district-courier';
 
 type Internals = { player: PlayerCtl; people: PeopleCtl; fauna: FaunaCtl; wagons: WagonsCtl; brood: BroodCtl; names: NameLayer; roadFolk: RoadFolk };
 const runs = new WeakMap<GameContext, Internals>();
+const couriers = new WeakMap<GameContext, ReturnType<typeof createDistrictCourier>>();
 
 export function attachActors(ctx: GameContext): ActorsApi {
   const towns = createTownIndex(ctx.layout.settlements);
@@ -30,6 +32,8 @@ export function attachActors(ctx: GameContext): ActorsApi {
   const names = createNameLayer(ctx.scene);
   const roomFolk = createRoomFolk(ctx, people);
   const roadFolk = createRoadFolk(ctx);
+  const districtCourier = createDistrictCourier(ctx);
+  couriers.set(ctx, districtCourier);
   runs.set(ctx, { player, people, fauna, wagons, brood, names, roadFolk });
 
   const sync = (): void => {
@@ -44,6 +48,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
     names.destroy();
     roomFolk.destroy();
     roadFolk.destroy();
+    districtCourier.destroy();
     people.destroy();
     fauna.destroy();
     wagons.destroy();
@@ -73,6 +78,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
       fauna.update(dt, time, p);
       wagons.update(dt, time, names);
       roadFolk.update(dt, time, names);
+      districtCourier.update(time, names);
       roomFolk.update(names);
       names.end();
     },
@@ -101,6 +107,8 @@ registerDevHook('teleportTo', (ctx) => (personId: string) => {
   return true;
 });
 registerDevHook('speed', () => ({ get: () => getWalkMul(), set: (n: number) => setWalkMul(n) }));
+registerDevHook('districtCouriers', (ctx) => () => couriers.get(ctx)?.list() ?? []);
+registerDevHook('children', (ctx) => () => internals(ctx).people.children());
 registerDevHook('fauna', (ctx) => () => internals(ctx).fauna.list());
 registerDevHook('traffic', (ctx) => () => internals(ctx).wagons.list());
 registerDevHook('roadFolk', (ctx) => () => internals(ctx).roadFolk.list());

@@ -179,6 +179,8 @@ export function setBodyFlags(state: SimState): void {
   state.flags.bodiesInMultipleTowns = apart;
   state.flags.allBodiesSameTown = !apart;
   state.flags.playerAtHome = !!inh.homeTownId && inh.townId === inh.homeTownId;
+  // cost_inherited_dependence_cling: a day without carrying anyone's burden (carry_burden method) lets the cling bite.
+  state.flags.noCarryUsedToday = !((state.flags.methodsUsedToday as string[] | undefined) ?? []).includes('carry_burden');
 }
 
 /** Start of a dawn: today's acts become yesterday's; embodiment flags refreshed. */

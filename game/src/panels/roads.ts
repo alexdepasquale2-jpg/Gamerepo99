@@ -129,6 +129,8 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
         const sec = el('section', 'hf-road', undefined, { 'aria-label': `Road to ${to}`, 'data-route': r.routeId });
         const kept = st.economyRoutes?.find((x) => x.id === r.routeId);
         sec.append(el('h3', '', `To ${to} · ${days(r.walkDays)} on foot${kept ? ` · the road is ${roadWord(kept)}` : ''}`));
+        // A friend shows the shorter way (travel-trades fastRouteUnlocks): say who.
+        if (r.friendId) sec.append(el('p', 'hf-small hf-road-friend', `${(st.people[r.friendId]?.name ?? 'A friend').split(' ')[0]} knows a shorter way; the walk is quicker for it.`));
         sec.append(button(`Walk it: ${days(r.walkDays)}`, () => void travel(r.routeId), {
           id: `walk-${r.routeId}`, title: 'On foot. The world goes on while you walk.',
         }));

@@ -30,6 +30,8 @@ import {
 import { loadEncounterDensity, loadEncounterTables, loadSizeTravelMuls } from './travel-tables';
 import type { EncounterEntry, EncounterTable, TravelRoute, TravelSimState } from './travel-types';
 import { resolveDaysEff, sizeMulFor } from './travel';
+import { fastRoad } from './fast-roads';
+import { noteUse } from '../data-use-civic';
 
 export type JourneyCheat = 'overcharged' | 'strayed' | 'robbed';
 
@@ -63,7 +65,7 @@ export type JourneyOpts = {
 };
 
 /** One road out of the player's town, with today's travellers. */
-export type RoadView = { routeId: string; toId: string; walkDays: number; offers: RoadOffer[] };
+export type RoadView = { routeId: string; toId: string; walkDays: number; offers: RoadOffer[]; /** Who shows you the shorter way (fast-roads), if anyone. */ friendId?: string };
 
 const plural = (n: number, w: string): string => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -96,6 +98,7 @@ export function roadViews(state: TravelSimState): RoadView[] {
         toId: route.fromId === here ? route.toId : route.fromId,
         walkDays,
         offers: roadOffers(state, route, { walkDays, sizeMul: sizeMul(state) }),
+        ...(() => { const f = fastRoad(state, route); return f ? { friendId: f.friend } : {}; })(),
       };
     });
 }
@@ -222,6 +225,7 @@ export function runJourney(state: TravelSimState, routeId: string, opts: Journey
     offer = roadOffers(state, route, { walkDays, sizeMul: sizeMul(state) }).find((o) => o.tradeId === opts.tradeId);
     trade = loadTravelTrades().find((t) => t.id === opts.tradeId);
     if (!offer || !trade) return fail('not_on_offer');
+    noteUse('economy/travel-trades', `trade:${trade.id}`);
     const shortCoin = Math.max(0, offer.coin - coinOf(state));
     if (state.player.spark - offer.spark - shortCoin * 2 < 1) return fail('cant_pay');
   }
@@ -315,6 +319,12 @@ export function runJourney(state: TravelSimState, routeId: string, opts: Journey
       }
     }
     encounters.push({ day: state.day, id: entry.id, quiet, blurb: entry.blurb });
+    if (entry.id === voice.highwayman.id) {
+      // The open highwayman (travel-trades row 'highwayman') shows the tell the data gives him.
+      const row = loadTravelTrades().find((t) => t.id === 'highwayman');
+      const tell = row?.tells[0];
+      if (row && tell) { noteUse('economy/travel-trades', `trade:${row.id}`); tail.push(roadVoice().tells[tell] ?? tell.replace(/_/g, ' ')); }
+    }
     pushJuice(state, 'encounter.spawn', {
       routeId,
       encounterId: entry.id,

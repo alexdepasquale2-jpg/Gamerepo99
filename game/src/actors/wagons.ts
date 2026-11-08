@@ -16,25 +16,28 @@ import type { CaravanMobile } from '../sim/caravans-types';
 import { ART_SCALE, ensureShadow, vehicleTexture } from './looks';
 import type { NameLayer } from './name-layer';
 import { safe } from './player';
+import { countVisual } from '../dev/visual-counts';
 import { footOf, inRect, viewRect } from './towns';
 
 /** Real ms per game day of caravan travel (as the old living world). */
 const DAY_MS = 120_000;
 const SLOW_EVERY = 0.25;
 
+/** A wreck is a lost cart left where the road took it (economy/logistics wrecks), tipped on its side. */
+type Kind = 'wagon' | 'cart' | 'courier' | 'wreck';
 type Mover = { x: number; y: number; dx: number; seen: boolean; parts: Phaser.GameObjects.GameObject[] };
 
 export type WagonsCtl = {
   update(dt: number, timeSec: number, names: NameLayer): void;
   things(near: Pt, radius: number): Thing[];
-  list(): { id: string; kind: 'wagon' | 'cart' | 'courier'; x: number; y: number }[];
+  list(): { id: string; kind: Kind; x: number; y: number }[];
   destroy(): void;
 };
 
 export function createWagons(ctx: GameContext): WagonsCtl {
   const scene = ctx.scene;
   const routes = new Map<string, LayoutRoute>(ctx.layout.routes.map((r) => [r.id, r]));
-  const pos = new Map<string, { kind: 'wagon' | 'cart' | 'courier'; x: number; y: number; dx: number; label?: string }>();
+  const pos = new Map<string, { kind: Kind; x: number; y: number; dx: number; label?: string }>();
   const movers = new Map<string, Mover>();
   let slow = 0;
 
@@ -69,13 +72,20 @@ export function createWagons(ctx: GameContext): WagonsCtl {
     return { p, dx: (q.x - p.x) * (turned ? -1 : 1) };
   };
 
-  const build = (id: string, kind: 'wagon' | 'cart' | 'courier', x: number, y: number): Mover => {
+  const build = (id: string, kind: Kind, x: number, y: number): Mover => {
     const parts: Phaser.GameObjects.GameObject[] = [];
     const shadow = scene.add.image(x, y, ensureShadow(scene)).setScale(kind === 'wagon' ? 3 : 1.4, 1.2);
     parts.push(shadow);
     if (kind === 'wagon') {
       parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'wagon'), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
       parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'ox'), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
+    } else if (kind === 'wreck') {
+      // On its side, dark with mud, its load spilled beside it.
+      parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'cart'), '0').setOrigin(0.5, 0.8).setScale(ART_SCALE).setAngle(80).setTint(0x8a7a6a));
+      const spill = scene.add.graphics();
+      spill.fillStyle(0x9a6a3a, 1).fillRect(-14, -6, 9, 7).fillRect(10, -3, 8, 6);
+      spill.fillStyle(0xc8a46a, 1).fillEllipse(2, 2, 10, 5);
+      parts.push(spill);
     } else parts.push(scene.add.sprite(x, y, vehicleTexture(scene, kind), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
     const m: Mover = { x, y, dx: 1, seen: true, parts };
     movers.set(id, m);
@@ -90,6 +100,11 @@ export function createWagons(ctx: GameContext): WagonsCtl {
       const rp = cartPosition(c);
       const a = rp && along(rp);
       if (a) pos.set(`cart:${c.id}`, { kind: 'cart', x: a.p.x, y: a.p.y, dx: a.dx, label: `${c.qty} ${c.itemId.replace(/_/g, ' ')}${c.escortedBy ? ' · guarded' : ''}` });
+    }
+    for (const w of st.logistics?.wrecks ?? []) {
+      const a = along(w.at);
+      // A cart lost the day it set out lies by its own town's gate: drawn only out on the road.
+      if (a && !safe(() => ctx.world.townAt(a.p), null)) pos.set(`wreck:${w.cartId}`, { kind: 'wreck', x: a.p.x + 14, y: a.p.y + 6, dx: a.dx, label: `Lost cart · ${w.qty} ${w.itemId.replace(/_/g, ' ')}` });
     }
     for (const c of couriersOnRoad(st)) {
       const a = along(c.pos);
@@ -117,10 +132,20 @@ export function createWagons(ctx: GameContext): WagonsCtl {
       const lr = viewRect(scene, 8);
       const indoors = !!safe(() => ctx.world.room(), null);
       for (const m of movers.values()) m.seen = false;
+      const seenKinds: Record<Kind, number> = { wagon: 0, cart: 0, courier: 0, wreck: 0 };
       if (!indoors) for (const [id, p] of pos) {
         if (!inRect(vr, p.x, p.y)) continue;
         const m = movers.get(id) ?? build(id, p.kind, p.x, p.y);
         m.seen = true;
+        seenKinds[p.kind]++;
+        if (p.kind === 'wreck') {
+          const [shadow, body, spill] = m.parts as [Phaser.GameObjects.Image, Phaser.GameObjects.Sprite, Phaser.GameObjects.Graphics];
+          shadow.setPosition(p.x, p.y - 1).setDepth(p.y - 0.5);
+          body.setPosition(p.x, p.y).setDepth(p.y);
+          spill.setPosition(p.x + 18, p.y).setDepth(p.y + 0.1);
+          if (p.label && inRect(lr, p.x, p.y)) names.put(`w:${id}`, p.x, p.y - 30, { text: p.label, alpha: 0.8, muted: true });
+          continue;
+        }
         const ease = p.kind === 'wagon' ? 1 : Math.min(1, dt * 1.5);
         const ox = m.x;
         m.x += (p.x - m.x) * ease;
@@ -141,12 +166,16 @@ export function createWagons(ctx: GameContext): WagonsCtl {
         }
       }
       for (const [id, m] of movers) if (!m.seen) { m.parts.forEach((o) => o.destroy()); movers.delete(id); }
+      countVisual('caravans', seenKinds.wagon);
+      countVisual('carts', seenKinds.cart);
+      countVisual('couriers', seenKinds.courier);
+      countVisual('wrecks', seenKinds.wreck);
     },
     things(near, radius) {
       const out: Thing[] = [];
       for (const [id, p] of pos) {
         // Trade wagons, and village carts (id `cart:<cartId>`: walk beside one to see it safe).
-        if (p.kind === 'courier') continue;
+        if (p.kind === 'courier' || p.kind === 'wreck') continue;
         const m = movers.get(id);
         const x = m?.x ?? p.x, y = m?.y ?? p.y;
         if (Math.hypot(x - near.x, y - near.y) > radius) continue;

@@ -4,6 +4,7 @@
  * people born, arriving or met there sound like the place. Pure and deterministic: the culture is a function
  * of (seed, col, row) via districtAt.
  */
+import { noteUse } from './data-use-people';
 import namesJson from '../data/people/names.json';
 import { cultureById, districtAt, districtOfTown } from './map/districts';
 
@@ -50,8 +51,22 @@ export function nameScope(townId: string | undefined): string {
  */
 export function distinctName(given: readonly string[], family: string, used: ReadonlySet<string>, roll: (k: number) => number): string {
   const nameAt = (i: number) => `${given[((i % given.length) + given.length) % given.length]!} ${family}`;
-  for (let k = 0; k < 8; k++) { const n = nameAt(roll(k)); if (!used.has(n)) return n; }
+  for (let k = 0; k < 8; k++) { const n = nameAt(roll(k)); if (!used.has(n)) return named(n, family); }
   const start = roll(0);
-  for (let j = 1; j < given.length; j++) { const n = nameAt(start + j); if (!used.has(n)) return n; }
-  return nameAt(start);
+  for (let j = 1; j < given.length; j++) { const n = nameAt(start + j); if (!used.has(n)) return named(n, family); }
+  return named(nameAt(start), family);
+}
+
+/** A home-pool name given to someone: it is on their name plate from now on (proof-of-use). */
+function named(full: string, family: string): string {
+  const g = full.slice(0, full.length - family.length - 1);
+  if (HOME.given.includes(g)) noteUse('people/names', `given.${g}`);
+  if (HOME.family.includes(family)) noteUse('people/names', `family.${family}`);
+  return full;
+}
+
+/** What folk call someone: the given name, keeping a title that is part of it ("Old Tom Briggs" -> "Old Tom"). */
+export function firstNameOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts[0] === 'Old' && parts.length > 2 ? `${parts[0]} ${parts[1]}` : parts[0] ?? name;
 }

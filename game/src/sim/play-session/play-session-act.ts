@@ -15,6 +15,7 @@ import { patronHostMethod } from '../patrons';
 import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
+import { noteUse } from '../data-use-people';
 import deedsJson from '../../data/systems/interactions/deeds.json';
 import { handleProvidedAction, providedActions, targetActions, type ActOutcome } from './action-providers';
 import { deedVerbAllowed, noteDeedUsed, planDeed, type DeedRow } from './deed-verbs';
@@ -29,14 +30,21 @@ export const deedLabel = (id: string): string | undefined => DEED_BY_ID.get(id)?
 /** The deed row behind a verb id (talk_gentle, favor_do, …): its host method and family. */
 export const deedRow = (id: string): DeedRow | undefined => DEED_BY_ID.get(id);
 
+/** The person you met most recently other than `personId` (introduce's other end), if any. */
+function otherMet(state: SimState, personId: string): string | undefined {
+  const last = state.flags?.lastTouchedPersonId as string | undefined;
+  const prev = state.flags?.prevTouchedPersonId as string | undefined;
+  return last && last !== personId ? last : prev && prev !== personId ? prev : undefined;
+}
+
 function deedAllowed(state: SimState, d: DeedRow, personId: string, rt?: CompatRuntime): boolean {
   if (d.requiresPendingPromise) {
     const p = rt?.people.get(personId) as { promises?: { status: string }[] } | undefined;
     if (!p?.promises?.some((x) => x.status === 'pending')) return false;
   }
   if (d.requiresOtherPerson) {
-    const other = state.flags?.lastTouchedPersonId as string | undefined;
-    if (!other || other === personId || !state.people[other]) return false;
+    const other = otherMet(state, personId);
+    if (!other || !state.people[other]) return false;
   }
   return deedVerbAllowed(state, d, personId, rt);
 }
@@ -184,8 +192,12 @@ export function actMethod(
     return;
   }
   if (deed?.requiresOtherPerson && compat) {
-    const other = state.flags.lastTouchedPersonId as string;
-    (state.kinEdges ??= []).push({ from: parsed.personId, to: other, kind: 'introduced' });
+    const other = otherMet(state, parsed.personId)!;
+    // Once introduced, always introduced: a second introduction adds no second tie (letters key edges by pair).
+    const ties = (state.kinEdges ??= []);
+    if (!ties.some((e) => (e.from === parsed.personId && e.to === other) || (e.from === other && e.to === parsed.personId))) {
+      ties.push({ from: parsed.personId, to: other, kind: 'introduced' });
+    }
     const op = compat.people.get(other) as { bond?: number } | undefined;
     const intro = (direct as { introduce?: unknown } | undefined)?.introduce as { otherBondDelta?: number } | undefined;
     if (op && typeof op.bond === 'number') op.bond += intro?.otherBondDelta ?? 0;
@@ -195,6 +207,7 @@ export function actMethod(
     const out = actInteraction(state, compat!, { ...parsed, methodId: deed.hostMethod, interactionId: deed.id, line: plan.line, failLine: plan.failLine }, eventLog, extras);
     if (out === 'resolved') plan.after();
     noteDeedUsed(state, deed, parsed.personId);
+    noteUse('systems/interactions/deeds', deed.id);
     return;
   }
   const interactionId = stash || patron ? parsed.methodId : compat ? expandMethodAct(compat.migration, parsed.methodId) : undefined;

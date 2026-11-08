@@ -4,7 +4,7 @@ import { districtAt, isHome } from '../map/districts';
 import { createRng } from '../rng';
 import { generatePeople, type PersonDraft } from './society/people';
 import { loadHistoryTables } from './load/load-history';
-import { generateHistoryEvents, historyChainCoherent } from './society/history-gen';
+import { authoredSeedEvents, generateHistoryEvents, historyChainCoherent } from './society/history-gen';
 import { generateGapSites } from './places/gap-sites';
 import { generateKinEdges } from './society/kin-gen';
 import { loadAuthoredAnchors } from './load/load-anchors';
@@ -117,7 +117,9 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
   const kinPattern = pickKinPattern(metaRng, worldTables.kinPatterns);
 
   const rng = createRng(peopleSeed ^ 0xc0ffee);
-  const history = generateHistoryEvents(rng, tables, people, shape);
+  const seeded = generateHistoryEvents(rng, tables, people, shape);
+  // The home district (authored cast aboard) also remembers the cast's own beats.
+  const history = opts.includeAnchors === true && !district ? [...seeded, ...authoredSeedEvents(tables, seeded, people)] : seeded;
   const gapSites = generateGapSites(rng, tables.settlementSizes, shape?.gapBias);
   const kinEdges = generateKinEdges(rng, people, kinPattern);
   const lines = people.flatMap((p) => p.lines ?? []);

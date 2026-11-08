@@ -9,14 +9,22 @@
  * the lead's flame and trust, the town's despair) spread over effort, with spark capped across all tasks.
  * Pure and deterministic.
  */
+import { encodeUnspokenForState } from '../social/unspoken';
+import { pushJuice } from '../packets';
+import { residentOf } from '../contrib/use-effects';
+import { fallbackLine } from '../fallback-lines';
 import { BUILDING_BY_ID } from '../economy/build-plans';
-import { facilityById, facilityOutput } from '../economy/facilities';
+import { facilityById, facilityOutput, shiftPay } from '../economy/facilities';
 import { addStock } from '../economy/food-stock';
 import { noteRoadNews, ROADS, routeById } from '../economy/roads';
 import { civicIfAny, siteById, SITE_KIND_BY_ID } from '../civic/sites';
 import { put } from '../civic/store';
 import type { SimState } from '../types/runtime';
 import { noteActToday } from '../embodiment';
+import { workYield } from '../goods/deed-goods';
+import { runHooks } from '../hooks';
+import type { DataTables } from '../load-data';
+import { deriveRng } from '../rng';
 import { helpOf, helpIfAny, nameOf, pickLine, taskById, TASKS, verbOfTask, fillTaskLine, wagonStuck, type Task } from './tasks';
 
 export type WorkResult = {
@@ -37,6 +45,21 @@ export type ContributeOpts = {
 };
 
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/** A deed the town saw: one of its residents says so (a bubble), never the player's own line. */
+export function heardInTown(state: SimState, townId: string | undefined, key: string, salt: string): void {
+  const who = residentOf(state, townId, `${key}:${salt}`);
+  const said = who ? fallbackLine(key, `${state.seed}|heard|${salt}|${state.day}`) : '';
+  if (who && said) pushJuice(state, 'moment.beat', { personId: who, line: said, townId, momentId: key });
+}
+
+/** Breaking stone on a road costs the body: the on_road_work hooks (cost_road_labor), once a day. */
+function roadLabor(state: SimState): void {
+  const data = state.data as DataTables | undefined;
+  if (!data || state.flags.roadLaborDay === state.day) return;
+  state.flags.roadLaborDay = state.day;
+  runHooks(state, 'on_road_work', { data, rng: deriveRng(state.seed, 'road_labor', state.day) });
+}
 
 /** Who the daily cap counts against: the lead, or the task itself when nobody leads it. */
 const capKey = (t: Task): string => t.workers[0] ?? t.id;
@@ -65,6 +88,7 @@ function applyToThing(state: SimState, t: Task, e: number): string | null {
       r.condition = Math.min(TASKS.road.ceiling, Math.max(r.condition, r.condition + e * TASKS.road.conditionPerEffort));
       if (r.broken && r.condition >= ROADS.reopenAt) r.broken = false;
       if (before && !r.broken) noteRoadNews(state, { routeId: r.id, kind: 'reopened', by: 'player' });
+      roadLabor(state);
       return null;
     }
     case 'wagon': {
@@ -75,7 +99,9 @@ function applyToThing(state: SimState, t: Task, e: number): string | null {
       if (h.wheel[c.id]! < TASKS.wagon.effortsToFree) return null;
       h.freed[c.id] = state.day;
       state.player.coin = (state.player.coin ?? 0) + TASKS.wagon.tip;
-      return TASKS.wheelFree;
+      // The lift told in the body's words, and a resident of the town it is stopped by tells it on.
+      heardInTown(state, c.visit?.townId ?? t.townId, 'body.lift_wagon.heard', c.id);
+      return fallbackLine('body.lift_wagon', `${state.seed}|lift|${c.id}|${state.day}`) || TASKS.wheelFree;
     }
     default: {
       // Sites, facilities and the pot: paid out at the next dawn (applyTaskDawn).
@@ -128,15 +154,25 @@ export function contribute(state: SimState, taskId: string, effort = 1, opts: Co
   const freed = applyToThing(state, t, e);
   const sparkDelta = reward(state, t, e, opts);
   h.byTask[t.id] = (h.byTask[t.id] ?? 0) + e;
-  h.given[capKey(t)] = (h.given[capKey(t)] ?? 0) + e;
+  const givenBefore = h.given[capKey(t)] ?? 0;
+  h.given[capKey(t)] = givenBefore + e;
+  // A full day's help beside someone earns a share of their trade's yield (data/items/jobs.json), once per
+  // lead per day: the moment today's help crosses the cap. No new state: the crossing is the record.
+  const paid = lead && givenBefore < TASKS.capPerPersonPerDay && h.given[capKey(t)]! >= TASKS.capPerPersonPerDay ? workYield(state, lead).got ?? [] : [];
+  const share = paid.length ? `${vars.name} sends you off with a share: ${paid.join(', ')}.` : '';
   const rec = h.today[t.id];
   h.today[t.id] = { ...(lead ? { lead } : {}), goal: t.goal, verb: verbOfTask(t), effort: (rec?.effort ?? 0) + e };
   h.rev++;
   const turn = `${t.id}|${h.byTask[t.id]}`;
-  const line = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  const said = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  // A facility's crew shares the day's shift with you (facility-workers.json).
+  const shift = t.source.type === 'facility' ? shiftPay(state, t.source.ref) : null;
+  const line = [said, shift, share].filter(Boolean).join(' ');
   const thanks = lead ? { personId: lead, line: pickLine(state, TASKS.thanks, `${turn}|thanks`, vars) } : undefined;
   // Spark hooks (personal-cost, spark-recovery) still key on the old work_alongside kind: real help counts as it.
   noteActToday(state, 'carry_burden', 'work_alongside');
+  // Working beside someone leaves an unspoken (unspoken_work_shoulder), once a day per lead.
+  if (lead && (rec?.effort ?? 0) === 0) encodeUnspokenForState(state, 'work_alongside', lead, { tags: ['work', 'meaning'] });
   return { ok: true, line, ...(thanks ? { thanks } : {}), task: taskById(state, t.id), effort: e, sparkDelta };
 }
 

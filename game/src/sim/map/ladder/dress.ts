@@ -4,6 +4,7 @@ import type { Biome } from '../terrain';
 import type { FacilityRenderView } from '../types';
 import { featuresIn, fhash, FEATURES as F, inRect, type Pt } from './features';
 import { isNamedSpot, spotLayout, type SpotTag } from './spot-lore';
+import { CROPS_TABLE, cropForFarm } from '../../goods/crops';
 
 type Put = (type: string, q: number, r: number, state?: string) => void;
 type Tile = (q: number, r: number, id: string) => void;
@@ -85,12 +86,16 @@ export function dressChunk(seed: number, q0: number, r0: number, size: number, c
       if (road) for (const c of bresenhamLine(house.q, house.r + 1, road.q, road.r)) tile(c.q, c.r, 'road_track');
       put('farmstead', house.q, house.r);
       put('hay', house.q - 1, house.r + 1);
+      // The field's crop (data/economy/crops.json), from its own ground and what lies just past its fence.
+      const E = CROPS_TABLE.edgeTiles, rim: Biome[] = [];
+      for (const [dq, dr] of [[-E, -E], [field.w + E, -E], [-E, field.h + E], [field.w + E, field.h + E], [Math.floor(field.w / 2), -E], [Math.floor(field.w / 2), field.h + E]] as const) rim.push(ctx.biome(field.q + dq, field.r + dr));
+      const crop = cropForFarm(ctx.biome(house.q, house.r), rim, fhash(seed ^ 0xc409, house.q, house.r, 1)).id;
       for (let q = field.q; q < field.q + field.w; q++) for (let r = field.r; r < field.r + field.h; r++) {
         const edgeH = r === field.r || r === field.r + field.h - 1, edgeV = q === field.q || q === field.q + field.w - 1;
         if (q === gate.q && r === gate.r) continue;
         if (edgeH) put('fence_h', q, r);
         else if (edgeV) put('fence_v', q, r);
-        else if ((r - field.r) % 2 === 1) put('field', q, r);
+        else if ((r - field.r) % 2 === 1) put('field', q, r, crop);
       }
       for (let r = field.r - 1; r <= field.r + field.h; r++) for (let q = house.q - 2; q <= field.q + field.w; q++) used.add(`${q},${r}`);
     }

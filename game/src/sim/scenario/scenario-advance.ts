@@ -104,7 +104,8 @@ export function advanceToDawn(state: SimState): void {
   const data = state.data as DataTables | undefined;
   const rng = state.rng as Rng | undefined;
   if (data && rng) {
-    runHooks(state, 'dawn', { data, rng });
+    // cost_town_despair reads the despair of the town the player wakes in (scaled by it).
+    runHooks(state, 'dawn', { data, rng, townDespair: state.towns?.[state.player.townId ?? '']?.despair });
   }
   // New systems register into a slot (src/sim/dawn-ticks.ts) instead of adding a line here.
   runDawnSlot(state, 'season');

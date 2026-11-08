@@ -17,6 +17,7 @@ import { namePool } from '../names';
 import { activeDistrict, districtDays, realmOf, refId, type DistrictRef } from '../realm';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-civic';
 import { leaderOf } from '../contrib/power-page';
 
 type Broker = { spark: number; base: number; perTrust: number; minTrust?: number; feudAfter?: number; trustAfter: number; failTrust: number };
@@ -33,6 +34,11 @@ export type PolityTuning = {
 const J = polityJson as unknown as { tuning: PolityTuning; rivalStyles: [string, string][]; woundFeud: Record<string, number> };
 /** Every knob; data/civic/district-polity.json is the one source. */
 export const DPOL: PolityTuning = J.tuning;
+/** The rivalStyles row a style pair matches, as written in the data (either order). */
+const rivalRow = (a: string, b: string): string => {
+  const hit = J.rivalStyles.find(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  return hit ? `${hit[0]}|${hit[1]}` : `${a}|${b}`;
+};
 const RIVALS = new Set(J.rivalStyles.flatMap(([a, b]) => [`${a}|${b}`, `${b}|${a}`]));
 
 export type PairState = 'peace' | 'pact' | 'war';
@@ -267,7 +273,10 @@ function stepPair(state: SimState, r: DistrictRelation, live: string): void {
   const pa = profileOf(state.seed, r.a), pb = profileOf(state.seed, r.b);
   const drift = Math.min(Math.abs(r.trust), DPOL.trustDrift + DPOL.trustDriftPerTrust * Math.abs(r.trust)) * Math.sign(r.trust);
   r.trust = clamp(r.trust - drift + (r.state === 'pact' ? DPOL.pactTrustPerDay : 0), -100, 100);
-  const grown = (RIVALS.has(`${pa.style}|${pb.style}`) ? DPOL.rivalStyleFeud : 0)
+  const rival = RIVALS.has(`${pa.style}|${pb.style}`);
+  if (rival) noteUse('civic/district-polity', `rival:${rivalRow(pa.style, pb.style)}`);
+  for (const w of [pa.wound, pb.wound]) if (w in J.woundFeud) noteUse('civic/district-polity', `wound:${w}`);
+  const grown = (rival ? DPOL.rivalStyleFeud : 0)
     + ((J.woundFeud[pa.wound] ?? 0) + (J.woundFeud[pb.wound] ?? 0)) / 2
     + DPOL.despairFeud * Math.max(0, D - DPOL.despairCalm);
   const sharp = 1 + DPOL.despairFeudMul * D;
@@ -348,6 +357,7 @@ export function broker(state: SimState): BrokerResult | undefined {
   if (state.player.spark < cfg.spark) return { kind, ok: false, other, cost: cfg.spark, refused: 'poor' };
   state.player.spark -= cfg.spark;
   r.brokered = state.day;
+  noteUse('civic/district-polity', `broker:${kind}`);
   const chance = clamp(cfg.base + cfg.perTrust * r.trust, 0.05, 0.95);
   const ok = deriveRng(state.seed, 'district-broker', r.a, r.b, state.day).next() < chance;
   if (ok && kind === 'peace') endWar(state, r, live, true);

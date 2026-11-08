@@ -38,3 +38,4 @@ import './site-verbs';
 import '../linger';
 import './carry';
 import './tasks';
+import './hook-felt';

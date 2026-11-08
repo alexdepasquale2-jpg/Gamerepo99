@@ -3,7 +3,6 @@
   "spec": "docs/superpowers/specs/2026-11-05-m2-dynamic-fabric-design.md",
   "chainRule": "A beat with chainsFrom may only fire after at least one listed prior beat is in town.historyTags/effects; ordering assertions fail if violated.",
   "files": [
-    "roles.json",
     "woundWeights.json",
     "settlementSizes.json",
     "historyBeats-founding.json",

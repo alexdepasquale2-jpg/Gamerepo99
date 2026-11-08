@@ -11,6 +11,7 @@ import { biomeAt, type Biome } from '../sim/map/terrain';
 import { deriveRng } from '../sim/rng';
 import { ART_SCALE, ensureShadow, faunaTexture } from './looks';
 import { viewRect, type TownIndex } from './towns';
+import { noteUse } from '../sim/data-use-world';
 
 type FaunaRow = { id: string; name: string; biomeIds: string[]; tags: string[] };
 const ROWS = (faunaJson as { fauna: FaunaRow[] }).fauna;
@@ -81,6 +82,8 @@ export function createFauna(ctx: GameContext, towns: TownIndex): FaunaCtl {
       const weighted = pool.filter((r) => (has(r, 'livestock') ? !!nearTown : true));
       const row = (weighted.length ? weighted : pool)[rng.int(0, (weighted.length ? weighted : pool).length)]!;
       const tex = faunaTexture(scene, row.id);
+      // The animal is on screen: its fauna row and its art subject (overworld-assets fauna.<id>) are seen.
+      noteUse('fauna.drawn', row.id); noteUse('art', `fauna.${row.id}`);
       const s = scene.add.sprite(x, y, tex, '0').setOrigin(0.5, 1).setScale(ART_SCALE);
       const shadow = modeOf(row) === 'swim' ? undefined : scene.add.image(x, y, ensureShadow(scene)).setScale(0.6, 0.6).setAlpha(0.8);
       out.push({ id: `${row.id}@${cx},${cy}#${i}`, row, home: { x, y }, x, y, tx: x, ty: y, wait: rng.next() * 3, fleeing: 0, seed: rng.next() * 100, s, shadow });

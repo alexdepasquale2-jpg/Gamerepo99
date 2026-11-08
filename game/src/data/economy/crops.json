@@ -1,7 +1,23 @@
 {
   "version": 1,
   "spec": "docs/superpowers/specs/2026-11-05-fabric-variety-fix.md",
+  "use": "What each farm's field grows (sim/goods/crops.ts, drawn by world/art/crop-art.ts). A farm (sim/map/ladder/dress.ts) picks one crop from the crops whose biomeIds meet the fabric biomes of the ground in and around it (coarse biome -> fabric biome: fabric). Each crop turns through the stages over yearDays, shifted by its sow offset, so the fields of one road ripen at different times. Gleaning a field (props.json field verb) takes glean x itemId at that stage; a stage with glean 0 has nothing to take. name is shown on the field's prompt.",
   "assetPrefix": "crop",
+  "yearDays": 16,
+  "edgeTiles": 4,
+  "fabric": {
+    "forest": ["ash_wood", "peat_fen"],
+    "hills": ["chalk_downs", "slag_verge", "glare_approach"],
+    "fields": ["mill_heath"],
+    "meadow": ["mill_heath", "chalk_downs"],
+    "water": ["river_margin", "brine_marsh"]
+  },
+  "stages": [
+    { "id": "sown", "name": "new-sown", "from": 0, "glean": 0, "done": "Only bare drills and a few green tips. Nothing to take yet." },
+    { "id": "green", "name": "growing", "from": 4, "glean": 1, "done": "You thin the rows and keep what you pull." },
+    { "id": "ripe", "name": "ripe", "from": 9, "glean": 2, "done": "Heavy and ready: the field edge gives a good armful." },
+    { "id": "stubble", "name": "cut", "from": 13, "glean": 1, "done": "You glean what the harvest left behind." }
+  ],
   "crops": [
     {
       "id": "crop_wheat",
@@ -11,6 +27,8 @@
         "chalk_downs"
       ],
       "resourceId": "food_grain",
+      "itemId": "grain",
+      "sow": 9,
       "tags": [
         "grain"
       ]
@@ -23,6 +41,8 @@
         "chalk_downs"
       ],
       "resourceId": "food_grain",
+      "itemId": "grain",
+      "sow": 4,
       "tags": [
         "grain"
       ]
@@ -35,6 +55,8 @@
         "ash_wood"
       ],
       "resourceId": "food_grain",
+      "itemId": "grain",
+      "sow": 13,
       "tags": [
         "root"
       ]
@@ -48,6 +70,8 @@
         "peat_fen"
       ],
       "resourceId": "timber",
+      "itemId": "flax",
+      "sow": 0,
       "tags": [
         "wet",
         "craft"
@@ -61,6 +85,8 @@
         "river_margin"
       ],
       "resourceId": "wool",
+      "itemId": "flax",
+      "sow": 6,
       "tags": [
         "fiber"
       ]

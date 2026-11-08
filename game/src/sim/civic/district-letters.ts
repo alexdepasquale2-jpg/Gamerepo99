@@ -10,6 +10,7 @@
  * Leaders' riders change horses at every trunk post, so these never thin on the road (roadDays 1).
  * Pure + deterministic.
  */
+import { trackedTable } from '../data-use-people';
 import lettersJson from '../../data/dialogue/district-letters.json';
 import { ensureLetters, type Flight } from '../letters-scale';
 import { inboxOf } from '../realm';
@@ -21,7 +22,7 @@ import {
 } from './district-relations';
 
 type Lines = string[];
-export const DL = lettersJson as unknown as {
+export const DL = trackedTable('dialogue/district-letters', lettersJson as unknown as {
   letters: Record<LetterKind, { title: string; body: Lines }>;
   gist: Record<LetterKind, Lines>;
   dawn: Record<string, Lines>;
@@ -29,7 +30,7 @@ export const DL = lettersJson as unknown as {
   fallen: Record<string, Lines>;
   broker: Record<string, Lines>;
   relation: Record<string, string>;
-};
+}, ['letters', 'gist', 'dawn', 'held', 'fallen', 'broker', 'relation']);
 
 export const fillIn = (s: string, v: Record<string, string | number | undefined>): string =>
   s.replace(/\{(\w+)\}/g, (m, k: string) => (v[k] !== undefined ? String(v[k]) : m));

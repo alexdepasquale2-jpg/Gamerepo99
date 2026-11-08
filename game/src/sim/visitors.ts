@@ -199,6 +199,7 @@ export function removeVisitor(state: SimState, id: string): boolean {
   const raiders = state.hoard?.raiders;
   if (raiders) for (const site of Object.keys(raiders)) if (raiders[site] === id) delete raiders[site];
   if (state.flags.lastTouchedPersonId === id) delete state.flags.lastTouchedPersonId;
+  if (state.flags.prevTouchedPersonId === id) delete state.flags.prevTouchedPersonId;
   if (state.kinEdges?.some((e) => e.from === id || e.to === id)) state.kinEdges = state.kinEdges.filter((e) => e.from !== id && e.to !== id);
   return true;
 }

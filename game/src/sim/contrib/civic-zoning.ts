@@ -28,6 +28,7 @@ import { registerTargetProvider, type ProvidedAction } from '../play-session/act
 import { targetActionId } from '../play-session/targets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-civic';
 
 /** Who speaks for a town: the leader of a doctrine seated there, else its eldest. */
 export function leaderOf(state: SimState, townId: string): string | undefined {
@@ -56,6 +57,7 @@ function townDawn(state: SimState, townId: string): void {
 
   // Tier: growing is news and history; shrinking is quiet (nobody announces that).
   const tier = tierOf(state, townId);
+  noteUse('civic/zones', `tier:${tier.id}`);
   if (c.tier === undefined) c.tier = tier.id;
   else if (tierIndex(tier.id) > tierIndex(c.tier)) {
     c.tier = tier.id;
@@ -180,6 +182,8 @@ registerBoardPage({
     if (shut.length) left.push(`Not yet: ${shut.join(', ')}.`);
     const last = c?.news.filter((n) => n.kind !== 'tier' && n.kind !== 'petition').slice(-1)[0];
     if (last) left.push(`Last word from the council (day ${last.day}): ${newsLine(state, townId, last)}`);
+    // The stakes out on the lots (world/civic-marks) carry these colours.
+    left.push('Stakes mark each lot: gold for farmland, brown for workshops, red for the market, blue for common ground, green for houses.');
     // Right: each zone and where its lots lie, with what stands on them.
     const lots = lotsOf(state, townId);
     const claims = claimsIn(state, townId);

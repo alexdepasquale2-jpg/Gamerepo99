@@ -168,7 +168,7 @@
       "woundLine": "They forgot the theft. I didn't.",
       "tellGivenUp": "Shutters nailed from inside; ledger slammed; she pretends not to hear knocks.",
       "linesRef": "dialogue/fragments#person:clara_whitby",
-      "tags": [],
+      "tags": ["ledger_keeper"],
       "driftHint": "When Mira's letters started sounding like another country, I nailed the shutters.",
       "cityKinHint": "My sister lives where the days don't match ours. I still owe her a true ledger line.",
       "authored": true,
@@ -196,7 +196,8 @@
       "woundLine": "The last one didn't cry.",
       "tellGivenUp": "Bag by the door unopened; kettle cold; she flinches at knocks.",
       "linesRef": "dialogue/fragments#person:nora_voss",
-      "tags": []
+      "tags": [],
+      "authored": true
     },
     {
       "id": "samir_okafor",
@@ -220,7 +221,8 @@
       "woundLine": "Silence started winning.",
       "tellGivenUp": "Fiddle cased; he drinks where music used to stand.",
       "linesRef": "dialogue/fragments#person:samir_okafor",
-      "tags": []
+      "tags": [],
+      "authored": true
     },
     {
       "id": "tom_briggs",
@@ -244,7 +246,8 @@
       "woundLine": "River's calm. I'm not.",
       "tellGivenUp": "Ferry unlaunched; rope soft with salt; he watches both shores like debts.",
       "linesRef": "dialogue/fragments#person:tom_briggs",
-      "tags": []
+      "tags": [],
+      "authored": true
     },
     {
       "id": "priya_sen",
@@ -268,7 +271,8 @@
       "woundLine": "People stopped being hungry for tomorrow.",
       "tellGivenUp": "Plot a fist of thistle; seed packets yellow in a tin; sleeps in the shed.",
       "linesRef": "dialogue/fragments#person:priya_sen",
-      "tags": []
+      "tags": [],
+      "authored": true
     },
     {
       "id": "leon_march",

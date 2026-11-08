@@ -3,6 +3,7 @@
  * Overworld stamps (cottage / shop / hall) own the doors; each maps to a small
  * room plan with furniture and, when the town has someone to spare, an occupant.
  */
+import { noteUse } from '../data-use-people';
 import art from '../../data/art/settlements.json';
 import lines from '../../data/dialogue/interior-lines.json';
 import { TILE_PX } from './constants';
@@ -421,10 +422,22 @@ export function reachableTiles(plan: InteriorPlan): Set<string> {
 
 /** What an occupant says on the n-th time you speak to them; mood follows town despair (0..1). */
 export function interiorLine(kind: InteriorKind, despair01: number, visit: number): string {
-  const pool = lines[kind][despair01 >= lines.lowAt ? 'low' : 'calm'];
+  const band = despair01 >= lines.lowAt ? 'low' : 'calm';
+  noteUse('dialogue/interior-lines', `${kind}.${band}`);
+  const pool = lines[kind][band];
   return pool[((visit % pool.length) + pool.length) % pool.length]!;
 }
 export const EMPTY_ROOM_LINE: string = lines.empty;
+
+/**
+ * Who speaks when you step into a room: the first seated occupant greets you in the room's mood (the town's
+ * despair), the n-th visit moving them on through their lines; an empty room is your own remark.
+ */
+export function roomGreeting(kind: string, despair01: number, visit: number, occupantIds: readonly string[]): { personId: string; line: string } | null {
+  if (!(kind in lines) || typeof (lines as Record<string, unknown>)[kind] !== 'object') return null;
+  if (!occupantIds.length) return { personId: 'player', line: EMPTY_ROOM_LINE };
+  return { personId: occupantIds[0]!, line: interiorLine(kind as InteriorKind, despair01, visit) };
+}
 
 /** Plain-words time of day for the room HUD (matches the sky stops: night is ~0.76-0.92). */
 export function dayPartLabel(day01: number): string {

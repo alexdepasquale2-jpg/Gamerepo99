@@ -1,5 +1,6 @@
 /** Shared effect schema applicator. Pure: no Phaser/DOM/Math.random. */
 
+import { noteUse } from './data-use-people';
 import type { Effect, EffectOp } from './types/data';
 import type { PacketState, SimState } from './types/runtime';
 import type { DataTables } from './load-data';
@@ -188,6 +189,7 @@ export function applyEffect(state: SimState, effect: Effect, ctx: EffectCtx): vo
 
   if (fx.target === 'player.statusTrait' && op === 'set') {
     setPath(state, ctx, fx.target, fx.value);
+    noteUse('people/traits', `statusTraits.${String(fx.value)}`);
     return;
   }
 

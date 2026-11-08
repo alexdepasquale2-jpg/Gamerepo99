@@ -1,6 +1,7 @@
 /** Seeded facility selection from facilities.json. Pure; no dyn/. */
 
 import facilitiesJson from '../../../data/economy/facilities.json';
+import { noteUse } from '../../data-use-civic';
 import { townRole } from '../../economy/town-roles';
 import { districtOfTown } from '../../map/districts';
 import type { Rng } from '../../rng';
@@ -61,6 +62,8 @@ export function roleFacilities(seed: number, settlements: SettlementGen[], route
     const road = routes.filter((r) => r.fromId === s.id || r.toId === s.id).sort((a, b) => a.id.localeCompare(b.id))[0];
     // Facilities stand beside a road; a town with none would get a facility that is never placed.
     if (!road) continue;
+    noteUse('economy/facilities', `byLand:${role.land}`);
+    noteUse('economy/facilities', `byTownKind:${role.kind}`);
     for (const kind of [...new Set(kinds)]) {
       out.push({
         id: `fac_${s.id}_${kind}`,

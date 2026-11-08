@@ -12,6 +12,7 @@
  * Place: the settlement kind of the person's town (city | town | village). Lines tagged for another
  * place are dropped for generated voices and nearly silenced for authored ones (placeBias). Pure.
  */
+import { noteUse, trackedTable } from '../data-use-people';
 import voicesJson from '../../data/dialogue/generic-voices.json';
 import { jobOf } from '../goods/jobs';
 import type { SettlementKind } from '../map/world-layout';
@@ -33,7 +34,7 @@ type VoicesFile = {
   strainBonus: number;
   trustHighAbove: number;
 };
-const CFG = voicesJson as VoicesFile;
+const CFG = trackedTable('dialogue/generic-voices', voicesJson as VoicesFile, ['byWound', 'byJob']);
 
 const TONE_DIM: Record<string, keyof VoiceVector> = {
   'tone:warm': 'warmth',
@@ -60,7 +61,9 @@ const isBody = (f: Frag): boolean => {
   const tags = tagsOf(f);
   if (tags.includes('generic_piece')) return false;
   if (f.slot === 'alone' || tags.includes('slot:alone')) return true;
-  return (f.slot === 'middle' || tags.includes('slot:middle')) && tags.includes('generic_voice');
+  if ((f.slot === 'middle' || tags.includes('slot:middle')) && tags.includes('generic_voice')) return true;
+  // A voice's opener / middle / closer blends are whole lines too (the same thought, ended three ways).
+  return tags.includes('generic_blend') && ['opener', 'middle', 'closer'].includes(f.slot ?? '');
 };
 
 /** The settlement kind of where this person lives (city | town | village), if known. */
@@ -108,7 +111,21 @@ function pick<T>(items: T[], scores: number[], r01: number): T {
   return items[items.length - 1]!;
 }
 
-export type GenericVoiceArgs = { memory: Set<string>; strained: boolean; constraints: Constraint[] };
+/**
+ * The tone a line is scored against: the person's own seeded vector leaned halfway toward their voice's
+ * anchor (dialogue/voice-anchors.json va_<voice>), so every miller sounds a little like a miller.
+ */
+function voicedVector(ctx: ReactionPickCtx, voice: string, own: VoiceVector | undefined): VoiceVector | undefined {
+  const anchor = (ctx.state.data.voiceAnchors?.anchors as { id: string; vector?: VoiceVector }[] | undefined)?.find((a) => a.id === `va_${voice}`);
+  if (!anchor?.vector) return own;
+  noteUse('dialogue/voice-anchors', anchor.id);
+  if (!own) return anchor.vector;
+  const out: VoiceVector = {};
+  for (const k of Object.keys(TONE_DIM).map((t) => TONE_DIM[t]!)) out[k] = ((own[k] ?? 0.5) + (anchor.vector[k] ?? 0.5)) / 2;
+  return out;
+}
+
+export type GenericVoiceArgs ={ memory: Set<string>; strained: boolean; constraints: Constraint[] };
 
 /** A composed line in this person's generic voice for the method, or null when no voice covers it. */
 export function genericVoiceLine(ctx: ReactionPickCtx, a: GenericVoiceArgs): ReactionLineResult | null {
@@ -145,7 +162,7 @@ export function genericVoiceLine(ctx: ReactionPickCtx, a: GenericVoiceArgs): Rea
   const pool = allowed.filter((f) => !(ownStrain && isKinStrainFrag(f) && !tagsOf(f).includes('generic_voice')));
   if (!pool.length) return null;
 
-  const vec = generatedVector(ctx.personId);
+  const vec = voicedVector(ctx, voice, generatedVector(ctx.personId));
   const scores = pool.map((f) => {
     let s = scoreFragment(f, {}, a.memory, { trust, flame01, hollowness }) + toneBonus(f, vec);
     // Family split by the drift is often on a strained mind, not every time.

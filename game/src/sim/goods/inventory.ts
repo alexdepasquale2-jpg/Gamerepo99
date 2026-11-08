@@ -2,6 +2,7 @@
 
 import itemsJson from '../../data/items/items.json';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-world';
 
 export type ItemRow = {
   id: string; name: string; icon: string; color: string; price: number;
@@ -28,12 +29,16 @@ export const itemName = (id: string): string => ITEM_BY_ID.get(id)?.name ?? id;
 export function inventoryOf(state: SimState): Record<string, number> {
   if (!state.inventory) {
     state.inventory = { ...ITEMS.startingInventory };
+    // The satchel you start with is how a keepsake and a letter are got at all.
+    for (const id of Object.keys(ITEMS.startingInventory)) noteUse('items', id);
     if (typeof state.player.coin === 'number') state.inventory.coin = state.player.coin + (state.inventory.coin ?? 0);
   }
   return state.inventory;
 }
 
 export function addItem(state: SimState, itemId: string, qty: number): void {
+  // Proof the item is really got (qty > 0) and spent (qty < 0) in play: game/scripts/coverage-world.mts.
+  if (qty) noteUse(qty > 0 ? 'items' : 'items.use', itemId);
   const inv = inventoryOf(state);
   inv[itemId] = (inv[itemId] ?? 0) + qty;
   if (inv[itemId]! <= 0) delete inv[itemId];

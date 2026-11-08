@@ -5,6 +5,7 @@
  * so Blessings and Burdens can come to pass. Deterministic: deriveRng, sorted iteration.
  */
 
+import { noteUse } from './data-use-people';
 import { retireLetter, sealLetter } from './goods/instances';
 import { encodeUnspokenForState } from './social/unspoken';
 import { removeItem } from './goods/inventory';
@@ -83,7 +84,13 @@ export function enqueueLetter(state: SimState, p: Pending): void {
 
 /** Baked social web plus this seed's Fabric kin edges (generated people are not in the baked web). */
 export function edgesOf(state: SimState, web?: SocialWebTable): SocialEdge[] {
-  const kin: SocialEdge[] = (state.kinEdges ?? []).map((k) => ({
+  // One edge per pair (older saves may hold a repeated introduction; the graph refuses duplicate ids).
+  const seen = new Set<string>();
+  const ties = (state.kinEdges ?? []).filter((k) => {
+    const id = `kin_${k.from}__${k.to}`;
+    return !seen.has(id) && !!seen.add(id);
+  });
+  const kin: SocialEdge[] = ties.map((k) => ({
     id: `kin_${k.from}__${k.to}`,
     a: k.from,
     b: k.to,
@@ -113,7 +120,11 @@ function routeDays(state: SimState, a: string, b: string): number {
 function pickTemplate(ts: Template[], packetType: string, edge?: SocialEdge): Template | undefined {
   const of = ts.filter((t) => t.packetType === packetType);
   const kinds = edge ? [...(edge.tags ?? []), edge.kind] : [];
-  return of.find((t) => t.edgeKind !== null && kinds.includes(t.edgeKind)) ?? of.find((t) => t.edgeKind === null);
+  const tpl = of.find((t) => t.edgeKind !== null && kinds.includes(t.edgeKind)) ?? of.find((t) => t.edgeKind === null);
+  noteUse('dialogue/letters', (tpl as { id?: string } | undefined)?.id);
+  // An authored kin tie (data/people/kinship.json, woven into the web) carrying this letter.
+  if (tpl && edge?.id?.startsWith('edge_')) noteUse('people/kinship', edge.id);
+  return tpl;
 }
 
 function launch(state: SimState, ls: LettersState, f: Omit<Flight, 'id' | 'days' | 'fromTownId' | 'toTownId' | 'legs' | 'roadDays'>, road?: { legs: RoadLeg[]; days: number }): Flight | null {

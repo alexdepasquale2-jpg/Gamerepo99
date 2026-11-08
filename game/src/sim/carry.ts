@@ -11,6 +11,8 @@
  * that really holds it (data/items/carry.json; the coin is the old errand's carryRewardCoin).
  * Pure + deterministic: no Phaser/DOM, no Math.random.
  */
+import { encodeUnspokenForState } from './social/unspoken';
+import { fallbackLine } from './fallback-lines';
 import carryJson from '../data/items/carry.json';
 import { BUILDING_BY_ID, contributeToPlan, PLAYER_OWNER } from './economy/build-plans';
 import { addStock, isFoodRes, stockOf } from './economy/food-stock';
@@ -19,12 +21,13 @@ import { deliverToTown } from './goods/deed-goods';
 import { ITEMS, ITEM_BY_ID, addItem } from './goods/inventory';
 import { dropItem } from './goods/item-use';
 import { pushJuice } from './packets';
+import { noteUse } from './data-use-world';
 import { residentOf } from './contrib/use-effects';
 import type { ActOutcome } from './play-session/action-providers';
 import { parseTargetKey, type Target } from './play-session/targets';
 import type { SimState } from './types/runtime';
 
-export type LoadRow = { itemId: string; name: string; qty: number; speed: number; shape: string; resource?: string };
+export type LoadRow = { itemId: string; name: string; qty: number; speed: number; shape: string; resource?: string; offcutOf?: string };
 type CarryFile = { loads: LoadRow[]; facilityPiles: Record<string, string[]>; townPiles: string[]; thanks: { trust: number; tipFromPlan: boolean; keepDays: number } };
 const FILE = carryJson as CarryFile;
 export const CARRY = FILE;
@@ -72,7 +75,11 @@ function facilityPile(state: SimState, facId: string, itemId: string): PileView 
   const row = loadRow(itemId);
   const res = row && resOf(row);
   if (!place || !row || !res || !(FILE.facilityPiles[place.kind] ?? []).includes(itemId)) return null;
-  const made = Math.round(facilityOutput(state, place).find((o) => o.resourceId === res)?.qty ?? 0);
+  const out = facilityOutput(state, place);
+  const own = out.find((o) => o.resourceId === res)?.qty;
+  // Generated lumber camps saw only timber; their firewood is the offcuts (carry.json offcutOf).
+  const offcut = own === undefined && row.offcutOf ? Math.ceil((out.find((o) => o.resourceId === row.offcutOf)?.qty ?? 0) / 2) : 0;
+  const made = Math.round(own ?? offcut);
   const key = facilityPileKey(facId, itemId);
   const t = cs(state).taken[key];
   const takenToday = t && t.day === state.day ? t.n : 0;
@@ -150,6 +157,10 @@ export function pickUp(state: SimState, key: string): ActOutcome {
   if (!p) return { ok: false, line: 'There is nothing here to lift.' };
   if (p.load <= 0) return { ok: false, line: `The ${p.name} are all gone.` };
   takeFrom(state, p, p.load);
+  // Proof each load and each pile source is really lifted (game/scripts/coverage-world.mts).
+  noteUse('carry', p.itemId);
+  if (p.source === 'facility') noteUse('carry.facilityPiles', `${facilityById(state, p.ref)?.kind}.${p.itemId}`);
+  else if (p.source === 'town') noteUse('carry.townPiles', p.itemId);
   state.player.carrying = { itemId: p.itemId, qty: p.load, from: key, ...(p.townId ? { fromTown: p.townId } : {}) };
   pushJuice(state, 'carry.lift', { itemId: p.itemId, qty: p.load, from: key });
   return { ok: true, line: `You heave up ${p.load} ${p.name}. Heavy going.` };
@@ -168,6 +179,8 @@ function thank(state: SimState, personId: string, now: string, dawn: string, tip
   p.trust = Math.min(1, (p.trust ?? 0) + FILE.thanks.trust);
   pushJuice(state, 'moment.beat', { personId, line: now, townId: p.townId, momentId: 'carry.thanks' });
   cs(state).thanks.push({ day: state.day, personId, line: dawn });
+  // Goods carried to someone who needed them: an errand they will not forget (unspoken_favor_warmth).
+  encodeUnspokenForState(state, 'carry_goods', personId, { tags: ['favor', 'errand'] });
   const tip = tipFrom?.() ?? 0;
   if (tip > 0) addItem(state, 'coin', tip);
   return tip;
@@ -212,6 +225,17 @@ function toTown(state: SimState, c: Carried, townId: string): ActOutcome {
   const short = deliverToTown(state, townId, c.itemId, c.qty, who ?? 'player');
   const qty = c.qty;
   delete state.player.carrying;
+  // Unloading a wagon into the store by hand: the driver tips a coin and the town talks of it.
+  if (c.from.startsWith('wagon:')) {
+    const salt = `${c.from}|${townId}`;
+    const said = fallbackLine('body.carry_crates', `${state.seed}|crates|${salt}|${state.day}`);
+    addItem(state, 'coin', 1);
+    if (who) {
+      const heard = fallbackLine('body.carry_crates.heard', `${state.seed}|crates-heard|${salt}|${state.day}`);
+      if (heard) pushJuice(state, 'moment.beat', { personId: who, line: heard, townId, momentId: 'body.carry_crates' });
+    }
+    if (said) return { ok: true, line: said };
+  }
   // Carrying a town's own goods back to it is no favour; bringing them from elsewhere when it is short is.
   if (short && who && c.fromTown !== townId) {
     const name = firstName(state, who);

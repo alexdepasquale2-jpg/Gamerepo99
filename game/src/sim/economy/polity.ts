@@ -12,6 +12,7 @@
 
 import polityJson from '../../data/items/polity.json';
 import { deriveRng } from '../rng';
+import { noteUse } from '../data-use-civic';
 import type { SimState } from '../types/runtime';
 
 /** `fork`: techs sharing one are rival paths; a town holds at most one of them. */
@@ -56,8 +57,10 @@ export const creedOf = (state: SimState, townId: string): Creed | undefined => C
 /** Production multiplier from the town's technology and creed for a trade. */
 export function polityMul(state: SimState, townId: string, jobId: string): number {
   const known = techsOf(state, townId);
-  let m = TECHS.filter((t) => known.includes(t.id)).reduce((n, t) => n * (t.mul[jobId] ?? 1), 1);
-  m *= creedOf(state, townId)?.jobMul?.[jobId] ?? 1;
+  let m = TECHS.filter((t) => known.includes(t.id)).reduce((n, t) => { noteUse('items/polity', `tech:${t.id}`); return n * (t.mul[jobId] ?? 1); }, 1);
+  const creed = creedOf(state, townId);
+  if (creed) noteUse('items/polity', `creed:${creed.id}`);
+  m *= creed?.jobMul?.[jobId] ?? 1;
   return m;
 }
 export const birthMul = (state: SimState, townId: string): number => creedOf(state, townId)?.birthMul ?? 1;
@@ -157,7 +160,9 @@ export function tickPolity(state: SimState): void {
     // Saves from before forks may hold both sides of one; the first taken stands.
     const known = (p.tech[id] = (p.tech[id] ?? []).filter((t, i, all) => { const f = TECH_BY_ID.get(t)?.fork; return !f || !all.slice(0, i).some((u) => TECH_BY_ID.get(u)?.fork === f); }));
     const have = (kind: string): number => built.filter((c) => c.kind === kind).length;
-    const next = TECHS.filter((t) => techOpen(known, t) && Object.entries(t.needs.buildings ?? {}).every(([k, n]) => have(k) >= n)).sort((a, b) => a.cost - b.cost || a.id.localeCompare(b.id))[0];
+    // Toward what the town builds most (a mill town takes the water wheel, a farm town field rotation), then the cheapest.
+    const weight = (t: Tech): number => Object.keys(t.needs.buildings ?? {}).reduce((n, k) => n + have(k), 0);
+    const next = TECHS.filter((t) => techOpen(known, t) && Object.entries(t.needs.buildings ?? {}).every(([k, n]) => have(k) >= n)).sort((a, b) => weight(b) - weight(a) || a.cost - b.cost || a.id.localeCompare(b.id))[0];
     if (next && p.knowledge[id]! >= techCost(known, next)) { p.knowledge[id]! -= techCost(known, next); known.push(next.id); }
   }
 

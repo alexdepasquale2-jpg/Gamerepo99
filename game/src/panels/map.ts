@@ -107,7 +107,7 @@ export function createWorldMap(ctx: GameContext, layer: HTMLElement, openMap: ()
     c.addEventListener('click', (e) => { const r = c.getBoundingClientRect(); show(districtAtPoint(c, ctx, e.clientX - r.left, e.clientY - r.top)); });
     const all = realm(ctx.seed);
     const towns = all.reduce((a, d) => a + d.towns.length, 0) + model.towns.length;
-    body.append(c, el('p', 'hf-small hf-muted', `${all.length} districts and ${towns} towns and villages. Gold outline: your home district. Grey: despair has the upper hand.`), info,
+    body.append(c, el('p', 'hf-small hf-muted', `${all.length} districts and ${towns} towns and villages. Gold outline: your home district. Grey: despair has the upper hand. A gold line joins districts under a trade pact; red dashes and crossed blades mark a war.`), info,
       button('Close map', () => ctx.panels.map.toggle(), { id: 'map-close' }));
     show(picked ?? all.find((d) => here && d.col === here.col && d.row === here.row) ?? null);
   };

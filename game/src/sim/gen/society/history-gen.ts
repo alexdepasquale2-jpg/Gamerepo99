@@ -5,6 +5,7 @@ import type { WorldShape } from '../load/load-world-tables';
 import type { HistoryBeat, HistoryTables } from '../load/load-history';
 import type { HistoryEvent } from '../world-types';
 import type { PersonDraft } from './people';
+import { noteUse } from '../../data-use-civic';
 
 function tagsFromBeat(beat: HistoryBeat): string[] {
   const tags = new Set<string>();
@@ -125,6 +126,7 @@ export function generateHistoryEvents(
   }
 
   const personIds = people.map((p) => p.id);
+  for (const b of selected) noteUse('world/history/historyBeats', b.id);
   return selected.map((beat, i) => {
     const sliceEnd = Math.min(personIds.length, 1 + rng.int(0, Math.max(1, personIds.length)));
     return {
@@ -134,6 +136,33 @@ export function generateHistoryEvents(
       personIds: personIds.slice(0, Math.max(1, sliceEnd)),
     };
   });
+}
+
+/**
+ * The authored cast's own past (beats marked authoredSeed): the home district carries them after the
+ * seeded chain, each once its chainsFrom ancestor is in the history (or it has none), so Marta's cold
+ * oven or Jonah's chalk map are there to be retold by the people named in them. No rng is drawn.
+ */
+export function authoredSeedEvents(tables: HistoryTables, events: HistoryEvent[], people: PersonDraft[]): HistoryEvent[] {
+  const ids = new Set(events.map((e) => e.id));
+  const out: HistoryEvent[] = [];
+  const authored = new Set(tables.historyBeats.filter((b) => b.authoredSeed).map((b) => b.id));
+  // The cast's beats, and the ones that can only follow theirs (every chainsFrom an authored beat).
+  const seeds = tables.historyBeats.filter((b) => !ids.has(b.id) && (b.authoredSeed || (!!b.chainsFrom?.length && b.chainsFrom.every((c) => authored.has(c)))));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const beat of seeds) {
+      if (ids.has(beat.id) || !chainOk(beat, ids)) continue;
+      // Who is in it: anchors whose first name the summary speaks (people.json ids are first_last).
+      const named = people.filter((p) => p.anchor && new RegExp(`\\b${p.id.split('_')[0]}\\b`, 'i').test(beat.summary)).map((p) => p.id);
+      ids.add(beat.id);
+      noteUse('world/history/historyBeats', beat.id);
+      out.push({ id: beat.id, at: events.length + out.length + 1, tags: tagsFromBeat(beat), personIds: named });
+      grew = true;
+    }
+  }
+  return out;
 }
 
 /** True when every beat with chainsFrom has a prior selected ancestor (order-safe). */

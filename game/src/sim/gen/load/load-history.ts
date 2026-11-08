@@ -29,11 +29,6 @@ export type SettlementSize = {
   gapAxisMax: number;
 };
 
-export type RoleWeight = {
-  id: string;
-  weight: number;
-};
-
 export type WoundWeight = {
   woundId: string;
   weight: number;
@@ -44,7 +39,6 @@ export type HistoryTables = {
   chainRule?: string;
   historyBeats: HistoryBeat[];
   settlementSizes: SettlementSize[];
-  roles: RoleWeight[];
   woundWeights: WoundWeight[];
 };
 
@@ -103,7 +97,6 @@ export function loadHistoryTables(): HistoryTables {
     chainRule: out.chainRule as string | undefined,
     historyBeats,
     settlementSizes: (out.settlementSizes as SettlementSize[] | undefined) ?? [],
-    roles: (out.roles as RoleWeight[] | undefined) ?? [],
     woundWeights: (out.woundWeights as WoundWeight[] | undefined) ?? [],
   };
 }

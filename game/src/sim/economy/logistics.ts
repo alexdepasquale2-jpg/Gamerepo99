@@ -38,7 +38,12 @@ export type Cart = { id: string; itemId: string; qty: number; fromTownId: string
   /** Who walks beside it: 'player', or `watch:<name>` (sim/economy/roads). Cuts the road's hazard. */
   escortedBy?: string };
 /** `flow`: units delivered between town pairs since the last dawn tick of the polity layer. */
-export type Logistics = { requests: CartRequest[]; carts: Cart[]; next: number; lost: number; delivered: number; flow?: Record<string, number> };
+export type Logistics = { requests: CartRequest[]; carts: Cart[]; next: number; lost: number; delivered: number; flow?: Record<string, number>;
+  /** Carts lost on the road lately, and where: the world draws the wreck there until the road is cleared. */
+  wrecks?: Wreck[] };
+/** A lost cart's wreck (kept WRECK_DAYS so passers-by can see where the road took it). */
+export type Wreck = { cartId: string; itemId: string; qty: number; at: RoadPosition; day: number };
+export const WRECK_DAYS = 5;
 
 const logOf = (state: SimState): Logistics => (state.logistics ??= { requests: [], carts: [], next: 1, lost: 0, delivered: 0 });
 
@@ -70,6 +75,7 @@ export function tickLogistics(state: SimState): void {
   const log = logOf(state);
   const rng = (tag: string, id: string) => deriveRng(state.seed, tag, state.day, id);
 
+  if (log.wrecks) log.wrecks = log.wrecks.filter((w) => state.day - w.day < WRECK_DAYS);
   // 1. Carts on the road: age, maybe lose, maybe arrive.
   for (const cart of [...log.carts].sort((a, b) => a.id.localeCompare(b.id))) {
     cart.daysLeft -= 1;
@@ -78,6 +84,8 @@ export function tickLogistics(state: SimState): void {
     const hazard = atWar(state, cart.fromTownId, cart.toTownId) ? 3 : broken ? 2 : safeRoads(state, cart.fromTownId, cart.toTownId) ? 0.5 : 1;
     const guarded = cart.escortedBy ? hazard * LOGISTICS.escortHazardMul : hazard;
     if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** guarded) {
+      const at = cartPosition(cart);
+      if (at) (log.wrecks ??= []).push({ cartId: cart.id, itemId: cart.itemId, qty: cart.qty, at, day: state.day });
       log.carts.splice(log.carts.indexOf(cart), 1);
       log.lost += 1;
       loseCartLoad(state, cart.qty);

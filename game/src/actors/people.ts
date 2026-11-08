@@ -4,23 +4,31 @@
  * a town that wakes up puts its people where the schedule says they are. Newcomers, births and the dead
  * are settled at sync().
  */
+import { firstNameOf } from '../sim/names';
 import type { GameContext, Pt, Thing } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
-import { isIndoorsAt, DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS } from '../sim/map/residency';
+import { isIndoorsAt, placeAt, DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS } from '../sim/map/residency';
 import type { Building } from '../sim/map/interiors';
 import { Figure } from './figure';
 import { doorStep, findSpots, makeFolk, makeVillager, rehouse, scheduleSpot, wantInside, workPose, type Folk, type PersonRow, type Villager } from './folk';
 import { headHeight, lookTexture } from './looks';
-import { doctrineLeaders, postureOf, strongestMarkTell } from './marks';
+import { doctrineLeaders, postureOf, strongestMarkTell, type Posture } from './marks';
 import type { NameLayer } from './name-layer';
 import { hash } from './paint';
 import { safe } from './player';
 import { inRect, viewRect, type TownIndex } from './towns';
 import { visitorOf } from '../sim/visitors';
+import { countVisual } from '../dev/visual-counts';
+import { createHaulLoads, haulLeg } from './haulers';
+import { createChildren } from './children';
 
 const ROUTES_PER_FRAME = 4;
 const NEAR_NAME = 96;
 const WANDER = TILE_PX * 1.1;
+/** The sick walk pale (a wan green-grey over their colours), stooped, and at half pace. */
+const SICK_TINT = 0xa0b890;
+const SICK_PACE = 0.5;
+const postureFor = (v: Villager): Posture => (v.sick ? { ...postureOf(v.tell), tint: SICK_TINT, lean: 0.12, tempo: 0.6, scaleY: 0.93 } : postureOf(v.tell));
 
 export type PeopleCtl = {
   sync(): void;
@@ -32,6 +40,8 @@ export type PeopleCtl = {
   lookOf(id: string): { texture: string; frame: string; scale: number; tint: number } | undefined;
   /** Dev: everyone, with where they are. */
   list(): { id: string; name: string; townId: string; x: number; y: number; inside: string | null; mark: string | null; leader: boolean; drawn: boolean }[];
+  /** Dev: the households' young drawn at their parents' heels now. */
+  children(): { id: string; given: string; x: number; y: number }[];
   destroy(): void;
 };
 
@@ -40,6 +50,19 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
   const byId = new Map<string, Villager>();
   const active = new Set<Folk>();
   let routes = 0;
+  const loads = createHaulLoads(ctx.scene);
+  const kids = createChildren(ctx);
+  let sickAt = -1;
+  /** Who is sick, re-read once a second (staffing tags them at dawn; a cure can come any time). */
+  const refreshSick = (now: number): void => {
+    if (now - sickAt < 1) return;
+    sickAt = now;
+    const st = ctx.session.getState();
+    for (const v of byId.values()) {
+      const sick = !!st?.people[v.id]?.tags?.includes('sick');
+      if (sick !== !!v.sick) { v.sick = sick; v.fig?.setPosture(postureFor(v)); }
+    }
+  };
 
   // Visitors on a road are drawn by road-folk.ts; everyone else lives in a town.
   const rows = (): PersonRow[] => {
@@ -66,7 +89,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
   const show = (v: Villager, folk: Folk): void => {
     if (v.fig || !folk.active) return;
     v.fig = new Figure(ctx.scene, v.pl, v.x, v.y);
-    v.fig.setPosture(postureOf(v.tell));
+    v.fig.setPosture(postureFor(v));
     v.fig.setVisible(!v.inside);
   };
   const hide = (v: Villager): void => { v.fig?.destroy(); v.fig = undefined; };
@@ -131,7 +154,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       if (!v) continue;
       v.tell = strongestMarkTell(p.marks);
       if (leaders) v.leader = leaders.has(p.id);
-      v.fig?.setPosture(postureOf(v.tell));
+      v.fig?.setPosture(postureFor(v));
     }
   };
 
@@ -151,7 +174,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       const v = byId.get(row.id);
       const folk = folkFor(row.townId, row.id);
       if (!folk) continue;
-      if (v && v.townId === folk.town.id) { if (row.name && row.name !== v.name) { v.name = row.name; v.first = row.name.split(' ')[0]!; } continue; }
+      if (v && v.townId === folk.town.id) { if (row.name && row.name !== v.name) { v.name = row.name; v.first = firstNameOf(row.name); } continue; }
       if (v) { // moved town
         hide(v);
         const old = folkByTown.get(v.townId);
@@ -205,7 +228,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
     v.moving = false;
     if (d > 2) {
       const rest = Math.hypot(v.target.x - v.x, v.target.y - v.y);
-      const base = v.entering ? 52 : rest > TILE_PX * 3 ? 34 : 16;
+      const base = (v.entering ? 52 : rest > TILE_PX * 3 ? 34 : 16) * (v.sick ? SICK_PACE : 1);
       const step = Math.min(d, base * v.pl.speed * dt);
       const nx = v.x + (dx / d) * step, ny = v.y + (dy / d) * step;
       if (!ctx.world.nav.walkableAt(nx, ny)) { v.path = []; v.target = { x: v.x, y: v.y }; }
@@ -232,13 +255,31 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       const focus = safe(() => ctx.interact.focus()?.key, undefined);
       const lr = viewRect(ctx.scene, 8);
       const shown: { v: Villager; d: number }[] = [];
+      refreshSick(timeSec);
+      loads.begin();
+      let sickShown = 0;
       for (const f of active) {
         for (const v of f.people) {
           stepVillager(f, v, dt, timeSec, ph);
-          if (v.inside || !v.fig || !inRect(lr, v.x, v.y) || focus === `person:${v.id}`) continue;
+          if (v.inside || !v.fig || !inRect(lr, v.x, v.y)) continue;
+          if (v.sick) sickShown++;
+          // A hauler on the road between site and stores carries the load on their head.
+          const role = f.haul?.(v.id);
+          if (role && placeAt(ph) === 'work') {
+            const leg = haulLeg(v.id, performance.now() / 1000);
+            loads.put(v.id, { x: v.x, y: v.y - headHeight(v.pl.scale) }, v.y, leg === 'in' ? role.out ?? role.back : role.back);
+          }
+          if (focus === `person:${v.id}`) continue;
           shown.push({ v, d: Math.hypot(player.x - v.x, player.y - v.y) });
         }
       }
+      loads.end();
+      countVisual('sickFolk', sickShown);
+      kids.update(dt, timeSec, (id) => {
+        const v = byId.get(id);
+        const f = v && folkByTown.get(v.townId);
+        return v && f?.active && v.fig && !v.inside ? { x: v.x, y: v.y, kind: f.kind, moving: v.moving } : undefined;
+      });
       // Nearest first, so in a crowd the people beside you keep their names.
       shown.sort((a, b) => a.d - b.d);
       shown.forEach(({ v, d }, i) => {
@@ -284,8 +325,11 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       return v ? { texture: lookTexture(ctx.scene, v.pl.look), frame: '1', scale: v.pl.scale, tint: postureOf(v.tell).tint } : undefined;
     },
     list: () => [...byId.values()].map((v) => ({ id: v.id, name: v.name, townId: v.townId, x: Math.round(v.x), y: Math.round(v.y), inside: v.inside?.id ?? null, mark: v.tell?.markId ?? null, leader: v.leader, drawn: !!v.fig && !v.inside })),
+    children: () => kids.list(),
     destroy() {
       offJuice();
+      loads.destroy();
+      kids.destroy();
       for (const v of byId.values()) hide(v);
     },
   };

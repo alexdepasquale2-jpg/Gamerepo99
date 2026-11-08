@@ -4,7 +4,7 @@
   "elderAge": 50,
   "oldAge": 50,
   "childAge": 14,
-  "askLabel": "Ask about the old days",
+  "askLabel": "Ask about {gist}",
   "askTrustDelta": 0.02,
   "dawnChance": 0.35,
   "openers": {
@@ -29,8 +29,7 @@
       "drift": ["It happened slow.", "Nobody noticed until it was done."],
       "departure": ["Nobody wrote.", "The door stayed open a long while."],
       "doctrine_arrival": ["It's still posted, more or less.", "We learned the words by heart."]
-    },
-    "fallback": ["That's how it was."]
+    }
   },
   "dawn": [
     "{teller} was telling the children about {gist}.",
@@ -75,14 +74,5 @@
     "hb_miracle_green": "the green that came back to the fallow strip",
     "ashford_seed_stoop_chalk": "Jonah's hidden chalk map",
     "hb_miracle_peat_light": "the fen light that held through the rain"
-  },
-  "kindGists": {
-    "founding": "how the town was first raised",
-    "loss": "the bad year",
-    "feud": "the old quarrel",
-    "miracle": "the thing nobody could explain",
-    "drift": "how things slowly changed",
-    "departure": "the ones who left",
-    "doctrine_arrival": "the first notice going up"
   }
 }

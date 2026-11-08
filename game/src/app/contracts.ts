@@ -92,6 +92,8 @@ export interface WorldApi {
   enterRoom(buildingId: string): boolean;
   leaveRoom(): void;
   update(dt: number, player: Pt): void;
+  /** Where a town's granary, storehouse and yard stand in the open (world/things/stores), once found; haulers carry there. */
+  storesAt?(townId: string): Pt | null;
 }
 
 export interface PlayerHandle {

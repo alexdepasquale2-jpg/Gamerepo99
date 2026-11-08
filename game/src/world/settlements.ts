@@ -17,6 +17,7 @@ import { PUFF_TEX } from './assets';
 import { townSpots, type TownSpots } from './town-spots';
 import { paletteIndexOf, townPlan } from '../sim/map/town-plan';
 import type { Pt } from './depth';
+import { countVisual } from '../dev/visual-counts';
 
 const STOCK_OK = 4;
 /** Emitters and flames run only for towns this near the player (px). */
@@ -59,13 +60,22 @@ export function createSettlements(scene: Phaser.Scene, towns: LayoutSettlement[]
       }
     },
     refresh(state, despair) {
+      const cam = scene.cameras.main.worldView;
+      let empty = 0, cold = 0;
       for (const v of views) {
         const id = v.spots.town.id;
         v.smoke.setData('warm', (despair[id] ?? 0) < 0.5);
         // The stall shows goods while the town's one food stock (the village ledger) holds enough.
         const stocked = (state?.towns?.[id] ? foodHave(state, id) : STOCK_OK) >= STOCK_OK;
         v.goods.setData('stocked', stocked).setVisible(stocked && v.flame.visible);
+        if (Math.hypot(v.spots.centre.x - cam.centerX, v.spots.centre.y - cam.centerY) < LIVE_RANGE) {
+          if (!stocked) empty++;
+          if ((despair[id] ?? 0) >= 0.5) cold++;
+        }
       }
+      // Shortage and despair as the street shows them: a bare stall, a chimney gone cold.
+      countVisual('emptyStalls', empty);
+      countVisual('coldChimneys', cold);
     },
     setVisible(on) {
       for (const v of views) for (const o of v.objects) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(on);

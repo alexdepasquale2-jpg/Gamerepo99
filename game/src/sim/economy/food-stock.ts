@@ -9,6 +9,7 @@
  */
 
 import { ITEMS } from '../goods/inventory';
+import { noteUse } from '../data-use-civic';
 import type { SimState } from '../types/runtime';
 import { drawStores, spoilInTown } from '../civic/town-stores';
 import { COVER_DAYS, HOUSEHOLD, supplyTown } from './village-economy';
@@ -76,6 +77,7 @@ export function stockOf(state: SimState, townId: string, res: string): number | 
 /** Add (or with a negative qty, take) stock. Never below zero. */
 export function addStock(state: SimState, townId: string, res: string, qty: number): void {
   if (!townId || !qty) return;
+  noteUse('economy/economy-resources', res);
   if (isFoodRes(res)) {
     if (qty > 0) supplyTown(state, townId, BULK_FOOD_ITEM, qty);
     else takeFood(state, townId, -qty);

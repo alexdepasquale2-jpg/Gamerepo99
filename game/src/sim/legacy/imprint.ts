@@ -1,5 +1,6 @@
 /** Protagonist imprint: build from a finished life, assemble a legend NPC from one. No archetype branches. */
 
+import { noteUse } from '../data-use-people';
 import { detectEnding } from '../hoard';
 import type { DataTables } from '../load-data';
 import { partsOf } from '../inhabitant';
@@ -42,6 +43,8 @@ export function buildImprint(state: SimState): ProtagonistImprint {
     generation: lg.lineage.length + 1,
   };
   if (detectEnding(state) === 'ash_hoard') {
+    // legacy_hoard_imprint (data/hooks/legacy.json): its when{} is the ash_hoard ending test (hoard/neglect).
+    noteUse('hooks', 'legacy_hoard_imprint');
     imprint.flags = ['hoard_legacy'];
     imprint.ending = 'ash_hoard';
   }
