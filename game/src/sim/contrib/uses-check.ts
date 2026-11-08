@@ -3,14 +3,15 @@
  *
  * The rule, checked over the data tables (pure; no state):
  *   item   ≥ 2 verbs in items.json (each a demand: it spends or needs the item), and ≥ 1 supply: a job's
- *          work or recipe, a resource node, a roadside trader, the starting satchel,
+ *          work or recipe, a resource node, a roadside trader, the starting satchel, a land act's yield,
+ *          a crafting recipe (data/items/recipes.json),
  *          a patron's offer, or another verb's output (gain / buy).
  *   node   ≥ 2 uses (Gather + its own verbs in resource-nodes.json + held-item verbs aimed at its kind),
  *          and ≥ 1 supply (what Gather yields).
  *   fauna  ≥ 2 uses (its own verbs in fauna.json + held-item verbs aimed at it), and ≥ 1 that supplies
  *          something (spark, items, town goods, regrowth or a resident's thanks).
- *   every verb (items, nodes, fauna, props, deeds) has a full label and a chip ≤ SHORT_MAX characters,
- *          and points at things that exist (items, node and fauna kinds, jobs, stash acts).
+ *   every verb (items, nodes, fauna, props, land acts, recipes, deeds) has a full label and a chip ≤ SHORT_MAX characters,
+ *          and points at things that exist (items, node and fauna kinds, jobs, land and stash acts, stations, tools).
  * Run: `npx vite-node game/scripts/uses-check.mts` (exits 1 on any error).
  */
 import deedsJson from '../../data/systems/interactions/deeds.json';
@@ -18,6 +19,8 @@ import jobsJson from '../../data/items/jobs.json';
 import patronsJson from '../../data/economy/patrons.json';
 import { ITEMS } from '../goods/inventory';
 import { NODES } from '../goods/nodes';
+import { LAND_RULES } from '../land-acts';
+import { RECIPES, STATIONS } from '../craft/recipes';
 import { SHORT_MAX } from '../play-session/verb-families';
 import { allItemVerbs, type ItemVerbRow } from './item-verbs';
 import { FAUNA, faunaVerbs, nodeVerbs, PROPS, type ThingVerbRow } from './thing-verbs';
@@ -28,8 +31,8 @@ export type UsesReport = { ok: boolean; errors: string[]; rows: UsesRow[] };
 
 type Job = { id: string; yield: { itemId: string }[]; recipes: { out: Record<string, number> }[] };
 const JOBS = (jobsJson as unknown as { jobs: Job[] }).jobs;
-const TARGETS = new Set(['self', 'person', 'hearth', 'node', 'shrine', 'grave', 'plot', 'wagon', 'board', 'chest', 'fauna']);
-const DOES = new Set(['gift', 'memory', 'plan', 'deliver', 'stash', 'gather', 'alms', 'buy']);
+const TARGETS = new Set(['self', 'person', 'hearth', 'tile', 'node', 'shrine', 'grave', 'plot', 'wagon', 'board', 'chest', 'fauna']);
+const DOES = new Set(['gift', 'memory', 'land', 'plan', 'deliver', 'stash', 'gather', 'alms', 'buy']);
 const STASH_ACTS = new Set(['stash_hide', 'stash_store', 'stash_guard_hire', 'stash_withdraw']);
 const BUNDLE_KEYS: (keyof Bundle)[] = ['spark', 'gain', 'town', 'despair', 'thanks', 'regrow', 'tend', 'charge'];
 const an = (w: string): string => (/^[aeiou]/i.test(w) ? `an ${w}` : `a ${w}`);
@@ -46,6 +49,8 @@ function supplyMap(): Map<string, string[]> {
   for (const k of NODES.kinds) for (const y of k.yields) add(y.itemId, `gather ${an(k.name.toLowerCase())}`);
   for (const id of ITEMS.market.goods) add(id, 'roadside traders');
   for (const id of Object.keys(ITEMS.startingInventory)) add(id, 'in your satchel at the start');
+  for (const a of LAND_RULES.acts) for (const id of Object.keys(a.yield ?? {})) add(id, a.label.toLowerCase());
+  for (const r of RECIPES) for (const id of Object.keys(r.out)) add(id, `craft at the ${r.station}`);
   for (const p of (patronsJson as { patrons: { name: string; deals: { offer: { coin?: number; goods?: Record<string, number> } }[] }[] }).patrons) {
     for (const d of p.deals) {
       if (d.offer.coin) add('coin', `${p.name} deal`);
@@ -74,6 +79,7 @@ export function checkUses(): UsesReport {
   const nodeKinds = new Set(NODES.kinds.map((k) => k.id));
   const faunaKinds = new Set(FAUNA.map((f) => f.id));
   const jobs = new Set(JOBS.map((j) => j.id));
+  const landActs = new Set(LAND_RULES.acts.map((a) => a.id));
   const sup = supplyMap();
   const itemRefs = (where: string, rec?: Record<string, number>): void => {
     for (const id of Object.keys(rec ?? {})) if (!items.has(id)) errors.push(`${where}: unknown item ${id}`);
@@ -98,6 +104,8 @@ export function checkUses(): UsesReport {
       const e = v.effect;
       if (e.do && !DOES.has(e.do)) errors.push(`${where}: unknown effect ${e.do}`);
       if (!e.do && !BUNDLE_KEYS.some((k) => e[k] !== undefined)) errors.push(`${where}: effect does nothing`);
+      if (e.do === 'land' && !landActs.has(e.act ?? '')) errors.push(`${where}: unknown land act ${e.act}`);
+      if (e.do === 'land' && v.target !== 'tile') errors.push(`${where}: a land act needs a tile target`);
       if (e.do === 'stash' && !STASH_ACTS.has(e.act ?? '')) errors.push(`${where}: unknown stash act ${e.act}`);
       if ((e.do === 'gift' || e.do === 'alms' || e.do === 'buy') && v.target !== 'person') errors.push(`${where}: ${e.do} needs a person target`);
       if (e.do === 'plan' && v.target !== 'plot') errors.push(`${where}: plan needs a plot target`);
@@ -111,7 +119,7 @@ export function checkUses(): UsesReport {
     if (new Set(verbs.map((v) => v.id)).size !== verbs.length) errors.push(`item ${item.id}: duplicate verb ids`);
     if (verbs.length < 2) errors.push(`item ${item.id}: ${verbs.length} use(s), needs at least 2`);
     const s = sup.get(item.id) ?? [];
-    if (!s.length) errors.push(`item ${item.id}: no supply (job, node, trader, start, patron or verb output)`);
+    if (!s.length) errors.push(`item ${item.id}: no supply (job, node, trader, start, land act, recipe, patron or verb output)`);
     rows.push({ kind: 'item', id: item.id, uses: verbs.map((v) => v.label), supplies: [...new Set(s)] });
   }
 
@@ -150,6 +158,22 @@ export function checkUses(): UsesReport {
     rows.push({ kind: 'prop', id: p.type, uses: p.verbs.map((v) => v.label), supplies: p.verbs.filter((v) => supplies(v.effect)).map((v) => v.label) });
   }
 
+  for (const a of LAND_RULES.acts) {
+    checkLabel(errors, `land ${a.id}`, { id: a.id, label: a.label, short: a.short ?? a.label });
+    itemRefs(`land ${a.id}`, a.cost);
+    for (const id of a.tools ?? []) if (!items.has(id)) errors.push(`land ${a.id}: unknown tool ${id}`);
+  }
+  // Recipes: a known station, real goods in and out, and a real tool.
+  for (const r of RECIPES) {
+    const where = `recipe ${r.id}`;
+    checkLabel(errors, where, r);
+    if (!STATIONS[r.station]) errors.push(`${where}: unknown station ${r.station}`);
+    if (!Object.keys(r.in).length || !Object.keys(r.out).length) errors.push(`${where}: needs goods in and out`);
+    itemRefs(where, r.in);
+    itemRefs(where, r.out);
+    for (const id of r.tool ?? []) if (!items.has(id)) errors.push(`${where}: unknown tool ${id}`);
+  }
+  if (new Set(RECIPES.map((r) => r.id)).size !== RECIPES.length) errors.push('recipes: duplicate ids');
   const families = new Set((deedsJson as { families: { id: string; aliases?: string[] }[] }).families.flatMap((f) => [f.id, ...(f.aliases ?? [])]));
   for (const d of (deedsJson as { deeds: { id: string; label: string; short?: string; family?: string }[] }).deeds) {
     checkLabel(errors, `deed ${d.id}`, { id: d.id, label: d.label, short: d.short ?? d.label });

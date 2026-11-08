@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Land acts: small ways the player changes the ground beside them (sim/land-acts.ts). Each act turns a tile whose current ground is in 'on' into 'becomes' (saved as a tile edit), spending 'cost' items and 'labour' from a daily budget (labourPerDay, refilled each dawn); 'yield' items are gained. Stepping stones only go where the water is shallow: natural dry land within shallowReach tiles. Edits within noticeRadiusTiles of a town are talked about there the next dawn ('heard' completes '<who> says someone ... outside <town>.'). log keeps the last logCap acts. Ground already drawn as a stream or a road/track is left alone, and so is a tile holding anything but clearsProps (small growth and stones cleared by the work); structures (farmsteads, fences, fields, camps) block it.",
+  "spec": "Land acts: small ways the player changes the ground beside them (sim/land-acts.ts). Each act turns a tile whose current ground is in 'on' into 'becomes' (saved as a tile edit), spending 'cost' items and 'labour' from a daily budget (labourPerDay, refilled each dawn); 'yield' items are gained. 'tools' (optional) lists items of which the player must carry at least one (any of them; kept, not spent): crafted at a forge or workbench (data/items/recipes.json). Stepping stones only go where the water is shallow: natural dry land within shallowReach tiles. Edits within noticeRadiusTiles of a town are talked about there the next dawn ('heard' completes '<who> says someone ... outside <town>.'). log keeps the last logCap acts. Ground already drawn as a stream or a road/track is left alone, and so is a tile holding anything but clearsProps (small growth and stones cleared by the work); structures (farmsteads, fences, fields, camps) block it.",
   "labourPerDay": 6,
   "shallowReach": 3,
   "noticeRadiusTiles": 60,
@@ -21,6 +21,7 @@
       "label": "Lay stepping stones",
       "on": ["water"],
       "becomes": "ford",
+      "tools": ["mallet", "tools"],
       "cost": {
         "stone": 3
       },
@@ -34,6 +35,7 @@
       "label": "Clear brush",
       "on": ["forest"],
       "becomes": "meadow",
+      "tools": ["axe", "tools"],
       "cost": {},
       "labour": 2,
       "yield": {
