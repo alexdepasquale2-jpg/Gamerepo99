@@ -12,7 +12,7 @@ import type { TerrainAccess } from './map/terrain-access';
 import type { SimState } from './types/runtime';
 
 export type LandActRow = {
-  id: string; label: string; on: string[]; becomes: string;
+  id: string; label: string; short?: string; on: string[]; becomes: string;
   cost: Record<string, number>; labour: number; yield?: Record<string, number>;
   done: string; heard: string;
 };

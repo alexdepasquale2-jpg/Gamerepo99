@@ -18,8 +18,8 @@ import { targetActionId, type Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
 
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
-const one = (t: Target, verb: string, label: string, short?: string): ProvidedAction[] => [
-  { id: targetActionId(verb, t), label, ...(short ? { short } : {}) },
+const one = (t: Target, verb: string, label: string, short: string = label, family?: string): ProvidedAction[] => [
+  { id: targetActionId(verb, t), label, short, ...(family ? { family } : {}) },
 ];
 
 /** The scene's resource node (q, r, kind) rides along as target data; the id alone cannot rebuild it. */
@@ -34,7 +34,7 @@ registerTargetProvider({
   list(state, t) {
     const n = nodeOf(t);
     if (!n || nodeCharges(state, n) <= 0) return [];
-    return one(t, 'gather', `Gather · ${nodeKind(n.kindId)?.name ?? 'here'}`, 'Gather');
+    return one(t, 'gather', `Gather · ${nodeKind(n.kindId)?.name ?? 'here'}`, 'Gather', 'work');
   },
   act(state, actionId, t) {
     const n = nodeOf(t);
@@ -52,7 +52,7 @@ registerTargetProvider({
   list(state, t) {
     const place = facilityById(state, t.id);
     if (!place) return [];
-    return one(t, 'work', shiftWorkedToday(state) ? 'Work a shift (your day is done)' : `Work a shift · ${kindLabel(place.kind).toLowerCase()}`, 'Work a shift');
+    return one(t, 'work', shiftWorkedToday(state) ? 'Work a shift (your day is done)' : `Work a shift · ${kindLabel(place.kind).toLowerCase()}`, 'Work a shift', 'work');
   },
   act(state, actionId, t) {
     if (verbOf(actionId) !== 'work' || !facilityById(state, t.id)) return false;
@@ -94,7 +94,7 @@ export const EXIT_DOOR = 'exit';
 registerTargetProvider({
   id: 'door',
   kinds: ['door'],
-  list: (_s, t) => (t.id === EXIT_DOOR ? one(t, 'leave', 'Leave') : one(t, 'enter', 'Enter')),
+  list: (_s, t) => (t.id === EXIT_DOOR ? one(t, 'leave', 'Step outside', 'Leave') : one(t, 'enter', 'Go inside', 'Enter')),
   act(state, actionId, t) {
     const verb = verbOf(actionId);
     if (verb === 'leave' && t.id === EXIT_DOOR) return { ok: true };
