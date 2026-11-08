@@ -47,6 +47,16 @@ const nearby =
     return personId ? { kind: 'line', personId, townId, tell, cue, line: pickFallback(fb, personId + fb) } : null;
   };
 
+/** A townsperson where it happened notices; `{patron}` in the line is the payload's patronName. */
+const noticed =
+  (cue: string, fb: string, tell: Tell): Entry =>
+  (p, ctx) => {
+    const townId = str(p.townId);
+    const personId = ctx.nearbyPersonId?.(townId);
+    const line = pickFallback(fb, (personId ?? '') + fb + (str(p.dealId) ?? '')).replace(/\{patron\}/g, str(p.patronName) ?? 'patron');
+    return personId ? { kind: 'line', personId, townId, tell, cue, line } : null;
+  };
+
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
 /** Every juice id that surfaces. */
@@ -63,6 +73,11 @@ export const SURFACED: Record<string, Entry> = {
   'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
+  'patron.offer': own('patron', 'patron_offer', 'none', (p) => str(p.personId), (p) => str(p.line)),
+  'patron.deal': noticed('patron', 'patron_deal', 'glance'),
+  'patron.fulfilled': noticed('patron', 'patron_fulfilled', 'none'),
+  'patron.broken': noticed('patron', 'patron_broken', 'glance'),
+  'patron.betrayed': noticed('patron', 'patron_betrayed', 'glance'),
   'person.reignite': tint,
   'site.kindle': tint,
 };
@@ -72,7 +87,7 @@ export const SILENT: readonly string[] = [
   'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
   'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
   'caravan.arrive', 'caravan.trade', 'caravan.depart', 'letter.reply',
-  'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
+  'stash.guard_left',
   'succession.carried', 'succession.rested', 'legend.heard', 'legend.act', 'grave.found',
 ];
 

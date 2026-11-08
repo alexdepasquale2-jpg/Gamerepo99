@@ -6,8 +6,8 @@ import { nudgeDoctrine } from '../doctrine-tick';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
-import { applyObligationEffect, doctrineOf, findDeal, patronTable } from './doctrine-link';
-import type { PatronDeal } from './types';
+import { applyObligationEffect, doctrineOf, findDeal, patronSeat, patronTable } from './doctrine-link';
+import type { PatronDeal, PatronDef } from './types';
 
 const deals = (state: SimState): Record<string, PatronDeal> => (state.patronDeals ??= {});
 
@@ -27,17 +27,21 @@ function word(state: SimState, townId: string, outcomeId: string): void {
   if (v) enqueueLetter(state, { kind: 'rumor', fromPersonId: v, outcomeId });
 }
 
+/** Juice payload: townsfolk where it happened (the seat, or where you are when word reaches you) notice. */
+const noticed = (patron: PatronDef, dealId: string, townId: string | undefined) => ({ patronId: patron.id, patronName: patron.name, dealId, townId });
+
 export function acceptDeal(state: SimState, patronId: string, dealId: string): { ok: boolean } {
   const found = findDeal(state, dealId);
   if (!found || found.patron.id !== patronId || !openDeals(state, patronId).includes(dealId)) return { ok: false };
   const { patron, deal } = found;
+  const seat = patronSeat(state, patron);
   const offer = deal.offer;
   if (offer.coin) {
     state.player.coin = (state.player.coin ?? 0) + offer.coin;
     notePeakCoin(state);
   }
   if (offer.standing || offer.goods) {
-    const town = ((state.towns ??= {})[patron.homeTownId] ??= { id: patron.homeTownId, economyOptIn: false, stock: {}, despair: 0 });
+    const town = ((state.towns ??= {})[seat] ??= { id: seat, economyOptIn: false, stock: {}, despair: 0 });
     if (offer.standing) town.standing = clamp01((town.standing ?? 0) + offer.standing);
     for (const g of Object.keys(offer.goods ?? {}).sort()) town.stock[g] = (town.stock[g] ?? 0) + offer.goods![g]!;
   }
@@ -53,24 +57,28 @@ export function acceptDeal(state: SimState, patronId: string, dealId: string): {
   };
   addNotoriety(state, 'gain_patron_deal');
   applyObligationEffect(state, patron, deal, 'accept');
-  word(state, patron.homeTownId, 'patron_deal');
-  pushJuice(state, 'patron.deal', { patronId, dealId });
+  word(state, seat, 'patron_deal');
+  pushJuice(state, 'patron.deal', noticed(patron, dealId, seat));
   return { ok: true };
 }
 
 /** Meet an obligation through an interaction (tithe paid from carried coin; guard_caravan is service, no cost). */
-export function fulfilDeal(state: SimState, dealId: string): { ok: boolean } {
+export function canFulfilDeal(state: SimState, dealId: string): boolean {
   const d = deals(state)[dealId];
   const found = findDeal(state, dealId);
-  if (!d || !found || d.status !== 'active' || !['tithe', 'guard_caravan'].includes(found.deal.obligation.kind)) return { ok: false };
-  if (found.deal.obligation.kind === 'tithe') {
-    const cost = found.deal.obligation.magnitude;
-    if ((state.player.coin ?? 0) < cost) return { ok: false };
-    state.player.coin = (state.player.coin ?? 0) - cost;
-  }
+  if (!d || !found || d.status !== 'active' || !['tithe', 'guard_caravan'].includes(found.deal.obligation.kind)) return false;
+  return found.deal.obligation.kind !== 'tithe' || (state.player.coin ?? 0) >= found.deal.obligation.magnitude;
+}
+
+export function fulfilDeal(state: SimState, dealId: string): { ok: boolean } {
+  if (!canFulfilDeal(state, dealId)) return { ok: false };
+  const d = deals(state)[dealId]!;
+  const found = findDeal(state, dealId)!;
+  if (found.deal.obligation.kind === 'tithe') state.player.coin = (state.player.coin ?? 0) - found.deal.obligation.magnitude;
   d.status = 'fulfilled';
+  d.endedDay = state.day;
   applyObligationEffect(state, found.patron, found.deal, 'fulfil');
-  pushJuice(state, 'patron.fulfilled', { patronId: d.patronId, dealId });
+  pushJuice(state, 'patron.fulfilled', noticed(found.patron, dealId, patronSeat(state, found.patron)));
   return { ok: true };
 }
 
@@ -80,6 +88,7 @@ export function breakDeal(state: SimState, dealId: string, as: 'broken' | 'betra
   const found = findDeal(state, dealId);
   if (!d || !found || d.status !== 'active') return;
   d.status = as;
+  d.endedDay = state.day;
   const lev = found.deal.leverageOnBreak;
   if (lev.notorietyAdd) {
     const h = ensureHoard(state);
@@ -88,7 +97,7 @@ export function breakDeal(state: SimState, dealId: string, as: 'broken' | 'betra
   }
   if (lev.doctrineExposureAdd) nudgeDoctrine(state, found.patron.doctrineId, 'exposure', lev.doctrineExposureAdd);
   if (lev.betrayalSpawn) pushJuice(state, 'notoriety.attractor', { attractorId: lev.betrayalSpawn, dealId });
-  pushJuice(state, as === 'broken' ? 'patron.broken' : 'patron.betrayed', { patronId: d.patronId, dealId });
+  pushJuice(state, as === 'broken' ? 'patron.broken' : 'patron.betrayed', noticed(found.patron, dealId, state.player.townId ?? patronSeat(state, found.patron)));
 }
 
 export function tickPatronDawn(state: SimState): { due: string[]; broken: string[]; betrayed: string[]; voided: string[] } {
@@ -103,6 +112,7 @@ export function tickPatronDawn(state: SimState): { due: string[]; broken: string
     const doc = doctrineOf(state, found.patron);
     if (!doc || doc.collapsed) {
       d.status = 'void';
+      d.endedDay = state.day;
       out.voided.push(id);
       continue;
     }
@@ -114,14 +124,16 @@ export function tickPatronDawn(state: SimState): { due: string[]; broken: string
     } else if (state.day >= d.dueDay) {
       out.due.push(id);
       const softKept = found.deal.obligation.kind === 'deny_reignite' && ensureHoard(state).reigniteCount <= d.reigniteAtAccept;
-      if (softKept) d.status = 'fulfilled';
-      else {
+      if (softKept) {
+        d.status = 'fulfilled';
+        d.endedDay = state.day;
+      } else {
         breakDeal(state, id);
         out.broken.push(id);
       }
     } else continue;
     if (letters < t.rules.maxLettersPerDawn) {
-      word(state, found.patron.homeTownId, d.status === 'fulfilled' ? 'patron_kept' : 'patron_break');
+      word(state, patronSeat(state, found.patron), d.status === 'fulfilled' ? 'patron_kept' : 'patron_break');
       letters++;
     }
   }

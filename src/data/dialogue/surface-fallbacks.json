@@ -12,6 +12,11 @@
     "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
     "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
     "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
+    "patron_offer": ["There's an offer, if you'll hear it.", "Money wants a word with you."],
+    "patron_deal": ["Shook hands with the {patron}, did you? Count your fingers.", "You're the {patron}'s now. Everyone saw."],
+    "patron_fulfilled": ["Paid up to the {patron}. Didn't think you would.", "The {patron} got what it asked. Less trouble for the rest of us."],
+    "patron_broken": ["The {patron} is saying your name, and not kindly.", "You let the {patron} down. That kind of thing travels."],
+    "patron_betrayed": ["Heard the {patron} turned on you. They always do.", "The {patron} sold you out. Mind the road."]
   }
 }

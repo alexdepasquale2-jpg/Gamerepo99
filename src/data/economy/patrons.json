@@ -5,6 +5,7 @@
     {
       "id": "patron_mill_trust",
       "name": "Ashford Mill Trust",
+      "shortName": "Mill Trust",
       "polityTags": [
         "guild",
         "mill_trust"
@@ -15,6 +16,7 @@
       "deals": [
         {
           "id": "deal_mill_tithe_coin",
+          "terms": "tithe",
           "offer": {
             "coin": 25,
             "standing": 0.05
@@ -32,6 +34,7 @@
         },
         {
           "id": "deal_mill_deny_reignite",
+          "terms": "cold hearths",
           "offer": {
             "coin": 40,
             "travelSafeDays": 3
@@ -53,6 +56,7 @@
     {
       "id": "patron_strand_wardens",
       "name": "Strand Road Wardens",
+      "shortName": "Wardens",
       "polityTags": [
         "roadwarden",
         "crown"
@@ -63,6 +67,7 @@
       "deals": [
         {
           "id": "deal_warden_guard_caravan",
+          "terms": "caravan",
           "offer": {
             "coin": 15,
             "goods": {
@@ -91,7 +96,9 @@
     "betrayalDailyScale": 0.15,
     "lowLegitimacyMul": 1.5,
     "sourMul": 2,
-    "maxLettersPerDawn": 2
+    "maxLettersPerDawn": 2,
+    "warnDays": 2,
+    "seatNote": "A patron sits in homeTownId when people live there; otherwise in the town of its doctrine leader (generated worlds hold a subset of the authored towns). Brokers are voiceTagsAny people in the seat."
   },
   "obligationEffects": {
     "tithe": {
@@ -109,5 +116,50 @@
       "meter": "propaganda",
       "add": 0.08
     }
+  },
+  "lines": {
+    "note": "Said by the broker (offer/closed/taken) or heard at dawn (due/broken/betrayed/kept/void). {patron} = name, {patronMan} = \"The <name>'s man\", {left} = \"Two days\", {terms} = deal terms.",
+    "offerPart": {
+      "coin": "{n} coin",
+      "standing": "a good word in town",
+      "travelSafeDays": "{n} days of safe roads",
+      "goods": "{n} {item} for the town stores"
+    },
+    "obligation": {
+      "tithe": "you pay {n} coin back within {d} days",
+      "guard_caravan": "you ride guard on their caravan within {d} days",
+      "deny_reignite": "you rekindle nobody for {d} days"
+    },
+    "offer": "The {patron} offers {deals}.",
+    "offerDeal": "{offer}, if {owed}",
+    "offerJoin": ". Or ",
+    "closed": [
+      "The {patron} deals with people others talk about. Nobody says your name yet.",
+      "Come back when the roads know your purse. The {patron} only backs a name."
+    ],
+    "taken": [
+      "You have your deal with the {patron}. They are waiting on you, not talking."
+    ],
+    "due": [
+      "{patronMan} is asking after you. {left} left.",
+      "{patronMan} was by the well again. {left} left on the {terms} deal."
+    ],
+    "dueSoft": [
+      "{patronMan} is watching your hands. {left} left on the {terms} deal."
+    ],
+    "broken": [
+      "{patronMan} came about the {terms} deal and went away empty. Word is out on you.",
+      "The {terms} deal lapsed. The {patron} won't forget it, and they're telling people."
+    ],
+    "betrayed": [
+      "The {patron} sold you out. The {terms} deal was never meant to hold.",
+      "They say the {patron} named you to anyone who'd pay. So much for the {terms} deal."
+    ],
+    "kept": [
+      "{patronMan} tipped his hat at dawn. The {terms} deal is kept."
+    ],
+    "void": [
+      "The {patron} has nothing behind it now. Nobody is collecting on the {terms} deal."
+    ]
   }
 }
