@@ -35,7 +35,9 @@ void main() {
   vec3 c = col.rgb;
   // The season on the land: only greenery (green above red and blue) turns, so roofs, paths and people keep
   // their colour. x: snow lying, y: autumn rust, z: summer's dry gold.
-  float green = clamp((c.g - max(c.r, c.b)) * 4.0, 0.0, 1.0);
+  // A soft cutoff, not a ramp from zero: greenery leads by 0.18+, while the sage skin of green-skinned folk
+  // (the player included) leads by about 0.04, so people never catch snow or rust.
+  float green = smoothstep(0.06, 0.13, c.g - max(c.r, c.b));
   c = mix(c, vec3(0.80, 0.50, 0.22) * (0.55 + c.g * 0.7), green * uSeason.y * 0.75);
   c = mix(c, c * vec3(1.08, 1.0, 0.82), green * uSeason.z * 0.5);
   float ls = dot(c, vec3(0.299, 0.587, 0.114));
