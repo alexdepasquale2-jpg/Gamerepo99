@@ -64,12 +64,16 @@ export function registerTargetProvider(p: TargetActionProvider): void {
   providers.set(p.id, p);
 }
 
-/** Person acts from every person provider (target providers that list 'person' are included too). */
-export function providedActions(state: SimState, personId: string, rt?: CompatRuntime): ProvidedAction[] {
+/**
+ * Person acts from every person provider (target providers that list 'person' are included too, and get
+ * the scene's target with its data, e.g. the held item, when one is given).
+ */
+export function providedActions(state: SimState, personId: string, rt?: CompatRuntime, target?: Target): ProvidedAction[] {
   const out: ProvidedAction[] = [];
+  const t: Target = target?.kind === 'person' && target.id === personId ? target : { kind: 'person', id: personId };
   for (const p of providers.values()) {
     if (!isTarget(p)) out.push(...p.list(state, personId, rt));
-    else if (p.kinds.includes('person')) out.push(...p.list(state, { kind: 'person', id: personId }, rt));
+    else if (p.kinds.includes('person')) out.push(...p.list(state, t, rt));
   }
   return out;
 }

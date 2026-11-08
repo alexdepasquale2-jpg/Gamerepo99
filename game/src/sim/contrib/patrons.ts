@@ -27,6 +27,8 @@ function pick(arr: string[] | undefined, key: string): string {
 const lines = (state: SimState): PatronLines | undefined => patronTable(state)?.lines;
 const short = (p: PatronDef): string => p.shortName ?? p.name;
 const terms = (d: DealDef): string => d.terms ?? 'deal';
+/** Chip text within SHORT_MAX (16), else the fallback. */
+const chip = (text: string, fallback: string): string => (text.length <= 16 ? text : fallback);
 /** "The Strand Road Wardens' man" / "The Ashford Mill Trust's man". */
 export const patronMan = (p: PatronDef): string => `The ${p.name}${p.name.endsWith('s') ? "'" : "'s"} man`;
 const daysLeft = (n: number): string => `${NUM[n] ?? n} day${n === 1 ? '' : 's'}`;
@@ -65,14 +67,14 @@ registerActionProvider({
     const out: ProvidedAction[] = [];
     const rows = catalog(state);
     for (const patron of patronsBrokeredBy(state, personId)) {
-      out.push({ id: `${HEAR}${patron.id}@${personId}`, label: `Hear the ${short(patron)} offer`, short: `Hear the ${short(patron)}`, family: 'ask' });
+      out.push({ id: `${HEAR}${patron.id}@${personId}`, label: `Hear the ${short(patron)} offer`, short: chip(`${short(patron)} offer`, 'Hear the offer'), family: 'deal' });
       for (const dealId of openDeals(state, patron.id)) {
         const deal = patron.deals.find((d) => d.id === dealId)!;
-        for (const r of rows) if (r.patronAccept === dealId) out.push({ id: `${r.id}@${personId}`, label: `Accept the ${short(patron)} deal (${terms(deal)})`, short: `Accept ${terms(deal)}`, family: 'deal' });
+        for (const r of rows) if (r.patronAccept === dealId) out.push({ id: `${r.id}@${personId}`, label: `Accept the ${short(patron)} deal (${terms(deal)})`, short: chip(`Accept ${terms(deal)}`, 'Accept the deal'), family: 'deal' });
       }
       for (const deal of patron.deals) {
         if (!canFulfilDeal(state, deal.id)) continue;
-        for (const r of rows) if (r.patronFulfil === deal.id) out.push({ id: `${r.id}@${personId}`, label: `Deliver on the deal (${terms(deal)})`, short: `Deliver ${terms(deal)}`, family: 'deal' });
+        for (const r of rows) if (r.patronFulfil === deal.id) out.push({ id: `${r.id}@${personId}`, label: `Deliver on the deal (${terms(deal)})`, short: chip(`Deliver ${terms(deal)}`, 'Deliver on deal'), family: 'deal' });
       }
     }
     return out;

@@ -91,7 +91,7 @@ export function listMethodActions(state: SimState, rt?: CompatRuntime, personId?
 type PersonVerb = Verb & { provided?: { family?: string; label: string } };
 
 /** One person's ring verbs: deeds that pass their gates, then provider acts. No legacy method chips. */
-function personVerbs(state: SimState, personId: string, rt?: CompatRuntime): PersonVerb[] {
+function personVerbs(state: SimState, personId: string, rt?: CompatRuntime, target?: Target): PersonVerb[] {
   const out: PersonVerb[] = [];
   if (rt) {
     for (const d of DEEDS) {
@@ -101,7 +101,7 @@ function personVerbs(state: SimState, personId: string, rt?: CompatRuntime): Per
     }
   }
   // Acts other systems offer for this person (stash, patrons, asking about the past…).
-  for (const a of providedActions(state, personId, rt)) out.push({ ...a, provided: { family: a.family, label: a.label } });
+  for (const a of providedActions(state, personId, rt, target)) out.push({ ...a, provided: { family: a.family, label: a.label } });
   return out;
 }
 
@@ -109,7 +109,7 @@ function personVerbs(state: SimState, personId: string, rt?: CompatRuntime): Per
 export function listTargetVerbs(state: SimState, target: Target, rt?: CompatRuntime): Verb[] {
   if (target.kind !== 'person') return targetActions(state, target, rt);
   if (!state.people[target.id]) return [];
-  return personVerbs(state, target.id, rt).map(({ provided: _p, ...v }) => v);
+  return personVerbs(state, target.id, rt, target).map(({ provided: _p, ...v }) => v);
 }
 
 export function parseMethodAction(actionId: string): { methodId: string; personId: string } | null {

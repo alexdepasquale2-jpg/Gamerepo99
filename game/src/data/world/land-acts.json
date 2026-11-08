@@ -17,6 +17,7 @@
   "acts": [
     {
       "id": "lay_stones",
+      "short": "Lay stones",
       "label": "Lay stepping stones",
       "on": ["water"],
       "becomes": "ford",
@@ -29,6 +30,7 @@
     },
     {
       "id": "clear_brush",
+      "short": "Clear brush",
       "label": "Clear brush",
       "on": ["forest"],
       "becomes": "meadow",
@@ -42,6 +44,7 @@
     },
     {
       "id": "mend_path",
+      "short": "Mend the path",
       "label": "Mend the path",
       "on": ["meadow", "fields", "hills"],
       "becomes": "road_track",

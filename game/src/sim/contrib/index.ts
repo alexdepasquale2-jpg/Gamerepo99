@@ -15,3 +15,5 @@ import './patrons';
 import './stash';
 import './happenings';
 import './objects';
+import './thing-verbs';
+import './item-verbs';

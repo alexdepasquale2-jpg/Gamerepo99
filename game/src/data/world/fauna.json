@@ -1,108 +1,40 @@
 {
   "version": 1,
   "spec": "docs/superpowers/specs/2026-11-05-fabric-variety-fix.md",
+  "verbsSpec": "verbs = what the player can do with each animal (sim/contrib/thing-verbs.ts), once per animal per day: {id, label, short, effect: regrow (node kinds nearby recover a dawn), town (ledger goods), gain, spark, thanks, despair, done}. Held items add more (items.json target fauna).",
   "assetPrefix": "fauna",
   "fauna": [
-    {
-      "id": "rabbit",
-      "name": "Rabbit",
-      "biomeIds": [
-        "mill_heath",
-        "chalk_downs",
-        "ash_wood"
-      ],
-      "tags": [
-        "small",
-        "prey"
-      ]
-    },
-    {
-      "id": "deer",
-      "name": "Deer",
-      "biomeIds": [
-        "ash_wood",
-        "peat_fen"
-      ],
-      "tags": [
-        "grazer"
-      ]
-    },
-    {
-      "id": "bird",
-      "name": "Bird",
-      "biomeIds": [
-        "river_margin",
-        "mill_heath",
-        "chalk_downs",
-        "brine_marsh",
-        "ash_wood",
-        "glare_approach",
-        "peat_fen",
-        "slag_verge"
-      ],
-      "tags": [
-        "flyer"
-      ]
-    },
-    {
-      "id": "pig",
-      "name": "Pig",
-      "biomeIds": [
-        "mill_heath",
-        "chalk_downs"
-      ],
-      "tags": [
-        "livestock"
-      ]
-    },
-    {
-      "id": "fox",
-      "name": "Fox",
-      "biomeIds": [
-        "ash_wood",
-        "chalk_downs",
-        "slag_verge"
-      ],
-      "tags": [
-        "predator",
-        "edge"
-      ]
-    },
-    {
-      "id": "fish",
-      "name": "Fish",
-      "biomeIds": [
-        "river_margin",
-        "brine_marsh"
-      ],
-      "tags": [
-        "water"
-      ]
-    },
-    {
-      "id": "heron",
-      "name": "Heron",
-      "biomeIds": [
-        "river_margin",
-        "brine_marsh",
-        "peat_fen"
-      ],
-      "tags": [
-        "water",
-        "flyer"
-      ]
-    },
-    {
-      "id": "rat",
-      "name": "Rat",
-      "biomeIds": [
-        "glare_approach",
-        "slag_verge",
-        "mill_heath"
-      ],
-      "tags": [
-        "scavenger"
-      ]
-    }
+    { "id": "rabbit", "name": "Rabbit", "biomeIds": ["mill_heath","chalk_downs","ash_wood"], "tags": ["small","prey"], "verbs": [
+      {"id":"drive","label":"Shoo it off the patches","short":"Shoo it off","effect":{"regrow":["berry_bush","herb_patch"],"done":"It bolts. The patches will come back quicker."}},
+      {"id":"watch","label":"Watch it a while","short":"Watch it","effect":{"spark":1,"done":"It washes its face and forgets you. You breathe out."}}
+    ] },
+    { "id": "deer", "name": "Deer", "biomeIds": ["ash_wood","peat_fen"], "tags": ["grazer"], "verbs": [
+      {"id":"drive","label":"Drive it off the saplings","short":"Drive it off","effect":{"regrow":["tree","berry_bush"],"done":"It springs away into the trees. The young growth is safe."}},
+      {"id":"watch","label":"Watch it quietly","short":"Watch quietly","effect":{"spark":2,"done":"It lifts its head, looks at you, and goes back to grazing."}}
+    ] },
+    { "id": "bird", "name": "Bird", "biomeIds": ["river_margin","mill_heath","chalk_downs","brine_marsh","ash_wood","glare_approach","peat_fen","slag_verge"], "tags": ["flyer"], "verbs": [
+      {"id":"scare","label":"Scare it off the fields","short":"Scare it off","effect":{"town":{"grain":1},"done":"It wheels off the furrows. That grain stays in the field."}},
+      {"id":"listen","label":"Listen to it sing","short":"Listen to it","effect":{"spark":1,"done":"You stand and listen until it stops."}}
+    ] },
+    { "id": "pig", "name": "Pig", "biomeIds": ["mill_heath","chalk_downs"], "tags": ["livestock"], "verbs": [
+      {"id":"home","label":"Drive it home","short":"Drive it home","effect":{"thanks":["kin"],"despair":-0.01,"done":"You steer the pig back to its sty. {name} owes you one."}},
+      {"id":"scratch","label":"Scratch its back","short":"Scratch its back","effect":{"spark":1,"done":"It leans into your hand and grunts."}}
+    ] },
+    { "id": "fox", "name": "Fox", "biomeIds": ["ash_wood","chalk_downs","slag_verge"], "tags": ["predator","edge"], "verbs": [
+      {"id":"drive","label":"Drive it off from the hens","short":"Drive it off","effect":{"town":{"grain":1},"done":"It slinks off. The hens and their feed are safe tonight."}},
+      {"id":"track","label":"Follow its tracks","short":"Follow tracks","effect":{"spark":2,"done":"The tracks lead to an earth under the roots. You leave it be."}}
+    ] },
+    { "id": "fish", "name": "Fish", "biomeIds": ["river_margin","brine_marsh"], "tags": ["water"], "verbs": [
+      {"id":"tickle","label":"Tickle for it by hand","short":"Tickle for it","effect":{"gain":{"fish":1},"done":"Slow hands, then quick. A fish flaps on the bank."}},
+      {"id":"watch","label":"Watch them rise","short":"Watch them rise","effect":{"spark":1,"done":"Rings spread on the water, one after another."}}
+    ] },
+    { "id": "heron", "name": "Heron", "biomeIds": ["river_margin","brine_marsh","peat_fen"], "tags": ["water","flyer"], "verbs": [
+      {"id":"scare","label":"Scare it off the shallows","short":"Scare it off","effect":{"regrow":["fishing_spot"],"done":"It lifts off on slow wings. The fish will come back."}},
+      {"id":"watch","label":"Watch it stalk","short":"Watch it stalk","effect":{"spark":1,"done":"It stands so still you forget it is there."}}
+    ] },
+    { "id": "rat", "name": "Rat", "biomeIds": ["glare_approach","slag_verge","mill_heath"], "tags": ["scavenger"], "verbs": [
+      {"id":"drive","label":"Drive it from the stores","short":"Drive it out","effect":{"town":{"grain":1},"done":"It scurries off. The sacks are safe a while."}},
+      {"id":"block","label":"Stop up its hole","short":"Stop its hole","effect":{"despair":-0.01,"thanks":["hearth"],"done":"You stuff the hole with stones. {name} nods, grateful."}}
+    ] }
   ]
 }
