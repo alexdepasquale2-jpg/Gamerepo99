@@ -33,6 +33,8 @@
     "grave_found": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it."],
     "kin_birth": ["A little one at ours. Come and see, when you can.", "We've a new mouth to feed, and glad of it."],
     "kin_grown": ["Grown now. I'll make my own way here.", "First day keeping my own hours. Strange, and good."],
+    "kin_death": ["We laid them by the stones at first light. Sit with me a bit.", "The house is too quiet now.", "I keep setting a place at the table."],
+    "retired": ["My hands have done their share. Someone younger can have the work.", "No more dawns at the bench for me. I'll sit and watch for once."],
     "notoriety_rise.whisper": ["Someone at the well said your name. Just in passing.", "Folk have noticed your purse, a little."],
     "notoriety_rise.talk": ["People are talking about the one with the full purse.", "There's a name going round. Yours."],
     "notoriety_rise.known": ["Everyone knows what you carry now. Everyone.", "Children point when you walk by."],

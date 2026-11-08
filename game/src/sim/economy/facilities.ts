@@ -208,7 +208,7 @@ export function facilityById(state: SimState, id: string): FacilityPlace | undef
 
 const fitToWork = (state: SimState, place: FacilityPlace, pid: string | null, flame: number): boolean => {
   const p = pid ? state.people[pid] : undefined;
-  return !!p && p.flame >= flame && !!p.townId && place.townIds.includes(p.townId);
+  return !!p && p.flame >= flame && !!p.townId && place.townIds.includes(p.townId) && !p.tags?.includes('retired');
 };
 
 const stableKey = (seed: number, a: string, b: string): number => deriveRng(seed, 'facility-crew', a, b).next();

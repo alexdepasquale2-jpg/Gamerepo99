@@ -1,6 +1,6 @@
 /**
  * Every interactable world Thing in one place: town fixtures (noticeboard, signpost, hearth, doors),
- * nodes, facilities, stash chests, ground items, plots, and the workable tile in front of the player.
+ * nodes, facilities, stash chests, ground items, plots, graves, and the workable tile in front of the player.
  * Keys are `${kind}:${id}`; each target carries what its sim provider (sim/contrib/objects, stash) needs.
  */
 import type Phaser from 'phaser';
@@ -100,7 +100,7 @@ export function createWorldThings(o: {
   return {
     nodes, facilities, chests, ground, plots, graves,
     things(near, radius, facing) {
-      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius)];
+      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius)];
       if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }
       return out;
     },
