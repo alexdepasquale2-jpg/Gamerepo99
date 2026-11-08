@@ -9,11 +9,18 @@ import { deriveRng, type Rng } from '../rng';
 import type { LayoutSettlement } from './world-layout';
 
 export type TileOff = { q: number; r: number };
-export type PlanBuilding = TileOff & { type: string; interior?: string };
+/**
+ * `slot` is the building's stable name inside its town: its role (house / shop / inn / office / tower)
+ * plus an ordinal among the town's wanted buildings of that role (`inn`, `house`, `house-2`, ...).
+ * Building ids are `${townId}:${slot}`, so they survive placement tweaks that move, reorder or drop lots.
+ * Required buildings' slots depend only on the required list; the random fill is named in draw order, so
+ * changing a rule's count or stamp weights can rename those (not their required neighbours).
+ */
+export type PlanBuilding = TileOff & { type: string; interior?: string; slot: string };
 export type StreetAxis = 'h' | 'v' | 'd';
 export type TownPlan = {
   axis: StreetAxis;
-  /** Door feet (bottom-centre of each stamp). Order is stable: building ids index into it. */
+  /** Door feet (bottom-centre of each stamp). Ids come from each entry's `slot`, not its index. */
   buildings: PlanBuilding[];
   /** Index of the building whose chimney smokes. */
   main: number;
@@ -35,6 +42,8 @@ const FOOT: Record<string, { w: number; h: number }> = {
 };
 /** Stamps the building art can draw; rules naming anything else are ignored. */
 const STAMPS = new Set(['cottage', 'shop', 'hall', 'tower']);
+/** A stamp's role for slot names, like interiors.interiorKindOf: a layout `interior` wins (any name: it only has to be stable). */
+const ROLE: Record<string, string> = { cottage: 'house', shop: 'shop', hall: 'inn', tower: 'tower' };
 /** Everything stays this far inside the 13-tile town box terrain-access calls inTown. */
 const LIMIT = 11;
 /** Furniture around a plaza on a street running across (wide) or along (tall) the screen. */
@@ -101,10 +110,19 @@ function makePlan(town: LayoutSettlement, seed: number): TownPlan {
   for (let i = 0; i < nWall; i++) walls.push({ q: wx + (i - (nWall - 1) / 2) * 4, r: -LIMIT - 1 + FOOT.wall!.h });
   for (const w of walls) taken.push(footRect('wall', w));
 
-  const want: { type: string; interior?: string }[] = rule.required.filter((b) => STAMPS.has(b.type)).map((b) => ({ ...b }));
+  const want: { type: string; interior?: string; slot?: string }[] = rule.required.filter((b) => STAMPS.has(b.type)).map((b) => ({ ...b }));
   const total = Math.max(want.length, rng.int(rule.count[0]!, rule.count[1]! + 1));
   const weights = Object.entries(rule.stamps).filter(([t]) => STAMPS.has(t));
   while (want.length < total && weights.length) want.push({ type: pick(rng, weights) });
+  // Slots are dealt over the wanted list, before placement: a lot that fails to place leaves a gap
+  // rather than renumbering the rest, and placement changes never touch them.
+  const perRole = new Map<string, number>();
+  for (const b of want) {
+    const role = b.interior ?? ROLE[b.type] ?? b.type;
+    const n = (perRole.get(role) ?? 0) + 1;
+    perRole.set(role, n);
+    b.slot = n === 1 ? role : `${role}-${n}`;
+  }
 
   const buildings: PlanBuilding[] = [];
   const nRequired = rule.required.length;
@@ -113,7 +131,7 @@ function makePlan(town: LayoutSettlement, seed: number): TownPlan {
     const spot = placeBuilding(rng, b.type, taken, tall, slope, px, py, pz.rect, flip, rule.spacing, i === 0)
       ?? (i < nRequired ? placeBuilding(rng, b.type, taken, tall, slope, px, py, pz.rect, flip, 0, false) : null);
     if (!spot) continue;
-    buildings.push({ ...b, ...spot });
+    buildings.push({ ...b, slot: b.slot!, ...spot });
     taken.push(pad(footRect(b.type, spot), rule.spacing));
   }
   const hall = buildings.findIndex((b) => b.type === 'hall');
