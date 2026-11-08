@@ -1,6 +1,6 @@
-/** The road's end: each way out with its destination and days, walk it or hire one of today's travellers. */
+/** The road's end: each way out with its destination and days, walk it or hire one of today's travellers. A side sheet: the world stays in view. */
 import type { RoadView } from '../../sim/travel/journey';
-import { openMenu, type MenuHandle, type MenuItem } from './dom';
+import { openMenu, type MenuHandle, type MenuItem } from '../kit/menu';
 
 const days = (n: number): string => `${n} day${n === 1 ? '' : 's'}`;
 
@@ -34,6 +34,7 @@ export function openRoadMenu(
   items.push({ id: 'stay', label: 'Stay a while', onPick: io.onClose });
   return openMenu(`${townName}: the road out`, items, {
     id: 'hf-road-menu',
+    placement: 'sheet',
     onEscape: io.onClose,
     note: roads.length ? 'Short of coin, they take two spark a coin. Watch their hands, not their words.' : 'No road leaves here.',
   });

@@ -1,14 +1,16 @@
-/** Inventory panel (I / Tab) + hotbar. Screen-space, reads sim inventory. */
+/** Inventory: the satchel side sheet (I / Tab, kit DOM) + the canvas hotbar. Reads sim inventory. */
 
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
 import { sealedLetters } from '../../sim/goods/instances';
 import { listStacks } from '../../sim/goods/inventory';
+import { createSheet, kitEl } from '../../ui/kit/sheet';
+import { COLORS, phaserColor, phaserText } from '../../ui/kit/tokens';
 
 const D = 1_000_100;
 const SLOT = 30;
 const HOTBAR = 8;
-const font = { fontFamily: 'monospace', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 };
+const font = phaserText('label');
 
 export type InventoryUi = { toggle: () => void; isOpen: () => boolean; refresh: () => void; select: (i: number) => void; selectedItem: () => string | undefined; close: () => void; dragging: () => boolean };
 
@@ -21,10 +23,12 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
   const W = scene.scale.width;
   const H = scene.scale.height;
   const bar = scene.add.container(0, 0).setScrollFactor(0).setDepth(D);
-  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(D + 10).setVisible(false);
+  // The satchel opens as a kit side sheet (the hotbar stays on the canvas).
+  const sheet = createSheet({ id: 'hf-satchel', title: 'Satchel', onClose: () => endDrag() });
+  scene.events.once('shutdown', () => sheet.destroy());
   let selected = 0;
   let held: { itemId: string; sx: number; sy: number; moved: boolean; ghost: Phaser.GameObjects.Arc } | undefined;
-  const tip = scene.add.text(0, 0, '', { ...font, backgroundColor: '#1b1612', padding: { x: 4, y: 2 } }).setScrollFactor(0).setDepth(D + 40).setVisible(false);
+  const tip = scene.add.text(0, 0, '', { ...font, backgroundColor: COLORS.void, padding: { x: 4, y: 2 } }).setScrollFactor(0).setDepth(D + 40).setVisible(false);
   const endDrag = (): void => { if (!held) return; held.ghost.destroy(); held = undefined; drag?.move(null, 0, 0); };
   const onMove = (p: Phaser.Input.Pointer): void => {
     if (!held) return;
@@ -47,14 +51,14 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
 
   const drawSlot = (c: Phaser.GameObjects.Container, x: number, y: number, stack?: { item: { id: string; name: string; color: string; icon: string }; qty: number }, sel = false): void => {
     const note = stack ? letterNote(stack.item.id) : '';
-    const bg = scene.add.rectangle(x, y, SLOT - 2, SLOT - 2, 0x2a2018, 0.92).setStrokeStyle(2, sel ? 0xf2b84b : 0x6a5a40).setOrigin(0).setScrollFactor(0);
+    const bg = scene.add.rectangle(x, y, SLOT - 2, SLOT - 2, phaserColor('surface'), 0.9).setStrokeStyle(2, phaserColor(sel ? 'accent' : 'lineQuiet')).setOrigin(0).setScrollFactor(0);
     bg.setInteractive({ useHandCursor: true }).on('pointerdown', (p: Phaser.Input.Pointer) => {
       const stacks = getState() ? listStacks(getState()!) : [];
       const i = stacks.findIndex((s) => s.item.name === stack?.item.name);
       if (i >= 0) { selected = i; refresh(); }
       tip.setVisible(false);
       if (drag && stack && c === bar) {
-        const ghost = scene.add.circle(p.x, p.y, 8, hex(stack.item.color)).setStrokeStyle(2, 0xf2b84b).setScrollFactor(0).setDepth(D + 50).setVisible(false);
+        const ghost = scene.add.circle(p.x, p.y, 8, hex(stack.item.color)).setStrokeStyle(2, phaserColor('accent')).setScrollFactor(0).setDepth(D + 50).setVisible(false);
         held = { itemId: stack.item.id, sx: p.x, sy: p.y, moved: false, ghost };
       }
     }).on('pointerover', () => {
@@ -93,32 +97,43 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     for (let i = 0; i < HOTBAR; i++) drawSlot(bar, x0 + i * SLOT, y0, stacks[i], i === selected);
     const sel = stacks[selected];
     if (sel) bar.add(scene.add.text(W / 2, y0 - 3, sel.item.name, font).setOrigin(0.5, 1));
-    if (!panel.visible) return;
-    panel.removeAll(true);
-    const cols = 6;
-    const pw = cols * SLOT + 24;
-    const ph = Math.max(3, Math.ceil(stacks.length / cols)) * SLOT + 84;
-    const px = W / 2 - pw / 2;
-    const py = H / 2 - ph / 2 - 20;
-    panel.add(scene.add.rectangle(px, py, pw, ph, 0x1b1612, 0.95).setStrokeStyle(2, 0xa8743e).setOrigin(0));
-    panel.add(scene.add.text(px + 12, py + 8, 'Satchel', { ...font, fontSize: '13px', color: '#f2b84b' }));
-    stacks.forEach((s, i) => drawSlot(panel, px + 12 + (i % cols) * SLOT, py + 30 + Math.floor(i / cols) * SLOT, s, selected === i));
+    if (sheet.isOpen()) paintSheet(stacks, st);
+  };
+
+  /** The satchel sheet: one button per stack (click selects it for the hotbar and F), then what you carry. */
+  const paintSheet = (stacks: ReturnType<typeof listStacks>, st: SimState | undefined): void => {
+    const body = sheet.body;
+    body.replaceChildren();
+    const grid = kitEl('div', 'hf-slots');
+    stacks.forEach((s, i) => {
+      const b = kitEl('button', 'hf-slot');
+      b.type = 'button';
+      b.dataset.item = s.item.id;
+      b.setAttribute('aria-pressed', String(i === selected));
+      b.title = `${s.item.name} x${s.qty}${letterNote(s.item.id)}`;
+      const sw = kitEl('span', 'hf-swatch');
+      sw.style.background = s.item.color;
+      b.append(sw, kitEl('span', '', s.item.name), kitEl('span', 'hf-qty', String(s.qty)));
+      b.addEventListener('click', () => { selected = i; refresh(); });
+      grid.append(b);
+    });
+    if (!stacks.length) grid.append(kitEl('span', 'hf-muted', 'Empty.'));
     const cargo = st?.cargo ?? [];
-    const note = cargo.length ? `Carrying: ${cargo.map((c) => `${c.qty} ${c.itemId} → ${c.toTownId}`).join('; ')}` : 'Click item · F: use/eat/place · L: letters';
-    panel.add(scene.add.text(px + 12, py + ph - 30, note, { ...font, wordWrap: { width: pw - 24 } }));
+    const note = cargo.length ? `Carrying: ${cargo.map((c) => `${c.qty} ${c.itemId} → ${c.toTownId}`).join('; ')}` : 'Click an item to hold it · F: use, eat or place · L: letters';
+    body.append(grid, kitEl('p', 'hf-note hf-small', note));
   };
 
   refresh();
   return {
     toggle() {
-      panel.setVisible(!panel.visible);
+      sheet.toggle();
       refresh();
     },
-    isOpen: () => panel.visible,
+    isOpen: () => sheet.isOpen(),
     refresh,
     selectedItem: () => { const s = getState(); return s ? listStacks(s)[selected]?.item.id : undefined; },
     dragging: () => !!held?.moved,
-    close: () => { endDrag(); panel.setVisible(false); },
+    close: () => { endDrag(); sheet.close(); },
     select(i) {
       selected = Phaser.Math.Clamp(i, 0, HOTBAR - 1);
       refresh();

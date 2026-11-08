@@ -1,7 +1,7 @@
 /** World file export/import (M5 versioned files). Pure helpers first; DOM below. */
 import { importWorld, type Arrival } from '../../sim/legacy';
 import type { PlaySession } from '../../sim';
-import { openMenu, type MenuHandle } from './dom';
+import { openMenu, type MenuHandle } from '../kit/menu';
 
 export type ExportedFile = { filename: string; text: string };
 

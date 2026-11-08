@@ -3,3 +3,4 @@
  * (each module calls registerDevHook from ../dev-hooks). Add one import line per system; keep the order stable.
  */
 export {};
+import './ui-kit';

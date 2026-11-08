@@ -1,7 +1,7 @@
 /** Save / load slot list: name, day, town, last-saved. Dawn autosave lives in its own slot and is load-only. */
 import type { SaveBlob } from '../../sim/save';
 import { AUTO_SLOT, MANUAL_SLOTS, type SaveSlots, type SlotId, type SlotMeta } from '../save-slots';
-import { openMenu, type MenuHandle, type MenuItem } from './dom';
+import { openMenu, type MenuHandle, type MenuItem } from '../kit/menu';
 
 export const slotLabel = (m: SlotMeta | undefined, slot: SlotId): string =>
   m

@@ -1,5 +1,5 @@
 /** Pause menu: Esc toggles; keyboard operable. Caller pauses/resumes the scenes. */
-import { openMenu, type MenuHandle } from './dom';
+import { openMenu, type MenuHandle } from '../kit/menu';
 
 export type PauseIo = {
   onResume: () => void;

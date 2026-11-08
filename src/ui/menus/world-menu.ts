@@ -1,6 +1,6 @@
 /** New game, second step: which world? The one you know (seed 42), a new one, or one by its number. */
 import { DEFAULT_SOCIAL_SEED } from '../../sim/social/social-web-build';
-import { openMenu, type MenuHandle } from './dom';
+import { openMenu, type MenuHandle } from '../kit/menu';
 
 /** The world every earlier run was played in (the social web is baked for it). */
 export const KNOWN_WORLD = DEFAULT_SOCIAL_SEED;
@@ -19,12 +19,7 @@ export function parseWorldNumber(text: string): number | null {
   return /^\d{1,9}$/.test(t) ? Number(t) : null; // 9 digits == MAX_WORLD
 }
 
-const INPUT_STYLE =
-  'display:flex;gap:8px;margin:6px 0 2px;align-items:center';
-const FIELD_STYLE =
-  'flex:1;min-width:0;padding:6px 8px;background:#1b1714;border:1px solid #b89860;color:#f4e6c8;font:inherit';
-const GO_STYLE =
-  'padding:6px 12px;background:#3a3028;border:1px solid #f2b84b;color:#f4e6c8;font:inherit;cursor:pointer';
+const INPUT_STYLE = 'display:flex;gap:8px;margin:6px 0 2px;align-items:center';
 
 export function openWorldMenu(io: { newSeed: number; onPick: (seed: number) => void; onBack: () => void }): MenuHandle {
   const form = document.createElement('form');
@@ -38,12 +33,13 @@ export function openWorldMenu(io: { newSeed: number; onPick: (seed: number) => v
   input.setAttribute('aria-label', 'World number');
   input.dataset.id = 'world-seed-input';
   input.maxLength = 16;
-  input.style.cssText = FIELD_STYLE;
+  input.className = 'hf-field';
+  input.style.cssText = 'flex:1;min-width:0';
   const go = document.createElement('button');
   go.type = 'submit';
   go.dataset.id = 'world-seed-go';
   go.textContent = 'Go';
-  go.style.cssText = GO_STYLE;
+  go.className = 'hf-btn';
   form.append(input, go);
   // Typing here is for the field only: keep keys from reaching window/document listeners (game hotkeys).
   form.addEventListener('keydown', (e) => e.key !== 'Escape' && e.stopPropagation());

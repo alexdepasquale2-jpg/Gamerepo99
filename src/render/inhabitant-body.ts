@@ -7,7 +7,8 @@ import Phaser from 'phaser';
 import { applySpriteSort } from './depth-sort';
 import { FEEL } from './feel';
 import { HERO_TEX } from './sheet-frames';
-import { openMenu, type MenuItem } from '../ui/menus/dom';
+import { openMenu, type MenuItem } from '../ui/kit/menu';
+import { overlays } from '../ui/kit/overlay-stack';
 import {
   bodiesElsewhere,
   bodiesHere,
@@ -102,13 +103,11 @@ export function attachInhabitantBody(o: Opts): InhabitantBody {
 
   function menu(): boolean {
     const st = o.session.getState();
-    if (!st || !isMultiBody(st.player) || document.querySelector('.hf-menu')) return false;
+    if (!st || !isMultiBody(st.player) || overlays.count('menu', 'modal') > 0) return false;
     const inh = st.player;
-    o.scene.scene.pause();
     let handle: ReturnType<typeof openMenu> | null = null;
     const done = (line?: string) => {
       handle?.close();
-      o.scene.scene.resume();
       if (line) o.say(line);
     };
     const withYou = bodiesWithYou(inh);
@@ -149,7 +148,8 @@ export function attachInhabitantBody(o: Opts): InhabitantBody {
     }
     items.push({ id: 'back', label: 'Back', onPick: () => done() });
     const where = withYou.map((b) => b.name).join(', ');
-    handle = openMenu('The Brood', items, { id: 'hf-brood-menu', onEscape: () => done(), note: `With you: ${where}. One spark between you.` });
+    // A side sheet that holds the world still while you choose (the overlay stack's pause flag).
+    handle = openMenu('The Brood', items, { id: 'hf-brood-menu', placement: 'sheet', pause: true, onEscape: () => done(), note: `With you: ${where}. One spark between you.` });
     return true;
   }
 
