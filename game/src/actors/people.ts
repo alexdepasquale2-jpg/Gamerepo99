@@ -28,6 +28,7 @@ export type PeopleCtl = {
   things(near: Pt, radius: number): Thing[];
   headOf(id: string): Pt | undefined;
   residentsOf(buildingId: string): string[];
+  keeperOf(buildingId: string): string | undefined;
   lookOf(id: string): { texture: string; frame: string; scale: number; tint: number } | undefined;
   /** Dev: everyone, with where they are. */
   list(): { id: string; name: string; townId: string; x: number; y: number; inside: string | null; mark: string | null; leader: boolean; drawn: boolean }[];
@@ -54,6 +55,9 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
     if (!f) folkByTown.set(t.id, (f = makeFolk(t)));
     return f;
   };
+
+  /** Building ids are `${townId}:${slot}`; slots never contain ':'. */
+  const folkOfBuilding = (buildingId: string): Folk | undefined => folkByTown.get(buildingId.slice(0, buildingId.lastIndexOf(':')));
 
   const phase = () => safe(() => ctx.world.phase(), 0.3);
 
@@ -261,11 +265,18 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       return v ? { x: v.x, y: v.y - headHeight(v.pl.scale) } : undefined;
     },
     residentsOf(buildingId) {
-      const townId = buildingId.slice(0, buildingId.lastIndexOf(':'));
-      const folk = folkByTown.get(townId);
+      const folk = folkOfBuilding(buildingId);
       if (!folk) return [];
       const ph = phase();
       return folk.people.filter((v) => { const b = folk.homes.get(v.id); return b?.id === buildingId && isIndoorsAt(b.kind, ph); }).map((v) => v.id);
+    },
+    keeperOf(buildingId) {
+      // The person whose home this is (folk.homes, dealt by rehouse), indoors or not: the same map that
+      // sends people to this door, so the room is furnished for whoever the street sees walk in.
+      const folk = folkOfBuilding(buildingId);
+      if (!folk) return undefined;
+      for (const [id, b] of folk.homes) if (b.id === buildingId && byId.has(id)) return id;
+      return undefined;
     },
     lookOf(id) {
       const v = byId.get(id);

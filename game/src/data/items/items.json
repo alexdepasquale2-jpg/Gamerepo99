@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
+  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, land = land act, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
   "items": [
     { "id": "bread", "name": "Bread", "icon": "food", "color": "#d9a45b", "price": 3, "economyResourceId": "food_grain", "tags": ["food","comfort"], "use": {"spark":6}, "verbs": [
       {"id":"eat","label":"Eat the bread","short":"Eat bread","target":"self","effect":{"spark":6}},
@@ -23,10 +23,12 @@
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}}
     ] },
     { "id": "timber", "name": "Timber", "icon": "wood", "color": "#a8743e", "price": 5, "economyResourceId": "timber", "tags": ["build"], "verbs": [
+      {"id":"mend","label":"Mend the path with timber","short":"Mend the path","target":"tile","qty":0,"effect":{"do":"land","act":"mend_path"}},
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
     ] },
     { "id": "stone", "name": "Stone", "icon": "stone", "color": "#9a9a92", "price": 2, "economyResourceId": "timber", "tags": ["build"], "verbs": [
+      {"id":"lay","label":"Lay stepping stones","short":"Lay stones","target":"tile","qty":0,"effect":{"do":"land","act":"lay_stones"}},
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
     ] },
@@ -95,6 +97,18 @@
     { "id": "nails", "name": "Nails", "icon": "tool", "color": "#7d838a", "price": 3, "tags": ["craft","build"], "verbs": [
       {"id":"cart","label":"Fix the broken cart","short":"Fix the cart","target":"wagon","effect":{"gain":{"coin":3},"done":"You nail the loose board back. The driver presses three coin on you."}},
       {"id":"build","label":"Add them to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}}
+    ] },
+    { "id": "kindling", "name": "Kindling", "icon": "wood", "color": "#c08a4a", "price": 2, "tags": ["fuel","warmth"], "verbs": [
+      {"id":"light","label":"Light the hearth with kindling","short":"Light kindling","target":"hearth","effect":{"despair":-0.01,"thanks":["warmth","hearth"],"spark":3,"done":"The kindling catches at once. {name} holds out cold hands to it."}},
+      {"id":"bundle","label":"Give a bundle for their fire","short":"Give kindling","target":"person","effect":{"do":"gift","tags":["warmth","fuel"]}}
+    ] },
+    { "id": "axe", "name": "Axe", "icon": "tool", "color": "#9aa2aa", "price": 8, "tags": ["craft","work"], "verbs": [
+      {"id":"clear","label":"Clear the brush with the axe","short":"Clear brush","target":"tile","qty":0,"effect":{"do":"land","act":"clear_brush"}},
+      {"id":"lend","label":"Lend it to a woodcutter","short":"Lend the axe","target":"person","who":{"jobs":["woodcutter","farmer"]},"effect":{"do":"gift","tags":["work"]}}
+    ] },
+    { "id": "mallet", "name": "Mallet", "icon": "tool", "color": "#a07850", "price": 4, "tags": ["craft","work"], "verbs": [
+      {"id":"lay","label":"Set stepping stones with the mallet","short":"Lay stones","target":"tile","qty":0,"effect":{"do":"land","act":"lay_stones"}},
+      {"id":"lend","label":"Lend it to a mason","short":"Lend the mallet","target":"person","who":{"jobs":["mason","potter"]},"effect":{"do":"gift","tags":["work"]}}
     ] },
     { "id": "pots", "name": "Pots", "icon": "stone", "color": "#c4694a", "price": 5, "tags": ["craft","comfort"], "verbs": [
       {"id":"home","label":"Give them to a new household","short":"For their home","target":"person","who":{"household":"new"},"effect":{"do":"gift","tags":["comfort","kin"]}},

@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "spec": "Zoning and civic tiers (sim/civic/zoning.ts, sim/civic/tiers.ts, sim/contrib/civic-zoning.ts). A town's plot cells (build-plans findPlot: rings centerRadius+1..maxRing around the centre) split into 16 lots: 8 compass sectors (0 E, 1 SE, 2 S, 3 SW, 4 W, 5 NW, 6 N, 7 NE; screen y runs south) times 2 bands (inner rings up to innerMaxRing, outer beyond). layouts[kind] gives each lot's zone, sector 0 first, before the turn: the town plan's street axis turns the layout so the market sits on the main street (axisTurn, in sectors). buildingZone maps every building kind to the zone its claim must sit in. tiers run in order; a town is the highest tier whose pop and built it meets (pop = residents, or a district town's founding people if more; built = finished buildings). unlocks: kinds an ambition may pick only from that tier on. civicBuildings join data/items/buildings.json (same shape). council: the leader's dawn decisions (chance the council sits per dawn, minimum gap in days, raiseChance to stake one of leaderRaises when the tier allows, crowd = claims per lot at which a zone asks for more ground, tax bounds and step, wagePerLabor = levy coin paid a builder per labor on the council's own works, at most maxLaborPerDawn, petition gap, hours and odds). preAged: what a generated district town of each tier already has standing at founding, oldest first (at least the tier's built count). yearsPerBuilding: years between pre-aged buildings; yearDays: dawns in a year (matches economy/mortality LIFE.yearDays). years: how the old folk name a year. lines: dawn lines, told by the leader ({who}) or a neighbour.",
+  "zones": [
+    { "id": "farm", "name": "farmland" },
+    { "id": "craft", "name": "workshops" },
+    { "id": "market", "name": "market" },
+    { "id": "civic", "name": "common ground" },
+    { "id": "housing", "name": "houses" }
+  ],
+  "innerMaxRing": 8,
+  "sectorNames": ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"],
+  "axisTurn": { "h": 0, "v": 2, "d": 7 },
+  "layouts": {
+    "village": {
+      "inner": ["market", "housing", "craft", "housing", "civic", "housing", "craft", "housing"],
+      "outer": ["farm", "farm", "craft", "farm", "farm", "farm", "housing", "farm"]
+    },
+    "town": {
+      "inner": ["market", "craft", "housing", "craft", "market", "civic", "housing", "craft"],
+      "outer": ["farm", "craft", "farm", "housing", "farm", "craft", "farm", "housing"]
+    },
+    "city": {
+      "inner": ["market", "craft", "civic", "craft", "market", "housing", "civic", "craft"],
+      "outer": ["housing", "craft", "farm", "housing", "craft", "market", "farm", "housing"]
+    }
+  },
+  "buildingZone": {
+    "farm": "farm", "mill": "farm", "granary": "farm",
+    "bakery": "craft", "smithy": "craft", "weavery": "craft", "pottery": "craft", "ropewalk": "craft", "sawmill": "craft",
+    "market": "market",
+    "chapel": "civic", "barracks": "civic", "townhall": "civic",
+    "house": "housing"
+  },
+  "tiers": [
+    { "id": "hamlet", "name": "hamlet", "pop": 0, "built": 0 },
+    { "id": "village", "name": "village", "pop": 8, "built": 2 },
+    { "id": "town", "name": "town", "pop": 14, "built": 5 },
+    { "id": "city", "name": "city", "pop": 24, "built": 9 }
+  ],
+  "unlocks": { "granary": "village", "market": "town", "barracks": "town", "townhall": "city" },
+  "civicBuildings": [
+    { "id": "granary", "name": "granary", "jobs": ["farmer", "miller"], "cost": { "timber": 5, "stone": 4, "rope": 1 }, "labor": 8, "w": 2, "h": 1 },
+    { "id": "market", "name": "market", "jobs": ["shopkeeper", "innkeeper"], "cost": { "timber": 4, "cloth": 2, "nails": 2, "rope": 1 }, "labor": 6, "w": 2, "h": 2, "slots": 3 },
+    { "id": "barracks", "name": "barracks", "jobs": [], "cost": { "timber": 6, "stone": 8, "tools": 2 }, "labor": 12, "w": 2, "h": 1 },
+    { "id": "townhall", "name": "town hall", "jobs": [], "cost": { "stone": 12, "timber": 8, "cloth": 2, "nails": 3 }, "labor": 16, "w": 2, "h": 2 }
+  ],
+  "council": {
+    "chance": 0.08,
+    "minGap": 12,
+    "raiseChance": 0.5,
+    "crowd": 1.25,
+    "maxLaborPerDawn": 2,
+    "leaderRaises": ["barracks", "townhall"],
+    "taxStart": 0.1,
+    "taxMin": 0.05,
+    "taxMax": 0.25,
+    "taxStep": 0.05,
+    "despairHigh": 0.5,
+    "wagePerLabor": 2,
+    "petitionGap": 7,
+    "petitionHours": 2,
+    "petitionBase": 0.45,
+    "petitionStanding": 0.5,
+    "newsKeep": 8
+  },
+  "preAged": {
+    "hamlet": ["house"],
+    "village": ["farm", "house", "granary"],
+    "town": ["farm", "house", "granary", "mill", "smithy", "market"],
+    "city": ["farm", "house", "granary", "mill", "smithy", "market", "chapel", "barracks", "sawmill", "townhall"]
+  },
+  "yearsPerBuilding": 3,
+  "yearDays": 8,
+  "years": [
+    "the long frost", "the wet summer", "the wolf winter", "the red moon", "the thin harvest", "the great fair",
+    "the river flood", "the comet", "the sickness", "the salt shortage", "the quiet spring", "the two weddings"
+  ],
+  "lines": {
+    "rezone": [
+      "{who} says the council has given the {sector} lots of {town} over to {zone}.",
+      "{who} says the stakes on the {sector} side of {town} are for {zone} now. The council voted it."
+    ],
+    "taxUp": [
+      "{who} says the council will take {pct} in every hundred of the companies' takings in {town}.",
+      "{who} says the levy in {town} goes up to {pct} in the hundred. Somebody has to pay for the building."
+    ],
+    "taxDown": [
+      "{who} says the council has eased the levy in {town} to {pct} in the hundred. Folk are tired.",
+      "{who} says the levy in {town} comes down to {pct} in the hundred."
+    ],
+    "tier": [
+      "{who} says {town} counts as a {tier} now. There is talk of a {kind}.",
+      "{who} says {town} has grown into a {tier}. Nobody quite noticed it happen."
+    ],
+    "tierPlain": [
+      "{who} says {town} counts as a {tier} now.",
+      "{who} says {town} has grown into a {tier}. Nobody quite noticed it happen."
+    ],
+    "raise": [
+      "{who} says the council means to raise a {kind} in {town}, out of the levy.",
+      "{who} says the council has staked ground for a {kind} in {town}."
+    ],
+    "petitionYes": [
+      "{who} hears you out. \"The {sector} lots for {zone}, then. The council will see it done.\"",
+      "{who} nods slowly. \"Fair. The {sector} side goes to {zone}.\""
+    ],
+    "petitionNo": [
+      "{who} hears you out and shakes their head. \"Not this season.\"",
+      "{who} listens, then says the council has other things on its mind."
+    ]
+  }
+}
