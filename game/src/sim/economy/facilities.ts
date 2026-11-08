@@ -94,7 +94,7 @@ function producerResource(seed: number, route: LayoutRoute): string {
 }
 
 /** A dry tile a few tiles off the road near `progress`, side chosen by seed; tries nearby spots before giving up. */
-function besideRoad(seed: number, route: LayoutRoute, progress: number, id: string): MapPoint {
+export function besideRoad(seed: number, route: LayoutRoute, progress: number, id: string): MapPoint {
   const side = deriveRng(seed, 'facility-side', id).next() < 0.5 ? -1 : 1;
   const off = Math.max(3, Math.round(0.7 * WORLD_SCALE));
   // The building's footprint (3 wide, 2 deep above its foot) must be dry ground.

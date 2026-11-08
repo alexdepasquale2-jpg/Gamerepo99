@@ -9,7 +9,8 @@ import type { SimState } from '../../sim/types/runtime';
 import type { WorldLayout } from '../../sim/map/world-layout';
 import type { TerrainAccess } from '../../sim/map/terrain-access';
 import { DOOR_REACH, INTERIOR_TITLE } from '../../sim/map/interiors';
-import { pickLandWork, type LandTown, type LandView } from '../../sim/land-acts';
+import { pickLandWork, reachTiles, type LandTown, type LandView } from '../../sim/land-acts';
+import { roadAt, roadNeedsMending, roadWord } from '../../sim/economy/roads';
 import { TILE_PX } from '../../sim/map/constants';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
@@ -88,12 +89,29 @@ export function createWorldThings(o: {
     const st = getState();
     if (!st) return null;
     const from = { q: Math.floor(at.x / TILE_PX), r: Math.floor((at.y - 2) / TILE_PX) };
+    // On a worn road, the road comes first; step off it to work the land beside.
+    const road = roadThing(st, from, facing);
+    if (road) return road;
     const pick = pickLandWork(st, view, from, facing);
     if (!pick) return null;
     const f = tileFoot(pick.q, pick.r);
     const id = `${pick.q},${pick.r}`;
     const data: TileData = { q: pick.q, r: pick.r, act: pick.act.id, from, facing: { ...facing }, view, towns: landTowns };
     return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: TILE_LABEL[pick.act.id] ?? pick.act.label, target: { kind: 'tile', id, data } };
+  };
+
+  /** A worn or broken road in front of you (or under you), outside towns: `tile:road:<q>,<r>` with its road id. */
+  const roadThing = (st: SimState, from: { q: number; r: number }, facing: { dx: number; dy: number }): Thing | null => {
+    for (const t of reachTiles(from, facing).slice(0, 2)) {
+      if (!o.terrain.onRoad(t.q, t.r) || o.terrain.inTown(t.q, t.r)) continue;
+      const roadId = roadAt(o.layout, t.q, t.r);
+      const route = roadId ? st.economyRoutes?.find((r) => r.id === roadId) : undefined;
+      if (!route || !roadNeedsMending(route)) return null;
+      const f = tileFoot(t.q, t.r);
+      const id = `road:${t.q},${t.r}`;
+      return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: route.broken ? 'Broken road' : `Road · ${roadWord(route)}`, target: { kind: 'tile', id, data: { q: t.q, r: t.r, roadId, towns: landTowns } } };
+    }
+    return null;
   };
 
   const all = [nodes, facilities, chests, ground, plots, graves];

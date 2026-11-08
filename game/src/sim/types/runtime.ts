@@ -195,4 +195,6 @@ export type SimState = {
   happenings?: import('../happenings').HappeningsState;
   /** Body-only acts (sim/contrib/body-acts): siblings left watching a place (saveable). */
   bodyActs?: import('../contrib/body-acts').BodyActsState;
+  /** Road news, crews out, help hired at waystations, watches on the carts (sim/economy/roads; saveable). */
+  roadway?: import('../economy/roads').Roadway;
 };

@@ -11,6 +11,7 @@ import { ensureHoard } from '../hoard/state';
 import { addItem, inventoryOf } from '../goods/inventory';
 import { pushJuice } from '../packets';
 import { deriveRng, type Rng } from '../rng';
+import { innStop, takeRoadHelp } from '../economy/waystations';
 import {
   clamp01,
   fill,
@@ -55,6 +56,10 @@ export type JourneyOpts = {
   /** Run one whole world day (dusk-free dawn pipeline). Absent: only the calendar moves. */
   runDay?: (state: TravelSimState) => void;
   nameOf?: (townId: string) => string;
+  /** Walk beside this logistics cart to its town instead (sim/travel/escort; routeId is then ignored). */
+  escortCartId?: string;
+  /** Stop a night at this waystation on the road, partway (sim/economy/waystations). */
+  stopAt?: string;
 };
 
 /** One road out of the player's town, with today's travellers. */
@@ -96,7 +101,7 @@ export function roadViews(state: TravelSimState): RoadView[] {
 }
 
 /** Authored table, else one picked by route id so each road keeps its own character. */
-function tableFor(route: TravelRoute, tables: EncounterTable[]): EncounterTable | undefined {
+export function tableFor(route: TravelRoute, tables: EncounterTable[]): EncounterTable | undefined {
   const authored = route.encounterTableId && tables.find((t) => t.id === route.encounterTableId);
   if (authored) return authored;
   let h = 0;
@@ -104,7 +109,7 @@ function tableFor(route: TravelRoute, tables: EncounterTable[]): EncounterTable 
   return tables.length ? tables[h % tables.length] : undefined;
 }
 
-const isQuiet = (e: EncounterEntry): boolean => !!e.quiet || !!e.tags?.includes('quiet');
+export const isQuiet = (e: EncounterEntry): boolean => !!e.quiet || !!e.tags?.includes('quiet');
 const isBad = (e: EncounterEntry): boolean =>
   !!e.tags?.some((t) => t === 'hostile' || t === 'break' || t === 'notoriety') ||
   !!e.effects?.some((f) => (f.target === 'player.spark' && f.value < 0) || (f.target === 'town.despair' && f.value > 0) || (f.target === 'route.condition' && f.value < 0));
@@ -125,10 +130,10 @@ function highwaymanEntry(): EncounterEntry {
   return { id: h.id, weight: h.weight, blurb: h.blurb, heard: h.heard, tags: h.tags, prism: 'encounter.spawn.highwayman' };
 }
 
-type RollCtx = { route: TravelRoute; cond: number; cooldown: boolean; escortMul: number; reroll: boolean };
+export type RollCtx = { route: TravelRoute; cond: number; cooldown: boolean; escortMul: number; reroll: boolean };
 
 /** §5 roll: pSpawn chance of a meaningful beat, else a quiet stretch; cooldown keeps hostiles from chaining. */
-function rollEncounter(state: TravelSimState, table: EncounterTable | undefined, rng: Rng, ctx: RollCtx): EncounterEntry | null {
+export function rollEncounter(state: TravelSimState, table: EncounterTable | undefined, rng: Rng, ctx: RollCtx): EncounterEntry | null {
   if (!table?.entries.length) return null;
   const d = loadEncounterDensity();
   const biomes = (ctx.route.biomeIds ?? []).map((b) => d.biomeWeightMul[b]).filter((m): m is number => typeof m === 'number');
@@ -153,7 +158,7 @@ function rollEncounter(state: TravelSimState, table: EncounterTable | undefined,
   return hit ?? pickQuiet();
 }
 
-function applyEffects(state: TravelSimState, entry: EncounterEntry, route: TravelRoute, fromId: string, toId: string, sparkMax: number): void {
+export function applyEffects(state: TravelSimState, entry: EncounterEntry, route: TravelRoute, fromId: string, toId: string, sparkMax: number): void {
   for (const f of entry.effects ?? []) {
     if (f.op !== 'add' || typeof f.value !== 'number') continue;
     if (f.target === 'player.spark') state.player.spark = Math.max(0, Math.min(sparkMax, state.player.spark + f.value));
@@ -247,6 +252,10 @@ export function runJourney(state: TravelSimState, routeId: string, opts: Journey
   const cond = (): number => clamp01(state.economyRoutes?.find((x) => x.id === route.id)?.condition ?? 1);
   const encounters: JourneyResult['encounters'] = [];
   let cooldown = 0;
+  // Help hired at a waystation on this road walks with you; a night at a waystation partway is safe.
+  const help = takeRoadHelp(state, route.id);
+  tail.push(...help.lines);
+  const stopIdx = opts.stopAt ? Math.floor((days - 1) / 2) : -1;
 
   for (let i = 0; i < days; i++) {
     const before = state.player.spark;
@@ -255,6 +264,12 @@ export function runJourney(state: TravelSimState, routeId: string, opts: Journey
     // Loom pacing: the road gives +2 a day, never a hearth's rest (world costs that landed today still count).
     state.player.spark = Math.min(sparkMax, Math.min(state.player.spark, before) + 2);
     pushJuice(state, 'route.travel_step', { routeId, step: i + 1, daysEff: days, day: state.day, tradeId: trade?.id });
+    const stop = i === stopIdx && opts.stopAt ? innStop(state, route.id, opts.stopAt) : null;
+    if (stop) {
+      state.player.spark = Math.min(sparkMax, Math.min(state.player.spark, before) + stop.spark);
+      tail.unshift(stop.line);
+      continue;
+    }
 
     let forced: EncounterEntry | null = null;
     if (riding && trade) {
@@ -284,8 +299,8 @@ export function runJourney(state: TravelSimState, routeId: string, opts: Journey
       route,
       cond: cond(),
       cooldown: cooldown > 0,
-      escortMul: riding && trade?.highwaymanWeightMul !== undefined ? trade.highwaymanWeightMul : 1,
-      reroll: riding && !!trade?.encounterRerollBad,
+      escortMul: Math.min(help.escortMul, riding && trade?.highwaymanWeightMul !== undefined ? trade.highwaymanWeightMul : 1),
+      reroll: help.reroll || (riding && !!trade?.encounterRerollBad),
     });
     if (cooldown > 0) cooldown -= 1;
     if (!entry) continue;

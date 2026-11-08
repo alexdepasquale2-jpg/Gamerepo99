@@ -2,22 +2,28 @@
  * The road sheet at a signpost: each road out with its far town and days on foot, and today's travellers
  * for hire with their prices (coin you lack is paid in warmth, two spark a coin). Taking a road runs the
  * journey in the sim (every road day is a world day), then the app puts you in the far town and you hear
- * how the road went.
+ * how the road went. A road with a waystation on it can be walked with a night there partway; each road says
+ * how it is kept. Escorting a cart (the ring's Escort verb on a cart) runs here too, as a journey beside it.
  */
 import Phaser from 'phaser';
 import type { GameContext, SheetDef } from '../app/contracts';
-import type { JourneyResult, RoadView } from '../sim/travel/journey';
+import { registerDevHook } from '../app/dev-hooks';
+import { roadWord, tickRoads } from '../sim/economy/roads';
+import { INNS, waystationsOn } from '../sim/economy/waystations';
+import type { JourneyOpts, JourneyResult, RoadView } from '../sim/travel/journey';
+import { parseTargetAction } from '../sim/play-session/targets';
 import { coinOf } from '../sim/travel/journey';
 import { unreadReplies } from '../sim/letter-replies';
 import { button, el, townNamer } from './dom';
 
 export const ROADS_ID = 'roads';
 const days = (n: number): string => `${n} day${n === 1 ? '' : 's'}`;
+type Plan = Pick<JourneyOpts, 'escortCartId' | 'stopAt'>;
 
 export type Roads = {
   sheet(townId: string): SheetDef;
   /** Take a road as if picked on the sheet; resolves once you have arrived (null if refused). */
-  travel(routeId: string, tradeId?: string): Promise<JourneyResult | null>;
+  travel(routeId: string, tradeId?: string, plan?: Plan): Promise<JourneyResult | null>;
   busy(): boolean;
   views(): RoadView[];
 };
@@ -41,12 +47,13 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
     if (out) cam.fadeOut(600, 8, 8, 20); else cam.fadeIn(800, 8, 8, 20);
   });
 
-  const travel = async (routeId: string, tradeId?: string): Promise<JourneyResult | null> => {
+  const travel = async (routeId: string, tradeId?: string, plan?: Plan): Promise<JourneyResult | null> => {
     if (travelling) return null;
     closeSheet();
-    const res = ctx.session.journey(routeId, tradeId);
+    const res = ctx.session.journey(routeId, tradeId, plan);
     if (!res?.ok || !res.toId) {
-      ctx.voice?.tell(res?.reason === 'cant_pay' ? 'You haven’t the warmth to spare for that.' : 'Not that road, not today.', 'player');
+      const why = res?.reason === 'cant_pay' ? 'You haven’t the warmth to spare for that.' : plan?.escortCartId ? 'The cart has gone on without you.' : 'Not that road, not today.';
+      ctx.voice?.tell(why, 'player');
       ctx.voice?.sfx?.('refuse');
       return res;
     }
@@ -85,10 +92,16 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
       for (const r of roads) {
         const to = nameOf(r.toId);
         const sec = el('section', 'hf-road', undefined, { 'aria-label': `Road to ${to}`, 'data-route': r.routeId });
-        sec.append(el('h3', '', `To ${to} · ${days(r.walkDays)} on foot`));
+        const kept = st.economyRoutes?.find((x) => x.id === r.routeId);
+        sec.append(el('h3', '', `To ${to} · ${days(r.walkDays)} on foot${kept ? ` · the road is ${roadWord(kept)}` : ''}`));
         sec.append(button(`Walk it: ${days(r.walkDays)}`, () => void travel(r.routeId), {
           id: `walk-${r.routeId}`, title: 'On foot. The world goes on while you walk.',
         }));
+        for (const inn of waystationsOn(st, r.routeId)) {
+          sec.append(button(`Walk it, a night at ${inn.name}: ${INNS.restCoin} coin`, () => void travel(r.routeId, undefined, { stopAt: inn.id }), {
+            id: `stop-${r.routeId}-${inn.id}`, title: 'A bed partway, a safe night, and the talk of the road. No coin: the hayloft.',
+          }));
+        }
         if (!r.offers.length) sec.append(el('p', 'hf-muted hf-small', 'No one is heading that way today.'));
         for (const o of r.offers) {
           const total = o.spark + Math.max(0, o.coin - coin) * 2;
@@ -109,5 +122,26 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
     },
   });
 
+  // The ring's Escort verb on a cart (sim/contrib/roads) settles in the sim; the walk beside it runs here.
+  const off = ctx.events.on('act', (e) => {
+    const parsed = parseTargetAction(e.actionId);
+    if (parsed?.verb !== 'escort' || !e.outcome?.ok || e.target.kind !== 'wagon' || !e.target.id.startsWith('cart:')) return;
+    const cartId = e.target.id.slice(5);
+    const cart = ctx.session.getState()?.logistics?.carts.find((c) => c.id === cartId);
+    window.setTimeout(() => void travel(cart?.legs[0]?.routeId ?? '', undefined, { escortCartId: cartId }), 900);
+  });
+  ctx.scene.events.once('shutdown', off);
+
   return { sheet, travel, busy: () => travelling, views };
 }
+
+// ---- QA hooks (window.__hearth.dev.roadway) ----
+registerDevHook('roadway', (ctx) => ({
+  /** Every road: condition, broken, the word people use. */
+  list: () => (ctx.session.getState()?.economyRoutes ?? []).map((r) => ({ id: r.id, from: r.fromTownId, to: r.toTownId, condition: Math.round(r.condition * 1000) / 1000, broken: r.broken, word: roadWord(r) })),
+  /** Run the roads' dawn tick n times (wear, crews, breaks) without moving the day. */
+  wear: (n = 10) => { const st = ctx.session.getState(); if (st) for (let i = 0; i < n; i++) tickRoads(st); return st?.roadway?.news.slice(-6); },
+  /** Set a road's condition (and broken below the break line on the next tick). */
+  set: (routeId: string, condition: number) => { const r = ctx.session.getState()?.economyRoutes?.find((x) => x.id === routeId); if (r) r.condition = condition; return r; },
+  carts: () => (ctx.session.getState()?.logistics?.carts ?? []).map((c) => ({ id: c.id, to: c.toTownId, daysLeft: c.daysLeft, escortedBy: c.escortedBy })),
+}));
