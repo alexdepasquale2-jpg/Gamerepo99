@@ -20,6 +20,7 @@
  * moment lands on the matching person in generated worlds. Pure and deterministic: no RNG draws.
  */
 import { pushJuice } from '../packets';
+import { maybeFirstMoment } from '../start-rules';
 import type { DataTables } from '../load-data';
 import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from '../play-session/play-session-types';
@@ -304,6 +305,8 @@ export function beginMomentAct(state: SimState, actionId: string): (resolve?: Pl
 
 function settle(state: SimState, act: { methodId: string; personId: string } | null, busLen: number, pre: Pre, kindled: string[], resolve?: PlayLastResolve): void {
   if (!state.people) return;
+  // Each body's own first moment (sim/start-rules), on the run's first act or rest.
+  maybeFirstMoment(state);
   const juice = state.bus?.lastIds?.slice(busLen) ?? [];
   const absorb = (p: Progress): void => {
     for (const id of juice) if (!p.bus.includes(id)) p.bus.push(id);

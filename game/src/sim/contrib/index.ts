@@ -17,3 +17,4 @@ import './happenings';
 import './objects';
 import './thing-verbs';
 import './item-verbs';
+import './body-acts';

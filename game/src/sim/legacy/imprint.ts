@@ -2,6 +2,7 @@
 
 import { detectEnding } from '../hoard';
 import type { DataTables } from '../load-data';
+import { partsOf } from '../inhabitant';
 import type { Inhabitant, SimState } from '../types/runtime';
 import { scoreBonds } from './heir';
 import { ensureLegacy, legacyTable, slug } from './state';
@@ -10,8 +11,10 @@ import type { LegacyInhabitant, ProtagonistImprint } from './types';
 export function buildImprint(state: SimState): ProtagonistImprint {
   const data = state.data as DataTables | undefined;
   const lg = ensureLegacy(state);
-  const arch = data?.archetypes?.find((a) => a.id === state.player.archetypeId);
-  const displayName = lg.playerName ?? arch?.name ?? 'A stranger';
+  // What this life was made of: its parts (older saves rebuild them once from their archetype row).
+  const parts = partsOf(state.player, data);
+  const archetypeId = data?.archetypes?.some((a) => a.id === state.player.archetypeId) ? state.player.archetypeId : undefined;
+  const displayName = lg.playerName ?? parts?.name ?? 'A stranger';
   const max = Math.max(1, ...Object.values(lg.methodCounts));
   const methodTendencies = Object.fromEntries(
     Object.keys(lg.methodCounts).sort().map((m) => [m, Math.round((lg.methodCounts[m]! / max) * 100) / 100]),
@@ -24,8 +27,8 @@ export function buildImprint(state: SimState): ProtagonistImprint {
   const imprint: ProtagonistImprint = {
     slot: 'reserved',
     displayName,
-    speciesTags: [...(arch?.speciesTags ?? [])],
-    embodimentTraitId: arch?.embodimentTraitId,
+    speciesTags: [...(parts?.speciesTags ?? [])],
+    embodimentTraitId: parts?.embodimentTraitId,
     methodTendencies,
     refusalHookIds,
     notableChoices: lg.choices.slice(-12).map((c) => ({ ...c })),
@@ -33,7 +36,8 @@ export function buildImprint(state: SimState): ProtagonistImprint {
     marksLeft,
     legendSeed: `${state.seed}:${state.day}:${slug(displayName)}`,
     homeTownId: state.player.townId,
-    ...(arch ? { archetypeId: arch.id } : {}),
+    // Recorded as a label for the world file; nothing branches on it.
+    ...(archetypeId ? { archetypeId } : {}),
     // recordEnd pushes to lineage after the imprint is built, so this life is lineage.length + 1.
     generation: lg.lineage.length + 1,
   };

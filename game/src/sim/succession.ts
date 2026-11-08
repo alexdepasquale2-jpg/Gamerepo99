@@ -2,6 +2,7 @@
 
 import archetypesJson from '../data/people/archetypes.json';
 import type { DataTables } from './load-data';
+import { sparkProfileOf } from './inhabitant';
 import type { Inhabitant, SimState } from './types/runtime';
 import type { PlayEvent } from './play-session/play-session-types';
 
@@ -75,12 +76,9 @@ export function burnoutAtFor(
   data: DataTables | undefined,
 ): number {
   const defaults = (data?.player as { defaults?: { burnoutAt?: number } } | undefined)?.defaults;
-  const profiles = data?.traits?.sparkProfiles as Array<{ id: string; burnoutAt?: number }> | undefined;
-  const arch = data?.archetypes?.find((a) => a.id === player.archetypeId);
-  if (arch && profiles) {
-    const sp = profiles.find((p) => p.id === arch.sparkProfileId);
-    if (typeof sp?.burnoutAt === 'number') return sp.burnoutAt;
-  }
+  // The spark profile is one of the inhabitant's parts.
+  const sp = sparkProfileOf(player, data);
+  if (typeof sp?.burnoutAt === 'number') return sp.burnoutAt;
   return typeof defaults?.burnoutAt === 'number' ? defaults.burnoutAt : 0;
 }
 
@@ -90,12 +88,8 @@ export function emberZoneBelowFor(
   data: DataTables | undefined,
 ): number {
   const defaults = (data?.player as { defaults?: { emberZoneBelow?: number } } | undefined)?.defaults;
-  const profiles = data?.traits?.sparkProfiles as Array<{ id: string; emberZoneBelow?: number }> | undefined;
-  const arch = data?.archetypes?.find((a) => a.id === player.archetypeId);
-  if (arch && profiles) {
-    const sp = profiles.find((p) => p.id === arch.sparkProfileId);
-    if (typeof sp?.emberZoneBelow === 'number') return sp.emberZoneBelow;
-  }
+  const sp = sparkProfileOf(player, data);
+  if (typeof sp?.emberZoneBelow === 'number') return sp.emberZoneBelow;
   return typeof defaults?.emberZoneBelow === 'number' ? defaults.emberZoneBelow : 20;
 }
 
