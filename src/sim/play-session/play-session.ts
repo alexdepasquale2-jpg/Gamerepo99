@@ -26,6 +26,7 @@ import { tickPackets } from '../packets';
 import { regrowNodes } from '../goods/nodes';
 import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
 import { firstTrust } from '../embodiment';
+import { carryHistory } from '../history-voice';
 import '../contrib';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
@@ -118,6 +119,8 @@ function createPlayModeSession(defaults: {
     seed = next.seed;
     world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
     bindWorldEconomy(next, world);
+    // History is the seed's: always the regenerated world's beats (older saves never carried them).
+    next.history = carryHistory(world.history);
     routes = toTravelRoutes(world.routes ?? []);
     next.routes = routes;
     if (!world.settlements?.some((s) => s.id === next.player.townId)) next.player.townId = world.settlements?.[0]?.id;
