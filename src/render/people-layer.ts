@@ -21,6 +21,9 @@ const tileArgs = (nav: Navigator, pt: { x: number; y: number }): [number, number
 export const pretty = (id: string): string =>
   id.split(/[_-]/).filter(Boolean).map((w) => w[0]!.toUpperCase() + w.slice(1)).join(' ');
 
+/** What a villager is called to their face: their given name, else the first word of their id. */
+export const firstName = (p: { id: string; name?: string }): string => p.name?.split(' ')[0] || pretty(p.id).split(' ')[0]!;
+
 export function hash(s: string): number {
   let h = 2166136261;
   for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
@@ -90,7 +93,7 @@ export function createPeopleLayer(
   const byId = new Map<string, Person>();
   const idx = new Map<string, number>();
   const hasFrame = scene.textures.exists(HERO_TEX) && scene.textures.get(HERO_TEX).has('7');
-  const addPerson = (p: { id: string; townId?: string }): void => {
+  const addPerson = (p: { id: string; name?: string; townId?: string }): void => {
     if (byId.has(p.id)) return;
     const town = settlements.find((s) => s.id === p.townId) ?? settlements[hash(p.id) % settlements.length];
     if (!town) return;
@@ -109,7 +112,7 @@ export function createPeopleLayer(
     sprite.setTint(TINTS[h % TINTS.length]!);
     sprite.setInteractive({ useHandCursor: true, hitArea: new Phaser.Geom.Rectangle(-4, -6, 24, 24), hitAreaCallback: Phaser.Geom.Rectangle.Contains });
     const label = scene.add
-      .text(0, 0, pretty(p.id).split(' ')[0]!, { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
+      .text(0, 0, firstName(p), { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
       .setOrigin(0.5, 1)
       .setDepth(998_000)
       .setAlpha(0);

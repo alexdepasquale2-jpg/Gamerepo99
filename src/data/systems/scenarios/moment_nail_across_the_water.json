@@ -60,5 +60,14 @@
     "woundId": "grief",
     "siteKind": "forge",
     "fallback": "first_matching_tags"
+  },
+  "beat": {
+    "lines": [
+      {
+        "who": "elias_boone",
+        "text": "Hammered till the coals went grey. Sent a nail over the water."
+      }
+    ],
+    "dawnLine": "Word came over the water: {name} is at the forge again."
   }
 }

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pickInhabitant } from './support/game';
 
 const OUT = path.join('tests', 'e2e', 'artifacts', 'tangible');
 
@@ -18,9 +19,7 @@ test('drag bread from hotbar to a villager and to the ground', async ({ page }) 
   fs.mkdirSync(OUT, { recursive: true });
   await page.addInitScript(() => { (window as unknown as { hs: () => unknown }).hs = () => (window as unknown as { __hearth: { scene: unknown } }).__hearth.scene; });
   await page.goto('/');
-  await page.locator('[data-id=new]').click();
-  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-  await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
+  await pickInhabitant(page);
   const setup = await page.evaluate(() => {
     const s = (window as unknown as W).hs();
     const p = s.people.people[0]!;
