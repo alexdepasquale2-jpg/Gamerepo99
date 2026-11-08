@@ -1,57 +1,80 @@
 /**
  * The level-of-detail day: what a stretch of days does to a district without running every person's
  * dawn. Used for long waits (civic/clock fastForward past FULL_DAYS) and for districts you were away
- * from (play-session enterDistrict, the away summaries in sim/realm-away). Its cost is a few scalars per
- * town per day plus one pass over the people for the whole window, so a hundred days cost about what a
- * handful of full dawns do.
+ * from (play-session enterDistrict, the away summaries in sim/realm-away). Its saving is the people:
+ * nobody's work is rolled one by one and nobody's life is rolled day by day.
  *
- * Per town, day by day (the same rules the dawn applies, on aggregates):
+ * Each day, per town, on aggregates:
  *   - goods: each trade's recipes run at their expected rate (chance x workers x workshop/polity muls),
- *     limited by inputs in store; route deliveries as economy-lod makes them; spoilage; households eat.
- *   - despair: neglect, starvation and broken roads add (capped per dawn); burning people ease it.
- *   - doctrines: the dawn's own tick (cheap: a handful of meters), fed the same supply hook on hunger.
- * Once for the window: age and the hazard of death, retirement, couples, births as rates over the days
- * (real children, real deaths with heirs and stones), and coming of age. Happenings get one draw per
- * HAPPENING_EVERY days (a reduced rate: fewer things come to pass while nobody watches).
- * Pure + deterministic (deriveRng keyed on the window's first day), never Math.random.
+ *     limited by inputs in store; households eat. A company's hands work its trade only while its site
+ *     has a manager (companies workJobId: an idle site's hands work their own trade), and its till takes
+ *     the share of what they make that creditCompany books at a dawn.
+ * Each day, whole (the dawn's own ticks, in the dawn's order): the economy LOD (route deliveries,
+ * caravans and their crates, facility crews, spoilage, starve/neglect/broken-road despair, flame relief),
+ * build plans, the civic sites (civic/staffing: empty posts posted and filled, wages, rations, the unfed
+ * falling sick and leaving, hiring), the carts (logistics: the goods build plans wait on), doctrines, and
+ * the live district's relations and war (the levy, fed from the seat).
+ * Without these a long wait drifted from the dawns: no carts meant no finished workshops, no companies
+ * and no coin; no war, no levy to feed (perf-civic, seed 42: food 595 against the dawns' 366).
+ * Slower: companies, borders and polity every DEVELOP_EVERY days, the realm's far pairs every FAR_EVERY,
+ * and happenings get one draw per HAPPENING_EVERY days (fewer things come to pass while nobody watches).
+ * Every LIFE_EVERY days: age and the hazard of death, retirement, couples, births as rates over those
+ * days (real children, who then eat; real deaths with heirs and stones), and coming of age.
+ * Pure + deterministic (deriveRng keyed on each stretch's first day), never Math.random.
  */
 import type { DataTables } from '../load-data';
 import { tickDoctrines } from '../doctrine-tick';
 import { tickHappenings } from '../happenings';
 import { JOBS } from '../goods/jobs';
-import { tickCompanies, workJobId } from '../economy/companies';
+import { ITEM_BY_ID } from '../goods/inventory';
+import { COMPANY, companyManaged, companyOf, tickCompanies, workJobId, type Company } from '../economy/companies';
 import { tickBuildPlans, workshopMul } from '../economy/build-plans';
+import { tickBorders } from '../economy/borders';
+import { tickEconomyLod } from '../economy/economy-lod';
 import { birthMul, polityMul, tickPolity } from '../economy/polity';
 import { facilityStaffMul } from '../economy/facilities';
 import { HOUSEHOLD } from '../economy/village-economy';
-import { addStock, foodHave, foodStarving, isFoodRes, shortLine, spoilFood, takeFood, FOOD_RES } from '../economy/food-stock';
-import { LOGISTICS } from '../economy/logistics';
-import { ITEMS } from '../goods/inventory';
+import { foodHave, isFoodRes } from '../economy/food-stock';
+import { tickLogistics } from '../economy/logistics';
 import { bearChild, formCouples, growUp, KIN, security } from '../economy/households';
 import { deathless, hazard, isRetired, laidToRest, LIFE, retire } from '../economy/mortality';
 import { deriveRng, type Rng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { tickDistrictRelations } from './district-relations';
+import { tickLiveWar } from './district-war';
+import { tickSites } from './staffing';
 
 /** One happening draw per this many days of LOD (the full dawn draws every day). */
 export const HAPPENING_EVERY = 7;
 /**
- * The town's own growth (build plans, companies hiring, techs and creeds) is the slow part of a dawn
- * that changes what a town makes: it runs whole, but only every DEVELOP_EVERY days, and the trades and
- * multipliers the goods day reads are re-read after it.
+ * Every this many days: companies are founded (finished workshops open for trade), borders and the towns'
+ * polity (trust, feuds, techs, raids) step, and the hands the goods day counts are re-read.
  */
 export const DEVELOP_EVERY = 2;
+/**
+ * The realm's far pairs of districts step every this many days; the live district's own pairs step
+ * daily (their wars raise the levy and eat the seat's food). Far wars are only news here.
+ */
+export const FAR_EVERY = 14;
+/**
+ * Births, deaths and retirements land every LIFE_EVERY days rather than once at the window's end, so a
+ * child born in the stretch eats in it and the dead stop eating.
+ */
+export const LIFE_EVERY = 10;
 
 /** What a window did, for the morning's news (civic/clock keeps the last one; contrib/clock tells it). */
 export type LodReport = { from: number; to: number; born: string[]; died: string[]; grown: number; wed: number };
 
 type Ledger = { goods: Record<string, number>; need: Record<string, number>; short: Record<string, number> };
 type Flow = { item: string; perDay: number };
-type TownRun = { id: string; ledger: Ledger; pop: number; jobs: { jobId: string; workers: number; mul: number }[]; inflow: Flow[] };
+/** Hands of one trade; `company`: the managed company they make for (its till is credited). */
+type JobRun = { jobId: string; workers: number; mul: number; company?: Company };
+type TownRun = { id: string; ledger: Ledger; pop: number; jobs: JobRun[] };
 
-const folkOf = (state: SimState, townId: string) =>
-  Object.values(state.people).filter((p) => p.townId === townId && !isRetired(p));
+const JOB_RANK = new Map(JOBS.map((j, i) => [j.id, i]));
+const JOB_BY_ID = new Map(JOBS.map((j) => [j.id, j]));
 
-/** Route deliveries per day into a town, as economy-lod steps 1–2 make them (facilities at today's crew). */
+/** Route deliveries per day into a town, as economy-lod makes them (facilities at today's crew): for the away rates. */
 function routeInflow(state: SimState, townId: string, data: DataTables): Flow[] {
   const lod = data.economyLod;
   const byId = new Map(data.facilities.map((f) => [f.id, f]));
@@ -74,7 +97,7 @@ function routeInflow(state: SimState, townId: string, data: DataTables): Flow[] 
   return [...out].sort(([a], [b]) => a.localeCompare(b)).map(([item, perDay]) => ({ item, perDay }));
 }
 
-function townRuns(state: SimState, data: DataTables | undefined): TownRun[] {
+function townRuns(state: SimState): TownRun[] {
   const ve = (state.villageEconomy ??= { towns: {} });
   const byTown = new Map<string, string[]>(Object.keys(state.towns ?? {}).map((id) => [id, []]));
   for (const p of Object.values(state.people)) if (p.townId) (byTown.get(p.townId) ?? byTown.set(p.townId, []).get(p.townId)!).push(p.id);
@@ -83,40 +106,44 @@ function townRuns(state: SimState, data: DataTables | undefined): TownRun[] {
   return [...byTown.keys()].sort().map((id) => {
     const people = byTown.get(id)!;
     const kids = kidsBy.get(id) ?? 0;
-    const count = new Map<string, number>();
-    for (const pid of people) { const j = workJobId(state, pid); count.set(j, (count.get(j) ?? 0) + 1); }
+    // Hands grouped by trade and by the company they make for.
+    const groups = new Map<string, { jobId: string; workers: number; company?: Company }>();
+    for (const pid of people) {
+      const jobId = workJobId(state, pid);
+      const c = companyOf(state, pid);
+      const company = c && companyManaged(state, c) ? c : undefined;
+      const key = `${jobId}|${company?.id ?? ''}`;
+      const g = groups.get(key) ?? groups.set(key, { jobId, workers: 0, company }).get(key)!;
+      g.workers += 1;
+    }
     // JOBS order, as the village economy runs them: raw trades before the processors that use their output.
-    const jobs = JOBS.filter((j) => count.has(j.id)).map((j) => ({ jobId: j.id, workers: count.get(j.id)!, mul: workshopMul(state, id, j.id) * polityMul(state, id, j.id) }));
-    const town = state.towns?.[id];
-    return {
-      id,
-      ledger: (ve.towns[id] ??= { goods: {}, need: {}, short: {} }),
-      pop: people.length + 0.5 * kids,
-      jobs,
-      inflow: town?.economyOptIn && data?.economyLod ? routeInflow(state, id, data) : [],
-    };
+    const jobs: JobRun[] = [...groups.entries()]
+      .filter(([, g]) => JOB_RANK.has(g.jobId))
+      .sort(([ka, a], [kb, b]) => JOB_RANK.get(a.jobId)! - JOB_RANK.get(b.jobId)! || ka.localeCompare(kb))
+      .map(([, g]) => ({ ...g, mul: workshopMul(state, id, g.jobId) * polityMul(state, id, g.jobId) }));
+    return { id, ledger: (ve.towns[id] ??= { goods: {}, need: {}, short: {} }), pop: people.length + 0.5 * kids, jobs };
   });
 }
 
-/** One aggregate day of a town's goods: deliveries, spoilage, expected production, households eat. */
-function goodsDay(state: SimState, t: TownRun, data: DataTables | undefined): void {
+/** One aggregate day of a town's goods: expected production (and the tills' share), households eat. */
+function goodsDay(t: TownRun): void {
   const g = t.ledger.goods;
-  for (const f of t.inflow) addStock(state, t.id, f.item, f.perDay);
-  const town = state.towns?.[t.id];
-  if (data?.dawnStock?.spoil.apply && town) {
-    const floor = data.dawnStock.stockFloor;
-    for (const r of data.economyResources) {
-      if (isFoodRes(r.id)) spoilFood(state, t.id, r.spoilPerDawn, floor);
-      else if (r.spoilPerDawn > 0 && typeof town.stock[r.id] === 'number') town.stock[r.id] = Math.max(floor, town.stock[r.id]! * (1 - r.spoilPerDawn));
-    }
-  }
   for (const j of t.jobs) {
-    for (const r of JOBS.find((x) => x.id === j.jobId)!.recipes) {
+    for (const r of JOB_BY_ID.get(j.jobId)!.recipes) {
       let runs = j.workers * (r.chance ?? 1);
       for (const [item, q] of Object.entries(r.in ?? {})) runs = Math.min(runs, Math.max(0, g[item] ?? 0) / q);
       if (!(runs > 0)) continue;
       for (const [item, q] of Object.entries(r.in ?? {})) g[item] = (g[item] ?? 0) - q * runs;
-      for (const [item, q] of Object.entries(r.out)) g[item] = (g[item] ?? 0) + q * runs * j.mul;
+      let worth = 0;
+      for (const [item, q] of Object.entries(r.out)) {
+        g[item] = (g[item] ?? 0) + q * runs * j.mul;
+        worth += q * runs * j.mul * (ITEM_BY_ID.get(item)?.price ?? 0);
+      }
+      // The till's share of the sale, as creditCompany books each member's make at a dawn.
+      if (j.company) {
+        j.company.coin += worth * COMPANY.revenueShare;
+        j.company.revenue += worth * COMPANY.revenueShare;
+      }
     }
   }
   // Households eat and wear things out exactly as the village economy has them (need and short included,
@@ -135,63 +162,6 @@ function goodsDay(state: SimState, t: TownRun, data: DataTables | undefined): vo
   }
 }
 
-/**
- * The roads between towns, folded: a town under its food shortage line gets a day's cart from the town
- * with the most to spare above its reserve (logistics' rule), and every unit that lands in a shortage
- * eases despair as a caravan's crate does (caravan-visit). Carts in the dark are not drawn or lost.
- */
-function haulDay(state: SimState, runs: TownRun[]): void {
-  for (const t of runs) {
-    const line = shortLine(state, t.id, FOOD_RES), have = foodHave(state, t.id);
-    if (have >= line) continue;
-    const spare = (o: TownRun): number => foodHave(state, o.id) - LOGISTICS.reserveDays * (o.ledger.need.food ?? 0);
-    const from = runs.filter((o) => o !== t && spare(o) > 0).sort((a, b) => spare(b) - spare(a) || a.id.localeCompare(b.id))[0];
-    if (!from) continue;
-    // Whole crates, as a cart carries them: each one that lands while the town is still short eases it.
-    const crates = Math.min(Math.ceil(line - have), Math.floor(spare(from)), LOGISTICS.cartCapacity);
-    const town = state.towns?.[t.id];
-    for (let i = 0; i < crates; i++) {
-      if (town?.economyOptIn && foodHave(state, t.id) < line) town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief);
-      addStock(state, t.id, FOOD_RES, takeFood(state, from.id, 1));
-    }
-  }
-}
-
-/**
- * One aggregate day of a town's despair: economy-lod's neglect, starve, broken-road and flame-relief rules
- * (opted-out towns are not simulated, at a dawn or here).
- */
-function despairDay(state: SimState, townId: string, lit: number, data: DataTables): void {
-  const town = state.towns?.[townId];
-  const cfg = data.economyLod?.despair as (DataTables['economyLod']['despair'] & {
-    neglect?: { enabled?: boolean; onNeglect: number; graceDawns: number; neglectCap: number };
-    flameRelief?: { perDawn: number; minShare: number };
-  }) | undefined;
-  if (!town?.economyOptIn || !cfg) return;
-  const [lo, hi] = cfg.clamp;
-  const hook = state.economyHooks?.doctrine;
-  let add = 0;
-  for (const r of state.economyRoutes ?? []) {
-    if ((r.fromTownId !== townId && r.toTownId !== townId) || !r.broken || !data.economyLod.flow.skipWhenRouteBroken) continue;
-    add += cfg.onRouteBroken;
-    hook?.(state, { townId, reason: 'route_broken', deltaRealDelivery: cfg.doctrineRealDeliveryHitOnBroken });
-  }
-  if (foodStarving(state, townId, cfg.starveWhenFoodBelow)) {
-    add += cfg.onStarve;
-    hook?.(state, { townId, reason: 'starve', deltaRealDelivery: 0 });
-  }
-  const neg = cfg.neglect;
-  if (neg?.enabled) {
-    const last = (state.flags.lastTouchDayByTown as Record<string, number> | undefined)?.[townId];
-    const neglected = last === undefined ? state.day >= neg.graceDawns : state.day - last >= neg.graceDawns;
-    if (neglected && town.despair < neg.neglectCap) add += Math.min(neg.onNeglect, neg.neglectCap - town.despair);
-  }
-  add = Math.min(add, cfg.maxAddPerDawn);
-  if (add > 0) town.despair = Math.min(hi, Math.max(lo, town.despair + add));
-  const relief = cfg.flameRelief;
-  if (relief && lit >= relief.minShare && town.despair > lo) town.despair = Math.max(lo, town.despair - relief.perDawn * lit);
-}
-
 /** Poisson-ish count for an expected `mean` (Knuth; means here are small). */
 function countOf(rng: Rng, mean: number): number {
   if (!(mean > 0)) return 0;
@@ -201,11 +171,12 @@ function countOf(rng: Rng, mean: number): number {
   return k;
 }
 
-/** Aging, retirement and death over the window, each person rolled once for the whole stretch. */
+/** Aging, retirement and death over a stretch, each person rolled once for the whole of it. */
 function lifeOver(state: SimState, from: number, to: number, rep: LodReport): void {
   const days = to - from;
   const birthdays = Math.floor(to / LIFE.yearDays) - Math.floor(from / LIFE.yearDays);
   const struckPerTown = new Map<string, number>();
+  const diedBefore = rep.died.length;
   for (const id of Object.keys(state.people).sort()) {
     const p = state.people[id];
     if (!p) continue;
@@ -218,9 +189,9 @@ function lifeOver(state: SimState, from: number, to: number, rep: LodReport): vo
     const roll = rng.next();
     if (!isRetired(p) && !p.tags?.includes('legacy_player') && (p.age >= LIFE.retireBy || (tries > 0 && roll < 1 - (1 - LIFE.retireChance) ** tries))) retire(state, id);
     if (deathless(state, p)) continue;
-    // The dawn strikes at most one person a town a day, and maxDeathsPerDawn in all: the window keeps both caps.
+    // The dawn strikes at most one person a town a day, and maxDeathsPerDawn in all: the stretch keeps both caps.
     const town = p.townId ?? id;
-    if ((struckPerTown.get(town) ?? 0) >= days || rep.died.length >= LIFE.maxDeathsPerDawn * days) continue;
+    if ((struckPerTown.get(town) ?? 0) >= days || rep.died.length - diedBefore >= LIFE.maxDeathsPerDawn * days) continue;
     const perDay = hazard((age0 + p.age) / 2) / LIFE.yearDays;
     if (p.age < LIFE.oldest && rng.next() >= 1 - (1 - perDay) ** days) continue;
     const name = p.name ?? id;
@@ -232,10 +203,10 @@ function lifeOver(state: SimState, from: number, to: number, rep: LodReport): vo
 function kinOver(state: SimState, from: number, to: number, rep: LodReport): void {
   const days = to - from;
   const before = state.kin?.households.length ?? 0;
-  // A couple that forms in the window is dated to its expected day (a dawn's chance waits ~1/chance days),
-  // so its children have the rest of the window, as they would day by day.
+  // A couple that forms in the stretch is dated to its expected day (a dawn's chance waits ~1/chance days),
+  // so its children have the rest of the stretch, as they would day by day.
   formCouples(state, 1 - (1 - KIN.pairChance) ** days, from + Math.min(Math.ceil(days / 2), Math.round(1 / KIN.pairChance)));
-  rep.wed = (state.kin?.households.length ?? 0) - before;
+  rep.wed += (state.kin?.households.length ?? 0) - before;
   for (const h of [...(state.kin?.households ?? [])].sort((a, z) => a.id.localeCompare(z.id))) {
     if (h.adults.length < 2 || !h.adults.every((a) => state.people[a])) continue;
     const opens = Math.max(from, h.formed + KIN.settleDays);
@@ -251,7 +222,7 @@ function kinOver(state: SimState, from: number, to: number, rep: LodReport): voi
   }
   const grownBefore = (state.kin?.children ?? []).filter((c) => c.status === 'adult').length;
   growUp(state);
-  rep.grown = (state.kin?.children ?? []).filter((c) => c.status === 'adult').length - grownBefore;
+  rep.grown += (state.kin?.children ?? []).filter((c) => c.status === 'adult').length - grownBefore;
 }
 
 /**
@@ -263,31 +234,38 @@ export function lodDays(state: SimState, days: number, daily?: (state: SimState)
   const rep: LodReport = { from, to, born: [], died: [], grown: 0, wed: 0 };
   if (to <= from) return rep;
   const data = state.data as DataTables | undefined;
-  const burnAt = data?.reigniteThreshold ?? 35;
-  let runs = townRuns(state, data);
-  // The share burning is held for the window: flames move by deeds, and nobody is acting here.
-  const lit = new Map(runs.map((t) => {
-    const folk = folkOf(state, t.id);
-    return [t.id, folk.length ? folk.filter((p) => p.flame >= burnAt).length / folk.length : 0];
-  }));
+  let runs = townRuns(state);
+  let lived = from;
   for (let d = from + 1; d <= to; d++) {
     state.day = d;
-    // Despair first, as the dawn has it: yesterday's hunger (the ledger's short) is what starves today.
-    if (data) for (const t of runs) despairDay(state, t.id, lit.get(t.id) ?? 0, data);
-    for (const t of runs) goodsDay(state, t, data);
-    haulDay(state, runs);
-    if ((d - from) % DEVELOP_EVERY === 0) {
-      tickBuildPlans(state);
-      tickCompanies(state);
+    const n = d - from;
+    // The dawn's order: the economy LOD (yesterday's hunger starves today), the village's goods, plans
+    // and companies, the people slot (sites), polity, carts, doctrines, happenings, the late slot (war).
+    tickEconomyLod(state);
+    for (const t of runs) goodsDay(t);
+    tickBuildPlans(state);
+    if (n % DEVELOP_EVERY === 0) tickCompanies(state);
+    tickSites(state);
+    if (n % DEVELOP_EVERY === 0) {
+      tickBorders(state);
       tickPolity(state);
-      runs = townRuns(state, data);
     }
+    tickLogistics(state);
     if (state.towns && data?.doctrines) tickDoctrines(state);
-    if ((d - from) % HAPPENING_EVERY === 0 || d === to) tickHappenings(state);
+    if (n % HAPPENING_EVERY === 0 || d === to) tickHappenings(state);
+    tickDistrictRelations(state, n % FAR_EVERY !== 0);
+    tickLiveWar(state);
     daily?.(state);
+    const life = n % LIFE_EVERY === 0 || d === to;
+    if (life) {
+      lifeOver(state, lived, d, rep);
+      kinOver(state, lived, d, rep);
+      lived = d;
+    }
+    // Sites hire and lose hands, the levy marches, people are born and die: the hands are re-read
+    // every other day, and after every stretch of lives.
+    if (life || n % DEVELOP_EVERY === 0) runs = townRuns(state);
   }
-  lifeOver(state, from, to, rep);
-  kinOver(state, from, to, rep);
   return rep;
 }
 
@@ -300,15 +278,15 @@ export function foodPerDay(state: SimState): number {
   const food = new Set(HOUSEHOLD.food.eats);
   const isFood = (item: string): boolean => food.has(item) || isFoodRes(item);
   let net = 0;
-  for (const t of townRuns(state, data)) {
+  for (const t of townRuns(state)) {
     for (const j of t.jobs) {
-      for (const r of JOBS.find((x) => x.id === j.jobId)!.recipes) {
+      for (const r of JOB_BY_ID.get(j.jobId)!.recipes) {
         const made = Object.entries(r.out).reduce((n, [i, q]) => n + (isFood(i) ? q * j.mul : 0), 0);
         const used = Object.entries(r.in ?? {}).reduce((n, [i, q]) => n + (isFood(i) ? q : 0), 0);
         net += j.workers * (r.chance ?? 1) * (made - used);
       }
     }
-    for (const f of t.inflow) if (isFood(f.item)) net += f.perDay;
+    if (data?.economyLod && state.towns?.[t.id]?.economyOptIn) for (const f of routeInflow(state, t.id, data)) if (isFood(f.item)) net += f.perDay;
     net -= t.pop * HOUSEHOLD.food.perPerson;
   }
   return net;

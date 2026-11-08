@@ -6,9 +6,15 @@
  * kept on the town's civic record); claims already standing keep their ground, new ones must fit.
  * Also the civic record itself (tax, treasury, news) and the council's two pure choices: which lot to
  * give a wanted zone, and where to set the tax. Who the council is lives with the caller (contrib).
- * Pure, deterministic (deriveRng), no Phaser/DOM; imports no build-plans values (it imports us).
+ * Sites (civic/sites) are zoned too: a site's kind must fit the zone under its plot (siteFitsZone), and a
+ * site standing on a lot the council has since given to another zone still counts toward its own zone
+ * when the council judges which zone is crowded (its trade still wants that ground). A town without sites
+ * zones exactly as before.
+ * Pure, deterministic (deriveRng), no Phaser/DOM; imports no build-plans or site values (both import us).
  */
 import zonesJson from '../../data/civic/zones.json';
+import sitesJson from '../../data/civic/sites.json';
+import type { Site } from './sites';
 import { districtOfTown, realm, DISTRICTS } from '../map/districts';
 import { townPlan } from '../map/town-plan';
 import { settlementKind, type SettlementKind } from '../map/world-layout';
@@ -70,8 +76,15 @@ export type TownCivic = {
 export const zoneName = (z: string): string => ZONES.zones.find((x) => x.id === z)?.name ?? z;
 export const sectorName = (lot: number): string => ZONES.sectorNames[lot % 8] ?? 'far';
 export const bandName = (lot: number): string => (lot < 8 ? 'near' : 'far');
-/** The zone a building kind's claim must sit in (unknown kinds count as houses). */
-export const zoneFor = (kind: string): ZoneId => ZONES.buildingZone[kind] ?? 'housing';
+type SiteKindRow = { id: string; zone: ZoneId; fromBuildings: string[]; fromFacilities: string[] };
+const SITE_KINDS = (sitesJson as unknown as { kinds: SiteKindRow[] }).kinds;
+/** A site kind's zone by its own id or by any building or facility kind it is raised from. */
+const SITE_ZONE = new Map<string, ZoneId>(SITE_KINDS.flatMap((k) => [k.id, ...k.fromBuildings, ...k.fromFacilities].map((x) => [x, k.zone] as const)));
+/**
+ * The zone a building kind's claim must sit in: the zones table's, else the zone of the site kind it opens
+ * as (a facility kind, a site kind), else a house's.
+ */
+export const zoneFor = (kind: string): ZoneId => ZONES.buildingZone[kind] ?? SITE_ZONE.get(kind) ?? 'housing';
 
 /** Compass sector of a cell offset from the centre, integer only (tan 22.5° ≈ 2/5). Screen y runs south. */
 export function sectorOf(dx: number, dy: number): number {
@@ -136,6 +149,28 @@ export function fitsZone(state: SimState, townId: string, kind: string, dx: numb
   return true;
 }
 
+/**
+ * Whether a site fits its zone: a site on a plot claim has its building's zone under every cell (a
+ * re-zoned lot leaves a standing site where it was, so this can fail); a road crew's site stands on no lot.
+ */
+export function siteFitsZone(state: SimState, site: Pick<Site, 'townId' | 'building' | 'plot'>): boolean {
+  const p = site.plot;
+  if (!p || !('dx' in p)) return true;
+  return fitsZone(state, site.townId, site.building, p.dx, p.dy, p.w, p.h);
+}
+
+/** Plot corners of the town's sites that no longer fit their zone (their lot was re-zoned under them), by the zone they want. */
+function misfitSites(state: SimState, townId: string): { dx: number; dy: number; zone: ZoneId }[] {
+  const sites = (state as SimState & { civic?: { sites?: Record<string, Site> } }).civic?.sites;
+  const out: { dx: number; dy: number; zone: ZoneId }[] = [];
+  for (const s of Object.values(sites ?? {}).sort((a, z) => a.id.localeCompare(z.id))) {
+    const p = s.plot;
+    if (s.townId !== townId || s.status === 'closed' || !p || !('dx' in p) || siteFitsZone(state, s)) continue;
+    out.push({ dx: p.dx, dy: p.dy, zone: zoneFor(s.building) });
+  }
+  return out;
+}
+
 /** What the old folk call the year a day fell in (every year has one name, so tales agree). */
 export const yearName = (seed: number, day: number): string =>
   ZONES.years[deriveRng(seed, 'year-name', Math.floor(day / ZONES.yearDays)).int(0, ZONES.years.length)]!;
@@ -171,11 +206,18 @@ export function rezoneFor(state: SimState, townId: string, zone: ZoneId, anchors
   return pick.lot;
 }
 
-/** The zone with most claims per lot, when it has reached the council's crowding mark (else null). */
+/**
+ * The zone with most claims per lot, when it has reached the council's crowding mark (else null). A site
+ * left standing on a lot re-zoned under it counts for the zone its kind needs, not the lot's new one.
+ */
 export function crowdedZone(state: SimState, townId: string, anchors: { dx: number; dy: number }[]): ZoneId | null {
   const lots = lotsOf(state, townId);
   const per = new Map<ZoneId, number>();
-  for (const a of anchors) { const z = lots[lotOf(a.dx, a.dy)]!; per.set(z, (per.get(z) ?? 0) + 1); }
+  const misfit = new Map(misfitSites(state, townId).map((m) => [`${m.dx},${m.dy}`, m.zone]));
+  for (const a of anchors) {
+    const z = misfit.get(`${a.dx},${a.dy}`) ?? lots[lotOf(a.dx, a.dy)]!;
+    per.set(z, (per.get(z) ?? 0) + 1);
+  }
   const ranked = ZONES.zones
     .map((z) => ({ z: z.id, p: (per.get(z.id) ?? 0) / Math.max(1, lots.filter((x) => x === z.id).length) }))
     .sort((a, b) => b.p - a.p || a.z.localeCompare(b.z));
