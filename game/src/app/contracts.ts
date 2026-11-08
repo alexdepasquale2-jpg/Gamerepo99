@@ -96,6 +96,27 @@ export interface PlayerHandle {
   setFrozen(frozen: boolean): void;
 }
 
+/** One body of a many-bodied inhabitant. `at` is 'with_you' or the town it waits in. */
+export type BroodBody = { id: string; name: string; at: string };
+/**
+ * The brood's logic (sim/embodiment rules); the ui area draws the menu (touch Brood button + B) and
+ * speaks the returned line with voice.say('player', line). Every action returns null when it can't happen.
+ */
+export interface BroodApi {
+  /** True for a many-bodied inhabitant. */
+  active(): boolean;
+  /** Bodies travelling with you (the one you are first), waiting in this town, waiting elsewhere. */
+  withYou(): BroodBody[];
+  here(): BroodBody[];
+  elsewhere(): BroodBody[];
+  /** Leave one following sibling in this town. */
+  leave(): string | null;
+  /** Everyone waiting in this town rejoins you. */
+  callBack(): string | null;
+  /** Become a sibling waiting in another town (the player moves there via ctx.arriveAt). */
+  switchTo(bodyId: string): string | null;
+}
+
 export interface ActorsApi {
   player: PlayerHandle;
   /** Head position (world px) of a person, or of the player with 'player'. */
@@ -105,6 +126,12 @@ export interface ActorsApi {
   /** Rebuild people from session state (dawn newcomers, deaths, load). */
   sync(): void;
   update(dt: number): void;
+  /** The brood: siblings left in towns, call back, switch body. */
+  brood: BroodApi;
+  /** People the schedule puts inside this building now (`${townId}:${index}`, sim/map/interiors ids). */
+  residentsOf(buildingId: string): string[];
+  /** How a person looks, so an interior can draw the same figure: texture, standing frame, scale, tint. */
+  lookOf(personId: string): { texture: string; frame: string; scale: number; tint: number } | undefined;
 }
 
 export type SayOpts = { tone?: 'warm' | 'plain' | 'hard'; ms?: number };
