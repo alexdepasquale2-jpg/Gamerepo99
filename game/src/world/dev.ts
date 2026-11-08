@@ -5,7 +5,10 @@
  *   things(radius?)   Things around the player (facing included), as plain rows
  *   nearThing(kind)   stand just south of the nearest Thing of a kind, facing it; returns its key
  *   room(), enterRoom(id), leaveRoom(), setPhase(p), despair(), chunks(), facilities(), plots(), graves()
+ *   chunkStats()      chunk build times in ms (ground paint and whole build: avg, max, last)
+ *   artGallery(on?)   lay every manifest frame from the credited packs out beside the player (false clears it)
  */
+import type Phaser from 'phaser';
 import type { GameContext, Thing } from '../app/contracts';
 import { registerDevHook } from '../app/dev-hooks';
 import type { TerrainAccess } from '../sim/map/terrain-access';
@@ -15,6 +18,7 @@ import type { WorldThings } from './things';
 import type { TownToneDriver } from './town-tone';
 import type { Settlements } from './settlements';
 import { tileFoot, type Pt } from './depth';
+import { loadManifestArt, manifestFrame } from './assets';
 
 export type WorldInternals = {
   terrain: TerrainAccess;
@@ -83,7 +87,26 @@ registerDevHook('setPhase', (ctx) => (p: number) => { ctx.world.setPhase(p); ret
 registerDevHook('despair', (ctx) => () => ({ sim: ctx.session.townDespair(), shown: internals.get(ctx)?.tone.despair() }));
 registerDevHook('pulse', (ctx) => (townId?: string) => internals.get(ctx)?.tone.pulse(townId ?? ctx.session.snapshot().townId));
 registerDevHook('chunks', (ctx) => () => internals.get(ctx)?.chunks.count());
+registerDevHook('chunkStats', (ctx) => () => internals.get(ctx)?.chunks.stats());
 registerDevHook('facilities', (ctx) => () => internals.get(ctx)?.things.facilities.list());
 registerDevHook('plots', (ctx) => () => internals.get(ctx)?.things.plots.list());
 registerDevHook('graves', (ctx) => () => internals.get(ctx)?.things.graves.list());
 registerDevHook('chest', (ctx) => (siteId: string) => internals.get(ctx)?.things.chests.tally(siteId));
+
+const galleries = new WeakMap<GameContext, Phaser.GameObjects.Image[]>();
+registerDevHook('artGallery', (ctx) => async (on = true) => {
+  for (const img of galleries.get(ctx) ?? []) img.destroy();
+  galleries.delete(ctx);
+  if (!on) return [];
+  const keys = await loadManifestArt(ctx.scene);
+  const p = ctx.actors.player.pos(), CELL = 72, COLS = 7, imgs: Phaser.GameObjects.Image[] = [];
+  keys.forEach((key, i) => {
+    const f = manifestFrame(ctx.scene, key);
+    if (!f) return;
+    const img = ctx.scene.add.image(p.x + ((i % COLS) - 3) * CELL, p.y - 120 + Math.floor(i / COLS) * CELL, f.tex, f.frame).setOrigin(0.5, 1).setDepth(1e6);
+    img.setScale(Math.min(4, Math.floor(60 / Math.max(img.width, img.height)) || 1));
+    imgs.push(img);
+  });
+  galleries.set(ctx, imgs);
+  return keys;
+});

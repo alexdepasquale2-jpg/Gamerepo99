@@ -106,3 +106,45 @@ export function createWorldAssets(scene: Phaser.Scene): void {
   paintThingTextures(scene);
   paintBuildingTextures(scene);
 }
+
+/*
+ * Manifest art: every ready entry of the overworld manifest whose sheet is listed in `artSheets` (the
+ * credited packs in assets/vendor plus baked sheets) becomes a frame named by its key ('fauna.pig') on that
+ * sheet's texture. Loaded on demand, off the boot path: the world's look is still the code-drawn props.
+ */
+type ArtSheet = { path: string; frameW: number; frameH: number };
+type ArtEntry = { key: string; sheet: string; frame: number; rect?: number[]; status: string };
+const ART_SHEETS = (manifest as { artSheets?: Record<string, ArtSheet> }).artSheets ?? {};
+const ART_ENTRIES = Object.values(manifest.assets as Record<string, ArtEntry>).filter((e) => e.status === 'ready' && ART_SHEETS[e.sheet]);
+const artTex = (sheet: string): string => `art-${sheet}`;
+
+/** Texture and frame of a manifest key once loadManifestArt has run; null before, or for a key with no pack source. */
+export function manifestFrame(scene: Phaser.Scene, key: string): { tex: string; frame: string } | null {
+  const e = ART_ENTRIES.find((x) => x.key === key);
+  if (!e || !scene.textures.exists(artTex(e.sheet)) || !scene.textures.get(artTex(e.sheet)).has(key)) return null;
+  return { tex: artTex(e.sheet), frame: key };
+}
+
+/** Load the packs the manifest's ready entries point at and name a frame per key. Resolves with the keys. */
+export function loadManifestArt(scene: Phaser.Scene): Promise<string[]> {
+  const name = (): string[] => {
+    for (const e of ART_ENTRIES) {
+      const sheet = ART_SHEETS[e.sheet]!, key = artTex(e.sheet);
+      if (!scene.textures.exists(key)) continue;
+      const tex = scene.textures.get(key);
+      if (tex.has(e.key)) continue;
+      const src = tex.getSourceImage() as HTMLImageElement;
+      const cols = Math.max(1, Math.floor(src.width / sheet.frameW));
+      const [x, y, w, h] = e.rect ?? [(e.frame % cols) * sheet.frameW, Math.floor(e.frame / cols) * sheet.frameH, sheet.frameW, sheet.frameH];
+      tex.add(e.key, 0, x!, y!, w!, h!);
+    }
+    return ART_ENTRIES.filter((e) => scene.textures.exists(artTex(e.sheet))).map((e) => e.key);
+  };
+  const missing = [...new Set(ART_ENTRIES.map((e) => e.sheet))].filter((s) => !scene.textures.exists(artTex(s)));
+  if (!missing.length) return Promise.resolve(name());
+  return new Promise((resolve) => {
+    for (const s of missing) scene.load.image(artTex(s), toPublicUrl(ART_SHEETS[s]!.path));
+    scene.load.once('complete', () => resolve(name()));
+    scene.load.start();
+  });
+}

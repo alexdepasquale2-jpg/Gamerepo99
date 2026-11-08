@@ -57,7 +57,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
   const passableTile = (q: number, r: number): boolean => (room?.inside(q, r) ? room.walkable(q, r) : terrain.passable(q, r));
   const nav = createNavigator({ passable: passableTile, stepCost: (q, r) => (room?.inside(q, r) ? 1 : terrain.stepCost(q, r)) });
 
-  const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits);
+  const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits, ctx.seed);
   const towns = createSettlements(scene, ctx.layout.settlements);
   const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn });
   const clock = createDayClock(0.3);

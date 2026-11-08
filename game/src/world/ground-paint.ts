@@ -1,19 +1,23 @@
 /**
  * One chunk's ground as a single canvas at half resolution (1 canvas px = 2 world px, the 2x art scale):
- * biome colour per pixel with chunky dithered borders, shore foam and banks, then roads as soft dirt
- * ribbons, worked tracks, plank bridges, fords and ferry pontoons laid over it. Pure canvas; no Phaser.
+ * the tiles refined to L4 sub-cells (sim/map/ladder/refine.ts refineDetail), so borders round off inside a
+ * tile and dither by 2 px; per-pixel biome colour tinted by the sub-cell's ground variant; shore foam and
+ * banks, forest fringes, hill rims and field verges; small props (ground-detail.ts); then roads as soft
+ * dirt ribbons, worked tracks, plank bridges, fords and ferry pontoons laid over it. Pure canvas; no Phaser.
  */
 import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import type { ChunkTiles } from '../sim/map/types';
+import { DETAIL_SPLIT, refineDetail } from '../sim/map/ladder/refine';
+import { EDGE, FIELDS, FOREST, HILLS, MEADOW, VARIANT_TINT, WATER, paintDetailProps, type Rgb } from './ground-detail';
 
 const S = CHUNK_SIZE;
 const CPX = TILE_PX / 2; // canvas px per tile
 const SIZE = S * CPX;
 const G = S + 2; // grid with a one-tile border
+const SUB = CPX / DETAIL_SPLIT; // canvas px per L4 sub-cell
+const CLASSES = 5;
 
-// Ground classes painted per pixel. Overlays (roads, tracks, decks, fords, ferries) go on top.
-const MEADOW = 0, FIELDS = 1, FOREST = 2, HILLS = 3, WATER = 4;
-type Rgb = [number, number, number];
+// Ground classes painted per pixel (ground-detail.ts). Overlays (roads, tracks, decks, fords, ferries) go on top.
 const PAL: Rgb[][] = [
   [[0x6e, 0x9a, 0x48], [0x79, 0xa6, 0x50], [0x62, 0x8b, 0x40]],
   [[0x9c, 0x99, 0x56], [0xa8, 0xa4, 0x61], [0x8b, 0x88, 0x4a]],
@@ -53,9 +57,9 @@ const hash = (x: number, y: number): number => {
 /**
  * Paint a chunk. `around(q, r)` gives the drawn ground id of tiles just outside the chunk (one ring), so
  * borders and road ribbons carry across chunk edges. `under(q, r)` is the land beneath a road or track
- * (its verge takes the colour of the fields or hills it crosses).
+ * (its verge takes the colour of the fields or hills it crosses). `seed` seeds the L4 detail.
  */
-export function paintGround(chunk: ChunkTiles, around: (q: number, r: number) => string, under: (q: number, r: number) => string): HTMLCanvasElement {
+export function paintGround(chunk: ChunkTiles, around: (q: number, r: number) => string, under: (q: number, r: number) => string, seed = 0): HTMLCanvasElement {
   const q0 = chunk.cx * S, r0 = chunk.cy * S;
   const base = new Uint8Array(G * G);
   const over: Overlay[] = new Array(G * G).fill(null);
@@ -71,6 +75,8 @@ export function paintGround(chunk: ChunkTiles, around: (q: number, r: number) =>
     base[gy * G + gx] = c.base;
     over[gy * G + gx] = c.over;
   }
+  const det = refineDetail(seed, base, G, q0, r0, S, CLASSES);
+  const DS = det.size;
 
   const canvas = document.createElement('canvas');
   canvas.width = SIZE;
@@ -78,39 +84,46 @@ export function paintGround(chunk: ChunkTiles, around: (q: number, r: number) =>
   const ctx = canvas.getContext('2d')!;
   const img = ctx.createImageData(SIZE, SIZE);
   const d = img.data;
-  const cls = new Uint8Array(SIZE * SIZE);
+  // Pass 1: class per pixel, one px ring included, from the L4 sub-cells sampled through a 2 px dither.
+  const P = SIZE + 2;
+  const cls = new Uint8Array(P * P), vary = new Uint8Array(P * P);
   const ox = q0 * CPX, oy = r0 * CPX;
-  // Pass 1: class per pixel, sampled through a chunky 4px jitter so borders dither instead of stepping.
-  for (let py = 0; py < SIZE; py++) for (let px = 0; px < SIZE; px++) {
-    const hb = hash((ox + px) >> 2, (oy + py) >> 2);
-    const jx = (hb & 7) - 3, jy = ((hb >> 3) & 7) - 3;
-    const tx = Math.floor((px + jx) / CPX) + 1, ty = Math.floor((py + jy) / CPX) + 1;
-    cls[py * SIZE + px] = base[Math.max(0, Math.min(G - 1, ty)) * G + Math.max(0, Math.min(G - 1, tx))]!;
+  const DITHER = [-2, -1, 1, 2];
+  for (let py = -1; py <= SIZE; py++) for (let px = -1; px <= SIZE; px++) {
+    const hb = hash((ox + px) >> 1, (oy + py) >> 1);
+    const sx = Math.floor((px + DITHER[hb & 3]!) / SUB) + 1, sy = Math.floor((py + DITHER[(hb >> 2) & 3]!) / SUB) + 1;
+    cls[(py + 1) * P + px + 1] = det.cls[sy * DS + sx]!;
+    vary[(py + 1) * P + px + 1] = det.variant[sy * DS + sx]!;
   }
-  // Pass 2: colour, texture, shore foam and banks.
+  // Pass 2: colour and variant tint, shore foam and banks, forest fringes, hill rims, field verges.
   for (let py = 0; py < SIZE; py++) for (let px = 0; px < SIZE; px++) {
-    const i = py * SIZE + px, c = cls[i]!;
+    const k = (py + 1) * P + px + 1, c = cls[k]!;
+    const up = cls[k - P]!, dn = cls[k + P]!, lf = cls[k - 1]!, rt = cls[k + 1]!;
     const h = hash(ox + px, oy + py);
     const v = (h >>> 6) & 15;
     let rgb = PAL[c]![v < 1 ? 2 : v < 2 ? 1 : 0]!;
-    const wet = (x: number, y: number) => x >= 0 && y >= 0 && x < SIZE && y < SIZE && cls[y * SIZE + x] === WATER;
+    let tint = true;
     if (c === WATER) {
-      if (!wet(px - 1, py) || !wet(px + 1, py) || !wet(px, py - 1) || !wet(px, py + 1)) {
-        const edgeX = px === 0 || px === SIZE - 1, edgeY = py === 0 || py === SIZE - 1;
-        if (!edgeX && !edgeY) rgb = FOAM;
-      } else if ((hash((ox + px) >> 2, oy + py) & 511) === 0) rgb = RIPPLE;
-    } else {
-      if (wet(px, py + 1) || wet(px, py - 1) || wet(px + 1, py) || wet(px - 1, py)) rgb = BANK;
-      else if (c === MEADOW && ((h >>> 12) & 31) === 0) rgb = PAL[FOREST]![0]!;
-      else if (c === FIELDS && ((oy + py) & 3) === 0) rgb = PAL[FIELDS]![2]!;
-      else if (c === FOREST && ((h >>> 12) & 7) === 0) rgb = [0x2c, 0x48, 0x28];
-      else if (c === HILLS && ((h >>> 12) & 15) === 0) rgb = [0xa8, 0xa4, 0x86];
-    }
-    d[i * 4] = rgb[0];
-    d[i * 4 + 1] = rgb[1];
-    d[i * 4 + 2] = rgb[2];
-    d[i * 4 + 3] = 255;
+      if (up !== WATER || dn !== WATER || lf !== WATER || rt !== WATER) { rgb = FOAM; tint = false; }
+      else if ((hash((ox + px) >> 2, oy + py) & 511) === 0) rgb = RIPPLE;
+    } else if (up === WATER || dn === WATER || lf === WATER || rt === WATER) { rgb = BANK; tint = false; }
+    else if (c === FOREST && (up !== c || dn !== c || lf !== c || rt !== c)) { rgb = EDGE.forest; tint = false; }
+    else if (c === HILLS && up !== c) { rgb = EDGE.hillRim; tint = false; }
+    else if (c === HILLS && dn !== c) { rgb = EDGE.hillShade; tint = false; }
+    else if (c === FIELDS && (up !== c || dn !== c || lf !== c || rt !== c)) { rgb = EDGE.verge; tint = false; }
+    else if (c === MEADOW && ((h >>> 12) & 31) === 0) rgb = PAL[FOREST]![0]!;
+    else if (c === FIELDS && ((oy + py) & 3) === 0) rgb = PAL[FIELDS]![2]!;
+    else if (c === FOREST && ((h >>> 12) & 7) === 0) rgb = [0x2c, 0x48, 0x28];
+    else if (c === HILLS && ((h >>> 12) & 15) === 0) rgb = [0xa8, 0xa4, 0x86];
+    const t = tint ? VARIANT_TINT[c]![vary[k]!]! : null;
+    const i = (py * SIZE + px) * 4;
+    d[i] = t ? rgb[0] + t[0] : rgb[0];
+    d[i + 1] = t ? rgb[1] + t[1] : rgb[1];
+    d[i + 2] = t ? rgb[2] + t[2] : rgb[2];
+    d[i + 3] = 255;
   }
+  // Pass 3: small props per sub-cell.
+  paintDetailProps(d, SIZE, SUB, det);
   ctx.putImageData(img, 0, 0);
   paintOverlays(ctx, over);
   return canvas;
