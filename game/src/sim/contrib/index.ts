@@ -35,3 +35,4 @@ import './district-polity';
 import '../civic';
 import './shop';
 import './site-verbs';
+import '../linger';

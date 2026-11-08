@@ -24,6 +24,7 @@ import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
 import { setWorldInternals } from './dev';
+import { attachLinger } from './linger';
 
 export { preloadWorldAssets, createWorldAssets } from './assets';
 
@@ -221,6 +222,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
     ctx.events.on('dawn', () => refresh('all')),
     ctx.events.on('state-replaced', () => { leaveRoom(); tone.snap(); chunks.invalidate(); lastKey = ''; refresh('all'); }),
   ];
+  // Standing still by a tree, rock or fire sits you down (no rest verbs on the ring).
+  const offLinger = attachLinger(ctx, chunks.propsNear);
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
     for (const off of offs) off();
     tone.destroy();
@@ -229,6 +232,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     towns.destroy();
     chunks.destroy();
     fx?.destroy();
+    offLinger();
   });
   setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf });
   return api;

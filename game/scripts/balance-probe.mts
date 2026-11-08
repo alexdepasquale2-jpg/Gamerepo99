@@ -4,8 +4,8 @@
  *
  * Playstyles:
  *   idle   rests every day, does nothing else.
- *   wild   rests, and leans on the wild: every spark-giving prop use it can find each day (the cheese path).
- *   kind   a few kind deeds a day on the dimmest people in town (talk gentle, help, give, show up, promise).
+ *   wild   rests, and leans on the wild: sits by every linger prop it can find each day (the cheese path).
+ *   kind   a few kind deeds a day on the dimmest people in town (talk gentle, help, give, promise).
  *   harsh  the same number of deeds, all hard or savage (talk hard, shame, break a promise, empty cheer).
  *   late   idle for the first twelfth of the run, then kind: a neglected home town greys, then is lit again
  *          (shows despair moving both ways in one town).
@@ -24,7 +24,6 @@
 import archetypesJson from '../src/data/people/archetypes.json';
 import { createPlaySession } from '../src/sim/play-session/play-session';
 import type { PlaySession } from '../src/sim/play-session/play-session-types';
-import type { Target } from '../src/sim/play-session/targets';
 
 const args = process.argv.slice(2);
 const argNum = (name: string, dflt: number): number => {
@@ -43,13 +42,12 @@ const DISTRICT_DAYS = QUICK ? 10 : 30;
 // 'introduce' is left out: introducing the same pair twice pushes a duplicate kin edge (play-session-act) and
 // the next dawn's letters throw "duplicate social edge id" (letters-scale createSocialGraph). Logic, not
 // tuning; reported in the PR. Pass --with-introduce to put it back and see the crash.
-const KIND_DEEDS = ['talk_gentle', 'favor_do', 'work_alongside', 'gift_give', 'show_up', 'promise_make', 'promise_keep', 'carry_goods', 'trade_fair', 'stand_up', ...(args.includes('--with-introduce') ? ['introduce'] : [])];
+const KIND_DEEDS = ['talk_gentle', 'gift_give', 'promise_make', 'promise_keep', 'carry_goods', 'trade_fair', 'stand_up', ...(args.includes('--with-introduce') ? ['introduce'] : [])];
 const HARSH_DEEDS = ['talk_hard_shame', 'promise_break', 'talk_hard', 'talk_empty_cheer'];
-/** Wild props a walker meets most days, with their pure-spark verb (props.json). */
-const WILD_PROPS: [string, string][] = [
-  ['tree', 'shade'], ['hay', 'lie'], ['boulder', 'climb'], ['campfire', 'warm'], ['tent', 'shelter'], ['shrine', 'pray'],
-  ['log', 'sit'], ['camp', 'share'], ['waystation', 'bench'], ['cart', 'lean'], ['field', 'weed'], ['rock', 'sit'],
-];
+/** Wild props a walker meets most days, with a linger tag (props.json): resting is sitting there, not a verb. */
+const WILD_PROPS: string[] = ['tree', 'hay', 'boulder', 'campfire', 'tent', 'shrine', 'log', 'camp', 'waystation', 'cart', 'rock'];
+/** Seconds the cheese walker sits by each one a day (well past what the daily prop cap pays for). */
+const LINGER_SECS = 120;
 
 /** Runs that threw inside the sim (where, which day, the first line of the error). */
 const CRASHES: { where: string; day: number; error: string }[] = [];
@@ -102,12 +100,7 @@ function dayOfDeeds(s: PlaySession, style: 'kind' | 'harsh', day: number): void 
 }
 
 function dayOfWild(s: PlaySession, day: number): void {
-  for (const [type, verb] of WILD_PROPS) {
-    const id = `${type}@${day % 7},${(day * 3) % 11}`;
-    const t: Target = { kind: 'prop', id, data: { type } };
-    if (!s.listVerbs(t).some((v) => v.id.startsWith(`prop.${verb}@`))) continue;
-    s.act(`prop.${verb}@prop:${id}`, t);
-  }
+  for (const type of WILD_PROPS) s.linger(`prop:${type}@${day % 7},${(day * 3) % 11}`, LINGER_SECS);
 }
 
 function playRun(seed: number, arch: string, style: Style, days = DAYS): Run {

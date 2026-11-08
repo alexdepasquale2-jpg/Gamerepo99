@@ -258,3 +258,9 @@ export interface AppHooks {
   stop(): void;
   setPaused(paused: boolean): void;
 }
+
+/**
+ * The player's resting pose while lingering by a prop (world/linger.ts sets it through app/pose.ts; the
+ * actors area draws it on the player's figure). null is upright and walking.
+ */
+export type PlayerPose = 'sit' | 'stand' | null;

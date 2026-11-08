@@ -9,6 +9,8 @@ import { TILE_PX } from '../sim/map/constants';
 import { getWalkMul } from '../dev/dev-flags';
 import { Figure } from './figure';
 import { headHeight, inhabitantLook, type PersonLook } from './looks';
+import { onPlayerPose } from '../app/pose';
+import { UPRIGHT, type Posture } from './marks';
 import type { TownIndex } from './towns';
 import { padMove } from '../ui/pad/move-source';
 
@@ -208,4 +210,14 @@ export function safe<T>(fn: () => T, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+// ---- Linger pose: sitting down by a tree, rock or fire (world/linger.ts sets it via app/pose.ts). ----
+// Kept apart from createPlayer so the walk code stays as it was. Moving lifts the pose (world/linger.ts).
+const SEATED: Posture = { tint: 0xffffff, scaleY: 0.74, lean: 0, tempo: 1, breath: 0.6 };
+const QUIET: Posture = { tint: 0xffffff, scaleY: 0.97, lean: 0.04, tempo: 1, breath: 0.4 };
+
+/** Draw the pose on the player's figure as it changes. Returns the unsubscribe. */
+export function watchPlayerPose(ctx: GameContext, p: PlayerCtl): () => void {
+  return onPlayerPose(ctx, (pose) => p.figure.setPosture(pose === 'sit' ? SEATED : pose === 'stand' ? QUIET : UPRIGHT));
 }
