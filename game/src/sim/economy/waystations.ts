@@ -9,12 +9,12 @@
  *              along this one; a watch also guards the carts on it for a few days
  * A journey can stop the night at a waystation partway (sim/travel/journey: opts.stopAt). Pure + deterministic.
  */
-import namesJson from '../../data/people/names.json';
 import { addItem, inventoryOf, itemName } from '../goods/inventory';
 import { happeningLine, happeningTownName } from '../happenings';
 import { noteCoinSpend } from '../hoard/events';
 import { gistOf } from '../history-voice';
 import type { LayoutRoute, WorldLayout } from '../map/world-layout';
+import { namePool } from '../names';
 import { deriveRng } from '../rng';
 import { loadTravelTrades, roadVoice, tradePrice, tradeTrust } from '../travel/road-trades';
 import type { TravelSimState } from '../travel/travel-types';
@@ -40,7 +40,6 @@ const INN_NAMES = [
   'The Halfway House', "The Drover's Rest", 'The Milestone', 'The Lantern', 'The Wayfarer', 'The Crossed Keys',
   "The Carter's Arms", 'The Ember', 'The Oak and Ox', 'The Last Lamp', 'The Mended Wheel', 'The Ford House',
 ];
-const GIVEN = (namesJson as { given?: string[] }).given ?? ['Tam'];
 
 /** A roadside inn on every road that has no waystation yet (beside the road, a third of the way along). */
 export function placeRoadsideInns(layout: WorldLayout, seed: number, placed: FacilityPlace[]): FacilityPlace[] {
@@ -178,6 +177,7 @@ export function hireHelp(state: SimState, facilityId: string, tradeId: HireTrade
   addItem(state, 'coin', -price);
   noteCoinSpend(state, price);
   const rng = deriveRng(state.seed, 'inn-hire', state.day, facilityId, tradeId);
+  const GIVEN = namePool(state, place.townIds).given; // a road into a district hires its culture's names
   const name = GIVEN[Math.floor(rng.next() * GIVEN.length)]!;
   const rw = roadwayOf(state);
   (rw.help ??= []).push({ tradeId, name, routeId: place.routeId, day: state.day, facilityId });
