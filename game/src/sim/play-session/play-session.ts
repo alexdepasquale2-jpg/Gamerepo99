@@ -213,7 +213,7 @@ function createPlayModeSession(defaults: {
       session.journey(routeId);
     },
     roads: () => (state ? roadViews(state) : []),
-    journey(routeId, tradeId) {
+    journey(routeId, tradeId, plan) {
       if (!state) return null;
       const st = state;
       const beforeLen = st.bus?.lastIds?.length ?? 0;
@@ -225,7 +225,7 @@ function createPlayModeSession(defaults: {
         regrowNodes(s);
       };
       const settleMoments = beginMomentAct(st, `travel:${routeId}`);
-      const res: JourneyResult = startTravel(st, routeId, { tradeId, runDay, nameOf }).journey;
+      const res: JourneyResult = startTravel(st, routeId, { tradeId, runDay, nameOf, ...plan }).journey;
       settleMoments();
       if (!res.ok) return res;
       tickN += res.days;

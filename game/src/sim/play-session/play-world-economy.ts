@@ -5,6 +5,7 @@ import type { SimState } from '../types/runtime';
 import type { DataTables } from '../load-data';
 import { layoutWorld } from '../map/world-layout';
 import { ensureFacilityCrews, placeFacilities } from '../economy/facilities';
+import { placeRoadsideInns } from '../economy/waystations';
 import { tickCaravans } from '../caravans';
 import { doctrineSupplyHook } from '../doctrine-tick';
 import { assignSettlementTowns } from './play-session-boot';
@@ -23,6 +24,7 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   // same output the old invisible producer gave) plus the world's generated facilities. Positions are
   // derived from seed + road geometry; crews persist in state.facilityStaff.
   const facilities = placeFacilities(world, layout, state.seed);
+  facilities.push(...placeRoadsideInns(layout, state.seed, facilities));
   data.facilities = facilities;
   const producerOf = new Map(facilities.filter((f) => f.producer).map((f) => [f.routeId, f]));
   state.economyRoutes = (world.routes ?? []).map((r) => ({

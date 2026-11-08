@@ -18,6 +18,7 @@ import type { Inhabitant, SimState } from '../types/runtime';
 // journey.ts imports resolveDaysEff/sizeMulFor from here; the cycle is function-body only, so it is safe.
 import { runJourney, type JourneyOpts, type JourneyResult } from './journey';
 import { lapseHappenings } from '../happenings';
+import { runEscort } from './escort';
 
 export type { TravelRoute, EncounterEntry, EncounterTable, TravelSimState } from './travel-types';
 export { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravelRoutes };
@@ -112,7 +113,7 @@ export function startTravel(
   opts?: JourneyOpts,
 ): { daysEff: number; journey?: JourneyResult } {
   if (opts) {
-    const journey = runJourney(state, routeId, opts);
+    const journey = opts.escortCartId ? runEscort(state, opts.escortCartId, opts) : runJourney(state, routeId, opts);
     return { daysEff: journey.ok ? journey.days : 0, journey };
   }
   const routes = state.routes ?? [];

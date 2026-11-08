@@ -166,4 +166,6 @@ export type SimState = {
   historyTold?: Record<string, string[]>;
   /** Happenings in force and recently begun (see sim/happenings; saveable). */
   happenings?: import('../happenings').HappeningsState;
+  /** Road news, crews out, help hired at waystations, watches on the carts (sim/economy/roads; saveable). */
+  roadway?: import('../economy/roads').Roadway;
 };

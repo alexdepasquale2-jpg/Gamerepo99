@@ -53,8 +53,11 @@ export type PlaySession = {
   travel(routeId: string): void;
   /** Roads out of the player's town with today's travellers for hire (seeded per seed/day/route). */
   roads(): import('../travel/journey').RoadView[];
-  /** Take a road on foot, or with one of today's travellers (tradeId). Moves the player to the far town. */
-  journey(routeId: string, tradeId?: string): import('../travel/journey').JourneyResult | null;
+  /**
+   * Take a road on foot, or with one of today's travellers (tradeId). Moves the player to the far town.
+   * `plan`: walk beside a cart to its town instead (escortCartId), or stop a night at a waystation (stopAt).
+   */
+  journey(routeId: string, tradeId?: string, plan?: Pick<import('../travel/journey').JourneyOpts, 'escortCartId' | 'stopAt'>): import('../travel/journey').JourneyResult | null;
   dump(): string;
   getWorld(): FabricWorld | null;
   getSeed(): number;
