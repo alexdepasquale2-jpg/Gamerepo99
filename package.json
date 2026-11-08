@@ -2,7 +2,7 @@
   "name": "the-last-spark",
   "version": "0.1.0",
   "private": true,
-  "description": "The Last Spark \u2014 walk into towns and reignite people, one spark at a time",
+  "description": "The Last Spark — walk into towns and reignite people, one spark at a time",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,10 +22,7 @@
     "perf:dawn": "vite-node scripts/perf-dawn.mts",
     "balance": "vite-node scripts/balance-bots.mts",
     "map:ascii": "vite-node scripts/map-ascii.mts",
-    "build:playtest": "VITE_PLAYTEST=1 vite build --base=./",
-    "game:dev": "vite --config game/vite.config.ts",
-    "game:check": "tsc -p game/tsconfig.json",
-    "game:build": "tsc -p game/tsconfig.json && vite build --config game/vite.config.ts --base=./"
+    "build:playtest": "VITE_PLAYTEST=1 vite build --base=./"
   },
   "dependencies": {
     "phaser": "^3.87.0"
