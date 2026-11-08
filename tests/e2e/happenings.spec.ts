@@ -2,7 +2,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
-const OUT = 'docs/qa/reports/happenings';
+const OUT = process.env.E2E_UPDATE_SHOTS ? 'docs/qa/reports/happenings' : 'test-results/shots/happenings';
 
 type Active = { eventId: string; townId: string; startDay: number; endsDay: number; speakerId?: string; mods: { kind: string }[] };
 type St = {

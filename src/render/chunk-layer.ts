@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 
 import type { ChunkCoord, TileSource } from '../sim';
 import { CHUNK_SIZE } from '../sim/map/constants';
+import { GROUND_DEPTH } from './depth-sort';
 import {
   paintChunkContents,
   paintProp,
@@ -70,7 +71,7 @@ export function createChunkLayer(
         const k = keyOf(coord);
         const chunk = source.getChunk(coord);
         const painted = paintChunkContents(host, ensureFullChunkTiles(chunk));
-        painted.setDepth(0);
+        painted.setDepth(GROUND_DEPTH);
         mounted.set(k, painted);
         if (!all && host.tweens) {
           painted.setAlpha(0);

@@ -3,6 +3,12 @@
 import { SPRITE_SORT } from './asset-manifest';
 import { TILE_PX } from '../sim/map/constants';
 
+/**
+ * Ground chunks sit far below every y-sorted thing. Sprites take depth = world y, which is
+ * negative north of the origin (new worlds put towns there); at ground depth 0 they vanished under it.
+ */
+export const GROUND_DEPTH = -1e9;
+
 /** World pixel Y of the foot/contact point (= sprite origin after placement). */
 export function footY(worldY: number): number {
   return worldY;
