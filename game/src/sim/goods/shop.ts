@@ -18,6 +18,7 @@ import { visitorOf, type Visitor } from '../visitors';
 import { offers } from './caravan-trade';
 import { deliverToTown, priceAt } from './deed-goods';
 import { consumeInstance, mintInstance } from './instances';
+import { noteUse } from '../data-use-world';
 import { ITEMS, ITEM_BY_ID, addItem, inventoryOf, itemName, removeItem } from './inventory';
 
 export type ShopKindId = 'general' | 'baker' | 'smith' | 'produce' | 'pedlar' | 'wagon';
@@ -375,6 +376,7 @@ export function settle(state: SimState, ref: ShopRef, basket: Basket): SettleRes
     }
   }
   if (purse) purse.deals++;
+  noteUse('shops', r.kind);
   const say = r.keeperId ? sayLine(state, view.key, purse?.deals ?? 0, q) : undefined;
   const bits = [
     q.lines.filter((l) => l.side === 'buy').map((l) => `${l.qty} ${l.name}`).join(', '),

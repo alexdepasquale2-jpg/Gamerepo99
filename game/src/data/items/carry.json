@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "spec": "Heavy goods carried by hand (sim/carry.ts). One load at a time, drawn on the player and slowing them. loads: itemId (items.json), name of the load, qty units per trip, speed (walk multiplier while carried), shape (carry-draw art: logs, stones, sack, ore, crate), resource (the LOD resource a facility/wagon pile draws from; default the item's economyResourceId). facilityPiles: facility kind -> load item ids its yard stacks. townPiles: load item ids a town's stock shows as piles by the hearth. thanks: what a delivery that helps someone (their plan, or a town short of it) earns: trust on the person, a coin tip from the carryRewardCoin deeds row, and how many dawns the thanks line keeps.",
+  "spec": "Heavy goods carried by hand (sim/carry.ts). One load at a time, drawn on the player and slowing them. loads: itemId (items.json), name of the load, qty units per trip, speed (walk multiplier while carried), shape (carry-draw art: logs, stones, sack, ore, bale, bolts, crate), resource (the LOD resource a facility/wagon pile draws from; default the item's economyResourceId). offcutOf: a yard that makes none of this load's own resource still stacks it from the offcuts of that one (half its output, rounded up): a lumber camp that only saws timber keeps a firewood heap. facilityPiles: facility kind -> load item ids its yard stacks. townPiles: load item ids a town's stock shows as piles by the hearth (wool and cloth are here because no facility yard or wagon carries cloth, so a weaver's bolts would otherwise never be lifted). thanks: what a delivery that helps someone (their plan, or a town short of it) earns: trust on the person, a coin tip from the carryRewardCoin deeds row, and how many dawns the thanks line keeps.",
   "loads": [
     { "itemId": "timber", "name": "logs", "qty": 3, "speed": 0.7, "shape": "logs" },
     { "itemId": "stone", "name": "stones", "qty": 3, "speed": 0.65, "shape": "stones" },
     { "itemId": "grain", "name": "grain sacks", "qty": 4, "speed": 0.8, "shape": "sack", "resource": "food_grain" },
     { "itemId": "ore", "name": "ore", "qty": 2, "speed": 0.65, "shape": "ore" },
-    { "itemId": "wood", "name": "firewood", "qty": 4, "speed": 0.8, "shape": "logs" },
-    { "itemId": "wool", "name": "wool bales", "qty": 3, "speed": 0.85, "shape": "crate" },
-    { "itemId": "cloth", "name": "cloth bolts", "qty": 3, "speed": 0.85, "shape": "crate" }
+    { "itemId": "wood", "name": "firewood", "qty": 4, "speed": 0.8, "shape": "logs", "offcutOf": "timber" },
+    { "itemId": "wool", "name": "wool bales", "qty": 3, "speed": 0.85, "shape": "bale" },
+    { "itemId": "cloth", "name": "cloth bolts", "qty": 3, "speed": 0.85, "shape": "bolts" }
   ],
   "facilityPiles": {
     "lumber_camp": ["timber", "wood"],
     "mine": ["ore"],
     "mill": ["grain"]
   },
-  "townPiles": ["timber", "stone", "grain", "ore", "wood"],
+  "townPiles": ["timber", "stone", "grain", "ore", "wood", "wool", "cloth"],
   "thanks": { "trust": 0.03, "tipFromPlan": true, "keepDays": 2 }
 }

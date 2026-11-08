@@ -18,6 +18,7 @@ import { FAUNA, propRow, spotStoryKey } from '../../sim/contrib/thing-verbs';
 import { spotTagOf } from '../../sim/map/ladder/dress';
 import { isSpotHeart, spotLore, title } from '../../sim/map/ladder/spot-lore';
 import { usedToday } from '../../sim/contrib/use-effects';
+import { fieldCrop, fieldLabel } from '../../sim/goods/crops';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
 import type { DrawnTile } from '../chunk-layer';
@@ -123,8 +124,11 @@ export function createWorldThings(o: {
       const storyLeft = !!spot && !!st && !usedToday(st, spotStoryKey(spot));
       if (st && !storyLeft && row.verbs.every((v) => usedToday(st, `prop.${v.id}@${row.type}`))) continue;
       const id = `${prop.type}@${q},${r}`;
-      const label = !spot || !lore ? row.name : isSpotHeart(spot.type, prop.type) ? title(lore.name) : `${row.name} by ${lore.name}`;
-      out.push({ key: `prop:${id}`, kind: 'prop', id, x, y, reach: PROP_REACH, label, target: { kind: 'prop', id, data: spot ? { type: prop.type, spot } : { type: prop.type } } });
+      // A field names its crop and how far along it is today (data/economy/crops.json).
+      const crop = prop.type === 'field' ? fieldCrop(prop.state, q, r) : undefined;
+      const label = crop && st ? fieldLabel(crop, st.day) : !spot || !lore ? row.name : isSpotHeart(spot.type, prop.type) ? title(lore.name) : `${row.name} by ${lore.name}`;
+      const data = { type: prop.type, ...(spot ? { spot } : {}), ...(crop ? { crop: crop.id } : {}) };
+      out.push({ key: `prop:${id}`, kind: 'prop', id, x, y, reach: PROP_REACH, label, target: { kind: 'prop', id, data } });
     }
     return out;
   };

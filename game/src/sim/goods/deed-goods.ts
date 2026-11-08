@@ -9,8 +9,12 @@ import { isFoodRes, isShortOf, scarcityOf } from '../economy/food-stock';
 import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
+import { noteUse } from '../data-use-world';
 
-export type DeedGoodsResult = { ok: boolean; line: string; /** Item that changed hands (gift/trade), for presentation. */ itemId?: string };
+export type DeedGoodsResult = {
+  ok: boolean; line: string; /** Item that changed hands (gift/trade), for presentation. */ itemId?: string;
+  /** workYield: what came of it ("+1 Iron Ore"), so a caller can word its own line. */ got?: string[];
+};
 // carry_goods is gone (heavy goods are carried by hand: sim/carry); work_alongside is gone (hold-to-work).
 const GOODS_DEEDS = new Set(['gift_give', 'trade_fair']);
 export const isGoodsDeed = (id: string): boolean => GOODS_DEEDS.has(id);
@@ -93,13 +97,16 @@ export function workYield(state: SimState, personId: string): DeedGoodsResult {
   const rng = deriveRng(state.seed, 'work', state.day, personId);
   const got: string[] = [];
   const job = jobOf(state, personId);
+  noteUse('jobs', job.id);
   for (const y of job.yield) {
     if (y.chance !== undefined && rng.next() >= y.chance) continue;
     addItem(state, y.itemId, y.qty);
     if (y.itemId !== 'coin') for (let k = 0; k < y.qty; k++) mintInstance(state, y.itemId, personId, townOf(state, personId));
     got.push(`${y.qty} ${itemName(y.itemId)}`);
   }
-  return { ok: true, line: `You work alongside ${first(personId)} the ${job.name}. +${got.join(', +')}` };
+  // Their own first name (generated folk have ids like gen_12, whose head is no name).
+  const name = (state.people[personId]?.name ?? first(personId)).split(' ')[0]!;
+  return { ok: true, line: `You work alongside ${name} the ${job.name}.${got.length ? ` +${got.join(', +')}` : ''}`, got: got.map((g) => `+${g}`) };
 }
 
 /** Run the item side of a goods deed. ok=false means the deed should not resolve. */

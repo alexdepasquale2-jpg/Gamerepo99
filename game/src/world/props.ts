@@ -9,6 +9,8 @@ import { TILE_PX } from '../sim/map/constants';
 import { ART_SCALE, ihash } from './art/px';
 import { FLAME_TEX, propTex } from './art/prop-art';
 import { tileFoot } from './depth';
+import { fieldTex, trackField } from './crop-fields';
+import { noteUse } from '../sim/data-use-world';
 
 /** Where a prop stands in the world (px): its tile foot plus the same sub-tile jitter it is drawn with. */
 export function propFoot(prop: FacilityRenderView): { x: number; y: number } {
@@ -26,13 +28,16 @@ export function mountProps(scene: Phaser.Scene, props: FacilityRenderView[]): Ph
     // Sub-tile jitter so rows of props do not read as a grid.
     const jx = Math.round((ihash(q, r, 7) - 0.5) * TILE_PX * 0.5), jy = Math.round((ihash(q, r, 9) - 0.5) * 6);
     const x = f.x + jx, y = f.y + jy;
-    const key = propTex(prop.type, prop.state);
+    // A field row shows its crop at today's stage (world/crop-fields.ts); every other prop has one look.
+    const key = prop.type === 'field' ? fieldTex(prop.state, q, r) : propTex(prop.type, prop.state);
     if (!key) continue;
+    noteUse('props.drawn', prop.type === 'critter' ? `critter.${prop.state}` : prop.type);
     // Fences stay on the tile grid so runs join up.
     const fx = prop.type.startsWith('fence') ? f.x : x, fy = prop.type.startsWith('fence') ? f.y : y;
     const img = scene.add.image(fx, fy, key).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(fy);
     if (prop.type !== 'fence_h' && prop.type !== 'fence_v' && ihash(q, r, 5) < 0.5) img.setFlipX(true);
     out.push(img);
+    if (prop.type === 'field') trackField(img, prop.state, q, r);
     if (prop.type === 'campfire') out.push(flame(scene, fx, fy - 4, q + r));
     else if (prop.type === 'critter') wander(scene, img, prop.state === 'bird', q * 31 + r * 17);
   }

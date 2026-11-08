@@ -9,7 +9,8 @@
  *   hearth/board  { townId? }                 which town's hearth or noticeboard
  *   grave         a stone in state.legacy.graves (`<personId>#<day>`, contrib/graves); GraveData
  *   plot          a build claim id; an older grave is a plot whose id starts with "grave" (or data.grave = true)
- *   node #shrine  a herb patch at a shrine (id ends "#shrine", or data.shrine = true) takes offerings
+ *   prop shrine   the wild shrine stone (`shrine@<q>,<r>`, data.type 'shrine') takes offerings
+ *   node #shrine  a herb patch at a shrine (id ends "#shrine", or data.shrine = true) takes offerings too
  */
 import type { WorldNode } from '../goods/nodes';
 import type { LandTown, LandView } from '../land-acts';
@@ -49,7 +50,14 @@ export function townOfTarget(state: SimState, t: Target): string | undefined {
 }
 
 export const isGrave = (t: Target): boolean => t.kind === 'grave' || (t.kind === 'plot' && (t.id.startsWith('grave') || rec(t).grave === true));
-export const isShrine = (t: Target): boolean => t.kind === 'node' && (t.id.endsWith('#shrine') || rec(t).shrine === true);
+/**
+ * A shrine takes offerings: the wild shrine stone (props.json `shrine`, a prop the world draws at shrine
+ * spots) or the older herb-patch convention. Nothing in the world made the node form, so without the prop
+ * "Offer them at the shrine" was never on any ring.
+ */
+export const isShrine = (t: Target): boolean =>
+  (t.kind === 'prop' && (rec(t).type === 'shrine' || t.id.startsWith('shrine@'))) ||
+  (t.kind === 'node' && (t.id.endsWith('#shrine') || rec(t).shrine === true));
 
 /** The node in the data (the scene's own node object; objects.ts uses the same check). */
 export function nodeData(t: Target): WorldNode | undefined {

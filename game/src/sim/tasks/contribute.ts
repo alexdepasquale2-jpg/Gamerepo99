@@ -17,6 +17,7 @@ import { civicIfAny, siteById, SITE_KIND_BY_ID } from '../civic/sites';
 import { put } from '../civic/store';
 import type { SimState } from '../types/runtime';
 import { noteActToday } from '../embodiment';
+import { workYield } from '../goods/deed-goods';
 import { helpOf, helpIfAny, nameOf, pickLine, taskById, TASKS, verbOfTask, fillTaskLine, wagonStuck, type Task } from './tasks';
 
 export type WorkResult = {
@@ -128,12 +129,18 @@ export function contribute(state: SimState, taskId: string, effort = 1, opts: Co
   const freed = applyToThing(state, t, e);
   const sparkDelta = reward(state, t, e, opts);
   h.byTask[t.id] = (h.byTask[t.id] ?? 0) + e;
-  h.given[capKey(t)] = (h.given[capKey(t)] ?? 0) + e;
+  const givenBefore = h.given[capKey(t)] ?? 0;
+  h.given[capKey(t)] = givenBefore + e;
+  // A full day's help beside someone earns a share of their trade's yield (data/items/jobs.json), once per
+  // lead per day: the moment today's help crosses the cap. No new state: the crossing is the record.
+  const paid = lead && givenBefore < TASKS.capPerPersonPerDay && h.given[capKey(t)]! >= TASKS.capPerPersonPerDay ? workYield(state, lead).got ?? [] : [];
+  const share = paid.length ? `${vars.name} sends you off with a share: ${paid.join(', ')}.` : '';
   const rec = h.today[t.id];
   h.today[t.id] = { ...(lead ? { lead } : {}), goal: t.goal, verb: verbOfTask(t), effort: (rec?.effort ?? 0) + e };
   h.rev++;
   const turn = `${t.id}|${h.byTask[t.id]}`;
-  const line = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  const said = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
+  const line = share ? `${said} ${share}` : said;
   const thanks = lead ? { personId: lead, line: pickLine(state, TASKS.thanks, `${turn}|thanks`, vars) } : undefined;
   // Spark hooks (personal-cost, spark-recovery) still key on the old work_alongside kind: real help counts as it.
   noteActToday(state, 'carry_burden', 'work_alongside');

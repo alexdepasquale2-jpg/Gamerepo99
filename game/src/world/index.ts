@@ -25,6 +25,7 @@ import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
 import { setWorldInternals } from './dev';
 import { attachLinger } from './linger';
+import { restageFields } from './crop-fields';
 
 export { preloadWorldAssets, createWorldAssets } from './assets';
 
@@ -201,6 +202,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
         fx?.apply({ day: soft, night: night * 0.5, towns: [{ ...room.centre, despair: d, warm: 0 }], lights: [], townR: [4000, 10] });
         return;
       }
+      // Fields first, so a chunk mounted this frame already shows today's crop stage.
+      restageFields(st()?.day);
       syncChunks(player);
       things.nodes.update(player);
       things.facilities.update(time);

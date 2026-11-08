@@ -24,6 +24,8 @@ import { targetActionId, type Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
 import { faunaKindOf, nodeData, townOfTarget, type FaunaTargetData } from './target-data';
 import { applyBundle, bundleRefusal, markUsed, usedToday, type Bundle } from './use-effects';
+import { noteUse } from '../data-use-world';
+import { cropStage, fieldCrop } from '../goods/crops';
 
 export type ThingVerbRow = { id: string; label: string; short: string; needs?: Record<string, number>; oncePerDay?: boolean; effect: Bundle };
 
@@ -107,6 +109,10 @@ function actRow(state: SimState, actionId: string, t: Target, prefix: string, ro
   const res = applyBundle(state, effect, ctx);
   if (prefix === 'prop' && state.player.spark > sparkBefore) notePropSpark(state, state.player.spark - sparkBefore);
   if (once) markUsed(state, onceKey(v));
+  // Proof each row and each of its verbs really runs (game/scripts/coverage-world.mts).
+  const file = prefix === 'node' ? 'resource-nodes' : prefix === 'prop' ? 'props' : 'fauna';
+  const kind = prefix === 'node' ? nodeData(t)?.kindId : prefix === 'prop' ? propTypeOf(t) : faunaKindOf(t);
+  if (kind) { noteUse(file, kind); noteUse(`${file}.verbs`, `${kind}.${v.id}`); }
   pushJuice(state, juice, { verb: v.id, target: t.kind, id: t.id, townId, personId: res.residentId, line: res.line });
   return { ok: true, line: res.line || v.label };
 }
@@ -164,12 +170,29 @@ export function spotStoryLine(state: SimState, s: SpotTag): string | null {
   return spotStory(state.seed, s.id, s.type, gist);
 }
 
+/** The crop a field target grows: the scene passes data.crop (sim/map/ladder/dress.ts); else by its tile. */
+export function fieldCropOf(t: Target) {
+  const c = t.data && typeof t.data === 'object' ? (t.data as { crop?: unknown }).crop : undefined;
+  const [q, r] = (t.id.split('@')[1] ?? '').split(',').map(Number);
+  return fieldCrop(typeof c === 'string' ? c : undefined, q || 0, r || 0);
+}
+
+/**
+ * A field's glean follows its crop and today's stage (data/economy/crops.json): ripe gives more, new-sown
+ * nothing (the verb leaves the ring). Every other prop verb is as written.
+ */
+function propVerbs(state: SimState, t: Target, rows: readonly ThingVerbRow[]): ThingVerbRow[] {
+  if (propTypeOf(t) !== 'field') return [...rows];
+  const crop = fieldCropOf(t), stage = cropStage(crop, state.day), name = crop.name.toLowerCase();
+  return rows.flatMap((v) => (v.id !== 'glean' ? [v] : stage.glean <= 0 ? [] : [{ ...v, label: `Glean the ${name}`, short: `Glean ${name}`.slice(0, 16), effect: { ...v.effect, gain: { [crop.itemId]: stage.glean }, done: stage.done } }]));
+}
+
 registerTargetProvider({
   id: 'prop-uses',
   kinds: ['prop'],
   list(state, t) {
     const row = propRow(propTypeOf(t) ?? '');
-    const out = row ? listRows(state, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`) : [];
+    const out = row ? listRows(state, t, 'prop', propVerbs(state, t, row.verbs), (v) => `prop.${v.id}@${row.type}`) : [];
     const spot = propSpotOf(t);
     if (spot && !usedToday(state, spotStoryKey(spot))) out.push({ id: targetActionId('prop.story', t), ...spotVerb(spot.type), family: 'work' });
     return out;
@@ -185,6 +208,10 @@ registerTargetProvider({
       return { ok: true, line };
     }
     const row = propRow(propTypeOf(t) ?? '');
-    return row ? actRow(state, actionId, t, 'prop', row.verbs, (v) => `prop.${v.id}@${row.type}`, 'prop.used') : false;
+    if (!row) return false;
+    if (row.type === 'field' && verbOf(actionId) === 'prop.glean' && cropStage(fieldCropOf(t), state.day).glean <= 0) return { ok: false, line: cropStage(fieldCropOf(t), state.day).done };
+    const res = actRow(state, actionId, t, 'prop', propVerbs(state, t, row.verbs), (v) => `prop.${v.id}@${row.type}`, 'prop.used');
+    if (res && res.ok && row.type === 'field') noteUse('crops.harvest', fieldCropOf(t).id);
+    return res;
   },
 });

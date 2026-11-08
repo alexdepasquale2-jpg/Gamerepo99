@@ -12,6 +12,7 @@ import { ART_SCALE } from '../art/px';
 import { thingTex } from '../art/thing-art';
 import { tileFoot, type Pt } from '../depth';
 import { drawSiteMarks, facilitySiteLook, lookSig } from './site-marks';
+import { noteUse } from '../../sim/data-use-world';
 
 const REACH = 64;
 const KNOWN = new Set(['mill', 'lumber_camp', 'mine', 'waystation']);
@@ -61,6 +62,8 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
       v.marks = look ? drawSiteMarks(scene, look, v.pos.x, v.pos.y) : [];
       for (const m of v.marks) (m as unknown as Phaser.GameObjects.Components.Visible).setVisible(visible);
       if (idle) v.img.setTint(0x8a8a8a); else v.img.clearTint();
+      // Art subject shown (overworld-assets facility.<kind>.<state>): a closed yard is greyed, a staffed one has its crew.
+      noteUse('art', `facility.${v.place.kind}.${idle ? 'idle' : 'working'}`);
       v.crew.forEach((c, i) => c.setVisible(visible && i < staffed).setData('on', i < staffed));
     }
   };

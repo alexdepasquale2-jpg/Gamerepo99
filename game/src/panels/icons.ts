@@ -35,9 +35,14 @@ const SHAPES: Record<string, string[]> = {
   rope: ['', '   oooooo', '  ohhhhhho', ' ohcoooocho', ' ocoohhoocso', ' ocohcccocso', ' ocoscsoocso', ' oscooooscso', '  osssssso', '   oooooo k', '         kk'],
   nails: ['', ' ooo  ooo', ' ohho ohho', ' ooo  ooo', '  oh   oh', '  oc   oc', '  oc   oc', '  oc   oc', '  os   os', '  os   os', '   o    o'],
   brick: ['', '', '', ' oooooooooo', ' ohhhhhhhhco', ' ohcccccccso', ' occcccccsso', ' osssssssss o', ' oooooooooo'],
+  // Crafted goods each get their own outline, so an axe, a mallet and a set of tools never share a slot's look.
+  axe: ['', '   oooo', '  ohhhoo', ' ohhccko', ' ohcssko', '  ooooko', '      ko', '      ko', '      ko', '      ko', '      ko', '       o'],
+  mallet: ['', ' oooooooo', ' ohhhhhho', ' ohcccccso', ' occcccsso', ' oooookooo', '     ko', '     ko', '     ko', '     ko', '     ko', '      o'],
+  kindling: ['', '', '  o o o o', ' ohohohoho', ' ocococoso', ' owwwwwwwo', ' ocococoso', ' ososososo', '  o o o o'],
+  plank: ['', '', 'oooooooooo', 'ohhhhhhhhho', 'occckcccsso', 'oooooooooooo', '  oooooooooo', '  ohhhhhhhho', '  occcckccso', '  osssssssso', '  oooooooooo'],
 };
 /** Item id → shape where the icon kind alone would mislead. */
-const BY_ID: Record<string, string> = { fish: 'fish', grain: 'grain', flax: 'grain', flour: 'sack', pots: 'pot', rope: 'rope', nails: 'nails', clay: 'brick' };
+const BY_ID: Record<string, string> = { fish: 'fish', grain: 'grain', flax: 'grain', flour: 'sack', pots: 'pot', rope: 'rope', nails: 'nails', clay: 'brick', axe: 'axe', mallet: 'mallet', kindling: 'kindling', timber: 'plank' };
 
 const hexToRgb = (hex: string): [number, number, number] => {
   const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);
