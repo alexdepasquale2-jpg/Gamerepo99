@@ -62,6 +62,8 @@ const inTown =
 export const SURFACED: Record<string, Entry> = {
   'person.reaction': own('reaction', 'unspoken', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'refusal.coal_flicker': own('refusal', 'unspoken', 'none', (p) => str(p.personId), (p) => str(p.line)),
+  // An authored moment landing (sim/scenario/moments-live): its line, from the person it happened to.
+  'moment.beat': own('moment', 'unspoken', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'letter.deliver': own('letter', 'letter', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
   'rumor.spread': own('rumor', 'rumor', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
   'history.told': own('history', 'unspoken', 'none', (p) => str(p.personId), (p) => str(p.line)),

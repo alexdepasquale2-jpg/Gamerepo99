@@ -603,6 +603,7 @@ export class OverworldScene extends Phaser.Scene {
     const off = this.session.onJuice((jid) => {
       juiced++;
       if (jid === 'person.reignite' || jid === 'site.kindle') reignited = true;
+      if (jid === 'moment.beat') reignited = true; // an authored moment landing gets the warm burst too
     });
     this.session.act(c.id);
     this.goods.onAct();

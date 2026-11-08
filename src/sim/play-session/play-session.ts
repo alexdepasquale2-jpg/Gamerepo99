@@ -28,6 +28,7 @@ import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
 import { firstTrust } from '../embodiment';
 import { carryHistory } from '../history-voice';
 import '../contrib';
+import { beginMomentAct } from '../scenario/moments-live';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
   attachSuccessionHandle,
@@ -143,6 +144,7 @@ function createPlayModeSession(defaults: {
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
+      const settleMoments = beginMomentAct(state, actionId);
       actMethod(
         state,
         actionId,
@@ -156,16 +158,21 @@ function createPlayModeSession(defaults: {
         },
         interactionRt ? { interactionCompat: interactionRt } : undefined,
       );
+      const beforeMoments = state.bus?.lastIds?.length ?? 0;
+      settleMoments(lastResolveVal);
+      appendJuiceSince(beforeMoments);
       maybeOpenSuccession(state, eventLog, successionOpen);
     },
     tick() {
       if (!state) return;
       tickN += 1;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
+      const settleMoments = beginMomentAct(state, 'rest');
       // Rest is a real dusk then a real dawn: the evening's personal costs, then recovery and the world's day.
       // A fire that goes out in the night burns out before dawn can rekindle it.
       runDuskHooks(state);
       if (maybeOpenSuccession(state, eventLog, successionOpen)) {
+        settleMoments();
         appendJuiceSince(beforeLen);
         eventLog.push({ type: 'tick' });
         return;
@@ -173,6 +180,7 @@ function createPlayModeSession(defaults: {
       advanceToDawn(state);
       tickPackets(state);
       regrowNodes(state);
+      settleMoments();
       appendJuiceSince(beforeLen);
       maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'tick' });
@@ -185,8 +193,10 @@ function createPlayModeSession(defaults: {
     travel(routeId) {
       if (!state) return;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
+      const settleMoments = beginMomentAct(state, `travel:${routeId}`);
       const { daysEff } = startTravel(state, routeId);
       tickN += daysEff;
+      settleMoments();
       appendJuiceSince(beforeLen);
       maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'travel' });
