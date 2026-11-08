@@ -63,7 +63,13 @@ function boot(seed: number): PlaySession {
   return session;
 }
 const advance = (session: PlaySession, days: number): SimState => {
-  for (let i = 0; i < days; i++) session.tick();
+  // An idle player burns out in a few weeks (spark is scarce) and, heirless, the run ends there. These checks
+  // are about the towns, not the player: keep the player's fire fed so the world turns to the dawns they need.
+  for (let i = 0; i < days; i++) {
+    const st = session.getState();
+    if (st) st.player.spark = Math.max(st.player.spark, 80);
+    session.tick();
+  }
   return session.getState()!;
 };
 const blobAfter = (seed: number, days: number): string => serializeSave(saveState(advance(boot(seed), days)));
