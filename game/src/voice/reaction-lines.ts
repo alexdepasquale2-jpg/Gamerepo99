@@ -5,6 +5,9 @@
  */
 
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
+import { jobOf } from '../sim/goods/jobs';
+import type { SimState } from '../sim/types/runtime';
+import { expandGrammar, isGrammar, type GrammarCtx, type GrammarRules, type LinePool } from '../sim/grammar';
 
 export type Tell = 'ember' | 'glance' | 'none';
 export type Presentation = {
@@ -23,35 +26,56 @@ export type PresentCtx = {
    * Undefined when the town is not the player's (far news comes by letter or at dawn instead).
    */
   nearbyPersonId?: (townId?: string, excludeId?: string) => string | undefined;
+  /** Slots and tags for the speaker's fallback grammar (given name, town, job, kin); see voiceAbout. */
+  about?: (personId: string, townId?: string) => GrammarCtx;
+};
+
+/** Grammar context for a speaker plus any slots the payload adds (a patron's name). */
+const aboutOf = (ctx: PresentCtx, personId: string, townId?: string, extra?: Record<string, string>): GrammarCtx => {
+  const a = ctx.about?.(personId, townId) ?? {};
+  return extra ? { ...a, slots: { ...a.slots, ...extra } } : a;
 };
 
 type FallbackFile = {
+  /** Plain lists (some sim modules read these keys as lists themselves). */
   lines: Record<string, string[]>;
+  /** Keys that may be a grammar, expanded with the shared `rules` (sim/grammar.ts). */
+  talk: Record<string, LinePool>;
+  rules: GrammarRules;
   woundChemistry: { deepAtLeast: number; slidAtMost: number };
   notorietyLevels: { id: string; min: number }[];
 };
-const FILE = fallbackJson as FallbackFile;
-const FALLBACK = FILE.lines;
+const FILE = fallbackJson as unknown as FallbackFile;
+const poolOf = (key: string): LinePool | undefined => FILE.talk[key] ?? FILE.lines[key];
+const authored = (key: string): boolean => {
+  const p = poolOf(key);
+  return !!p && (isGrammar(p) ? p.frames.length > 0 : p.length > 0);
+};
 
 /** How often each person has been handed each key this run, so they move on through the pool. */
 const handed = new Map<string, number>();
 
-/** A fallback line: starts where the person's hash says, then steps on each time they say that key again. */
-function pickFallback(key: string, seed: string): string {
-  const arr = FALLBACK[key] ?? [];
-  if (!arr.length) return '';
-  let h = 0;
-  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+/**
+ * A fallback line. A plain list starts where the person's hash says, then steps on each time they say
+ * that key again; a grammar expands off the same person+key+count, so a repeat gives a fresh variant.
+ */
+export function pickFallback(key: string, seed: string, about: GrammarCtx = {}): string {
+  const pool = poolOf(key);
+  if (!pool) return '';
   const k = `${key}|${seed}`;
   const n = handed.get(k) ?? 0;
   handed.set(k, n + 1);
   if (handed.size > 4000) handed.clear();
-  return arr[(h + n) % arr.length]!;
+  if (isGrammar(pool)) return expandGrammar(pool, FILE.rules, about, `${k}|${n}`);
+  if (!pool.length) return '';
+  let h = 0;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return pool[(h + n) % pool.length]!;
 }
 
 /** `base.specific` when authored, else `base`. */
 const keyed = (base: string, specific: string | undefined): string =>
-  specific && FALLBACK[`${base}.${specific}`]?.length ? `${base}.${specific}` : base;
+  specific && authored(`${base}.${specific}`) ? `${base}.${specific}` : base;
 
 /** Wound x method chemistry bucket: 'deep' / 'slid' when clearly off 1, else null (no line). */
 export function woundChemistry(mul: unknown): 'deep' | 'slid' | null {
@@ -76,9 +100,9 @@ type Entry = (p: P, ctx: PresentCtx) => Presentation | null;
 
 const own =
   (cue: string, fb: string, tell: Tell, who: (p: P) => string | undefined, text?: (p: P) => string | undefined): Entry =>
-  (p) => {
+  (p, ctx) => {
     const personId = who(p);
-    return personId ? { kind: 'line', personId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId) } : null;
+    return personId ? { kind: 'line', personId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId, aboutOf(ctx, personId)) } : null;
   };
 
 const nearby =
@@ -86,7 +110,7 @@ const nearby =
   (p, ctx) => {
     const townId = str(p.townId);
     const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
-    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb) } : null;
+    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb, aboutOf(ctx, personId, townId)) } : null;
   };
 
 /** A town-level line carried by someone in the crowd, not the person the act was about. */
@@ -97,17 +121,17 @@ const crowd =
     if (!k) return null;
     const townId = str(p.townId);
     const personId = ctx.nearbyPersonId?.(townId, str(p.personId)) ?? str(p.personId);
-    const line = personId ? pickFallback(k, personId + k) : '';
+    const line = personId ? pickFallback(k, personId + k, aboutOf(ctx, personId, townId)) : '';
     return personId && line ? { kind: 'line', personId, townId, tell, cue, line } : null;
   };
 
 /** The person's own line, from a fallback key chosen off the payload (null key = say nothing). */
 const ownKeyed =
   (cue: string, key: (p: P) => string | null, tell: Tell): Entry =>
-  (p) => {
+  (p, ctx) => {
     const personId = str(p.personId);
     const k = key(p);
-    const line = personId && k ? pickFallback(k, personId + k + (str(p.interactionId) ?? '')) : '';
+    const line = personId && k ? pickFallback(k, personId + k + (str(p.interactionId) ?? ''), aboutOf(ctx, personId)) : '';
     return personId && line ? { kind: 'line', personId, tell, cue, line } : null;
   };
 
@@ -116,17 +140,22 @@ const road: Entry = (p, ctx) => {
   if (p.quiet === true) return null;
   const townId = str(p.townId);
   const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
-  return personId ? { kind: 'line', personId, townId, tell: 'glance', cue: 'road', line: str(p.line) ?? pickFallback('road_encounter', personId + str(p.encounterId)) } : null;
+  return personId ? { kind: 'line', personId, townId, tell: 'glance', cue: 'road', line: str(p.line) ?? pickFallback('road_encounter', personId + str(p.encounterId), aboutOf(ctx, personId, townId)) } : null;
 };
 
-/** A townsperson where it happened notices; `{patron}` in the line is the payload's patronName. */
+/**
+ * A townsperson where it happened notices; `{patron}` is the payload's patronName. A grammar key takes it
+ * as a slot; the replace after covers a key still written as a plain list.
+ */
 const noticed =
   (cue: string, fb: string, tell: Tell): Entry =>
   (p, ctx) => {
     const townId = str(p.townId);
     const personId = ctx.nearbyPersonId?.(townId);
-    const line = pickFallback(fb, (personId ?? '') + fb + (str(p.dealId) ?? '')).replace(/\{patron\}/g, str(p.patronName) ?? 'patron');
-    return personId ? { kind: 'line', personId, townId, tell, cue, line } : null;
+    if (!personId) return null;
+    const patron = str(p.patronName) ?? 'patron';
+    const line = pickFallback(fb, personId + fb + (str(p.dealId) ?? ''), aboutOf(ctx, personId, townId, { patron })).replace(/\{patron\}/g, () => patron);
+    return { kind: 'line', personId, townId, tell, cue, line };
   };
 
 /** A townsperson in `townKey`'s town says the line (payload text first, else a fallback). */
@@ -135,7 +164,7 @@ const inTown =
   (p, ctx) => {
     const townId = str(p[townKey]);
     const personId = ctx.nearbyPersonId?.(townId);
-    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb) } : null;
+    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb, aboutOf(ctx, personId, townId)) } : null;
   };
 
 /** Every juice id that surfaces. */
@@ -205,6 +234,32 @@ export const SILENT: readonly string[] = [
   'person.reignite', 'site.kindle', 'spark.spend', 'succession.open',
   'packet.emit', 'route.travel_step', 'stock.starve', 'hoard.ending_open',
 ];
+
+const given = (name: string | undefined): string | undefined => name?.split(' ')[0] || undefined;
+
+/**
+ * Who the speaker is, for the fallback grammar: given name, town, job, one of their household by name.
+ * Tags let options gate on them: `job_<id>`, `kin` when they have family, `old` / `young` by age.
+ * Reads state only; derived each time so a save never carries it.
+ */
+export function voiceAbout(state: SimState | undefined, personId: string, townId: string | undefined, townName: (id: string) => string): GrammarCtx {
+  const p = state?.people[personId];
+  if (!state || !p) return townId ? { slots: { town: townName(townId) } } : {};
+  const town = p.townId ?? townId;
+  const job = jobOf(state, personId);
+  const hh = state.kin?.households.find((h) => h.adults.includes(personId));
+  const partner = hh?.adults.find((a) => a !== personId);
+  // a grown child who has died stays in the household's list; only name the living
+  const child = hh?.kids
+    .map((k) => state.kin!.children.find((c) => c.id === k))
+    .find((c) => c && (!c.personId || state.people[c.personId]));
+  const kin = given(partner ? state.people[partner]?.name : undefined) ?? child?.given;
+  const tags = [`job_${job.id}`];
+  if (kin) tags.push('kin');
+  if ((p.age ?? 30) >= 55) tags.push('old');
+  else if ((p.age ?? 30) < 20) tags.push('young');
+  return { slots: { name: given(p.name), town: town ? townName(town) : undefined, job: job.name, kin }, tags };
+}
 
 export function presentJuice(id: string, payload: unknown, ctx: PresentCtx = {}): Presentation | null {
   const fn = SURFACED[id];

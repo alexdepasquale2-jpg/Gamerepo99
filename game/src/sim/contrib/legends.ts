@@ -10,8 +10,10 @@ import { registerDawnTick } from '../dawn-ticks';
 import { ensureLegacy } from '../legacy/state';
 import { pushJuice } from '../packets';
 import { registerActionProvider } from '../play-session/action-providers';
+import { expandGrammar, type Grammar } from '../grammar';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { townLabel } from './power-page';
 import { markUsed, usedToday } from './use-effects';
 
 export type LegendTalk = {
@@ -26,8 +28,16 @@ export const LEGEND_TALK = {
   dawnChance: 0.2,
   /** Youngest who passes on a legend. */
   minAge: 14,
-  /** How people frame what they heard; {line} is the legend line. */
-  frames: ['{line}', 'My mother told it me: {line}', 'You hear it at the well still. {line}', 'Old folk swear to it. {line}'],
+  /** How people frame what they heard (sim/grammar.ts); {line} is the legend line, {town} the teller's. */
+  frames: {
+    frames: ['{line}', '#source# told it me: {line}', '#where# {line}', '#swear# {line}', '{line} #after#', '#where# {line} #after#'],
+    rules: {
+      source: ['My mother', 'My father', 'My gran', 'The old carter', 'A tinker once', 'My first master'],
+      where: ['You hear it at the well still.', 'It gets told round the fires in {town}.', 'Every child in {town} knows this one.', 'It is an old one, this.', 'They told it at my naming.'],
+      swear: ['Old folk swear to it.', 'My gran swore it was true.', 'I believe it, mostly.', 'Nobody here doubts it.'],
+      after: ['That is how they tell it.', 'So they say, anyway.', 'I like to think it is true.', 'Mind, I never saw it myself.'],
+    },
+  } satisfies Grammar,
 };
 export const ASK_LEGEND = 'ask_legend';
 const PREFIX = `${ASK_LEGEND}@`;
@@ -85,7 +95,10 @@ export function legendRumour(state: SimState, personId: string): string | null {
   if (!legends.length) return null;
   const rng = deriveRng(state.seed, 'legend-rumour', state.day, personId);
   const line = legends[rng.int(0, legends.length)]!;
-  return LEGEND_TALK.frames[rng.int(0, LEGEND_TALK.frames.length)]!.replace('{line}', () => line);
+  const townId = state.people[personId]?.townId;
+  // Imported legends are free text; a closing stop keeps "{line} That is how they tell it." reading right.
+  const slots = { line: /[.!?"']$/.test(line.trim()) ? line : `${line.trim()}.`, town: townId ? townLabel(state, townId) : undefined };
+  return expandGrammar(LEGEND_TALK.frames, {}, { slots }, `legend-rumour|${state.seed}|${state.day}|${personId}`);
 }
 
 registerActionProvider({

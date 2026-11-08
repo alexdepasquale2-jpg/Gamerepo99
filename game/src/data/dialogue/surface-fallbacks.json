@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "note": "Fallback people-lines for juice events whose payload carries no line. Short, in-voice, never shaming.",
+  "version": 2,
+  "note": "Fallback people-lines for juice events whose payload carries no line. Short, in-voice, never shaming. `lines` are plain lists (read as lists by sim modules); `talk` keys are a list or a grammar {frames, rules} expanded by sim/grammar.ts, with the shared `rules` below.",
   "lines": {
     "start.den_near_hills": ["You're the one from the den under the hill. The little ones say you hum to the coals.", "Saw your smoke on the hill again. Come down slow, the goats spook."],
     "start.den_near_hills.self": ["The den is warm and the hill is quiet. Time to go down and knock.", "Coal's banked. Somebody down there needs a bigger door than they've got."],
@@ -24,98 +24,538 @@
     "entry.yard": ["You come in by the yard gate, stooping under the lintel.", "In through the yard, past the barrels."],
     "entry.office": ["The clerk lifts the counter flap for you. Ink and dust.", "Someone with business on paper. They let you through."],
     "entry.refused.office": ["The clerk shakes their head. Offices are for people with business on paper.", "The ledger office keeps its counter shut to you."],
-    "unspoken": ["Something's different. I can't say what.", "I keep thinking about it."],
-    "letter": ["A letter came. I read it twice.", "Someone remembered me, it seems."],
-    "rumor": ["Did you hear? They're saying things again.", "Word's travelling. Warm word, for once."],
-    "doctrine_voice": ["The way things are done here, that's the way.", "We don't ask. We never did."],
-    "doctrine_exposed": ["Funny. It sounded truer yesterday.", "Somebody's been asking questions."],
-    "doctrine_suppressed": ["Best keep that one quiet now.", "The old words are heavier today."],
-    "doctrine_swap": ["New words in the square. Same hungry faces.", "They changed the song again."],
-    "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
-    "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
-    "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
-    "packet_deliver": ["Word came from over the hill. Someone there's changed.", "News from the next town. Good news, I think."],
-    "status_lose": ["They don't hush for you like they did.", "Folk have stopped waiting on your word."],
-    "route_break": ["The road's gone bad. Carts won't chance it.", "Nobody's come up that road in days."],
-    "stock_deliver": ["The wagon left sacks at the store. We'll eat.", "Supplies came in. The shelves look less sorry."],
     "food_starve": ["the larders are bare, and folk went to bed hungry last night.", "there wasn't bread enough to go round last night. The children ate first."],
     "food_short": ["there's only {days} of food left in the stores.", "the stores are thin: {days} of food, if nobody is greedy."],
     "food_eased": ["the larders are filling again. Nobody went hungry last night.", "there's food enough in the stores now. Folk are breathing easier."],
     "workshop_unpaid": ["no wage came from your {building} this morning.", "the till at your {building} was empty again. That's {days} unpaid."],
     "workshop_quit": ["there's been no wage from your {building} in {days}. That's the end of it.", "nobody works for nothing. {days} unpaid, and done with your {building}."],
-    "caravan_arrive": ["Wagons in the square! Go and see.", "The traders are here. Mind your purse."],
-    "caravan_trade": ["They bought what we had spare. Fair enough price.", "Some coin changed hands at the wagons."],
-    "caravan_depart": ["The wagons are rolling out.", "Traders gone. Quiet again."],
-    "letter_reply": ["A reply came back, folded twice.", "Someone wrote back. Fancy that."],
-    "succession_carried": ["I'll carry it. I don't know how yet, but I'll carry it.", "You kept me warm. Now it's my turn."],
-    "succession_rested": ["They say the fire went out. We'll remember it anyway.", "Someone used to come round. Kind, mostly."],
-    "legend_heard": ["There's an old name people say here.", "Someone like you came through, long ago."],
-    "legend_act": ["That one's strange. Acts like they've done this before.", "Saw the old stranger at it again."],
-    "grave_found": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it."],
-    "kin_birth": ["A little one at ours. Come and see, when you can.", "We've a new mouth to feed, and glad of it."],
-    "kin_grown": ["Grown now. I'll make my own way here.", "First day keeping my own hours. Strange, and good."],
-    "kin_death": ["We laid them by the stones at first light. Sit with me a bit.", "The house is too quiet now.", "I keep setting a place at the table."],
-    "retired": ["My hands have done their share. Someone younger can have the work.", "No more dawns at the bench for me. I'll sit and watch for once."],
-    "notoriety_rise.whisper": ["Someone at the well said your name. Just in passing.", "Folk have noticed your purse, a little."],
-    "notoriety_rise.talk": ["People are talking about the one with the full purse.", "There's a name going round. Yours."],
-    "notoriety_rise.known": ["Everyone knows what you carry now. Everyone.", "Children point when you walk by."],
-    "notoriety_rise.infamous": ["They say your name on the roads now. Not kindly.", "Lock the doors, they say, when you come through."],
-    "notoriety_fall": ["Folk have stopped talking about your purse. Mostly.", "Your name's gone quiet at the well."],
-    "wound_deep": ["...That landed somewhere deep.", "Nobody's ever said it like that to me."],
-    "wound_slid": ["That slid right off me.", "Words. I've heard words before."],
-    "wound_deep.grief": ["That landed somewhere deep. Where they used to be.", "You didn't ask me to stop missing them. Thank you."],
-    "wound_slid.grief": ["Not now. You don't know what I lost.", "That slid off me. Grief's got a thick hide."],
-    "wound_deep.fear": ["That landed somewhere deep. I'm less scared, I think.", "You didn't push. That's why it worked."],
-    "wound_slid.fear": ["Stop. Please. It slid off, I'm only shaking.", "Pushing me just makes me smaller."],
-    "wound_deep.apathy": ["Huh. I actually felt that.", "That landed somewhere deep. Under all the grey."],
-    "wound_slid.apathy": ["Mm. Nice words. Didn't reach.", "That slid right off me."],
-    "wound_deep.exhaustion": ["Oh. Someone took the weight. That landed deep.", "I could sleep for a week. In a good way."],
-    "wound_slid.exhaustion": ["I'm too tired for that. It slid off.", "More? I've nothing left to give it."],
-    "wound_deep.disillusionment": ["Straight talk. That landed somewhere deep.", "You didn't sell me anything. I believe you."],
-    "wound_slid.disillusionment": ["Another pretty story. It slid right off.", "I've heard that promise before."],
-    "wound_deep.shame_wound": ["You didn't look away from me. That landed deep.", "I thought no one would carry this with me."],
-    "wound_slid.shame_wound": ["Don't. That just sinks me further.", "It slid off. Shame's an old coat."],
-    "mark": ["Something stays with me after that.", "I'll be thinking about this."],
-    "mark.dependence": ["Don't go far, will you? Stay close.", "You'll come back tomorrow? You'll come back."],
-    "mark.hollowness": ["Yes. Fine. Thank you.", "Sure. I feel... it's fine."],
-    "mark.genuine_growth": ["I think I can do this myself now.", "I'll take it from here. I mean it."],
-    "mark.resentment": ["You pushed. I won't forget it.", "Don't do that to me again."],
-    "mark.fragile_hope": ["Maybe. Don't let me down.", "I want to believe you. I'm trying."],
-    "status_gain": ["People look at you differently now.", "Something's changed in how folk see you."],
-    "status_gain.civic_voice": ["They quiet down when you speak now.", "You stood up for us. Folk listen when you talk."],
     "dawn_inherited_dependence_held": ["{who} says you lean on people the way {prev} did.", "{who} says you still reach for a hand, like {prev} taught you."],
-    "dawn_inherited_dependence_resolved": ["{who} says you stand on your own now. {prev}'s need has let go of you.", "{who} says something in you steadied overnight. You don't need {prev}'s crutch anymore."],
-    "road_encounter": ["You came in off the road? You look like it met you halfway.", "Long road? Sit. Tell me what you saw out there."],
-    "patron_offer": ["There's an offer, if you'll hear it.", "Money wants a word with you."],
-    "patron_deal": ["Shook hands with the {patron}, did you? Count your fingers.", "You're the {patron}'s now. Everyone saw."],
-    "patron_fulfilled": ["Paid up to the {patron}. Didn't think you would.", "The {patron} got what it asked. Less trouble for the rest of us."],
-    "patron_broken": ["The {patron} is saying your name, and not kindly.", "You let the {patron} down. That kind of thing travels."],
-    "patron_betrayed": ["Heard the {patron} turned on you. They always do.", "The {patron} sold you out. Mind the road."],
-    "stash_hidden": ["Under the boards, then. I never saw a thing.", "It'll keep down there. I won't ask."],
-    "stash_stored": ["Down with the rest of it. Mind the damp.", "It'll keep, for a while."],
-    "stash_guard_hired": ["Someone's watching it now. They'll want paying every dawn.", "A guard, is it. Must be worth guarding."],
-    "stash_withdrawn": ["All of it? Then it's just a cellar again.", "Up it comes. Heavier than it looked."],
-    "stash_guard_left": ["Your guard's gone. Wages, they said.", "Nobody's watching the cellar now."],
-    "stash_decay": ["Something's spoiling down there. You can smell it.", "The damp gets into everything."],
-    "item_used": ["That'll be put to good use.", "You thought to bring that? Kind of you."],
-    "item_used.hearth": ["The hearth's warmer for it. Sit a while.", "Smells like home in here now."],
-    "item_used.grave": ["Someone remembered them. That matters.", "I saw what you left on the stone."],
-    "item_used.shrine": ["The shrine's had an offering. First in a while.", "Someone's been tending the old stones."],
-    "item_used.wagon": ["The driver says you've a good hand with a hammer.", "Wagon's sound again. They'll make the next town."],
-    "item_used.board": ["Somebody answered the board. Shelves look better.", "That need's off the board now."],
-    "item_used.plot": ["Every bit brings the walls closer.", "Another load for the build. It's coming on."],
-    "item_used.fauna": ["The beasts round here know you now.", "That animal's calmer since you came by."],
-    "item_used.node": ["You know how to work that ground.", "Good haul, that."],
-    "node_tended": ["Someone's been looking after the patches.", "It'll come back stronger for the care."],
-    "fauna_handled": ["Saw you with the animals. Gentle hands.", "The beasts are settled today."],
-    "fauna_handled.drive": ["Something was at the growing things. Not now.", "You chased it off? The stores thank you."],
-    "fauna_handled.watch": ["You stood still so long, I thought you'd grown roots.", "Nice to see someone stop and look."],
-    "packet_lifted": ["Had word from kin away. Somebody there got their fire back. Made me think I might.", "News came down the road: one of ours is burning again over there. Strange how that warms you."],
-    "packet_dimmed": ["Bad word from away. Someone we know has gone hollow. It sits on you.", "Heard one of ours over the hill has given up. Hard to shake."],
-    "prop_used": ["Saw you out past the fields. Find anything?", "You've been about the wild places, I hear."],
-    "happening": ["Strange morning. Did you feel it too?", "Something's happened. Everyone's talking."]
+    "dawn_inherited_dependence_resolved": ["{who} says you stand on your own now. {prev}'s need has let go of you.", "{who} says something in you steadied overnight. You don't need {prev}'s crutch anymore."]
   },
-  "woundChemistry": {"note": "Method effectiveness vs a person's wound (methods.json). deepAtLeast matches genuine_growth's minMatrix.", "deepAtLeast": 1.2, "slidAtMost": 0.7},
+  "rules": {
+    "open_news": ["", "", "You'll have heard.", "Word's about.", "Here's a thing.", "Morning.", "All {town} has it by now."],
+    "open_plain": ["", "", "Well.", "Listen.", "Mm.", "Here.", "So."],
+    "open_soft": ["", "", "Ah.", "Oh.", "Mm.", "Hm."],
+    "hedge": ["", "", "I think.", "Or that's how it looks to me.", "If you ask me.", "For what it's worth."],
+    "town_talk": ["", "", "Everyone's on about it.", "It's all the talk at the well.", "Ask anyone in {town}.", "Half of {town} saw it.", "Even the {job}s stopped to listen.", {"text": "In all my years I've not seen the like.", "when": ["old"]}, {"text": "My mam says not to listen. I listen.", "when": ["young"]}, {"text": "Folk at the ovens talked of nothing else.", "when": ["job_baker", "job_miller"]}, {"text": "The inn's been full of it.", "when": ["job_innkeeper"]}, {"text": "It came up at the forge before the fire was hot.", "when": ["job_smith"]}, {"text": "The boats came in full of it.", "when": ["job_fisher"]}],
+    "close_warm": ["", "", "Come by when you can.", "Sit a minute, if you like.", "Mind how you go.", "I'll tell {kin} tonight.", "{kin} will want to hear.", "Tell them {name} sent you.", {"text": "I'm at the bench most days, if you want me.", "when": ["job_smith", "job_potter", "job_weaver", "job_ropemaker", "job_stonemason"]}, {"text": "There's a heel of bread for you, if you come by.", "when": ["job_baker"]}],
+    "close_hard": ["", "", "That's all I'll say.", "Mind how you go.", "Keep your head down.", "Watch yourself out there.", "I'd not linger, if I were you."],
+    "close_soft": ["", "", "Anyway.", "That's all.", "Give me a minute.", "Don't mind me.", "I'll be all right."],
+    "after_deep": ["", "", "Give me a moment with it.", "I didn't expect that.", "Thank you.", "I'll be turning that over all night.", "I'll tell {kin} what you said."],
+    "after_slid": ["", "", "Try another day.", "Not today.", "Leave it there.", "I've heard it all before.", "Save your breath."],
+    "after_mark": ["", "", "I mean it.", "You know I do.", "That's all.", "Remember that."],
+    "patron_who": ["the {patron}", "the {patron}", "the {patron}'s people", "the {patron}'s man"]
+  },
+  "talk": {
+    "unspoken": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["Something's different. I can't say what.", "I keep thinking about it.", "Something sits different with me today.", "I can't put a name to it yet.", "It's on the tip of my tongue, whatever it is."]
+      }
+    },
+    "letter": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["A letter came. I read it twice.", "Someone remembered me, it seems.", "There's a letter on my table. I keep reading it.", "Somebody wrote to me. Me!", "A letter, in a hand I know."]
+      }
+    },
+    "rumor": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["Did you hear? They're saying things again.", "Word's travelling. Warm word, for once.", "There's talk going round the wells.", "Folk are passing something along. Warm, mostly.", "You'll hear it soon enough. Everyone has."]
+      }
+    },
+    "doctrine_voice": {
+      "frames": ["#open_plain# #core# #hedge#", "#core# #town_talk#"],
+      "rules": {
+        "core": ["The way things are done here, that's the way.", "We don't ask. We never did.", "It's how my mother did it, and hers.", "Some things you don't take apart to look at.", "{town} has its ways. They've kept us."]
+      }
+    },
+    "doctrine_exposed": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["Funny. It sounded truer yesterday.", "Somebody's been asking questions.", "Somebody asked why, out loud. Nobody had an answer.", "The old words don't sit right this morning.", "I said them this morning and felt silly."]
+      }
+    },
+    "doctrine_suppressed": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Best keep that one quiet now.", "The old words are heavier today.", "We don't say that one where they can hear.", "Mind who you say the old words to now.", "They've told us to stop saying it. So we whisper."]
+      }
+    },
+    "doctrine_swap": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["New words in the square. Same hungry faces.", "They changed the song again.", "Somebody painted over the old words.", "There's a new saying in the square. I don't know it yet.", "The words changed. The bread didn't."]
+      }
+    },
+    "doctrine_collapse": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet.", "Nobody's saying it at all now. Not even the old ones.", "The square's gone quiet on it.", "I tried to say the words and couldn't find them."]
+      }
+    },
+    "notoriety_rise": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["People are talking about the one with the full purse.", "There's a name going round.", "They talk about your purse at the well.", "There's a name going round, and it's carrying coin."]
+      }
+    },
+    "notoriety_rise.whisper": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Someone at the well said your name. Just in passing.", "Folk have noticed your purse, a little.", "Somebody wondered aloud what's in your bag.", "Just a word or two about you. Nothing much."]
+      }
+    },
+    "notoriety_rise.talk": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["People are talking about the one with the full purse.", "There's a name going round. Yours.", "The well's full of your name this morning.", "They're guessing at your purse now. Loudly."]
+      }
+    },
+    "notoriety_rise.known": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Everyone knows what you carry now. Everyone.", "Children point when you walk by.", "Nobody in {town} needs telling what you carry.", "Your purse walks in before you do now."]
+      }
+    },
+    "notoriety_rise.infamous": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["They say your name on the roads now. Not kindly.", "Lock the doors, they say, when you come through.", "Carters warn each other about you on the road.", "Mothers call the children in when you pass."]
+      }
+    },
+    "notoriety_fall": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["Folk have stopped talking about your purse. Mostly.", "Your name's gone quiet at the well.", "Nobody's counting your coin now. Good.", "The talk's moved on. Somebody's goat, I think.", "They've a new thing to gossip about. Not you."]
+      }
+    },
+    "notoriety_attractor": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin.", "There's a stranger at the gate asking after coin.", "Hard faces on the road this morning.", "Somebody new in {town}, and not here to trade."]
+      }
+    },
+    "stash_theft": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know.", "The cellar door's been forced. I saw the marks.", "Somebody knew where to dig.", "There's mud on the cellar steps that isn't ours."]
+      }
+    },
+    "packet_deliver": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["Word came from over the hill. Someone there's changed.", "News from the next town. Good news, I think.", "Word came over the hill. Someone there has turned a corner.", "A carter brought news from away. Kind news.", "They're saying things are better over the hill."]
+      }
+    },
+    "status_lose": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["They don't hush for you like they did.", "Folk have stopped waiting on your word.", "Nobody waits on your word at the well now.", "They used to stop talking when you came by.", "Folk go about their business when you speak now."]
+      }
+    },
+    "route_break": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["The road's gone bad. Carts won't chance it.", "Nobody's come up that road in days.", "The road out's gone to mud and worse.", "No carts in days. The ruts have grown over.", "The carters won't go that way now. Not for any coin."]
+      }
+    },
+    "stock_deliver": {
+      "frames": ["#open_news# #core# #close_warm#", "#core# #town_talk#"],
+      "rules": {
+        "core": ["The wagon left sacks at the store. We'll eat.", "Supplies came in. The shelves look less sorry.", "Sacks at the store, and full ones.", "The wagon came. There'll be bread tonight.", "The store's got something on its shelves again."]
+      }
+    },
+    "caravan_arrive": {
+      "frames": ["#open_news# #core# #town_talk#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["Wagons in the square! Go and see.", "The traders are here. Mind your purse.", "The traders are in the square, wagons and all.", "There's a caravan come in. Bells on the oxen.", "Wagons! Go and look before the good things go."]
+      }
+    },
+    "caravan_trade": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["They bought what we had spare. Fair enough price.", "Some coin changed hands at the wagons.", "The traders took our spare and left coin.", "We sold the extra. Not a bad price, either.", "Coin for the spare sacks. Fair, I'd say."]
+      }
+    },
+    "caravan_depart": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["The wagons are rolling out.", "Traders gone. Quiet again.", "The traders are off down the road.", "The square's empty again. Just dust.", "They've gone. Somebody's already missing the bells."]
+      }
+    },
+    "letter_reply": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["A reply came back, folded twice.", "Someone wrote back. Fancy that.", "A reply came. They took the trouble.", "Someone wrote back. I didn't think they would.", "An answer came on the cart, folded small."]
+      }
+    },
+    "succession_carried": {
+      "frames": ["#core#", "#core# #after_mark#", "#open_soft# #core# #after_deep#"],
+      "rules": {
+        "core": ["I'll carry it. I don't know how yet, but I'll carry it.", "You kept me warm. Now it's my turn.", "I'll keep it lit. I don't know how. I will.", "You warmed me when I was cold. I'll do the same.", "It's mine to carry now. I'm ready, or near enough."]
+      }
+    },
+    "succession_rested": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["They say the fire went out. We'll remember it anyway.", "Someone used to come round. Kind, mostly.", "Someone used to come round with a kind word. We'll miss that.", "The fire went out, they say. We still remember the warmth.", "They looked after us. I'll not forget it."]
+      }
+    },
+    "legend_heard": {
+      "frames": ["#open_plain# #core# #hedge#", "#core#"],
+      "rules": {
+        "core": ["There's an old name people say here.", "Someone like you came through, long ago.", "There's an old name people still say.", "Somebody like you passed through, long ago. Folk still talk.", "The old ones tell of someone who carried a light."]
+      }
+    },
+    "legend_act": {
+      "frames": ["#open_plain# #core# #hedge#", "#core# #town_talk#"],
+      "rules": {
+        "core": ["That one's strange. Acts like they've done this before.", "Saw the old stranger at it again.", "That one moves like they've done it all before.", "The stranger's at it again. Knows just where to stand.", "Odd one, that. Like they remember something we don't."]
+      }
+    },
+    "grave_found": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it.", "There's a fresh stone by the wall.", "Somebody's laid to rest up the hill. There are flowers.", "A new grave, and somebody's tending it."]
+      }
+    },
+    "kin_birth": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core#"],
+      "rules": {
+        "core": ["A little one at ours. Come and see, when you can.", "We've a new mouth to feed, and glad of it.", "We've a little one at ours. Loud, and perfect.", "A baby at our house! Come and see.", "There's a new face at our table. A very small one."]
+      }
+    },
+    "kin_grown": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Grown now. I'll make my own way here.", "First day keeping my own hours. Strange, and good.", "I keep my own hours now. Odd, and good.", "Grown, they tell me. I'll make my own way.", "My own work, my own door. I'll manage."]
+      }
+    },
+    "kin_death": {
+      "frames": ["#open_soft# #core# #close_soft#", "#core#"],
+      "rules": {
+        "core": ["We laid them by the stones at first light. Sit with me a bit.", "The house is too quiet now.", "I keep setting a place at the table.", "We laid them down by the stones this morning.", "It's too quiet at ours now.", {"text": "{kin} keeps asking where they've gone.", "when": ["kin"]}]
+      }
+    },
+    "retired": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["My hands have done their share. Someone younger can have the work.", "No more dawns at the bench for me. I'll sit and watch for once.", "My hands have done their share.", "Somebody younger can have the bench now.", "I'll sit in the sun and watch the work for once."]
+      }
+    },
+    "wound_deep": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["...That landed somewhere deep.", "Nobody's ever said it like that to me.", "Nobody's said it like that to me.", "That went in deep. I felt it."]
+      }
+    },
+    "wound_deep.grief": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["That landed somewhere deep. Where they used to be.", "You didn't ask me to stop missing them. Thank you.", "You let me miss them. That helped.", "That went in deep, down where they used to be."]
+      }
+    },
+    "wound_deep.fear": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["That landed somewhere deep. I'm less scared, I think.", "You didn't push. That's why it worked.", "You stayed gentle. I'm less scared, I think.", "That went in deep. My hands have stopped shaking."]
+      }
+    },
+    "wound_deep.apathy": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["Huh. I actually felt that.", "That landed somewhere deep. Under all the grey.", "I felt that. I'd forgotten how.", "That went in deep, under all the grey."]
+      }
+    },
+    "wound_deep.exhaustion": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["Oh. Someone took the weight. That landed deep.", "I could sleep for a week. In a good way.", "Someone took the weight for once.", "That went in deep. I could sleep now, properly."]
+      }
+    },
+    "wound_deep.disillusionment": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["Straight talk. That landed somewhere deep.", "You didn't sell me anything. I believe you.", "You didn't dress it up. That's why it went in.", "Plain words. I believe them."]
+      }
+    },
+    "wound_deep.shame_wound": {
+      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
+      "rules": {
+        "core": ["You didn't look away from me. That landed deep.", "I thought no one would carry this with me.", "You didn't look away. That went in deep.", "I thought I'd carry this on my own."]
+      }
+    },
+    "wound_slid": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["That slid right off me.", "Words. I've heard words before.", "That didn't reach me.", "Mm. Words."]
+      }
+    },
+    "wound_slid.grief": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["Not now. You don't know what I lost.", "That slid off me. Grief's got a thick hide.", "You don't know what I lost.", "Grief's got a thick hide. It didn't go in."]
+      }
+    },
+    "wound_slid.fear": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["Stop. Please. It slid off, I'm only shaking.", "Pushing me just makes me smaller.", "Please stop. Pushing makes it worse.", "It didn't go in. I'm only shaking."]
+      }
+    },
+    "wound_slid.apathy": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["Mm. Nice words. Didn't reach.", "That slid right off me.", "Nice words. They didn't reach.", "Mm. Didn't feel a thing."]
+      }
+    },
+    "wound_slid.exhaustion": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["I'm too tired for that. It slid off.", "More? I've nothing left to give it.", "I'm too tired for that.", "I've nothing left to give it."]
+      }
+    },
+    "wound_slid.disillusionment": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["Another pretty story. It slid right off.", "I've heard that promise before.", "Another pretty story.", "I've had that promise before. Didn't keep."]
+      }
+    },
+    "wound_slid.shame_wound": {
+      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
+      "rules": {
+        "core": ["Don't. That just sinks me further.", "It slid off. Shame's an old coat.", "Don't. That sinks me further.", "Shame's an old coat. It didn't go in."]
+      }
+    },
+    "mark": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["Something stays with me after that.", "I'll be thinking about this.", "That'll stay with me.", "I'll be carrying that a while."]
+      }
+    },
+    "mark.dependence": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["Don't go far, will you? Stay close.", "You'll come back tomorrow? You'll come back.", "You'll be back, won't you?", "Stay near. Just for a bit."]
+      }
+    },
+    "mark.hollowness": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["Yes. Fine. Thank you.", "Sure. I feel... it's fine.", "Fine. That's fine.", "Thank you. Yes. Fine."]
+      }
+    },
+    "mark.genuine_growth": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["I think I can do this myself now.", "I'll take it from here. I mean it.", "I can manage this on my own now.", "I'll take it on myself. I want to."]
+      }
+    },
+    "mark.resentment": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["You pushed. I won't forget it.", "Don't do that to me again.", "You pushed me. I felt it.", "I'll remember that."]
+      }
+    },
+    "mark.fragile_hope": {
+      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
+      "rules": {
+        "core": ["Maybe. Don't let me down.", "I want to believe you. I'm trying.", "All right. Maybe.", "I'll try to believe it. Don't make me sorry."]
+      }
+    },
+    "status_gain": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["People look at you differently now.", "Something's changed in how folk see you.", "Folk look at you a bit differently now.", "They've started saying your name with some weight to it.", "There's something new in how people nod to you."]
+      }
+    },
+    "status_gain.civic_voice": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
+      "rules": {
+        "core": ["They quiet down when you speak now.", "You stood up for us. Folk listen when you talk.", "They hush when you speak at the well now.", "You spoke for us. Folk remember that.", "When you talk in the square now, people stop to hear."]
+      }
+    },
+    "road_encounter": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core#"],
+      "rules": {
+        "core": ["You came in off the road? You look like it met you halfway.", "Long road? Sit. Tell me what you saw out there.", "In off the road? You look it.", "Long way? Sit down. What did you see?", "Dust to your knees. Was it a hard road?"]
+      }
+    },
+    "patron_offer": {
+      "frames": ["#open_plain# #core#", "#core# #hedge#"],
+      "rules": {
+        "core": ["There's an offer, if you'll hear it.", "Money wants a word with you.", "Somebody with money wants a word.", "There's an offer, if you've ears for it.", "A deal's waiting, if you'll sit for it."]
+      }
+    },
+    "patron_deal": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_plain# #core# #close_hard#"],
+      "rules": {
+        "core": ["Shook hands with the {patron}, did you? Count your fingers.", "You're the {patron}'s now. Everyone saw.", "You've shaken hands with #patron_who#. Everyone saw.", "So you're working for #patron_who# now.", "A deal with #patron_who#. Count your fingers after."]
+      }
+    },
+    "patron_fulfilled": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_plain# #core# #close_hard#"],
+      "rules": {
+        "core": ["Paid up to the {patron}. Didn't think you would.", "The {patron} got what it asked. Less trouble for the rest of us.", "You kept your word to #patron_who#. I didn't think you would.", "#patron_who.cap# got what they asked for. That's peace, for a while.", "Paid in full, I hear. #patron_who.cap# will leave us be."]
+      }
+    },
+    "patron_broken": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_plain# #core# #close_hard#"],
+      "rules": {
+        "core": ["The {patron} is saying your name, and not kindly.", "You let the {patron} down. That kind of thing travels.", "#patron_who.cap# is saying your name. Not kindly.", "You broke your word to #patron_who#. That travels.", "#patron_who.cap# won't forget that you let them down."]
+      }
+    },
+    "patron_betrayed": {
+      "frames": ["#open_news# #core# #town_talk#", "#open_plain# #core# #close_hard#"],
+      "rules": {
+        "core": ["Heard the {patron} turned on you. They always do.", "The {patron} sold you out. Mind the road.", "#patron_who.cap# turned on you, I hear. They always do.", "Sold out by #patron_who#. Mind the road now.", "So #patron_who# went back on it. Watch your back."]
+      }
+    },
+    "stash_hidden": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Under the boards, then. I never saw a thing.", "It'll keep down there. I won't ask.", "Under the boards. I never saw it.", "It'll keep there. I'll not ask what it is.", "Hidden, then. My mouth's shut."]
+      }
+    },
+    "stash_stored": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Down with the rest of it. Mind the damp.", "It'll keep, for a while.", "In with the rest. Keep it dry.", "Down it goes. It'll keep a while.", "Stored. Mind the damp gets in."]
+      }
+    },
+    "stash_guard_hired": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Someone's watching it now. They'll want paying every dawn.", "A guard, is it. Must be worth guarding.", "There's someone watching it now. They'll want paying each dawn.", "A guard on it. Must be worth a fair bit.", "Someone's sat on the cellar step now. Paid to."]
+      }
+    },
+    "stash_withdrawn": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["All of it? Then it's just a cellar again.", "Up it comes. Heavier than it looked.", "All of it up? Just a cellar again, then.", "Up it comes. Heavier than I thought.", "Cleared out. The boards feel lighter."]
+      }
+    },
+    "stash_guard_left": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Your guard's gone. Wages, they said.", "Nobody's watching the cellar now.", "The guard walked off. No wages, they said.", "No one's watching the cellar now.", "Your watcher's gone home. Didn't get paid."]
+      }
+    },
+    "stash_decay": {
+      "frames": ["#open_plain# #core# #close_hard#", "#open_news# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Something's spoiling down there. You can smell it.", "The damp gets into everything.", "Something's going off down in the cellar.", "The damp's got in. You can smell it from the lane.", "There's rot below. It doesn't take long."]
+      }
+    },
+    "packet_lifted": {
+      "frames": ["#open_news# #core# #close_warm#", "#core#"],
+      "rules": {
+        "core": ["Had word from kin away. Somebody there got their fire back. Made me think I might.", "News came down the road: one of ours is burning again over there. Strange how that warms you.", "One of ours over the hill has their fire back. It warms you, hearing it.", "Kin away wrote: someone's burning bright again. Maybe I can too."]
+      }
+    },
+    "packet_dimmed": {
+      "frames": ["#open_soft# #core# #close_soft#", "#open_plain# #core# #hedge#"],
+      "rules": {
+        "core": ["Bad word from away. Someone we know has gone hollow. It sits on you.", "Heard one of ours over the hill has given up. Hard to shake.", "One of ours away has gone quiet inside. It weighs on you.", "Bad word from over the hill. Someone we know has given up."]
+      }
+    },
+    "happening": {
+      "frames": ["#open_plain# #core# #town_talk#", "#core# #hedge#"],
+      "rules": {
+        "core": ["Strange morning. Did you feel it too?", "Something's happened. Everyone's talking.", "Odd sort of morning. You feel it?", "Something's going on. The whole street's out.", "Everyone's talking at once today."]
+      }
+    },
+    "item_used": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["That'll be put to good use.", "You thought to bring that? Kind of you.", "You brought that? That's kind.", "It'll get used. I'll see to it."]
+      }
+    },
+    "item_used.hearth": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["The hearth's warmer for it. Sit a while.", "Smells like home in here now.", "The hearth's glad of it.", "Warmer in here already."]
+      }
+    },
+    "item_used.grave": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Someone remembered them. That matters.", "I saw what you left on the stone.", "You left something on the stone. I saw.", "They're remembered. That counts."]
+      }
+    },
+    "item_used.shrine": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["The shrine's had an offering. First in a while.", "Someone's been tending the old stones.", "An offering at the old stones. First in an age.", "Somebody's minding the shrine again."]
+      }
+    },
+    "item_used.wagon": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["The driver says you've a good hand with a hammer.", "Wagon's sound again. They'll make the next town.", "The wagon's sound. They'll make the next town.", "Good mending, the driver says."]
+      }
+    },
+    "item_used.board": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Somebody answered the board. Shelves look better.", "That need's off the board now.", "Somebody filled a need off the board.", "One less note on the board."]
+      }
+    },
+    "item_used.plot": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Every bit brings the walls closer.", "Another load for the build. It's coming on.", "Another load for the build.", "The walls are coming on."]
+      }
+    },
+    "item_used.fauna": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["The beasts round here know you now.", "That animal's calmer since you came by.", "The animals know you now.", "That beast's easier since you came."]
+      }
+    },
+    "item_used.node": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["You know how to work that ground.", "Good haul, that.", "You know that ground.", "That's a good haul."]
+      }
+    },
+    "node_tended": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Someone's been looking after the patches.", "It'll come back stronger for the care.", "Somebody's minding the patches.", "It'll come back well for that."]
+      }
+    },
+    "fauna_handled": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Saw you with the animals. Gentle hands.", "The beasts are settled today.", "Gentle with the animals, you are.", "The beasts are quiet today."]
+      }
+    },
+    "fauna_handled.drive": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Something was at the growing things. Not now.", "You chased it off? The stores thank you.", "You chased it off the beds? Good.", "Nothing at the crops tonight, then."]
+      }
+    },
+    "fauna_handled.watch": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["You stood still so long, I thought you'd grown roots.", "Nice to see someone stop and look.", "You stood so still out there.", "It's good to see someone just look."]
+      }
+    },
+    "prop_used": {
+      "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
+      "rules": {
+        "core": ["Saw you out past the fields. Find anything?", "You've been about the wild places, I hear.", "Out past the fields again? Find much?", "Been in the wild places, have you?"]
+      }
+    }
+  },
+  "woundChemistry": {
+    "note": "Method effectiveness vs a person's wound (methods.json). deepAtLeast matches genuine_growth's minMatrix.",
+    "deepAtLeast": 1.2,
+    "slidAtMost": 0.7
+  },
   "notorietyLevels": [{"id": "whisper", "min": 0}, {"id": "talk", "min": 0.25}, {"id": "known", "min": 0.45}, {"id": "infamous", "min": 0.6}]
 }
