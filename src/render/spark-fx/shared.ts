@@ -27,6 +27,12 @@ export type SparkFxOptions = {
 
 export type SparkFxHandle = { detach: () => void };
 
+/**
+ * Base depth for spark fx. The overworld y-sorts sprites (depth = foot y), so fx must sit above
+ * every sprite to be seen at a head or chest, but below name prompts' bubbles (999_000) and the HUD.
+ */
+export const FX_DEPTH = 998_600;
+
 export function ensureParticleTexture(scene: Phaser.Scene, key: string, color: number): void {
   if (scene.textures.exists(key)) return;
   const g = scene.make.graphics({ x: 0, y: 0 });
@@ -67,7 +73,7 @@ export function emitBurst(
     blendMode: 'ADD',
     emitting: false,
   });
-  emitter.setDepth(20);
+  emitter.setDepth(FX_DEPTH + 20);
   emitter.explode(opts.count);
   scene.time.delayedCall(opts.lifespan + 50, () => emitter.destroy());
 }

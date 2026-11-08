@@ -60,7 +60,7 @@ export function attachSparkFx(
       playSfx('reignite');
     }),
     bus.on<RefusalPayload>('vfx.refusal', (p) => playRefusal(scene, p)),
-    bus.on<BurnoutPayload>('vfx.burnout', (p) => { playBurnout(scene, p); playSfx('despair'); }),
+    bus.on<BurnoutPayload>('vfx.burnout', (p) => { playBurnout(scene, p, opts.getPlayerPos); playSfx('despair'); }),
   ];
 
   const originalUpdate = scene.update.bind(scene);

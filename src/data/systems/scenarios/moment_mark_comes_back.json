@@ -83,5 +83,13 @@
     "woundId": "exhaustion",
     "fallback": "first_matching_tags"
   },
-  "specialBar": true
+  "specialBar": true,
+  "beat": {
+    "lines": [
+      {
+        "who": "harold_finch",
+        "text": "Twice now. You keep coming back like it costs nothing."
+      }
+    ]
+  }
 }

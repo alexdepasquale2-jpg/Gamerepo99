@@ -28,7 +28,7 @@ import { createCaravanTrade } from './caravan-trade-ui';
 import { createLivingWorld } from './living-world';
 import type { Navigator } from '../../sim/map/nav';
 import { townBuildings, type Building } from '../../sim/map/interiors';
-import { placeAt, residences } from '../../sim/map/residency';
+import { houseNewcomers, placeAt, residences } from '../../sim/map/residency';
 
 type Pt = { x: number; y: number };
 export type OverworldGoods = {
@@ -43,6 +43,10 @@ export type OverworldGoods = {
   /** Item side of a deed before it resolves; ok=false blocks the deed. */
   beforeDeed: (methodId: string, personId: string, itemId?: string) => { ok: boolean; line?: string };
   useSelected: (indoors?: boolean) => string | null;
+  /** Item id in the selected satchel slot, if any. */
+  selectedItem: () => string | undefined;
+  /** Redraw the satchel/hotbar after the inventory changed outside it. */
+  refreshInventory: () => void;
   letters: () => void;
   readBoard: (player: Pt) => boolean;
   meetCaravan: (player: Pt) => boolean;
@@ -156,11 +160,17 @@ export function attachOverworldGoods(
   };
   // Residency: each town's people are dealt one per enterable building; the day phase decides who is indoors.
   const homes = new Map<string, Building>();
+  const townIds = (townId: string, bornHere?: boolean): string[] =>
+    session.listPeople().filter((p) => p.townId === townId && (bornHere === undefined || bornHere === !!p.tags?.includes('born_here'))).map((p) => p.id);
+  // Founding villagers are dealt one per building; those born since take what is free, so a reload never reshuffles anyone.
   for (const t of layout.settlements) {
-    const bs = townBuildings(t);
-    const ids = session.listPeople().filter((p) => p.townId === t.id).map((p) => p.id);
-    for (const [pid, b] of residences(bs, ids)) homes.set(pid, b);
+    for (const [pid, b] of residences(townBuildings(t), townIds(t.id, false))) homes.set(pid, b);
+    houseNewcomers(homes, townBuildings(t), townIds(t.id));
   }
+  /** After a dawn: grown children and newcomers take a free house; the departed free theirs. */
+  const rehouse = (): void => {
+    for (const t of layout.settlements) houseNewcomers(homes, townBuildings(t), townIds(t.id));
+  };
   people.setResidency(() => life.phase(), homes);
   people.setSchedule((p) => {
     const ph = life.phase();
@@ -208,6 +218,7 @@ export function attachOverworldGoods(
       inv.refresh();
     },
     onDawn() {
+      rehouse();
       nodes.refresh();
       chests.refresh();
       plots.refresh();
@@ -244,6 +255,8 @@ export function attachOverworldGoods(
       const message = useItem(s, id, indoors ? undefined : life.nearestHearth(getPlayer())?.town.id);
       inv.refresh(); return message;
     },
+    selectedItem: () => inv.selectedItem(),
+    refreshInventory: () => inv.refresh(),
     letters: () => mail.open(),
     readBoard: (player) => boards.interact(player),
     openBoard: (townId, page) => boards.openAt(townId, page),
