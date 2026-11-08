@@ -251,3 +251,11 @@ export interface AppHooks {
   stop(): void;
   setPaused(paused: boolean): void;
 }
+
+// ---- carrying by hand (sim/carry, actors/carry-draw) ----
+/** The load in your arms and the drop-at-your-feet the pad's B button calls (actors/carry-draw: carryApi(ctx)). */
+export interface CarryApi {
+  carrying(): import('../sim/carry').Carried | null;
+  /** Let the load fall where you stand (ground items); undefined when your arms are empty. */
+  drop(): ActOutcome | undefined;
+}

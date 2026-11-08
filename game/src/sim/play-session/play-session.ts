@@ -31,6 +31,8 @@ import { fastForward, fullDay } from '../civic/clock';
 import { firstTrust } from '../embodiment';
 import { carryHistory } from '../history-voice';
 import '../contrib';
+import { carryTarget, dropCarried } from '../carry';
+import { targetActionId } from './targets';
 import { beginMomentAct } from '../scenario/moments-live';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
@@ -325,6 +327,19 @@ function createPlayModeSession(defaults: {
     worldFile: (opts) => (state ? exportWorld(state, opts) : null),
     adoptState: (st) => adopt(st as TravelSimState),
     getState: () => state ?? undefined,
+    // ---- carrying by hand (sim/carry): one load in your arms, through the same act path as the ring ----
+    carrying: () => (state?.player.carrying ? { ...state.player.carrying } : null),
+    pickUp(pileKey) {
+      return session.act(targetActionId('carry.lift', carryTarget(pileKey)), carryTarget(pileKey)) ?? { ok: false };
+    },
+    putDown(targetKey) {
+      if (!state) return { ok: false };
+      if (!targetKey) return state.player.x !== undefined && state.player.y !== undefined ? dropCarried(state, { x: state.player.x, y: state.player.y }) : { ok: false, line: 'Set it down where?' };
+      const t = carryTarget(targetKey);
+      return session.act(targetActionId('carry.put', t), t) ?? { ok: false };
+    },
+    dropCarried: (at) => (state ? dropCarried(state, at) : { ok: false }),
+    // ---- end carrying ----
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

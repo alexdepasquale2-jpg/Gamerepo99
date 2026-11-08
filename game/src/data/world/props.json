@@ -59,7 +59,6 @@
       { "id": "chore", "label": "Help with a chore", "short": "Help with chores", "effect": { "gain": { "grain": 1 }, "done": "You carry sacks for an hour. They pay you in grain." } }
     ] },
     { "type": "build_site", "name": "Build site", "verbs": [
-      { "id": "timber", "label": "Leave timber for the builders", "short": "Leave timber", "needs": { "timber": 1 }, "effect": { "spark": 4, "despair": -0.01, "done": "You stack the timber by the frame. Someone will be glad of it." } },
       { "id": "look", "label": "Look over the frame", "short": "Look it over", "effect": { "spark": 1, "done": "Good joints, but half the walls are missing. They need hands." } }
     ] },
     { "type": "campfire", "name": "Campfire", "verbs": [

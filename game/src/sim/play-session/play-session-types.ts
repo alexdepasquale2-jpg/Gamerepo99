@@ -91,6 +91,15 @@ export type PlaySession = {
   adoptState(state: SimState): void;
   /** Live sim state (render-side goods/nodes read + mutate through sim helpers). */
   getState(): SimState | undefined;
+  // ---- carrying by hand (sim/carry) ----
+  /** The load in the player's arms, or null. */
+  carrying(): import('../carry').Carried | null;
+  /** Lift one load off a pile: a pile key (`fac:<id>:<item>`, `town:<id>:<item>`, `wagon:<id>`) or a pile thing key (`prop:pile:…`). */
+  pickUp(pileKey: string): import('./action-providers').ActOutcome;
+  /** Set the load down on a thing by key (`plot:<claim>`, `hearth:<town>`, `wagon:<id>`, a pile); no key drops it where the sim last placed you. */
+  putDown(targetKey?: string): import('./action-providers').ActOutcome;
+  /** Let the load fall at a world point (ground items); the B button. */
+  dropCarried(at: { x: number; y: number }): import('./action-providers').ActOutcome;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }

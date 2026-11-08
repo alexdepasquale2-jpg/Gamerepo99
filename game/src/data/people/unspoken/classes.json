@@ -8,7 +8,7 @@
       "kind": "favor",
       "leaning": "blessing",
       "encodeFrom": {
-        "interactionIds": ["favor_do", "carry_goods"],
+        "interactionIds": ["favor_do"],
         "tagsAny": ["favor", "errand"]
       },
       "baseWeight": 0.4,
