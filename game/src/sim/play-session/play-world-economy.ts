@@ -11,6 +11,7 @@ import { doctrineSupplyHook } from '../doctrine-tick';
 import { assignSettlementTowns } from './play-session-boot';
 import { FOOD_RES } from '../economy/food-stock';
 import { supplyTown } from '../economy/village-economy';
+import { roleFoodItem, roleStock } from '../economy/town-roles';
 
 export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   const data = state.data as DataTables;
@@ -18,12 +19,13 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   const oldTowns = state.towns ?? {};
   state.towns = Object.fromEntries(layout.settlements.map((s) => {
     const old = oldTowns[s.id];
-    const stock: Record<string, number> = { food_grain: 12, timber: 8, ore_iron: 4, ...data.dawnStock.seedStockByTown[s.id], ...old?.stock };
+    // A generated district town has no authored seed row: it starts from its kind and land (null at home).
+    const stock: Record<string, number> = { food_grain: 12, timber: 8, ore_iron: 4, ...roleStock(state.seed, s.id), ...data.dawnStock.seedStockByTown[s.id], ...old?.stock };
     // One food stock (F6): a new town's food seed, or an older save's food_grain, moves into the village
     // ledger once; town.stock never holds food again.
     const food = old ? (old.stock?.[FOOD_RES] ?? 0) : (stock[FOOD_RES] ?? 0);
     delete stock[FOOD_RES];
-    if (food > 0) supplyTown(state, s.id, 'grain', food);
+    if (food > 0) supplyTown(state, s.id, old ? 'grain' : roleFoodItem(state.seed, s.id), food);
     return [s.id, { ...old, id: s.id, q: s.q, r: s.r, stock, despair: old?.despair ?? 0, economyOptIn: true, economySeeded: true }];
   }));
   const oldRoutes = new Map((state.economyRoutes ?? []).map((r) => [r.id, r]));

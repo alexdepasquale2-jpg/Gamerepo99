@@ -26,6 +26,22 @@
       "wool": 8
     }
   },
+  "seedStockByRole": {
+    "description": "Generated district towns (no seedStockByTown row): base stock by town kind plus what the district's land yields. An authored seedStockByTown row always wins.",
+    "base": {
+      "village": { "food_grain": 8, "timber": 4, "fuel_cord": 2, "ore_iron": 0, "wool": 2 },
+      "town": { "food_grain": 12, "timber": 6, "fuel_cord": 3, "ore_iron": 2, "wool": 3 },
+      "city": { "food_grain": 18, "timber": 8, "fuel_cord": 4, "ore_iron": 6, "wool": 5 }
+    },
+    "landBonus": {
+      "fields": { "food_grain": 8 },
+      "meadow": { "food_grain": 3, "wool": 4 },
+      "forest": { "timber": 8, "fuel_cord": 3 },
+      "hills": { "ore_iron": 8 },
+      "water": { "food_grain": 6 }
+    },
+    "landFood": { "water": "fish" }
+  },
   "missingTownStock": "use_seed_or_empty",
   "stockFloor": 0,
   "spoil": {

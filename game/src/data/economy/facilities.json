@@ -83,5 +83,32 @@
       "prism": "facility.work.mine",
       "m2Optional": true
     }
-  ]
+  ],
+  "roles": {
+    "description": "Generated district towns match no row above (their ids are d<col>_<row>_t<i>), so each gets facilities by role: byTownKind lists what a village/town/city keeps, 'land:<i>' meaning the i-th kind its district's land supports (byLand). A role facility borrows outputs, crew tags and prism from templateByKind's row.",
+    "byLand": {
+      "fields": ["mill", "mill"],
+      "meadow": ["mill", "lumber_camp"],
+      "forest": ["lumber_camp", "mill"],
+      "hills": ["mine", "lumber_camp"],
+      "water": ["mill", "waystation"]
+    },
+    "byTownKind": {
+      "village": ["land:0"],
+      "town": ["land:1"],
+      "city": ["land:0", "waystation"]
+    },
+    "templateByKind": {
+      "mill": "fac_ashford_mill",
+      "lumber_camp": "fac_ash_wood_camp",
+      "mine": "fac_reach_quarry",
+      "waystation": "fac_lowmere_waystation"
+    },
+    "nameByKind": {
+      "mill": "{town} Mill",
+      "lumber_camp": "{town} Wood Camp",
+      "mine": "{town} Pit",
+      "waystation": "{town} Waystation"
+    }
+  }
 }

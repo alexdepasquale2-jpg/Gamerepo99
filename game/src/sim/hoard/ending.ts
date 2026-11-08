@@ -6,6 +6,7 @@
 
 import { loadWorldTables } from '../gen/load/load-world-tables';
 import { letItRest } from '../legacy/flow';
+import { districtOfTown, prettyTownId } from '../map/districts';
 import type { SimState } from '../types/runtime';
 import { hoardEndingOpen } from './neglect';
 import { ensureHoard, notorietyTable, siteDefs, type HoardEndingUi } from './state';
@@ -21,7 +22,8 @@ export type HoardEndingChoice = 'continue' | 'quit';
 let townNames: Map<string, string> | undefined;
 export function townDisplayName(id: string): string {
   townNames ??= new Map(loadWorldTables().towns.map((t) => [t.id, t.name]));
-  return townNames.get(id) ?? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  // A generated district town (d<col>_<row>_t<i>) is not in the authored table: use its generated name.
+  return townNames.get(id) ?? (districtOfTown(id) ? prettyTownId(id) : id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
 }
 
 const fill = (s: string, vars: Record<string, string | number>): string => s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));

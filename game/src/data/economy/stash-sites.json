@@ -128,6 +128,31 @@
       ]
     }
   ],
+  "roles": {
+    "description": "Generated district towns get one hidden spot each (id stash_<townId>); authored sites above always win. Numbers by town kind, the name drawn from the district's land and culture.",
+    "byKind": {
+      "village": { "hideDifficulty": 0.65, "capacity": 40, "guardSlots": 0, "decayPerDawn": 0.05, "theftRiskBase": 0.18 },
+      "town": { "hideDifficulty": 0.55, "capacity": 55, "guardSlots": 1, "decayPerDawn": 0.04, "theftRiskBase": 0.2 },
+      "city": { "hideDifficulty": 0.45, "capacity": 80, "guardSlots": 2, "decayPerDawn": 0.02, "theftRiskBase": 0.24 }
+    },
+    "namesByLand": {
+      "forest": ["Hollow oak", "Root cellar under the holly", "Charcoal-burner's pit"],
+      "hills": ["Sheepfold wall cavity", "Old adit mouth", "Cairn under the scree"],
+      "fields": ["Hayrick hollow", "Grain-pit under the threshing floor", "Hedge-bank burrow"],
+      "meadow": ["Byre loft", "Dew-pond culvert", "Stone under the drovers' stile"],
+      "water": ["Eel-trap cache", "Boathouse rafters", "Reed-bed sink"]
+    },
+    "namesByCulture": {
+      "old_hearth": ["Cold chimney nook"],
+      "marsh": ["Peat-cut niche"],
+      "stone": ["Slate-quarry crevice"],
+      "orchard": ["Cider-press cellar"],
+      "salt": ["Salt-pan hutch"]
+    },
+    "namesByKind": {
+      "city": ["Counting-house loose board", "Cellar under the moneylender's"]
+    }
+  },
   "acts": [
     {
       "id": "stash_hide",
