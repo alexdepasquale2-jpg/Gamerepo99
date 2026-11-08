@@ -2,9 +2,30 @@
 
 This is a fresh front end on the proven simulation. The old game in `src/` keeps running until this one replaces it.
 
+**This version lives on branch `claude/v2-scaffold`. It is never merged into `main`.**
+
+## Get it and run it
+Fresh copy:
+```bash
+git clone --branch claude/v2-scaffold https://github.com/alexdepasquale2-jpg/Gamerepo99.git
+cd Gamerepo99
+npm ci
+npm run game:dev
+```
+Or, in an existing checkout:
+```bash
+git fetch origin
+git switch claude/v2-scaffold
+git pull
+npm ci
+npm run game:dev
+```
+Then open http://localhost:5174.
+
 - Dev server: `npm run game:dev` (port 5174)
 - Type check: `npm run game:check`
-- Build: `npm run game:build` (writes `game/dist`)
+- Build: `npm run game:build` (writes `game/dist`; open with `npx vite preview --config game/vite.config.ts`)
+- The old game still runs on the same branch with `npm run dev` (port 5173).
 
 ## What we learned, and the rules that follow
 The old game had a strong simulation that the player couldn't see. It grew about 15 one-off screens, a 1,000-line scene file, 12 single-letter hotkeys, a 17-chip paged ring, and one corner line that carried all the news. Features from 50 PRs were in the build and nobody could find them.
