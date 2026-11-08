@@ -1,6 +1,6 @@
 /**
  * PANELS area: hotbar + satchel, noticeboard (a tab for every board page), wagon trade, letters, world map +
- * minimap, and the road sheet at a signpost. Every sheet opens through ctx.ui.sheet, one at a time; the
+ * minimap, the road sheet at a signpost, and the company sheet (your workshops). Every sheet opens through ctx.ui.sheet, one at a time; the
  * hotbar and minimap sit in a click-through layer over the canvas. See game/README.md.
  */
 import type { GameContext, PanelsApi } from '../app/contracts';
@@ -17,6 +17,7 @@ import { TRADE_ID, tradeSheet } from './trade';
 import { lettersSheet } from './letters';
 import { MAP_ID, createWorldMap } from './map';
 import { createRoads } from './roads';
+import { COMPANY_ID, companySheet, watchCompanyVerbs } from './company';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -61,6 +62,7 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     letters: { open: () => sheets.open(lettersSheet(ctx)) },
     map: { toggle: () => sheets.toggle(MAP_ID, openMap) },
     roads: { open: (townId) => sheets.open(roads.sheet(townId)) },
+    company: { open: (townId, companyId) => sheets.open(companySheet(ctx, townId, companyId)) },
     dragging: () => hotbar.dragging(),
     closeAll() {
       hotbar.cancelDrag();
@@ -85,7 +87,8 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     ctx.events.on('inventory', () => { hotbar.sync(); hudSync(); sheets.refresh(SATCHEL_ID); sheets.refresh(TRADE_ID); }),
     ctx.events.on('act', () => { hotbar.sync(); hudSync(); sheets.refresh(SATCHEL_ID); }),
     ctx.events.on('held-item', () => sheets.refresh(SATCHEL_ID)),
-    ctx.events.on('dawn', () => { hotbar.sync(); hudSync(); }),
+    ctx.events.on('dawn', () => { hotbar.sync(); hudSync(); sheets.refresh(COMPANY_ID); }),
+    watchCompanyVerbs(ctx),
     ctx.events.on('arrive', () => { hotbar.sync(); hudSync(); }),
     ctx.events.on('state-replaced', () => { sheets.close(); hotbar.reset(); map.reset(); hudSync(); }),
   ];

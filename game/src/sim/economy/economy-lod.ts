@@ -7,6 +7,7 @@
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
 import { facilityStaffMul, updateFacilityStaffing } from './facilities';
+import { addStock, drainLegacyFood, foodCover, foodHave, foodStarving, isFoodRes, spoilFood } from './food-stock';
 import type { SimState } from '../types/runtime';
 import type {
   EconomyLodHooks,
@@ -95,6 +96,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
   for (const town of Object.values(state.towns ?? {})) {
     if (town.economyOptIn !== true) continue;
     seedMissingStock(town, data);
+    drainLegacyFood(state, town.id);
     let despairAdd = 0;
 
     // 1–2. Flow along non-broken routes; broken routes add despair + notify doctrine.
@@ -122,25 +124,27 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       for (const [resourceId, base] of produced) {
         const qty = base * route.condition * share;
         if (!(qty > 0)) continue;
-        town.stock[resourceId] = (town.stock[resourceId] ?? 0) + qty;
+        addStock(state, town.id, resourceId, qty);
         result.moved.push({ routeId: route.id, resourceId, qty, toTownId: town.id });
         pushJuice(state, lod.juice.deliver, { townId: town.id, routeId: route.id, resourceId, qty });
       }
     }
 
-    // 3. Spoil (after deliver, before starve).
+    // 3. Spoil (after deliver, before starve). Food spoils in the village ledger, the one food stock.
     if (dawn.spoil.apply) {
       for (const [rid, qty] of Object.entries(town.stock)) {
+        if (isFoodRes(rid)) continue;
         const rate = spoilById.get(rid) ?? 0;
         town.stock[rid] = Math.max(dawn.stockFloor, rate > 0 ? qty * (1 - rate) : qty);
       }
+      spoilFood(state, town.id, spoilById.get(foodId) ?? 0, dawn.stockFloor);
     }
 
-    // 4. Starve.
-    if ((town.stock[foodId] ?? 0) < despairCfg.starveWhenFoodBelow) {
+    // 4. Starve: households went hungry at the last dawn and the ledger still cannot feed a day.
+    if (foodStarving(state, town.id, despairCfg.starveWhenFoodBelow)) {
       despairAdd += despairCfg.onStarve;
       result.starved.push(town.id);
-      pushJuice(state, lod.juice.starve, { townId: town.id, food: town.stock[foodId] ?? 0 });
+      pushJuice(state, lod.juice.starve, { townId: town.id, food: foodHave(state, town.id), cover: foodCover(state, town.id) });
       doctrine(state, { townId: town.id, reason: 'starve', deltaRealDelivery: 0 });
     }
 

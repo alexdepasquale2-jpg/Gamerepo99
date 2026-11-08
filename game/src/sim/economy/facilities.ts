@@ -28,6 +28,7 @@ import { deriveRng } from '../rng';
 import { addItem, itemName } from '../goods/inventory';
 import type { SimState } from '../types/runtime';
 import type { FacilityRow } from './economy-lod-types';
+import { addStock } from './food-stock';
 
 type Worker = { id: string; role: string; shiftHours: number; sparkDrainIfHelp: number; meaningTag: string };
 type KindBlock = {
@@ -353,7 +354,7 @@ export function workShift(state: SimState, facilityId: string, nameOf: (townId: 
     for (const [townId, share] of Object.entries(shares)) {
       const town = state.towns?.[townId];
       if (!town || !(share > 0)) continue;
-      town.stock[out.resourceId] = (town.stock[out.resourceId] ?? 0) + qty * share;
+      addStock(state, townId, out.resourceId, qty * share); // food_grain lands in the village ledger
       (stock[townId] ??= {})[out.resourceId] = qty * share;
     }
     const itemId = block?.shiftItems?.[out.resourceId];

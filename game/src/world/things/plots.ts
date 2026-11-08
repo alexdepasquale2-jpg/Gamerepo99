@@ -80,8 +80,8 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
       objs.push(bar);
     }
     for (const o of objs) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(visible);
-    const owner = (s.people[c.ownerId]?.name ?? c.ownerId).split(' ')[0]!;
-    return { data: d, front, label: `${owner}'s ${BUILDING_BY_ID.get(c.kind)?.name?.toLowerCase() ?? 'plot'}`, objs, sig: '' };
+    const owner = c.ownerId === 'player' ? 'Your' : `${(s.people[c.ownerId]?.name ?? c.ownerId).split(' ')[0]!}'s`;
+    return { data: d, front, label: `${owner} ${BUILDING_BY_ID.get(c.kind)?.name?.toLowerCase() ?? 'plot'}`, objs, sig: '' };
   };
 
   const refresh = (): void => {
