@@ -12,6 +12,7 @@
     "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
     "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
     "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
+    "happening": ["Strange morning. Did you feel it too?", "Something's happened. Everyone's talking."]
   }
 }

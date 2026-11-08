@@ -126,6 +126,8 @@ export type DataTables = {
   wounds: unknown[];
   marks: unknown[];
   events: unknown[];
+  /** Happenings dawn-draw tuning (events.json `tuning`; see sim/happenings). */
+  eventsTuning?: Record<string, unknown>;
   proofs: unknown[];
   time: unknown;
   ripples: unknown;
@@ -253,6 +255,7 @@ export function loadData(): DataTables {
     wounds: (woundsJson.wounds ?? []) as unknown[],
     marks: (marksJson.marks ?? []) as unknown[],
     events: (eventsJson.events ?? []) as unknown[],
+    eventsTuning: (eventsJson as { tuning?: Record<string, unknown> }).tuning,
     proofs: (proofsJson.proofs ?? []) as unknown[],
     time: timeJson,
     ripples: ripplesJson,

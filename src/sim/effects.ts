@@ -19,7 +19,12 @@ export type EffectCtx = {
   playerTraitTags?: string[];
   successor?: { sparkStart?: number };
   town?: Record<string, number>;
+  /** Scratch multipliers ('relapse.mul', 'method.effectiveness'); start at 1. The caller keeps the result. */
+  mods?: Record<string, number>;
 };
+
+/** Person flame runs 0..FLAME_MAX. */
+export const FLAME_MAX = 100;
 
 type MutableEffect = Effect & {
   value?: number | string;
@@ -56,6 +61,11 @@ function getPath(state: SimState, ctx: EffectCtx, target: string): unknown {
     }
     case 'link.packet':
       return state.packets;
+    case 'person.flame':
+      return ctx.targetId ? state.people[ctx.targetId]?.flame : undefined;
+    case 'relapse.mul':
+    case 'method.effectiveness':
+      return ctx.mods?.[target] ?? 1;
     default:
       return undefined;
   }
@@ -88,6 +98,17 @@ function setPath(state: SimState, ctx: EffectCtx, target: string, next: unknown)
       const key = target.slice('town.'.length);
       const town = (ctx.town ??= {});
       town[key] = asNumber(next);
+      break;
+    }
+    case 'person.flame': {
+      const person = ctx.targetId ? state.people[ctx.targetId] : undefined;
+      if (person) person.flame = Math.max(0, Math.min(FLAME_MAX, Math.round(asNumber(next, person.flame))));
+      break;
+    }
+    case 'relapse.mul':
+    case 'method.effectiveness': {
+      const mods = (ctx.mods ??= {});
+      mods[target] = asNumber(next, 1);
       break;
     }
     default:

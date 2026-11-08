@@ -154,4 +154,6 @@ export type SimState = {
   legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
+  /** Happenings in force and recently begun (see sim/happenings; saveable). */
+  happenings?: import('../happenings').HappeningsState;
 };

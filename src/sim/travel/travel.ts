@@ -15,6 +15,7 @@ import type {
   TravelSimState,
 } from './travel-types';
 import type { Inhabitant, SimState } from '../types/runtime';
+import { lapseHappenings } from '../happenings';
 
 export type { TravelRoute, EncounterEntry, EncounterTable, TravelSimState } from './travel-types';
 export { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravelRoutes };
@@ -120,6 +121,7 @@ export function startTravel(state: TravelSimState, routeId: string): { daysEff: 
   for (let i = 0; i < daysEff; i++) {
     // Loom pacing: +2 spark per travel day (not full dawn hooks).
     state.day += 1;
+    lapseHappenings(state);
     state.player.spark = Math.min(sparkMax, (state.player.spark ?? 0) + 2);
     pushJuice(state, 'route.travel_step', { routeId, step: i + 1, daysEff, day: state.day });
     const entry = pickEncounter(table, rng, state);

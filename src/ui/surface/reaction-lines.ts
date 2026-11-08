@@ -40,11 +40,11 @@ const own =
   };
 
 const nearby =
-  (cue: string, fb: string, tell: Tell): Entry =>
+  (cue: string, fb: string, tell: Tell, text?: (p: P) => string | undefined): Entry =>
   (p, ctx) => {
     const townId = str(p.townId);
     const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
-    return personId ? { kind: 'line', personId, townId, tell, cue, line: pickFallback(fb, personId + fb) } : null;
+    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb) } : null;
   };
 
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
@@ -63,6 +63,7 @@ export const SURFACED: Record<string, Entry> = {
   'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
+  'happening.start': nearby('happening', 'happening', 'glance', (p) => str(p.line)),
   'person.reignite': tint,
   'site.kindle': tint,
 };

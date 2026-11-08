@@ -23,6 +23,7 @@ import { fireNotorietyEvent } from '../hoard/events';
 import { applyStashAct, ensureHoard, leverageDiscount, notePeakCoin } from '../hoard';
 import { applyPatronInteraction } from '../patrons';
 import { runHooks } from '../hooks';
+import { happeningMethodMul } from '../happenings';
 import { clamp } from '../interaction/interaction-state';
 import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
@@ -92,7 +93,10 @@ export function actInteraction(
   }
 
   // The inhabitant's body and habits bend every act: method modifiers, status traits, ember zone.
-  const res = resolveInteraction(rt, interactionId, personId, actMuls(s, methodId));
+  const muls = actMuls(s, methodId);
+  // A happening in the person's town can blunt a method for the day (e.g. the market ghost and inspire).
+  muls.powerMul *= happeningMethodMul(s, person.townId, methodId);
+  const res = resolveInteraction(rt, interactionId, personId, muls);
   // Compat: burn the draw legacy commitMethod spent on flame fuzz so seeded mark rolls stay identical.
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
