@@ -138,6 +138,11 @@ export function forceSpark(session: object, spark: number): void {
   h.setSpark(spark);
 }
 
+/** Presentation read: true while the session sits at a succession offer (cheap; no heir scoring). */
+export function isSuccessionOpen(session: object): boolean {
+  return handles.get(session)?.getBurnedOut() ?? false;
+}
+
 export function getSuccessionUi(session: object): SuccessionUi {
   const h = handles.get(session);
   if (!h) throw new Error('succession: session has no succession UI handle');

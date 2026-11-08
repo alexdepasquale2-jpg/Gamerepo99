@@ -1,9 +1,25 @@
 {
   "version": 1,
   "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md",
+  "staffing": {
+    "ableFlame": 10,
+    "restaffFlame": 35,
+    "unstaffedMul": 0.4,
+    "note": "A crew member works while their flame is at least ableFlame. An empty slot is only taken up by someone rekindled to restaffFlame. Output scales from unstaffedMul (nobody at work) to 1 (every role filled)."
+  },
+  "shift": {
+    "meaningSpark": 2,
+    "workSpark": 1,
+    "playerShare": 0.5,
+    "note": "Working a shift: the day's work. The facility's output goes to the road's towns; playerShare of it (at least 1) comes home in your satchel. Any honest shift lifts your spark a little (workSpark); meaningful work (workTags: meaning) lifts it by meaningSpark."
+  },
   "byKind": [
     {
       "facilityKind": "mill",
+      "label": "Mill",
+      "shiftItems": {
+        "food_grain": "flour"
+      },
       "workers": [
         {
           "id": "miller_shift",
@@ -23,6 +39,11 @@
     },
     {
       "facilityKind": "lumber_camp",
+      "label": "Wood Camp",
+      "shiftItems": {
+        "timber": "timber",
+        "fuel_cord": "wood"
+      },
       "workers": [
         {
           "id": "logger_shift",
@@ -35,6 +56,9 @@
     },
     {
       "facilityKind": "waystation",
+      "label": "Waystation",
+      "shiftCoin": 2,
+      "shiftRoadRepair": 0.15,
       "workers": [
         {
           "id": "hostler",
@@ -47,6 +71,10 @@
     },
     {
       "facilityKind": "mine",
+      "label": "Quarry",
+      "shiftItems": {
+        "ore_iron": "ore"
+      },
       "workers": [
         {
           "id": "miner_shift",
@@ -59,6 +87,10 @@
     },
     {
       "facilityKind": "farm",
+      "label": "Farm",
+      "shiftItems": {
+        "food_grain": "grain"
+      },
       "workers": [
         {
           "id": "field_hand",

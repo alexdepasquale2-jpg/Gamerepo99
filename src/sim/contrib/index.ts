@@ -3,4 +3,12 @@
  * registered by importing its module here. Add one import line per system; keep the order stable.
  */
 import './core';
+import './kin-strain';
+import './land';
+import './history';
+import './moments';
+import './households';
+import './inner-state';
+import './power-page';
+import './facilities';
 import './patrons';

@@ -8,6 +8,7 @@ import {
   resolveScenarioPerson,
   type PlaySession,
 } from '../../../src/sim';
+import { momentById } from '../../../src/sim/scenario/moments-live';
 
 const MEMORABLE = [
   'moment_warm_loaf_cold_hill',
@@ -16,6 +17,9 @@ const MEMORABLE = [
   'moment_chalk_after_the_cut',
   'moment_nail_across_the_water',
 ] as const;
+
+/** Who each moment lands on comes from the scenario data (the same rows play matches live). */
+const query = (id: (typeof MEMORABLE)[number]) => momentById(id)!.resolvePerson!;
 
 function asPlay(s: ReturnType<typeof createPlaySession>): PlaySession {
   if (!s || !('start' in s)) throw new Error('expected play session');
@@ -110,11 +114,7 @@ describe('special-bar on generated world', () => {
     {
       const s = asPlay(createPlaySession({ mode: 'play', seed: 7, archetypeId: 'marrow' }));
       s.start();
-      const id = resolveScenarioPerson(s, {
-        preferAnchorId: 'marta_ellison',
-        siteKind: 'bakery',
-        woundId: 'apathy',
-      });
+      const id = resolveScenarioPerson(s, query('moment_warm_loaf_cold_hill'));
       if (id) {
         s.act(`carry_burden@${id}`);
         s.act('advance:dusk');
@@ -127,10 +127,7 @@ describe('special-bar on generated world', () => {
     {
       const s = asPlay(createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' }));
       s.start();
-      const id = resolveScenarioPerson(s, {
-        preferAnchorId: 'jonah_pike',
-        tagsAny: ['child'],
-      });
+      const id = resolveScenarioPerson(s, query('moment_refusal_coal'));
       if (id) {
         s.act(`shame@${id}`);
         results.moment_refusal_coal = s.events().some((e) => e.type === 'refusal.coal_flicker');
@@ -140,10 +137,7 @@ describe('special-bar on generated world', () => {
     {
       const s = asPlay(createPlaySession({ mode: 'play', seed: 99, archetypeId: 'marrow' }));
       s.start();
-      const id = resolveScenarioPerson(s, {
-        preferAnchorId: 'harold_finch',
-        woundId: 'exhaustion',
-      });
+      const id = resolveScenarioPerson(s, query('moment_mark_comes_back'));
       if (id) {
         s.act(`challenge@${id}`);
         s.act(`carry_burden@${id}`);
@@ -155,10 +149,7 @@ describe('special-bar on generated world', () => {
     {
       const s = asPlay(createPlaySession({ mode: 'play', seed: 13, archetypeId: 'ivy_quill' }));
       s.start();
-      const id = resolveScenarioPerson(s, {
-        preferAnchorId: 'ruth_calder',
-        woundId: 'disillusionment',
-      });
+      const id = resolveScenarioPerson(s, query('moment_chalk_after_the_cut'));
       if (id) {
         s.act(`shame@${id}`);
         s.act('advance:dawn');
@@ -171,10 +162,7 @@ describe('special-bar on generated world', () => {
     {
       const s = asPlay(createPlaySession({ mode: 'play', seed: 21, archetypeId: 'marrow' }));
       s.start();
-      const id = resolveScenarioPerson(s, {
-        preferAnchorId: 'elias_boone',
-        woundId: 'grief',
-      });
+      const id = resolveScenarioPerson(s, query('moment_nail_across_the_water'));
       if (id) {
         s.act(`challenge@${id}`);
         s.act('advance:dawn');

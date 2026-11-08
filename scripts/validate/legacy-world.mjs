@@ -29,6 +29,15 @@ export function validateLegacyWorld(data, ctx) {
   for (const k of ['legendLines', 'graveLines', 'inspectLines']) {
     req(Array.isArray(t[k]) && t[k].length >= 1 && t[k].every((l) => l.includes('{legacyName}')), `legacy-world.${k} need {legacyName}`);
   }
+  const arr = t.arrival;
+  req(!!arr, 'legacy-world.arrival copy required (world file import screen)');
+  if (arr) {
+    for (const k of ['heard', 'countMany', 'verbOne', 'verbMany', 'somewhere', 'none', 'legend', 'who', 'lineage', 'ordinalMany', 'deeds', 'noDeeds', 'grave', 'rekindled', 'closeTo']) {
+      req(typeof arr[k] === 'string' && arr[k].length > 0, `legacy-world.arrival.${k} string required`);
+    }
+    for (const k of ['counts', 'ordinals']) req(Array.isArray(arr[k]) && arr[k].length >= 1, `legacy-world.arrival.${k} needs >=1`);
+    for (const m of Object.keys(arr.methodDeeds || {})) req(methods.has(m), `legacy-world.arrival.methodDeeds method unknown: ${m}`);
+  }
   const copy = data['archetypes.json']?.succession?.ui;
   req(t.ui?.screenCopy === copy?.screenCopy && t.ui?.continue === copy?.buttons?.continue && t.ui?.quit === copy?.buttons?.quit, 'legacy-world.ui copy must match locked succession copy');
 }

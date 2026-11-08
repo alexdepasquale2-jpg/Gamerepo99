@@ -7,6 +7,7 @@
     "scoring.json",
     "rules.json",
     "migration.json",
-    "examples.json"
+    "examples.json",
+    "deeds.json"
   ]
 }

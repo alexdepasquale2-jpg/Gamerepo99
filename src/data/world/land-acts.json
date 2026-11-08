@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "spec": "Land acts: small ways the player changes the ground beside them (sim/land-acts.ts). Each act turns a tile whose current ground is in 'on' into 'becomes' (saved as a tile edit), spending 'cost' items and 'labour' from a daily budget (labourPerDay, refilled each dawn); 'yield' items are gained. Stepping stones only go where the water is shallow: natural dry land within shallowReach tiles. Edits within noticeRadiusTiles of a town are talked about there the next dawn ('heard' completes '<who> says someone ... outside <town>.'). log keeps the last logCap acts. Ground already drawn as a stream or a road/track is left alone, and so is a tile holding anything but clearsProps (small growth and stones cleared by the work); structures (farmsteads, fences, fields, camps) block it.",
+  "labourPerDay": 6,
+  "shallowReach": 3,
+  "noticeRadiusTiles": 60,
+  "logCap": 40,
+  "clearsProps": [
+    "bush",
+    "reeds",
+    "flowers",
+    "stump",
+    "rock",
+    "log",
+    "critter"
+  ],
+  "acts": [
+    {
+      "id": "lay_stones",
+      "label": "Lay stepping stones",
+      "on": ["water"],
+      "becomes": "ford",
+      "cost": {
+        "stone": 3
+      },
+      "labour": 1,
+      "done": "You set stones into the shallows. The water can be waded here now.",
+      "heard": "laid stepping stones across the water"
+    },
+    {
+      "id": "clear_brush",
+      "label": "Clear brush",
+      "on": ["forest"],
+      "becomes": "meadow",
+      "cost": {},
+      "labour": 2,
+      "yield": {
+        "wood": 1
+      },
+      "done": "You hack the brush back to open ground and keep the wood.",
+      "heard": "cleared the brush"
+    },
+    {
+      "id": "mend_path",
+      "label": "Mend the path",
+      "on": ["meadow", "fields", "hills"],
+      "becomes": "road_track",
+      "cost": {
+        "timber": 1
+      },
+      "labour": 1,
+      "done": "You lay timber edging and tamp the ground. A path, for whoever comes next.",
+      "heard": "mended a path"
+    }
+  ]
+}

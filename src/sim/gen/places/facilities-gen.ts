@@ -25,6 +25,17 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
 }
 
 /**
+ * facilities.json names roads the authored way (route_<a>_<b>); map one onto this world's generated
+ * road between the same two towns, or null when this world has no such road.
+ */
+export function resolveFacilityRoute(routes: RouteGen[], routeId: string | null | undefined): string | null {
+  if (!routeId) return null;
+  if (routes.some((r) => r.id === routeId)) return routeId;
+  const body = routeId.replace(/^route_/, '');
+  return routes.find((r) => body === `${r.fromId}_${r.toId}` || body === `${r.toId}_${r.fromId}`)?.id ?? null;
+}
+
+/**
  * Facilities whose town or route is selected. Seed-varying subset; always ≥1
  * when any match (or a synthetic mill on the first settlement).
  */
@@ -64,6 +75,7 @@ export function generateFacilities(
       name: f.name,
       kind: f.kind,
       townId: f.townId ?? null,
-      routeId: f.routeId ?? null,
+      // Selection above is unchanged (same rng draws); the road id is then this world's generated road.
+      routeId: resolveFacilityRoute(routes, f.routeId),
     }));
 }

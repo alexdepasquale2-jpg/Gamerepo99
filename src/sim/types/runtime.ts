@@ -123,6 +123,8 @@ export type SimState = {
   polity?: import('../economy/polity').Polity;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
+  /** Facility crews and idle/restaffed state by facility id (see sim/economy/facilities). Positions are re-derived from seed. */
+  facilityStaff?: Record<string, import('../economy/facilities').FacilityStaff>;
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
   /** M4 packet-02: live caravan mobiles. */
@@ -136,10 +138,14 @@ export type SimState = {
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Per-chunk tile edits ("cx,cy" -> "q,r" -> biomeId); generated tiles are never saved. */
   tileEdits?: import('../map/tile-edits').TileEdits;
+  /** Land the player worked (sim/land-acts): today's labour and a short log for townsfolk to notice. */
+  landWork?: import('../land-acts').LandWork;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */
   cargo?: { itemId: string; qty: number; fromPersonId: string; toTownId: string }[];
+  /** Things a person lent the player when asked a favor; handed back with the return deed. */
+  loans?: { itemId: string; qty: number; fromPersonId: string; day: number }[];
   /** M4 packet-02: per-route latch so route.break juices once per false->true transition. */
   routeBreakJuiced?: Record<string, boolean>;
   /** Social graph 06: Blessings and Burdens instances + bounded tuning (saveable). */
@@ -154,4 +160,8 @@ export type SimState = {
   legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
+  /** The world's generated history beats, carried into play (rebuilt from the seed on boot/load). */
+  history?: import('../gen/world-types').HistoryEvent[];
+  /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
+  historyTold?: Record<string, string[]>;
 };
