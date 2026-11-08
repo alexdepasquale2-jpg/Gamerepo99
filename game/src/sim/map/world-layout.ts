@@ -19,6 +19,7 @@ export const settlementKind = (s: { gap01: number }): SettlementKind =>
  * villages orbit towns. Maximise separation with a bounded deterministic search. */
 /** Settlements at the original (pre-WORLD_SCALE) scale; used by save migration. */
 export function placeSettlementsBase(raw: SettlementGen[], seed: number): LayoutSettlement[] {
+  if (raw.length && raw.every((s) => s.at)) return raw.map((s) => ({ id: s.id, kind: settlementKind(s), q: Math.round(s.at!.q / S), r: Math.round(s.at!.r / S) }));
   const rank = { city: 0, town: 1, village: 2 };
   const ordered = raw.slice().sort((a, b) => rank[settlementKind(a)] - rank[settlementKind(b)] || a.id.localeCompare(b.id));
   const placed: LayoutSettlement[] = [];
@@ -53,6 +54,8 @@ export function placeSettlementsBase(raw: SettlementGen[], seed: number): Layout
 
 /** Placed at the original scale, then stretched, so the layout is exactly proportional. */
 export function placeSettlements(raw: SettlementGen[], seed: number): LayoutSettlement[] {
+  // District towns come with their spot already chosen (sim/map/districts).
+  if (raw.length && raw.every((s) => s.at)) return raw.map((s) => ({ id: s.id, kind: settlementKind(s), q: s.at!.q, r: s.at!.r }));
   return placeSettlementsBase(raw, seed).map((p) => ({ ...p, q: Math.round(p.q * S), r: Math.round(p.r * S) }));
 }
 

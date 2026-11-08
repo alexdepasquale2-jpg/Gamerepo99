@@ -55,4 +55,6 @@ export type GenerateWorldOpts = {
   peopleCount?: number;
   /** Merge authored people.json anchors (Ashford cast) into people list. */
   includeAnchors?: boolean;
+  /** Build this district of the realm (sim/map/districts) instead of the home world; omitted = home. */
+  district?: { col: number; row: number };
 };

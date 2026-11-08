@@ -10,10 +10,18 @@ import { despairColor, PLAYER_COLOR } from './map-draw';
 
 const LAND_TINT: Record<string, string> = { forest: '#2f4a2c', hills: '#5a5246', fields: '#6a6a3a', meadow: '#4f6a3a', water: '#2e4a5a' };
 
-/** The home district's despair: the mean of its live towns. */
-function homeDespair(ctx: GameContext): number {
+/** The live district's despair: the mean of its towns now. */
+function liveDespair(ctx: GameContext): number {
   const d = Object.values(ctx.session.townDespair());
   return d.length ? d.reduce((a, b) => a + b, 0) / d.length : 0.3;
+}
+
+/** A district's despair as you know it: live where you are, as you left it where you have been, else its seed. */
+function knownDespair(ctx: GameContext, d: District, live: number): number {
+  const here = ctx.session.district();
+  if (here.col === d.col && here.row === d.row) return live;
+  const seen = (ctx.session.getState() as { realm?: { summaries?: Record<string, { despair: number }> } } | undefined)?.realm?.summaries?.[d.id];
+  return seen?.despair ?? d.despair;
 }
 
 export function playerDistrict(ctx: GameContext): { col: number; row: number } | null {
@@ -33,14 +41,14 @@ export function drawRealm(canvas: HTMLCanvasElement, ctx: GameContext, selected?
   g.fillStyle = '#14120f';
   g.fillRect(0, 0, canvas.width, canvas.height);
   const here = playerDistrict(ctx);
-  const homeD = homeDespair(ctx);
+  const live = liveDespair(ctx);
   for (const d of realm(ctx.seed)) {
     const x = ox + d.col * cell, y = oy + d.row * cell;
     g.fillStyle = LAND_TINT[d.character.land] ?? '#3a3a30';
     g.fillRect(x + 1, y + 1, cell - 2, cell - 2);
     // Despair washes the land toward ash.
     g.globalAlpha = 0.55;
-    g.fillStyle = despairColor(d.home ? homeD : d.despair);
+    g.fillStyle = despairColor(knownDespair(ctx, d, live));
     g.fillRect(x + 1, y + 1, cell - 2, cell - 2);
     g.globalAlpha = 1;
     const span = d.box.q1 - d.box.q0;

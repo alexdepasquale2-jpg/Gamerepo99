@@ -116,7 +116,7 @@ registerDevHook('where', (ctx) => () => ({ ...ctx.world.tileOf(ctx.actors.player
 /** Start, stop and pause the Phaser game for the title flow. */
 export function createApp(): AppHooks {
   let game: Phaser.Game | null = null;
-  return {
+  const hooks: AppHooks = {
     start(session, autosave) {
       game?.destroy(true);
       const g = new Phaser.Game({
@@ -134,6 +134,8 @@ export function createApp(): AppHooks {
           preBoot: (pg) => {
             pg.registry.set('session', session);
             pg.registry.set('autosave', autosave);
+            // A new district is a new world: the whole game is rebuilt around the same session.
+            pg.registry.set('restart', () => window.setTimeout(() => hooks.start(session, autosave), 0));
           },
         },
       });
@@ -153,4 +155,5 @@ export function createApp(): AppHooks {
       }
     },
   };
+  return hooks;
 }

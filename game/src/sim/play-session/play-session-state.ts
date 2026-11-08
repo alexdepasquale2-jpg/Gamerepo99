@@ -2,7 +2,7 @@ import { bindWorldEconomy } from './play-world-economy';
 /** Play-session state assembly: generate world, seed player/people, interaction compat runtime. */
 
 import { createEventBus } from '../event-bus';
-import { generateWorld } from '../fabric/fabric-bake';
+import { worldFor, type DistrictRef } from '../realm';
 import type { FabricWorld } from '../gen/world';
 import { assembleInhabitant } from '../inhabitant';
 import { firstTrust } from '../embodiment';
@@ -30,10 +30,10 @@ export interface PlayBoot {
 }
 
 /** Fresh world + SimState for one play run (seed + archetype). */
-export function bootPlayState(seed: number, archetypeId: string, tables?: DataTables): PlayBoot {
+export function bootPlayState(seed: number, archetypeId: string, tables?: DataTables, district?: DistrictRef): PlayBoot {
   // This world's own tables: the social web is per seed (baked for 42, built at boot for any other world).
   const data = dataForSeed(tables ?? loadData(), seed);
-  const world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
+  const world = worldFor(seed, district);
   const routes = toTravelRoutes(world.routes ?? []);
   const player = assembleInhabitant(data, archetypeId);
   player.townId = pickTownId(player.townId, world, player.parts?.startRule, seed);

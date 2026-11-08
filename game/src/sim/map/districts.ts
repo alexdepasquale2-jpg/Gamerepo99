@@ -46,6 +46,18 @@ export type District = {
 };
 
 const D = (): number => DISTRICTS.districtTiles;
+
+/** Names of every generated town worked out so far (ids are `d<col>_<row>_t<i>`), for labels anywhere. */
+const TOWN_NAMES = new Map<string, string>();
+/** A town's spoken name: a generated district town's own name, else the id in title case. */
+export function prettyTownId(id: string): string {
+  return TOWN_NAMES.get(id) ?? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+/** The district a generated town belongs to (null for home towns). */
+export function districtOfTown(id: string): { col: number; row: number } | null {
+  const m = /^d(\d+)_(\d+)_t\d+$/.exec(id);
+  return m ? { col: Number(m[1]), row: Number(m[2]) } : null;
+}
 export const districtId = (col: number, row: number): string => `d${col}_${row}`;
 export const isHome = (col: number, row: number): boolean => col === DISTRICTS.grid.homeCol && row === DISTRICTS.grid.homeRow;
 export const inGrid = (col: number, row: number): boolean => col >= 0 && row >= 0 && col < DISTRICTS.grid.cols && row < DISTRICTS.grid.rows;
@@ -146,6 +158,7 @@ function placeTowns(seed: number, col: number, row: number, box: District['box']
     for (let k = 0; names.has(name) && k < 6; k++) name = townName(rng, c);
     names.add(name);
     const base = DISTRICTS.peoplePerKind[kind];
+    TOWN_NAMES.set(`${districtId(col, row)}_t${i}`, name);
     out.push({ id: `${districtId(col, row)}_t${i}`, name, kind, q: best.q, r: best.r, people: base + rng.int(0, Math.ceil(base / 3)), seat: i === 0 });
   }
   return out;

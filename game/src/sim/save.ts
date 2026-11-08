@@ -1,3 +1,6 @@
+import { CHRONICLE_TAG } from './chronicle';
+import type { HistoryEvent } from './gen/world-types';
+import { worldFor, type DistrictRef } from './realm';
 import type { HoardState } from './hoard/state';
 import type { LegacyState, ProtagonistImprint } from './legacy/types';
 import type { UnspokenState } from './social/unspoken-types';
@@ -71,6 +74,9 @@ export function saveState(state: SimState): SaveBlob {
   for (const [k, v] of Object.entries(state)) {
     if (!skip.has(k) && typeof v !== 'function' && v !== undefined) sim[k] = clone(v);
   }
+  // History is rebuilt from the seed, but what was lived (the chronicle) is not in the seed: keep it.
+  const lived = (state.history ?? []).filter((h) => h.tags?.includes(CHRONICLE_TAG));
+  if (lived.length) sim.chronicle = clone(lived);
   return {
     version: SAVE_VERSION,
     seed: state.seed,
@@ -140,7 +146,9 @@ export function loadState(raw: SaveBlob, data: DataTables = loadData(), archetyp
   // The save's own world: its social web follows its seed, whatever world `data` came from.
   data = dataForSeed(data, raw.seed);
   let world: GeneratedWorld | undefined;
-  const worldOf = (): GeneratedWorld => (world ??= generateWorld({ seed: raw.seed, includeAnchors: true, peopleCount: 60 }));
+  // The district the save was in (the home world for saves from before districts).
+  const where = (raw.sim as { realm?: { active?: DistrictRef } } | undefined)?.realm?.active;
+  const worldOf = (): GeneratedWorld => (world ??= worldFor(raw.seed, where));
   const blob = migrateSave(raw, { data, archetypeId, world: worldOf });
   const w = worldOf();
   // Keys in `sim` this build does not know (fields from a newer branch) are carried as they are.
@@ -155,8 +163,10 @@ export function loadState(raw: SaveBlob, data: DataTables = loadData(), archetyp
     encounterTables: loadEncounterTables(),
     biomeTerrainMuls: loadBiomeTerrainMuls(),
     sizeTravelMuls: loadSizeTravelMuls(),
-    history: carryHistory(w.history),
+    // The seed's old beats, then what was lived here (the chronicle is saved; the beats are not).
+    history: [...carryHistory(w.history), ...clone(((blob.sim as { chronicle?: HistoryEvent[] } | undefined)?.chronicle) ?? [])],
   };
+  delete (state as { chronicle?: unknown }).chronicle;
   state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
   installPlayReactions(state);
   for (const k of ['unspoken', 'hoard', 'legacy', 'patronDeals'] as const) {

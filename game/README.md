@@ -92,6 +92,7 @@ Each feature names the area that owns how it looks and is reached. The content a
 | Saves: 3 slots + dawn autosave (J8) | ui | title and pause |
 | Sound (J6) | voice | cues; N mutes (also in pause menu) |
 | Every item has ≥2 uses (revamp R3) | content, interact, panels | held item adds "Use …" to any ring |
+| The realm: a 10×10 grid of districts, each generated from the seed with its own wound, doctrine, land and naming culture; only the district you are in runs the full sim, the rest are frozen or a summary (sim/map/districts, sim/realm) | world, panels | world map → The realm; signpost → Beyond this district (trunk roads) |
 
 ## Area ownership (one agent each)
 - **world:** `src/world/**`

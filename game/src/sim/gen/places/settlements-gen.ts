@@ -9,6 +9,8 @@ export type SettlementGen = {
   gap01: number;
   /** mapWidth * mapHeight proxy for polity scale. */
   politySize: number;
+  /** A generated district's town: its fixed spot in world tiles (layout uses it as is). */
+  at?: { q: number; r: number };
 };
 
 function shuffle<T>(rng: Rng, items: T[]): T[] {

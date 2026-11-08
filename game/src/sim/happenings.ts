@@ -15,6 +15,7 @@
  *  - method.effectiveness scales that method's power on people in the town while it lasts (actInteraction).
  */
 
+import { prettyTownId } from './map/districts';
 import { applyEffect, FLAME_MAX, type EffectCtx } from './effects';
 import { loadWorldTables, pickWeighted } from './gen/load/load-world-tables';
 import type { DataTables } from './load-data';
@@ -124,7 +125,7 @@ export function ensureHappenings(state: SimState): HappeningsState {
 
 /** Display name of a town ("The Reach (City Pole)" → "The Reach"). */
 export function happeningTownName(townId: string): string {
-  const name = townRows().find((t) => t.id === townId)?.name ?? townId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const name = townRows().find((t) => t.id === townId)?.name ?? prettyTownId(townId);
   return name.replace(/\s*\(.*\)\s*$/, '');
 }
 

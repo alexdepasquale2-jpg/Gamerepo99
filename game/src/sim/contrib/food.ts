@@ -4,6 +4,7 @@
  * a resident's mouth, in the town you stand in and your home town: "Marta says the larders are bare…".
  * Lines are the fallbacks in data/dialogue/surface-fallbacks.json (food_starve, food_short, food_eased).
  */
+import { prettyTownId } from '../map/districts';
 import fallbacks from '../../data/dialogue/surface-fallbacks.json';
 import { registerDawnLines } from '../dawn-lines';
 import { registerDawnTick } from '../dawn-ticks';
@@ -25,7 +26,7 @@ const DEFAULT: Record<string, string> = {
   food_eased: 'the larders are filling again. Nobody went hungry last night.',
 };
 
-const townLabel = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const townLabel = (id: string): string => prettyTownId(id);
 const wordOf = (state: SimState): FoodWord | undefined => state.flags.foodWord as FoodWord | undefined;
 
 function tickFoodWord(state: SimState): void {

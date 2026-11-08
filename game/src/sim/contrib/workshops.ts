@@ -7,6 +7,7 @@
  * Wages and walk-outs reach you at dawn through the worker (fallbacks workshop_unpaid / workshop_quit in
  * data/dialogue/surface-fallbacks.json). Logic lives in sim/economy/workshops.ts. Pure: no Phaser/DOM.
  */
+import { prettyTownId } from '../map/districts';
 import fallbacks from '../../data/dialogue/surface-fallbacks.json';
 import { registerDawnLines } from '../dawn-lines';
 import { BUILDING_BY_ID } from '../economy/build-plans';
@@ -108,7 +109,7 @@ const DEFAULT: Record<string, string> = {
   workshop_unpaid: 'no wage came from your {building} this morning.',
   workshop_quit: "there's been no wage from your {building} in {days}. That's the end of it.",
 };
-const townLabel = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const townLabel = (id: string): string => prettyTownId(id);
 
 export function workshopDawnLines(state: SimState): string[] {
   const lines: string[] = [];

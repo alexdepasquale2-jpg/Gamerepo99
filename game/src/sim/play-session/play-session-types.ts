@@ -58,6 +58,14 @@ export type PlaySession = {
    * `plan`: walk beside a cart to its town instead (escortCartId), or stop a night at a waystation (stopAt).
    */
   journey(routeId: string, tradeId?: string, plan?: Pick<import('../travel/journey').JourneyOpts, 'escortCartId' | 'stopAt'>): import('../travel/journey').JourneyResult | null;
+  /** Trunk roads from the district you are in to each neighbouring district (seat to seat, days on the road). */
+  trunkRoads(): ReturnType<typeof import('../realm').trunkRoads>;
+  /** The district you are in. */
+  district(): import('../realm').DistrictRef;
+  /** Take a trunk road: its days pass here, then the district swaps (see enterDistrict). */
+  journeyDistrict(to: import('../realm').DistrictRef): { ok: true; days: number; townId: string; name: string } | null;
+  /** Leave this district for another: this one freezes, that one thaws (or is born from the seed); returns where you stand. */
+  enterDistrict(to: import('../realm').DistrictRef): string | null;
   dump(): string;
   getWorld(): FabricWorld | null;
   getSeed(): number;
