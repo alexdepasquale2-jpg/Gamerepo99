@@ -17,10 +17,12 @@ type Settlement = { id: string; q: number; r: number };
 export type RoadsHandle = {
   isOpen: () => boolean;
   busy: () => boolean;
-  /** E pressed: open the road menu if the player is at a signpost. */
-  interact: (p: Pt) => boolean;
   /** Signpost tile (q, r) of a town — for tests/dev teleport. */
   signpost: (townId: string) => { q: number; r: number } | null;
+  /** Each town's signpost (foot, world px) and how near counts as at it, for the focus resolver. */
+  spots: () => (Pt & { id: string; reach: number })[];
+  /** Open the road menu at a town's signpost (the signpost's Roads verb; the sim side already ran). */
+  open: (townId: string) => void;
   /** Run a journey as if picked from the menu; resolves when the arrival lines start. */
   travel: (routeId: string, tradeId?: string) => Promise<JourneyResult | null>;
   close: () => void;
@@ -48,7 +50,7 @@ export function attachRoads(o: {
     g.fillStyle(0xa87643).fillTriangle(p.x + 30, p.y - 42, p.x + 22, p.y - 48, p.x + 22, p.y - 36).fillRect(p.x - 2, p.y - 48, 24, 12);
     g.fillStyle(0x93653a).fillTriangle(p.x - 28, p.y - 26, p.x - 20, p.y - 32, p.x - 20, p.y - 20).fillRect(p.x - 20, p.y - 32, 22, 12);
     g.lineStyle(1, 0x68472e).strokeRect(p.x - 2, p.y - 48, 24, 12).strokeRect(p.x - 20, p.y - 32, 22, 12);
-    scene.add.text(p.x, p.y + 5, 'Roads · E', font).setOrigin(0.5, 0).setDepth(p.y + 1);
+    scene.add.text(p.x, p.y + 5, 'Roads', font).setOrigin(0.5, 0).setDepth(p.y + 1);
     return { id: t.id, p, tile };
   });
   let menu: MenuHandle | null = null;
@@ -105,16 +107,9 @@ export function attachRoads(o: {
   return {
     isOpen: () => !!menu?.el.isConnected,
     busy: () => travelling,
-    interact(p) {
-      const spot = spots.find((s) => Math.hypot(s.p.x - p.x, s.p.y - p.y) < TILE_PX * 1.8);
-      if (!spot) return false;
-      // You leave from where you stand: the signpost belongs to this town.
-      const st = session.getState();
-      if (st) st.player.townId = spot.id;
-      open(spot.id);
-      return true;
-    },
     signpost: (townId) => spots.find((s) => s.id === townId)?.tile ?? null,
+    spots: () => spots.map((s) => ({ id: s.id, x: s.p.x, y: s.p.y, reach: TILE_PX * 1.8 })),
+    open,
     travel,
     close,
   };

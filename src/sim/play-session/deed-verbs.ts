@@ -12,7 +12,12 @@ import { lendCandidate, lendFrom, returnLine, returnTheirGoods, theirGoods } fro
 
 export type DeedRow = {
   id: string;
+  /** Full label (the chip's tip, and what dev.chips reports). */
   label: string;
+  /** Chip text when `label` is longer than a ring chip holds (≤16 chars). */
+  short?: string;
+  /** Ring family (deeds.json families); else the family whose choice set lists this interaction. */
+  family?: string;
   hostMethod: string;
   requiresPendingPromise?: boolean;
   requiresOtherPerson?: boolean;

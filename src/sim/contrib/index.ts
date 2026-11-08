@@ -14,3 +14,4 @@ import './facilities';
 import './patrons';
 import './stash';
 import './happenings';
+import './objects';

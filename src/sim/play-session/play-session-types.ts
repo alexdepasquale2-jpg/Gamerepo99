@@ -36,8 +36,15 @@ export type PlayLastResolve = {
 };
 export type PlaySession = {
   start(opts?: { seed?: number; archetypeId?: string }): void;
-  listActions(): PlayAction[];
-  act(actionId: string): void;
+  /** Every act on offer (whole world); with `personId`, only that person's acts are built. */
+  listActions(personId?: string): PlayAction[];
+  /** Ring verbs for one target (a person, or a thing the scene hands over with its data). No legacy method ids. */
+  listVerbs(target: import('./targets').Target): import('./verb-families').Verb[];
+  /**
+   * Resolve an act id: `<verb>@<personId>`, `<verb>@<kind>:<id>` (pass the scene's target for things),
+   * advance:*, travel:*. Target acts return what happened (a line, ok); others return undefined.
+   */
+  act(actionId: string, target?: import('./targets').Target): import('./action-providers').ActOutcome | undefined;
   tick(): void;
   snapshot(): PlaySnapshot;
   events(): PlayEvent[];

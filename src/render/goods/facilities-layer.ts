@@ -1,12 +1,12 @@
 /**
  * Facilities on the roads: a painted mill / wood camp / quarry / waystation beside its road, its name
  * on a sign, a crew figure while anyone works there (greyed when it stands idle), and an
- * "E  Work a shift" prompt when you stand at it. Presentation only; the shift is sim/economy/facilities.
+ * Work-a-shift verb in its ring (sim/contrib/objects). Presentation only; the shift is sim/economy/facilities.
  */
 
 import Phaser from 'phaser';
 import type { SimState } from '../../sim/types/runtime';
-import { facilityPlaces, kindLabel, shiftWorkedToday, workShift, type FacilityPlace } from '../../sim/economy/facilities';
+import { facilityPlaces, type FacilityPlace } from '../../sim/economy/facilities';
 import { tileFootWorld } from '../depth-sort';
 import { facilityAssetKey, type FacilityRenderView } from '../world-view';
 
@@ -84,8 +84,10 @@ export type FacilityMarker = { x: number; y: number; kind: string; name: string;
 export type FacilitiesLayer = {
   /** Facility you are standing at, if any. */
   nearest: (p: Pt) => FacilityPlace | null;
-  /** Work a shift at the facility you stand at; null when none is near. */
-  work: (p: Pt) => { line: string; hours: number } | null;
+  /** Each facility (foot and sprite top, world px) for the focus resolver. */
+  spots: () => { id: string; x: number; y: number; top: number; reach: number }[];
+  /** After a shift: the structure bobs (when it went ahead) and the crew/idle look is redrawn. */
+  worked: (id: string, ok: boolean) => void;
   refresh: () => void;
   update: (player: Pt, time: number) => void;
   /** World-px markers for the map. */
@@ -95,7 +97,7 @@ export type FacilitiesLayer = {
 };
 
 export function createFacilitiesLayer(
-  scene: Phaser.Scene, getState: () => SimState | undefined, nameOf: (townId: string) => string,
+  scene: Phaser.Scene, getState: () => SimState | undefined, _nameOf: (townId: string) => string,
 ): FacilitiesLayer {
   ensureTextures(scene);
   const views: View[] = facilityPlaces(getState()).map((place) => {
@@ -105,9 +107,6 @@ export function createFacilitiesLayer(
     const label = scene.add.text(pos.x, pos.y + 4, place.name, font).setOrigin(0.5, 0).setDepth(pos.y + 2);
     return { place, pos, sprite, crew, label };
   });
-  const prompt = scene.add
-    .text(0, 0, 'E  Work a shift', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
-    .setOrigin(0.5, 1).setDepth(998_400).setVisible(false);
 
   const idleOf = (id: string): boolean => getState()?.facilityStaff?.[id]?.idle ?? false;
   const refresh = (): void => {
@@ -131,23 +130,14 @@ export function createFacilitiesLayer(
 
   return {
     nearest: (p) => nearestView(p)?.place ?? null,
-    work(p) {
-      const v = nearestView(p), st = getState();
-      if (!v || !st) return null;
-      const r = workShift(st, v.place.id, nameOf);
-      if (r.ok) scene.tweens.add({ targets: v.sprite, scaleX: 2.12, scaleY: 1.9, duration: 110, yoyo: true });
+    spots: () => views.map((v) => ({ id: v.place.id, x: v.pos.x, y: v.pos.y, top: v.pos.y - v.sprite.displayHeight - 4, reach: NEAR })),
+    worked(id, ok) {
+      const v = views.find((x) => x.place.id === id);
+      if (v && ok) scene.tweens.add({ targets: v.sprite, scaleX: 2.12, scaleY: 1.9, duration: 110, yoyo: true });
       refresh();
-      return { line: r.line, hours: r.ok ? (r.hours ?? 0) : 0 };
     },
     refresh,
-    update(player, time) {
-      const v = nearestView(player);
-      const st = getState();
-      prompt.setVisible(!!v);
-      if (v) {
-        prompt.setText(st && shiftWorkedToday(st) ? 'Your day\'s work is done' : `E  Work a shift · ${kindLabel(v.place.kind).toLowerCase()}`);
-        prompt.setPosition(v.pos.x, v.pos.y - v.sprite.displayHeight - 4 - Math.abs(Math.sin(time / 300)) * 2);
-      }
+    update(player) {
       for (const w of views) w.label.setVisible(Math.hypot(player.x - w.pos.x, player.y - w.pos.y) < LABEL_RANGE);
     },
     markers: () => views.map((v) => ({ x: v.pos.x, y: v.pos.y, kind: v.place.kind, name: v.place.name, idle: idleOf(v.place.id) })),

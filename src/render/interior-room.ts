@@ -86,7 +86,6 @@ export class InteriorRoom {
   private title!: Phaser.GameObjects.Text;
   private clockText!: Phaser.GameObjects.Text;
   private light!: Phaser.GameObjects.Rectangle;
-  private prompt!: Phaser.GameObjects.Text;
   private bubble!: Phaser.GameObjects.Text;
   private lantern?: { glow: Phaser.GameObjects.Arc; shade: Phaser.GameObjects.Graphics; x: number; y: number };
   private flames: { obj: Phaser.GameObjects.Ellipse | Phaser.GameObjects.Arc; base: number }[] = [];
@@ -454,7 +453,6 @@ export class InteriorRoom {
       .setScrollFactor(0).setDepth(1_000_000);
     // Daylight/dusk through the windows follows the live day clock.
     this.light = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0xffffff, 0).setScrollFactor(0).setDepth(899_000);
-    this.prompt = this.add.text(0, 0, '', { ...style, color: '#f2b84b' }).setOrigin(0.5, 1).setDepth(998_500).setVisible(false);
     this.bubble = this.add.text(0, 0, '', {
       fontFamily: 'monospace', fontSize: '10px', color: '#f2e9e4', backgroundColor: '#1b1612', padding: { x: 5, y: 3 }, wordWrap: { width: 210 },
     }).setOrigin(0.5, 1).setDepth(999_000).setVisible(false);
@@ -469,6 +467,24 @@ export class InteriorRoom {
 
   private local(): Pt {
     return { x: this.player.x - this.ox, y: this.player.y - this.oy };
+  }
+
+  /**
+   * What is in reach in here, for the host's focus resolver (it draws the one prompt and opens the ring):
+   * the exit mat (a door with id 'exit') and the seated resident. Empty while arriving or leaving.
+   */
+  focusCandidates(): { kind: 'door' | 'person'; id: string; x: number; y: number; reach: number; anchor: Pt }[] {
+    if (!this.active || this.leaving || this.time.now - this.born < 250) return [];
+    const out: { kind: 'door' | 'person'; id: string; x: number; y: number; reach: number; anchor: Pt }[] = [];
+    const me = this.playerPos();
+    if (nearExit(this.plan, this.local())) {
+      const mat = exitMat(this.plan);
+      const at = { x: this.ox + mat.x, y: this.oy + mat.y };
+      out.push({ kind: 'door', id: 'exit', x: me.x, y: me.y, reach: 1, anchor: { x: at.x, y: at.y - 44 } });
+    }
+    const r = this.seated;
+    if (r && this.nearNpc()) out.push({ kind: 'person', id: r.info.id, x: r.sprite.x, y: r.sprite.y, reach: talkNear, anchor: { x: r.sprite.x, y: r.sprite.y - 42 } });
+    return out;
   }
 
   /** E pressed. Returns the resident to talk to (host opens the action ring), or null when handled here. */
@@ -531,13 +547,5 @@ export class InteriorRoom {
     } else if (this.player.anims?.currentAnim?.key?.startsWith('hero-walk') && this.anims.exists('hero-idle-down')) {
       this.player.play('hero-idle-down', true);
     }
-    // Context prompt: leave at the door, talk beside the resident.
-    const mat = exitMat(this.plan);
-    if (frozen) this.prompt.setVisible(false);
-    else if (nearExit(this.plan, this.local())) {
-      this.prompt.setText('E · Leave').setVisible(true).setPosition(this.ox + mat.x, this.oy + mat.y - 44 - Math.abs(Math.sin(time / 300)) * 3);
-    } else if (this.nearNpc() && r) {
-      this.prompt.setText('E · Talk').setVisible(true).setPosition(r.sprite.x, r.sprite.y - 50 - Math.abs(Math.sin(time / 300)) * 3);
-    } else this.prompt.setVisible(false);
   }
 }

@@ -1,6 +1,7 @@
 /** Kingdom patrons in real play: a doctrine voice brokers the Wardens' deal; the deal's man comes asking at dawn. */
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
+import { pickVerb } from './support/game';
 
 const OUT = process.env.E2E_UPDATE_SHOTS ? 'docs/qa/reports/patrons' : 'test-results/shots/patrons';
 const BROKER = 'leon_march';
@@ -23,16 +24,11 @@ async function boot(page: Page): Promise<void> {
   await page.waitForFunction(() => !!(window as unknown as Win).__hearth, null, { timeout: 20_000 });
 }
 
-/** Open the ring on the broker and pick a chip with the number keys, paging with More… like a player. */
+/** Open the ring on the broker and pick a chip with the number keys (its family, then the verb) like a player. */
 async function pick(page: Page, chipId: string): Promise<void> {
   const chips = await page.evaluate((id) => (window as unknown as Win).__hearth!.dev.chips(id), BROKER);
-  const i = chips.findIndex((c) => c.id === chipId);
-  expect(i, `${chipId} on offer`).toBeGreaterThanOrEqual(0);
-  expect(await page.evaluate((id) => (window as unknown as Win).__hearth!.dev.ring(id), BROKER)).toBe(true);
-  const paged = chips.length > 8;
-  const per = paged ? 7 : 8;
-  for (let p = 0; p < Math.floor(i / per); p++) await page.keyboard.press('Digit8');
-  await page.keyboard.press(`Digit${(i % per) + 1}`);
+  expect(chips.some((c) => c.id === chipId), `${chipId} on offer`).toBe(true);
+  await pickVerb(page, BROKER, chipId);
 }
 
 const bubbles = (page: Page) =>

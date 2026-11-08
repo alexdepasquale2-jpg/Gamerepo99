@@ -15,6 +15,8 @@ const PUFF = 'hf-puff';
 export type WorldLife = {
   update: (time: number, dt: number, player: Pt, moving: boolean) => void;
   nearestHearth: (player: Pt) => { town: Settlement; pos: Pt } | null;
+  /** Every town hearth (world px), for QA lookups. */
+  hearthSpots: () => { town: Settlement; pos: Pt }[];
   /** Reset the clock to early morning. */
   dawn: () => void;
   /** Day clock 0..1 (0 dawn). */
@@ -23,7 +25,6 @@ export type WorldLife = {
   setSkyVisible: (on: boolean) => void;
   /** Jump the day clock (QA / tests). */
   setPhase: (p01: number) => void;
-  setPrompt: (on: boolean, pos?: Pt) => void;
 };
 
 function ensurePuff(scene: Phaser.Scene): void {
@@ -108,21 +109,12 @@ export function createWorldLife(scene: Phaser.Scene, settlements: Settlement[]):
   }).setDepth(900_000);
   let sinceDust = 0;
 
-  const prompt = scene.add
-    .text(0, 0, '…', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
-    .setOrigin(0.5, 1)
-    .setDepth(998_500)
-    .setVisible(false);
-
   return {
     dawn: () => (clock = DAY_MS * 0.06),
     phase: () => clock / DAY_MS,
     setSkyVisible: (on) => void sky.setVisible(on),
     setPhase: (p01) => (clock = (((p01 % 1) + 1) % 1) * DAY_MS),
-    setPrompt(on, pos) {
-      prompt.setVisible(on);
-      if (on && pos) prompt.setPosition(pos.x, pos.y - 26 - Math.abs(Math.sin(scene.time.now / 300)) * 3);
-    },
+    hearthSpots: () => hearths.map((h) => ({ town: h.town, pos: h.pos })),
     nearestHearth(player) {
       let best: { town: Settlement; pos: Pt } | null = null;
       let bd = HEARTH_NEAR;

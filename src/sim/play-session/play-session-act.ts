@@ -16,12 +16,18 @@ import type { SimState } from '../types/runtime';
 import { expandMethodAct, type CompatRuntime } from '../interaction';
 import { actInteraction } from './play-session-interaction';
 import deedsJson from '../../data/systems/interactions/deeds.json';
-import { handleProvidedAction, providedActions } from './action-providers';
+import { handleProvidedAction, providedActions, targetActions, type ActOutcome } from './action-providers';
 import { deedVerbAllowed, noteDeedUsed, planDeed, type DeedRow } from './deed-verbs';
+import type { Target } from './targets';
+import { FAMILIES, familyOf, type Verb } from './verb-families';
+
+const RING_FAMILY_IDS = new Set(FAMILIES.map((f) => f.id));
 
 export const DEEDS: readonly DeedRow[] = (deedsJson as { deeds: DeedRow[] }).deeds;
 const DEED_BY_ID = new Map(DEEDS.map((d) => [d.id, d]));
 export const deedLabel = (id: string): string | undefined => DEED_BY_ID.get(id)?.label;
+/** The deed row behind a verb id (talk_gentle, favor_do, …): its host method and family. */
+export const deedRow = (id: string): DeedRow | undefined => DEED_BY_ID.get(id);
 
 function deedAllowed(state: SimState, d: DeedRow, personId: string, rt?: CompatRuntime): boolean {
   if (d.requiresPendingPromise) {
@@ -49,24 +55,26 @@ export function installPlayReactions(state: SimState): void {
   installFabricReactionSelector(state);
 }
 
-export function listMethodActions(state: SimState, rt?: CompatRuntime): PlayAction[] {
+/**
+ * Every act on offer: per person the legacy method ids (still accepted by act, never shown as chips), the
+ * deeds that pass their gates and what providers offer; then advance:* and travel:*. With `personId`, only
+ * that one person's acts are built (no world-wide pass) and advance/travel are left out.
+ */
+export function listMethodActions(state: SimState, rt?: CompatRuntime, personId?: string): PlayAction[] {
   const methods = ((state.data as DataTables | undefined)?.methods ?? []) as MethodRow[];
-  const personIds = Object.keys(state.people);
+  const personIds = personId ? (state.people[personId] ? [personId] : []) : Object.keys(state.people);
   const out: PlayAction[] = [];
-  for (const personId of personIds) {
+  for (const pid of personIds) {
     for (const m of methods) {
-      out.push({ id: `${m.id}@${personId}`, family: m.family });
+      out.push({ id: `${m.id}@${pid}`, family: m.family });
     }
-    if (rt) {
-      for (const d of DEEDS) {
-        if (rt.catalog.has(d.id) && deedAllowed(state, d, personId, rt)) {
-          out.push({ id: `${d.id}@${personId}`, family: d.savage ? 'savage' : 'deed' });
-        }
-      }
+    for (const v of personVerbs(state, pid, rt)) {
+      // listActions keeps its act categories: a ring family (speak, ask, …) is still a 'deed' here.
+      const fam = v.provided?.family;
+      out.push(v.provided ? { id: v.id, family: fam && !RING_FAMILY_IDS.has(fam) ? fam : 'deed', label: v.provided.label } : { id: v.id, family: v.savage ? 'savage' : 'deed' });
     }
-    // Acts other systems offer for this person (stash, patrons, asking about the past…).
-    for (const a of providedActions(state, personId, rt)) out.push({ id: a.id, family: a.family ?? 'deed', label: a.label });
   }
+  if (personId) return out;
   out.push({ id: 'advance:dawn', family: 'rest' });
   out.push({ id: 'advance:day', family: 'rest' });
   const travelState = state as TravelSimState;
@@ -78,6 +86,30 @@ export function listMethodActions(state: SimState, rt?: CompatRuntime): PlayActi
     }
   }
   return out;
+}
+
+type PersonVerb = Verb & { provided?: { family?: string; label: string } };
+
+/** One person's ring verbs: deeds that pass their gates, then provider acts. No legacy method chips. */
+function personVerbs(state: SimState, personId: string, rt?: CompatRuntime): PersonVerb[] {
+  const out: PersonVerb[] = [];
+  if (rt) {
+    for (const d of DEEDS) {
+      if (rt.catalog.has(d.id) && deedAllowed(state, d, personId, rt)) {
+        out.push({ id: `${d.id}@${personId}`, label: d.label, short: d.short, family: d.family ?? familyOf({ id: d.id }), savage: !!d.savage });
+      }
+    }
+  }
+  // Acts other systems offer for this person (stash, patrons, asking about the past…).
+  for (const a of providedActions(state, personId, rt)) out.push({ ...a, provided: { family: a.family, label: a.label } });
+  return out;
+}
+
+/** Ring verbs for one target: a person's deeds and provider acts, or what target providers offer on a thing. */
+export function listTargetVerbs(state: SimState, target: Target, rt?: CompatRuntime): Verb[] {
+  if (target.kind !== 'person') return targetActions(state, target, rt);
+  if (!state.people[target.id]) return [];
+  return personVerbs(state, target.id, rt).map(({ provided: _p, ...v }) => v);
 }
 
 export function parseMethodAction(actionId: string): { methodId: string; personId: string } | null {
@@ -102,9 +134,10 @@ export function actMethod(
   actionId: string,
   eventLog: PlayEvent[],
   extras?: ActExtras,
-  opts?: { interactionCompat?: CompatRuntime },
-): void {
-  if (handleProvidedAction(state, actionId, eventLog, opts?.interactionCompat)) return;
+  opts?: { interactionCompat?: CompatRuntime; target?: Target },
+): ActOutcome | undefined {
+  let outcome: ActOutcome | undefined;
+  if (handleProvidedAction(state, actionId, eventLog, opts?.interactionCompat, opts?.target, (o) => (outcome = o))) return outcome;
 
   if (actionId.startsWith('approach@')) {
     if (extras && extras.metrics.firstChoiceAtTick == null) {

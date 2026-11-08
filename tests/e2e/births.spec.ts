@@ -66,7 +66,7 @@ test('a child who comes of age appears in town with their name, can be acted on,
   // Chips are offered for her, and the ring opens on her like anyone else.
   const chips = await page.evaluate((pid) => window.__hearth!.dev.chips(pid), id);
   expect(chips.length).toBeGreaterThan(0);
-  expect(chips.some((c) => c.id === `inspire@${id}`)).toBe(true);
+  expect(chips.some((c) => c.id === `talk_gentle@${id}`)).toBe(true); // Speak gently (was the Inspire chip)
 
   // A parent carries the news at dawn.
   expect(lines.some((l) => l.includes('Wren Tallow is grown now'))).toBe(true);

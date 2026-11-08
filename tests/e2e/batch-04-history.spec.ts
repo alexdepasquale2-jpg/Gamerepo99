@@ -1,6 +1,7 @@
 /** Unit 4: the past, spoken. Ask someone about the old days through the ring; their retelling shows over their head. */
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import { pickVerb } from './support/game';
 
 const OUT = 'test-results';
 const LABEL = 'Ask about the old days';
@@ -39,20 +40,15 @@ test('ask about the old days: a history beat retold as the person\'s bubble', as
     const people = h.session.listPeople();
     for (const p of [...people.filter((x) => x.townId === town), ...people]) {
       const chips = h.dev.chips(p.id);
-      const index = chips.findIndex((c) => c.label === label);
-      if (index >= 0 && h.dev.ring(p.id)) return { who: p.id, index, total: chips.length };
+      const chip = chips.find((c) => c.label === label);
+      if (chip) return { who: p.id, id: chip.id };
     }
     return null;
   }, LABEL);
   expect(found).not.toBeNull();
 
-  // Page through the ring with the number keys (7 chips + "More…" per page), then pick the chip.
-  const per = found!.total > 8 ? 7 : 8;
-  for (let i = 0; i < Math.floor(found!.index / per); i++) {
-    await page.keyboard.press('8');
-    await page.waitForTimeout(150);
-  }
-  await page.keyboard.press(String((found!.index % per) + 1));
+  // Open their ring as if E was pressed and pick the chip with the number keys (family, then verb).
+  await pickVerb(page, found!.who, found!.id);
 
   await page.waitForFunction(() => ((window as unknown as W).__told ?? []).length > 0, null, { timeout: 5000 });
   const line = await page.evaluate(() => (window as unknown as W).__told![0]!);

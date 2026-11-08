@@ -14,7 +14,7 @@ import { loadData, type DataTables } from '../load-data';
 import { exportWorld } from '../legacy/world-file';
 import { loadState, saveState } from '../save';
 import { admitNewPeople, buildPlaySnapshot, interactionRuntimeFromPeople } from './play-session-boot';
-import { actMethod, listMethodActions } from './play-session-act';
+import { actMethod, listMethodActions, listTargetVerbs } from './play-session-act';
 import { bootPlayState } from './play-session-state';
 import {
   listRoutesFrom,
@@ -145,19 +145,24 @@ function createPlayModeSession(defaults: {
     start(opts) {
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
-    listActions: () => {
+    listActions: (personId) => {
       if (!state) return [];
       admitNewcomers();
-      return listMethodActions(state, interactionRt as CompatRuntime | undefined);
+      return listMethodActions(state, interactionRt as CompatRuntime | undefined, personId);
     },
-    act(actionId) {
+    listVerbs: (target) => {
+      if (!state) return [];
+      if (target.kind === 'person') admitNewcomers();
+      return listTargetVerbs(state, target, interactionRt);
+    },
+    act(actionId, target) {
       if (!state) {
         eventLog.push({ type: 'act', methodId: actionId });
-        return;
+        return undefined;
       }
       const settleMoments = beginMomentAct(state, actionId);
       admitNewcomers();
-      actMethod(
+      const outcome = actMethod(
         state,
         actionId,
         eventLog,
@@ -168,12 +173,13 @@ function createPlayModeSession(defaults: {
             lastResolveVal = r;
           },
         },
-        interactionRt ? { interactionCompat: interactionRt } : undefined,
+        { ...(interactionRt ? { interactionCompat: interactionRt } : {}), ...(target ? { target } : {}) },
       );
       const beforeMoments = state.bus?.lastIds?.length ?? 0;
       settleMoments(lastResolveVal);
       appendJuiceSince(beforeMoments);
       maybeOpenSuccession(state, eventLog, successionOpen);
+      return outcome;
     },
     tick() {
       if (!state) return;

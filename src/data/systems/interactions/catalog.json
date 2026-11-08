@@ -512,17 +512,17 @@
       "options": [
         {
           "id": "opt_gentle",
-          "label": "Speak softly",
+          "label": "Speak gently",
           "interactionId": "talk_gentle"
         },
         {
           "id": "opt_hard",
-          "label": "Press them",
+          "label": "Speak hard",
           "interactionId": "talk_hard"
         },
         {
           "id": "opt_shame",
-          "label": "Name the failure",
+          "label": "Shame them",
           "interactionId": "talk_hard_shame"
         },
         {

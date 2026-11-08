@@ -15,7 +15,7 @@ const PREFIX = `${ASK_PAST}@`;
 registerActionProvider({
   id: 'history',
   list: (state, personId) =>
-    hasUntoldBeat(state, personId) ? [{ id: PREFIX + personId, label: VOICE.askLabel, family: 'deed' }] : [],
+    hasUntoldBeat(state, personId) ? [{ id: PREFIX + personId, label: VOICE.askLabel, short: 'Ask of old days', family: 'ask' }] : [],
   act: (state, actionId, eventLog, rt) => {
     if (!actionId.startsWith(PREFIX)) return false;
     const personId = actionId.slice(PREFIX.length);

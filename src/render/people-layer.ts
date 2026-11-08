@@ -63,8 +63,9 @@ export type PeopleLayer = {
   /** Head anchor in world coords. */
   headOf: (id: string) => { x: number; y: number };
   update: (time: number, dt: number, player: { x: number; y: number }) => void;
-  /** Nearest person within talk range that has actions. */
+  /** Nearest person within talk range (outdoors). */
   nearest: (player: { x: number; y: number }) => Person | null;
+  /** The person in focus (their name label fades while the world prompt is over them). */
   setPrompt: (p: Person | null) => void;
   freeze: (id: string | null) => void;
   /** Daily schedule: where a person should be now (null = home). */
@@ -86,7 +87,6 @@ export function createPeopleLayer(
   session: PlaySession,
   settlements: Settlement[],
   onTap: (p: Person) => void,
-  hasActions: (id: string) => boolean,
   nav?: Navigator,
 ): PeopleLayer {
   const people: Person[] = [];
@@ -158,11 +158,7 @@ export function createPeopleLayer(
   });
   scene.events.once('shutdown', offMarks);
 
-  const prompt = scene.add
-    .text(0, 0, '…', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
-    .setOrigin(0.5, 1)
-    .setDepth(998_500)
-    .setVisible(false);
+  // The scene draws the one world prompt over whoever is in focus; their name label steps aside for it.
   let promptFor: Person | null = null;
   let frozen: string | null = null;
   let schedule: (p: Person) => { x: number; y: number } | null = () => null;
@@ -251,7 +247,7 @@ export function createPeopleLayer(
       let bd = TALK_NEAR;
       for (const p of people) {
         const d = Phaser.Math.Distance.Between(player.x, player.y, p.sprite.x, p.sprite.y);
-        if (!p.inside && d < bd && hasActions(p.id)) {
+        if (!p.inside && d < bd) {
           bd = d;
           best = p;
         }
@@ -328,10 +324,6 @@ export function createPeopleLayer(
         // Beside the name when it shows, just off the head when it doesn't.
         p.tell?.setPosition(s.x + 3 + (p.label.width / 2) * p.label.alpha, s.y - 33).setDepth(998_000);
       }
-      if (promptFor) {
-        const h = headOf(promptFor.id);
-        prompt.setVisible(true).setPosition(h.x, h.y - 2 - Math.abs(Math.sin(time / 300)) * 3);
-      } else prompt.setVisible(false);
     },
   };
 }

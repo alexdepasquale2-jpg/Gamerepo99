@@ -2,6 +2,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pickVerb } from './support/game';
 
 const OUT = path.join('tests', 'e2e', 'artifacts', 'verbs');
 
@@ -36,19 +37,10 @@ async function boot(page: Page): Promise<void> {
 const chips = (page: Page, pid: string): Promise<Chip[]> =>
   page.evaluate((id) => (window as unknown as W).__hearth!.dev.chips(id), pid);
 
-/** Open the ring on a person and pick a chip with the number keys, paging with More… (slot 8). */
+/** Open the ring on a person and pick a chip with the number keys (its family first, then the verb). */
 async function pick(page: Page, pid: string, chipId: string): Promise<void> {
-  const all = await chips(page, pid);
-  const idx = all.findIndex((c) => c.id === chipId);
-  expect(idx, `${chipId} on offer`).toBeGreaterThanOrEqual(0);
-  expect(await page.evaluate((id) => (window as unknown as W).__hearth!.dev.ring(id), pid)).toBe(true);
-  await page.waitForTimeout(150);
-  const per = all.length > 8 ? 7 : 8;
-  for (let p = 0; p < Math.floor(idx / per); p++) {
-    await page.keyboard.press('Digit8'); // More…
-    await page.waitForTimeout(120);
-  }
-  await page.keyboard.press(`Digit${(idx % per) + 1}`);
+  expect((await chips(page, pid)).some((c) => c.id === chipId), `${chipId} on offer`).toBe(true);
+  await pickVerb(page, pid, chipId);
 }
 
 /** The reaction (or refusal) line the act produced, and that a bubble with it is on screen. */
@@ -87,7 +79,7 @@ test('missing verbs are ring chips that act: ask a favor, show up, empty cheer, 
   const labels = (await chips(page, pid)).map((c) => c.label);
   expect(labels).toEqual(expect.arrayContaining(['Ask a favor', 'Show up', 'Cheer up (empty words)']));
   expect(labels).not.toContain("Return what's theirs");
-  expect((await chips(page, pid)).length).toBeGreaterThan(8); // the new chips live past page one
+  expect((await chips(page, pid)).length).toBeGreaterThan(6); // more verbs than one ring level: they sit in families
 
   // Show up.
   let n = await juiceLen(page);
