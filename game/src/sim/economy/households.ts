@@ -6,7 +6,7 @@
  * Sex is derived from the seed, not stored. Pure + deterministic.
  */
 
-import { namePool } from '../names';
+import { namePool, nameScope } from '../names';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
@@ -92,6 +92,26 @@ const pick = (list: string[], taken: Set<string>, start: number): string => {
 
 export function tickHouseholds(state: SimState): void {
   const k = kin(state);
+  formCouples(state, KIN.pairChance, state.day);
+
+  // 2. Births, then growing up.
+  for (const h of [...k.households].sort((a, z) => a.id.localeCompare(z.id))) {
+    if (h.kids.length >= KIN.maxKids || state.day - h.formed < KIN.settleDays || h.adults.length < 2 || !h.adults.every((a) => state.people[a])) continue;
+    const sec = security(state, h);
+    if (sec < KIN.birthSecurity) continue;
+    const rng = deriveRng(state.seed, 'birth', state.day, h.id);
+    if (rng.next() >= KIN.birthChance * birthMul(state, h.townId)) continue;
+    bearChild(state, h, sec, rng, state.day);
+  }
+  growUp(state);
+}
+
+/**
+ * Couples form while the town has a home for them: each free man pairs with `chance` (one dawn's, or a
+ * fast-forward window's whole chance: civic/lod), the household dated `day`.
+ */
+export function formCouples(state: SimState, chance: number, day: number): void {
+  const k = kin(state);
   const adultsBy = new Map<string, string[]>();
   for (const [id, p] of Object.entries(state.people ?? {})) if (p.townId && (p.age === undefined || p.age >= 18)) (adultsBy.get(p.townId) ?? adultsBy.set(p.townId, []).get(p.townId)!).push(id);
 
@@ -103,7 +123,7 @@ export function tickHouseholds(state: SimState): void {
     let count = k.households.filter((h) => h.townId === townId).length;
     for (const m of free.filter((id) => sexOf(state, id) === 'm')) {
       if (count >= homes) break;
-      if (paired.has(m) || deriveRng(state.seed, 'pair', state.day, m).next() >= KIN.pairChance) continue;
+      if (paired.has(m) || deriveRng(state.seed, 'pair', day, m).next() >= chance) continue;
       const f = free.find((id) => !paired.has(id) && sexOf(state, id) === 'f');
       if (!f) break;
       // The founders pick the family name: a line they come from, else one of their own, else an unused one.
@@ -114,38 +134,46 @@ export function tickHouseholds(state: SimState): void {
         // A district town's founders pick from its culture's family names (sim/names).
         const family = namePool(state, townId).family;
         surname = [familyOf(state, m), familyOf(state, f)].find((n) => n && !taken.has(n)) ?? pick(family, taken, deriveRng(state.seed, 'surname', m).int(0, family.length));
-        k.lineages[surname] = { surname, founders: [m, f], founded: state.day, generation: 1 };
+        k.lineages[surname] = { surname, founders: [m, f], founded: day, generation: 1 };
       } else k.lineages[surname]!.generation = Math.max(k.lineages[surname]!.generation, line!.generation + 1);
-      k.households.push({ id: `hh${k.next++}`, townId, adults: [m, f], surname, generation: k.lineages[surname]!.generation, formed: state.day, kids: [] });
+      k.households.push({ id: `hh${k.next++}`, townId, adults: [m, f], surname, generation: k.lineages[surname]!.generation, formed: day, kids: [] });
       paired.add(m); paired.add(f); count++;
     }
   }
 
-  // 2. Births, then growing up.
-  for (const h of [...k.households].sort((a, z) => a.id.localeCompare(z.id))) {
-    if (h.kids.length >= KIN.maxKids || state.day - h.formed < KIN.settleDays || h.adults.length < 2 || !h.adults.every((a) => state.people[a])) continue;
-    const sec = security(state, h);
-    if (sec < KIN.birthSecurity) continue;
-    const rng = deriveRng(state.seed, 'birth', state.day, h.id);
-    if (rng.next() >= KIN.birthChance * birthMul(state, h.townId)) continue;
-    const warm = warmth(state, h) >= KIN.warmFlame && sec >= KIN.giftedSecurity;
-    const gifted = rng.next() < (warm ? KIN.giftedChanceWarm : KIN.giftedChanceBase);
-    const id = `kid${k.next++}`;
-    rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
-    // Not a sibling's name, nor one that would make a second "<given> <surname>" in town once grown.
-    const used = new Set(k.children.filter((c) => c.householdId === h.id || (c.townId === h.townId && c.surname === h.surname)).map((c) => c.given));
-    for (const p of Object.values(state.people)) if (p.townId === h.townId && p.name?.endsWith(` ${h.surname}`)) used.add(p.name.slice(0, -h.surname.length - 1));
-    const given = namePool(state, h.townId).given; // born in a district: its culture's names
-    k.children.push({
-      id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: [h.adults[0]!, h.adults[1]!],
-      given: pick(given, used, deriveRng(state.seed, 'given', id).int(0, given.length)),
-      sex: sexOf(state, grownIdOf(id)), gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
-    });
-    h.kids.push(id);
-    // The news comes from a parent, in their own voice.
-    const child = k.children[k.children.length - 1]!;
-    pushJuice(state, 'kin.birth', { personId: voiceOf(state, child), townId: h.townId, childId: id, line: `A little one at ours. ${child.given}, we're calling ${child.sex === 'f' ? 'her' : 'him'}.` });
-  }
+}
+
+/**
+ * A household has a child, born on `day` (the dawn's own, or a day inside a fast-forward window: civic/lod).
+ * `rng` has already rolled the birth itself; what follows rolls the gift in the same order as ever.
+ */
+export function bearChild(state: SimState, h: Household, sec: number, rng: ReturnType<typeof deriveRng>, day: number): Child {
+  const k = kin(state);
+  const warm = warmth(state, h) >= KIN.warmFlame && sec >= KIN.giftedSecurity;
+  const gifted = rng.next() < (warm ? KIN.giftedChanceWarm : KIN.giftedChanceBase);
+  const id = `kid${k.next++}`;
+  rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
+  // Not a sibling's name, nor one that would make a second "<given> <surname>" in town once grown.
+  // A district counts as one town here (sim/names nameScope): its folk move between towns, so a name must not repeat in it.
+  const scope = nameScope(h.townId);
+  const used = new Set(k.children.filter((c) => c.householdId === h.id || (nameScope(c.townId) === scope && c.surname === h.surname)).map((c) => c.given));
+  for (const p of Object.values(state.people)) if (nameScope(p.townId) === scope && p.name?.endsWith(` ${h.surname}`)) used.add(p.name.slice(0, -h.surname.length - 1));
+  const given = namePool(state, h.townId).given; // born in a district: its culture's names
+  k.children.push({
+    id, householdId: h.id, townId: h.townId, surname: h.surname, born: day, status: 'child', parents: [h.adults[0]!, h.adults[1]!],
+    given: pick(given, used, deriveRng(state.seed, 'given', id).int(0, given.length)),
+    sex: sexOf(state, grownIdOf(id)), gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
+  });
+  h.kids.push(id);
+  // The news comes from a parent, in their own voice.
+  const child = k.children[k.children.length - 1]!;
+  pushJuice(state, 'kin.birth', { personId: voiceOf(state, child), townId: h.townId, childId: id, line: `A little one at ours. ${child.given}, we're calling ${child.sex === 'f' ? 'her' : 'him'}.` });
+  return child;
+}
+
+/** Children old enough by today grow up into villagers (also run after a fast-forward window). */
+export function growUp(state: SimState): void {
+  const k = kin(state);
   for (const c of k.children) {
     if (c.status !== 'child' || state.day - c.born < KIN.comeOfAgeDays) continue;
     const parents = c.parents.map((p) => state.people[p]?.flame ?? 0);

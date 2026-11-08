@@ -77,7 +77,8 @@ export function createController(ctx: GameContext) {
   ];
   /** The live copy of a thing by key (people walk), searched around the player. */
   const fresh = (key: string, r = SCAN_RADIUS): Thing | null =>
-    candidates(ctx.actors.player.pos(), r).find((t) => t.key === key) ?? null;
+    // With facing, so the tile in front of the player (land work) can be found by key too.
+    candidates(ctx.actors.player.pos(), r, ctx.actors.player.facing()).find((t) => t.key === key) ?? null;
 
   function anchorOf(thing: Thing): Pt {
     if (thing.kind === 'person') return ctx.actors.headOf(thing.id) ?? { x: thing.x, y: thing.y - HEAD_FALLBACK };

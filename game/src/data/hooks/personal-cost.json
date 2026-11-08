@@ -207,14 +207,14 @@
           "id": "fx_empty_row",
           "target": "player.spark",
           "op": "add",
-          "value": -2,
+          "value": -1,
           "tags": [
             "cost",
             "row_grief"
           ]
         }
       ],
-      "notes": "A day without working beside anyone: Bren hears the empty row."
+      "notes": "A day without working beside anyone: Bren hears the empty row. Balance (game/scripts/balance-probe.mts): was -2; with the dawn now -6 and no unconditional comfort, -2 burned an idle Bren out in about 10 days, three times faster than anyone else."
     }
   ]
 }

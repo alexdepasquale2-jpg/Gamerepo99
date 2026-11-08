@@ -27,7 +27,8 @@
     "game:check": "tsc -p game/tsconfig.json && npm run game:test",
     "game:test": "vitest run --config game/vitest.config.ts",
     "game:build": "tsc -p game/tsconfig.json && vite build --config game/vite.config.ts --base=./",
-    "game:check-saves": "vite-node --config game/vite.config.ts game/scripts/check-saves.mts"
+    "game:check-saves": "vite-node --config game/vite.config.ts game/scripts/check-saves.mts",
+    "game:e2e": "playwright test -c game/playwright.config.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"

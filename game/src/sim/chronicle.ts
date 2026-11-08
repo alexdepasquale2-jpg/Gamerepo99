@@ -14,7 +14,7 @@ import { deriveRng } from './rng';
 import type { SimState } from './types/runtime';
 
 type KindRow = { gist: string; summaries: string[] };
-type Table = { keep: number; onlyFirstPerPerson: string[]; kinds: Record<string, KindRow>; codas: Record<string, string[]>; events: Record<string, string> };
+type Table = { keep: number; keepByKind?: Record<string, number>; onlyFirstPerPerson: string[]; kinds: Record<string, KindRow>; codas: Record<string, string[]>; events: Record<string, string> };
 export const CHRONICLE = table as unknown as Table;
 export const CHRONICLE_TAG = 'chronicle';
 
@@ -103,26 +103,47 @@ export function chronicleJuice(state: SimState, id: string, payload: unknown): v
   const seenKey = once ? `${note.kind}:${note.key}` : `${note.kind}:${note.key}:${state.day}`;
   if (seen[seenKey] !== undefined) return;
   seen[seenKey] = state.day;
-  const rng = deriveRng(state.seed, 'chronicle', note.kind, note.key, state.day);
+  appendEntry(state, note, row, state.day);
+}
+
+/** Write one entry and trim its kind to its newest `keep`. */
+function appendEntry(state: SimState, note: Note, row: KindRow, day: number): void {
+  const rng = deriveRng(state.seed, 'chronicle', note.kind, note.key, day);
   const at = Math.max(0, ...(state.history ?? []).map((h) => h.at ?? 0)) + 1;
   const entry: HistoryEvent = {
-    id: `chr_${note.kind}_${state.day}_${note.key}`.replace(/[^\w>-]/g, '_'),
+    id: `chr_${note.kind}_${day}_${note.key}`.replace(/[^\w>-]/g, '_'),
     at,
     tags: [CHRONICLE_TAG, note.kind],
     personIds: note.personIds,
     summary: fill(row.summaries[rng.int(0, row.summaries.length)]!, note.slots),
     gist: row.gist.replace(/\{(\w+)\}/g, (m, k: string) => note.slots[k] ?? m),
     kind: note.kind,
-    day: state.day,
+    day,
     ...(note.townId ? { townId: note.townId } : {}),
   };
   (state.history ??= []).push(entry);
   // Each kind keeps its own newest few, so common events cannot crowd out rare ones.
   const mine = state.history!.filter((h) => h.tags?.includes(CHRONICLE_TAG) && h.kind === note.kind);
-  if (mine.length > CHRONICLE.keep) {
-    const drop = new Set(mine.slice(0, mine.length - CHRONICLE.keep).map((h) => h.id));
+  const keep = CHRONICLE.keepByKind?.[note.kind] ?? CHRONICLE.keep;
+  if (mine.length > keep) {
+    const drop = new Set(mine.slice(0, mine.length - keep).map((h) => h.id));
     state.history = state.history!.filter((h) => !drop.has(h.id));
   }
+}
+
+/**
+ * Civic history (civic/founding, the civic dawn tick): a building that went up or a town that grew a tier.
+ * Called directly, not through juice, because a generated town's backstory is written at founding with
+ * days before the game began. Once per kind and key, like reignites.
+ */
+export function chronicleCivic(state: SimState, kind: 'raised' | 'tier', key: string, townId: string, slots: Record<string, string>, day = state.day, personIds: string[] = []): void {
+  const row = CHRONICLE.kinds[kind];
+  if (!row?.summaries.length || typeof state.seed !== 'number') return;
+  const seen = ((state.flags ??= {}).chronicled ??= {}) as Record<string, number>;
+  const seenKey = `${kind}:${townId}:${key}`;
+  if (seen[seenKey] !== undefined) return;
+  seen[seenKey] = day;
+  appendEntry(state, { kind, key: `${townId}_${key}`, townId, personIds, slots: { town: townName(state, townId), ...slots } }, row, day);
 }
 
 /** The coda lines for a chronicle kind (history-voice uses them like the old kinds). */

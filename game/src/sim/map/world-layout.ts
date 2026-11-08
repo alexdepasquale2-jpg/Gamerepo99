@@ -3,10 +3,15 @@ import type { FabricWorld } from '../gen/world-types';
 import type { SettlementGen } from '../gen/places/settlements-gen';
 import { deriveRng } from '../rng';
 import { WORLD_SCALE as S } from './constants';
+import { townLanes } from './town-plan';
 
 export type MapPoint = { q: number; r: number };
 export type SettlementKind = 'city' | 'town' | 'village';
-export type LayoutSettlement = MapPoint & { id: string; kind?: SettlementKind };
+export type LayoutSettlement = MapPoint & {
+  id: string; kind?: SettlementKind;
+  /** Road tiles inside the town box, as offsets from its centre tile: town-plan keeps buildings off them. */
+  lanes?: MapPoint[];
+};
 export type LayoutRoute = { id: string; from: string; to: string; path: MapPoint[] };
 export type WorldLayout = { settlements: LayoutSettlement[]; routes: LayoutRoute[] };
 
@@ -131,6 +136,8 @@ export function layoutWorld(world: FabricWorld, seed: number): WorldLayout {
     if (!a || !b || a.id === b.id) return [];
     return [{ id: r.id, from: a.id, to: b.id, path: generated.get(r.id)?.path ?? roadPath(a, b, seed, r.id) }];
   });
+  // Every reader of a town's plan (doors, painter, folk) gets the settlement from this layout, so they all see the lanes.
+  for (const s of settlements) { const lanes = townLanes(s, routes); if (lanes.length) s.lanes = lanes; }
   return { settlements, routes };
 }
 

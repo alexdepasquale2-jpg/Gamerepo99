@@ -23,8 +23,10 @@ export const interiorKindOf = (stampType: string, interior?: string): InteriorKi
 export const DOOR_REACH = 44;
 
 export type Building = {
-  /** `${townId}:${index}` — stable for a given layout. */
+  /** `${townId}:${slot}` (town-plan slot: `inn`, `house-2`, ...) — stable across plan tweaks and saves. */
   id: string;
+  /** The pre-slot id, `${townId}:${planIndex}`: only for adopting per-building flags from older saves (building-ids.ts). */
+  legacyId: string;
   townId: string;
   kind: InteriorKind;
   stampType: string;
@@ -36,8 +38,8 @@ export type Building = {
 
 /**
  * Enterable buildings of one settlement, in plan order (sim/map/town-plan — the same plan the
- * overworld painter stamps, so every door is on a painted building). Towers are skipped but keep
- * their index, so ids stay `${townId}:${planIndex}`.
+ * overworld painter stamps, so every door is on a painted building). Ids name the plan's slot,
+ * so a reordered or re-placed plan keeps each building's id (and the lantern lit in it).
  */
 export function townBuildings(town: LayoutSettlement): Building[] {
   const plan = townPlan(town);
@@ -47,7 +49,7 @@ export function townBuildings(town: LayoutSettlement): Building[] {
   plan.buildings.forEach((b, i) => {
     const kind = interiorKindOf(b.type, b.interior);
     if (!kind) return;
-    out.push({ id: `${town.id}:${i}`, townId: town.id, kind, stampType: b.type, door: { x: Math.round(fx + b.q * TILE_PX), y: Math.round(fy + b.r * TILE_PX) }, paletteIndex: paletteIndexOf(town, i) });
+    out.push({ id: `${town.id}:${b.slot}`, legacyId: `${town.id}:${i}`, townId: town.id, kind, stampType: b.type, door: { x: Math.round(fx + b.q * TILE_PX), y: Math.round(fy + b.r * TILE_PX) }, paletteIndex: paletteIndexOf(town, i) });
   });
   return out;
 }

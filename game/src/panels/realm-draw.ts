@@ -1,9 +1,12 @@
 /**
  * The realm view of the world map: every district as one cell of the grid, tinted by its despair, with a
  * dot per town, the home district outlined and where you stand marked. Districts come from the seed
- * (sim/map/districts); the home district's tint follows its live towns. Pure canvas drawing.
+ * (sim/map/districts); the home district's tint follows its live towns. Neighbouring districts under a trade
+ * pact are joined by a gold line, those at war by a red dashed one (sim/civic/district-relations); peace is
+ * the plain map. Pure canvas drawing.
  */
 import type { GameContext } from '../app/contracts';
+import { polityIfAny, refOf } from '../sim/civic/district-relations';
 import { TILE_PX } from '../sim/map/constants';
 import { DISTRICTS, districtAtTile, realm, type District } from '../sim/map/districts';
 import { despairColor, PLAYER_COLOR } from './map-draw';
@@ -71,7 +74,34 @@ export function drawRealm(canvas: HTMLCanvasElement, ctx: GameContext, selected?
       g.beginPath(); g.arc(x + cell / 2, y + cell / 2, Math.max(3, cell / 10), 0, Math.PI * 2); g.fill();
     }
   }
+  drawRelations(g, ctx, cell, ox, oy);
   return cell;
+}
+
+/** Pacts and wars between neighbouring districts, centre to centre (drawn over the cells). */
+function drawRelations(g: CanvasRenderingContext2D, ctx: GameContext, cell: number, ox: number, oy: number): void {
+  const rel = polityIfAny(ctx.session.getState())?.relations;
+  if (!rel) return;
+  const mid = (id: string): [number, number] => { const d = refOf(id); return [ox + (d.col + 0.5) * cell, oy + (d.row + 0.5) * cell]; };
+  g.save();
+  g.lineCap = 'round';
+  for (const key of Object.keys(rel).sort()) {
+    const r = rel[key]!;
+    if (r.state === 'peace') continue;
+    const [x0, y0] = mid(r.a), [x1, y1] = mid(r.b);
+    const war = r.state === 'war';
+    g.strokeStyle = war ? 'rgba(214,64,48,0.95)' : 'rgba(242,200,96,0.8)';
+    g.lineWidth = Math.max(war ? 2.5 : 1.5, cell / (war ? 14 : 22));
+    g.setLineDash(war ? [Math.max(3, cell / 9), Math.max(2, cell / 14)] : []);
+    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    if (war) {
+      // Crossed blades at the border between them.
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, k = Math.max(3, cell / 10);
+      g.setLineDash([]);
+      g.beginPath(); g.moveTo(cx - k, cy - k); g.lineTo(cx + k, cy + k); g.moveTo(cx + k, cy - k); g.lineTo(cx - k, cy + k); g.stroke();
+    }
+  }
+  g.restore();
 }
 
 /** The district under a canvas point (client coordinates relative to the canvas), or null. */

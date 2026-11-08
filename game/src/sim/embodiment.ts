@@ -7,7 +7,7 @@
 
 import { prettyTownId } from './map/districts';
 import entrancesJson from '../data/world/entrances.json';
-import fallbackJson from '../data/dialogue/surface-fallbacks.json';
+import { fallbackLine } from './fallback-lines';
 import { approachTags, canEnterTile } from './inhabitant';
 import { jobOf } from './goods/jobs';
 import type { BodyState, Inhabitant, SimState } from './types/runtime';
@@ -20,7 +20,6 @@ type EntrancesFile = { kinds: Record<string, Entrance[]>; refuseKey?: Record<str
 const ENTRANCE_FILE = entrancesJson as EntrancesFile;
 /** How each interior kind can be entered (data). A body gets in through any one entrance it may use. */
 export const ENTRANCES: Readonly<Record<string, readonly Entrance[]>> = ENTRANCE_FILE.kinds;
-const LINES = (fallbackJson as { lines: Record<string, string[]> }).lines;
 
 /** May this body use this entrance: every tag allowed (when the body lists its ways in), none blocked. */
 function mayUse(inh: Inhabitant, e: Entrance): boolean {
@@ -46,28 +45,24 @@ export function canEnterBuilding(inh: Inhabitant, kind: string): boolean {
   return entranceFor(inh, kind) !== null;
 }
 
-const pick = (key: string | undefined, salt: string): string | undefined => {
-  const pool = key ? LINES[key] : undefined;
-  if (!pool?.length) return undefined;
-  let h = 0;
-  for (const c of salt) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return pool[h % pool.length];
-};
+/** An entrance line from the key's grammar, seeded by the caller's salt (target and day). */
+const pick = (key: string | undefined, salt: string, slots: Record<string, string> = {}): string | undefined =>
+  fallbackLine(key, salt, slots) || undefined;
 const activeBodyName = (inh: Inhabitant): string => inh.bodies?.find((b) => b.id === inh.activeBodyId)?.name ?? 'You';
 
 /** Said as the body comes in by a way other than the front door ("Ash slips in through the vent."), else undefined. */
 export function entryLine(inh: Inhabitant, e: Entrance, salt = ''): string | undefined {
-  return pick(e.lineKey, salt + e.id)?.replace(/\{body\}/g, activeBodyName(inh));
+  return pick(e.lineKey, salt + e.id, { body: activeBodyName(inh) });
 }
 
 /**
  * Why this body is kept out of a kind of room: its own blockedLine when a blocked tag stopped it (an ogre
  * and a cottage door), else the room's refusal line (an office for people with business on paper).
  */
-export function refusedDoorLine(inh: Inhabitant, kind: string): string {
+export function refusedDoorLine(inh: Inhabitant, kind: string, salt = ''): string {
   const entrances = ENTRANCES[kind] ?? ENTRANCE_FILE.fallback;
   const blocked = entrances.some((e) => !canEnterTile(inh, e.tags));
-  const room = pick(ENTRANCE_FILE.refuseKey?.[kind], kind);
+  const room = pick(ENTRANCE_FILE.refuseKey?.[kind], salt + kind);
   return (blocked ? inh.embodiment.blockedLine : undefined) ?? room ?? blockedDoorLine(inh);
 }
 

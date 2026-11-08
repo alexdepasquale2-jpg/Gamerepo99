@@ -1,37 +1,6 @@
 {
   "version": 2,
-  "note": "Fallback people-lines for juice events whose payload carries no line. Short, in-voice, never shaming. `lines` are plain lists (read as lists by sim modules); `talk` keys are a list or a grammar {frames, rules} expanded by sim/grammar.ts, with the shared `rules` below.",
-  "lines": {
-    "start.den_near_hills": ["You're the one from the den under the hill. The little ones say you hum to the coals.", "Saw your smoke on the hill again. Come down slow, the goats spook."],
-    "start.den_near_hills.self": ["The den is warm and the hill is quiet. Time to go down and knock.", "Coal's banked. Somebody down there needs a bigger door than they've got."],
-    "start.ledger_office": ["You'll be the clerk. The ledger office is the door with the book on its sign.", "Biggest town on the road and nobody's added the books up in a year. Welcome."],
-    "start.ledger_office.self": ["Biggest town, biggest ledger. Somebody here owes somebody the truth.", "Ink's dry, nib's sharp. Let's see who's been signing for what."],
-    "start.warm_rock": ["Three of you on the warm rock again. Don't stare at the goats.", "The rock by the road's been warm since dawn. I suppose that's yours."],
-    "start.warm_rock.self": ["The rock still holds the sun. We'll go in when it cools.", "One of us watches the lane, one the doors, one the hearth. Then we go in."],
-    "start.mill_row": ["Bren? From the row? Sit, there's the heel of a loaf left.", "The wheel's still, but the row remembers you. Bread's on the sill."],
-    "start.mill_row.self": ["The mill's quiet. Somebody on this row still bakes, though. I can smell it.", "Two cups on the step. Maybe today someone drinks the second."],
-    "body.lift_wagon": ["You get a shoulder under the axle and lift. The wheel comes up out of the rut and the oxen pull. The driver presses coins on you.", "The wagon rocks, then rises. You set it down on the hard road. The driver laughs and pays you for it."],
-    "body.lift_wagon.heard": ["Did you see that? Lifted a loaded wagon like a basket.", "The wagon was stuck to the hubs, and up it came. Gently, too."],
-    "body.carry_crates": ["You take three crates at once and walk them into the store. The driver shakes their head and pays you a coin.", "The heavy crates go in on your back. The unloading's half done before the driver's had a drink."],
-    "body.carry_crates.heard": ["Crates came in faster than I could count them. That was you?", "The big one carried the whole wagon in. The stores look fuller already."],
-    "body.read_ledger": ["The ledger: {cover}. {short} In the margin, {who}'s name, underlined twice.", "You read down the columns: {cover}. {short} One name keeps turning up owing: {who}."],
-    "body.read_ledger.heard": ["You read that like it was a letter from home.", "Nobody's read those columns aloud since the reeve left. Go on, who's short?"],
-    "body.watch_left": ["{body} stays by the {place}. \"Go. We'll watch.\"", "{body} curls up by the {place}, eyes half open."],
-    "body.watch_report.board": ["{body}, watching the noticeboard in {town}, saw {who} read the shortage notice twice. They're short of {item}.", "{body} kept the noticeboard in {town}: {who} stood there a long while over the {item} notice."],
-    "body.watch_report.hearth": ["{body} kept the hearth in {town} all night. {who} sat closest to the coals and never said a word.", "{body}, by the hearth in {town}, watched {who} feed it the last of their kindling."],
-    "body.watch_report.quiet": ["{body}, watching the noticeboard in {town}, saw {who} read every notice and nod. Nothing's short there.", "{body} kept the noticeboard in {town}: {who} pinned up a thank-you and went home."],
-    "entry.vent": ["{body} slips in through the vent.", "{body} squeezes through the vent under the eaves."],
-    "entry.yard": ["You come in by the yard gate, stooping under the lintel.", "In through the yard, past the barrels."],
-    "entry.office": ["The clerk lifts the counter flap for you. Ink and dust.", "Someone with business on paper. They let you through."],
-    "entry.refused.office": ["The clerk shakes their head. Offices are for people with business on paper.", "The ledger office keeps its counter shut to you."],
-    "food_starve": ["the larders are bare, and folk went to bed hungry last night.", "there wasn't bread enough to go round last night. The children ate first."],
-    "food_short": ["there's only {days} of food left in the stores.", "the stores are thin: {days} of food, if nobody is greedy."],
-    "food_eased": ["the larders are filling again. Nobody went hungry last night.", "there's food enough in the stores now. Folk are breathing easier."],
-    "workshop_unpaid": ["no wage came from your {building} this morning.", "the till at your {building} was empty again. That's {days} unpaid."],
-    "workshop_quit": ["there's been no wage from your {building} in {days}. That's the end of it.", "nobody works for nothing. {days} unpaid, and done with your {building}."],
-    "dawn_inherited_dependence_held": ["{who} says you lean on people the way {prev} did.", "{who} says you still reach for a hand, like {prev} taught you."],
-    "dawn_inherited_dependence_resolved": ["{who} says you stand on your own now. {prev}'s need has let go of you.", "{who} says something in you steadied overnight. You don't need {prev}'s crutch anymore."]
-  },
+  "note": "Fallback lines. Short, in-voice, never shaming. Every `talk` key is a list or a grammar {frames, rules} expanded by sim/grammar.ts with the shared `rules` below: people-lines through voice/reaction-lines.ts, sim-side lines (start, body acts, entries, food, workshops, inner state) through sim/fallback-lines.ts.",
   "rules": {
     "open_news": ["", "", "You'll have heard.", "Word's about.", "Here's a thing.", "Morning.", "All {town} has it by now."],
     "open_plain": ["", "", "Well.", "Listen.", "Mm.", "Here.", "So."],
@@ -549,6 +518,242 @@
       "frames": ["#open_plain# #core# #close_warm#", "#core# #close_soft#"],
       "rules": {
         "core": ["Saw you out past the fields. Find anything?", "You've been about the wild places, I hear.", "Out past the fields again? Find much?", "Been in the wild places, have you?"]
+      }
+    },
+    "start.den_near_hills": {
+      "frames": ["#open_plain# #know# #tell#", "#know# #ask#", "#tell# #ask#"],
+      "rules": {
+        "know": ["You're the one from the den under the hill.", "Saw your smoke on the hill again.", "So you're the one living up the slope.", "That den up past the thorn is yours, then.", "We see your coal-glow from the lane some nights."],
+        "tell": ["The little ones say you hum to the coals.", "The children swear the hill hums at night.", "The goatherd keeps off the top pasture because of you.", "Nobody goes up past the thorn after dark.", "My youngest left a bun on the stile for you."],
+        "ask": ["Come down slow, the goats spook.", "Mind the scree on the way down.", "Wipe your feet, it's mud all the way from the thorn.", "Come in by the lane, not the field. The goats spook.", "Sit by the wall a while. Folk will get used to you."]
+      }
+    },
+    "start.den_near_hills.self": {
+      "frames": ["#here# #go#", "#here# #below#", "#below# #go#"],
+      "rules": {
+        "here": ["The den is warm and the hill is quiet.", "Coal's banked.", "The coals are low and steady.", "Smoke's going straight up. No wind.", "The hill's quiet this morning."],
+        "below": ["Somebody down there needs a bigger door than they've got.", "There are lamps lit down in the village already.", "Someone below is chopping wood badly.", "The village has its shutters half open.", "A dog down there has caught my smell."],
+        "go": ["Time to go down and knock.", "Down the slope, then, slowly.", "Better go down before they come up.", "Let's see who opens a door.", "Down we go, and mind the goats."]
+      }
+    },
+    "start.ledger_office": {
+      "frames": ["#open_plain# #who# #where#", "#who# #state# #welcome#", "#state# #where#"],
+      "rules": {
+        "who": ["You'll be the clerk.", "You're the new clerk, I take it.", "The ink on your fingers gives you away.", "They said a clerk was coming."],
+        "where": ["The ledger office is the door with the book on its sign.", "The office is past the well, the door with the book painted on it.", "Your counter's on the square. The key's under the step.", "The ledgers are stacked in the back room, damp end first."],
+        "state": ["Biggest town on the road and nobody's added the books up in a year.", "Nobody's added the books up since the reeve left.", "The last clerk kept the tallies in their head and took them along when they went.", "Half the debts in this town are written on the backs of other debts."],
+        "welcome": ["Welcome.", "Good luck to you.", "Welcome, and sorry.", "You'll be busy."]
+      }
+    },
+    "start.ledger_office.self": {
+      "frames": ["#tools# #intent#", "#town# #intent#", "#town# #tools#"],
+      "rules": {
+        "tools": ["Ink's dry, nib's sharp.", "Fresh nib, full pot.", "The pen's cut and the blotter's clean.", "Sleeves rolled, lamp trimmed."],
+        "town": ["Biggest town, biggest ledger.", "A town this size runs on what it owes.", "Every stall on the square has a tab somewhere.", "Lots of signatures here. Not many sums."],
+        "intent": ["Somebody here owes somebody the truth.", "Let's see who's been signing for what.", "Start with the oldest page and work forward.", "The columns will say what people won't.", "Find the one name that never balances."]
+      }
+    },
+    "start.warm_rock": {
+      "frames": ["#open_plain# #seen# #ask#", "#seen# #guess#", "#guess# #ask#"],
+      "rules": {
+        "seen": ["Three of you on the warm rock again.", "The rock by the road's been warm since dawn.", "Saw the three of you sunning by the road.", "There's a warm patch on the rock where you sat.", "You lot were on the rock before the cock crowed."],
+        "guess": ["I suppose that's yours.", "Nobody else would sit that still.", "The dogs give it a wide berth now.", "My boy says you blink in turns."],
+        "ask": ["Don't stare at the goats.", "Mind the goats, they don't like being watched.", "Come in when it cools.", "Leave the hens be, if you would.", "The well's that way, if you're dry."]
+      }
+    },
+    "start.warm_rock.self": {
+      "frames": ["#sun# #plan#", "#plan# #then#", "#sun# #then#"],
+      "rules": {
+        "sun": ["The rock still holds the sun.", "Warm stone, still air.", "The heat's going out of the rock slowly.", "The sun's off the road now, but the rock keeps it."],
+        "plan": ["One of us watches the lane, one the doors, one the hearth.", "One for the lane, one for the gate, one for the smoke.", "Count the doors, count the dogs, count the lamps.", "Learn the lane first, then the doors.", "Two of us sleep, one keeps an eye open."],
+        "then": ["Then we go in.", "We'll go in when it cools.", "In at dusk, together.", "Then into the warm, slowly.", "When the lamps are lit, we go."]
+      }
+    },
+    "start.mill_row": {
+      "frames": ["#know# #offer#", "#open_soft# #know# #row#", "#row# #offer#"],
+      "rules": {
+        "know": ["Bren? From the row?", "Is that Bren? It is.", "Bren, back on the row.", "Look who's on the step. Bren."],
+        "row": ["The wheel's still, but the row remembers you.", "The mill's not turned since spring, but we're all still here.", "Your old door's got a new latch.", "The row's quieter than you'll remember."],
+        "offer": ["Sit, there's the heel of a loaf left.", "Bread's on the sill.", "There's a crust and some dripping if you want it.", "Sit on the step, I'll bring a cup.", "The kettle's not long off the fire."]
+      }
+    },
+    "start.mill_row.self": {
+      "frames": ["#mill# #bake#", "#cups# #hope#", "#mill# #cups# #hope#"],
+      "rules": {
+        "mill": ["The mill's quiet.", "The wheel hasn't turned in weeks.", "No flour dust on the air this morning.", "The race is low and the wheel's stuck."],
+        "bake": ["Somebody on this row still bakes, though. I can smell it.", "Somebody's oven is lit. Rye, I think.", "There's bread somewhere close. Somebody kept their starter.", "Still, a chimney three doors down is smoking."],
+        "cups": ["Two cups on the step.", "I've set out a second cup.", "The step's swept and the kettle's on."],
+        "hope": ["Maybe today someone drinks the second.", "Maybe a neighbour stops.", "Somebody will knock before noon.", "Today the row might talk to me."]
+      }
+    },
+    "body.lift_wagon": {
+      "frames": ["#lift# #free# #pay#", "#lift# #pay#"],
+      "rules": {
+        "lift": ["You get a shoulder under the axle and lift.", "The wagon rocks, then rises.", "You set your back to the tailboard and push up.", "You crouch, grip the hub and straighten.", "Mud sucks at the wheel, then lets go."],
+        "free": ["The wheel comes up out of the rut and the oxen pull.", "You set it down on the hard road.", "The wheel rolls clear onto dry ground.", "The oxen lean in and it comes free."],
+        "pay": ["The driver presses coins on you.", "The driver laughs and pays you for it.", "The driver swears in relief and counts out a few coins.", "Coins go into your palm before you can say no.", "The driver pays you and shakes your hand twice."]
+      }
+    },
+    "body.lift_wagon.heard": {
+      "frames": ["#open_plain# #saw# #how#", "#saw# #how# #town_talk#"],
+      "rules": {
+        "saw": ["Did you see that? Lifted a loaded wagon like a basket.", "The wagon was stuck to the hubs, and up it came.", "That cart was sunk to the axle and you just lifted it.", "You lifted that wagon clean out of the rut.", "Up came the wagon, load and all."],
+        "how": ["", "Gently, too.", "Didn't even go red in the face.", "Not a sack fell off.", "The oxen looked as surprised as I was.", "I'll be telling that one all week."]
+      }
+    },
+    "body.carry_crates": {
+      "frames": ["#carry# #driver#", "#carry# #store#", "#carry# #store# #driver#"],
+      "rules": {
+        "carry": ["You take three crates at once and walk them into the store.", "The heavy crates go in on your back.", "You stack two crates on a third and lift the lot.", "You walk the crates in four at a time.", "You take the crates off the tail one after another, no rest between."],
+        "store": ["The unloading's half done before the driver's had a drink.", "The storeroom floor fills up fast.", "Somebody inside starts counting and can't keep up.", "The tailboard's bare before the horses have stopped steaming."],
+        "driver": ["The driver shakes their head and pays you a coin.", "The driver pays you a coin and asks if you're for hire.", "The driver hands you a coin and a swig from the flask.", "The driver laughs and tips you for it."]
+      }
+    },
+    "body.carry_crates.heard": {
+      "frames": ["#open_plain# #saw# #after#", "#saw# #ask#", "#saw# #after# #town_talk#"],
+      "rules": {
+        "saw": ["Crates came in faster than I could count them.", "The big one carried the whole wagon in.", "That wagon was empty before the driver got down.", "I saw crates walking into the store by themselves. Well, nearly."],
+        "ask": ["That was you?", "Was that you?", "You'll be wanting a drink after that."],
+        "after": ["The stores look fuller already.", "The storekeeper hardly had to lift a finger.", "We'll eat better this week for it.", "The shelves haven't looked like that in a month."]
+      }
+    },
+    "body.read_ledger": {
+      "frames": ["#open# {cover}. {short} #who#"],
+      "rules": {
+        "open": ["The ledger:", "You read down the columns:", "You run a finger down the pages:", "The books, added up:", "You turn the pages and tally as you go:", "Line by line, the ledger says:", "The sums, once you've checked them:"],
+        "who": ["In the margin, {who}'s name, underlined twice.", "One name keeps turning up owing: {who}.", "At the foot of every short page: {who}.", "A line in a nervous hand: {who}, to be paid later.", "The longest tab, signed and never settled: {who}.", "Underlined in red, again and again: {who}.", "The same name on every page of debts: {who}.", {"text": "No names in the margin. Nobody lives here to owe.", "when": ["no_folk"]}]
+      }
+    },
+    "body.read_ledger.heard": {
+      "frames": ["#open_plain# #read# #ask#", "#read# #town_talk#", "#read# #ask#"],
+      "rules": {
+        "read": ["You read that like it was a letter from home.", "Nobody's read those columns aloud since the reeve left.", "You made those sums sound easy.", "I couldn't make head or tail of that book.", "Half the square stopped to hear you read."],
+        "ask": ["Go on, who's short?", "Who's it say owes?", "Is my name in there?", "Don't read mine out."]
+      }
+    },
+    "body.watch_left": {
+      "frames": ["{body} #stay# by the {place}. #say#", "{body} #settle# by the {place}, #eyes#."],
+      "rules": {
+        "stay": ["stays", "sits down", "stops", "settles in", "waits"],
+        "say": ["\"Go. We'll watch.\"", "\"Go on. Nothing gets past us.\"", "\"We'll be here when you're back.\"", "\"Go. We'll count who comes.\"", "\"Off you go. We've got this.\"", "\"We'll keep it warm.\""],
+        "settle": ["curls up", "lies down", "hunkers down", "sits down low", "stretches out"],
+        "eyes": ["eyes half open", "one eye on the door", "watching everyone who passes", "ears turned to the lane", "still as a stone", "tail wrapped round the stones"]
+      }
+    },
+    "body.watch_report.board": {
+      "frames": ["#kept# #saw#", "#kept# #saw# #short#"],
+      "rules": {
+        "kept": ["{body}, watching the noticeboard in {town}, saw", "{body} kept the noticeboard in {town} and saw", "From the noticeboard in {town}, {body} saw", "{body} watched the board in {town} all day and saw"],
+        "saw": ["{who} read the shortage notice twice.", "{who} stand a long while over the {item} notice.", "{who} copy the {item} notice onto a scrap.", "{who} tap the {item} notice and shake their head.", "{who} come back three times to the {item} notice."],
+        "short": ["They're short of {item}.", "{town} is short of {item}.", "Nobody there has {item} to spare.", "What they're missing is {item}."]
+      }
+    },
+    "body.watch_report.hearth": {
+      "frames": ["#kept# #saw#", "#kept# #saw# #after#", "{body}, by the hearth in {town}, watched {who} #did#."],
+      "rules": {
+        "kept": ["{body} kept the hearth in {town} all night.", "{body} sat up by the hearth in {town} till the coals greyed.", "{body} watched the hearth in {town} through the night.", "{body} stayed by the {town} hearth until dawn."],
+        "saw": ["{who} sat closest to the coals and never said a word.", "{who} came twice in the dark to warm their hands.", "{who} fed it the last of their kindling.", "{who} slept beside it with their coat over their knees.", "{who} came at midnight and left before light, with nothing to burn."],
+        "after": ["Nobody else came near.", "The woodpile there is almost gone.", "Their hands shook the whole time."],
+        "did": ["feed it the last of their kindling", "warm their hands and go home with nothing", "sit closest to the coals and say nothing", "blow on the embers until they caught"]
+      }
+    },
+    "body.watch_report.quiet": {
+      "frames": ["#kept# #saw# #fine#"],
+      "rules": {
+        "kept": ["{body}, watching the noticeboard in {town}, saw", "{body} kept the noticeboard in {town} and saw", "From the noticeboard in {town}, {body} saw", "{body} watched the board in {town} all day and saw"],
+        "saw": ["{who} read every notice and nod.", "{who} pin up a thank-you and go home.", "{who} take down an old shortage notice.", "{who} stop, read, and walk on whistling.", "{who} add a line offering spare eggs."],
+        "fine": ["", "Nothing's short there.", "{town} is managing.", "The board's had no bad news all day.", "Nobody's going without."]
+      }
+    },
+    "entry.vent": {
+      "frames": ["{body} #move# #vent#.", "{body} #move# #vent#. #inside#"],
+      "rules": {
+        "move": ["slips in through", "squeezes through", "wriggles in by", "drops in through", "noses in through"],
+        "vent": ["the vent", "the vent under the eaves", "the vent by the chimney", "the low vent at the back"],
+        "inside": ["Dust and warm air.", "Nobody looks up.", "It smells of smoke and bread.", "The rafters creak once, then settle."]
+      }
+    },
+    "entry.yard": {
+      "frames": ["You come in by the yard gate, #how#.", "In through the yard, #past#.", "In by the yard gate, #past#. #inside#", "#gate# #inside#"],
+      "rules": {
+        "how": ["stooping under the lintel", "ducking under the lintel", "shouldering the gate wide", "edging past the water butt", "lifting the latch with a finger", "stepping over a sleeping dog"],
+        "past": ["past the barrels", "past the woodpile", "between the barrels and the cart", "past a hen that will not move", "past the washing on the line", "round the stacked hurdles"],
+        "inside": ["The back door's open.", "Someone's left the kitchen door on the latch.", "Nobody minds the back way here.", "There's a kettle on somewhere inside.", "A boot scraper by the step, worn thin."],
+        "gate": ["The yard gate's on the latch. You let yourself in.", "Round the back, by the yard.", "You take the back way in, by the yard."]
+      }
+    },
+    "entry.office": {
+      "frames": ["#clerk# #smell#", "#business# #through# #smell#"],
+      "rules": {
+        "clerk": ["The clerk lifts the counter flap for you.", "The clerk waves you round the counter.", "The clerk glances at your hands, sees ink, and lets you in.", "The clerk nods you past without looking up."],
+        "smell": ["Ink and dust.", "Ink, dust and lamp oil.", "Paper stacked to the rafters.", "A pen scratches somewhere at the back.", "Wax and old paper."],
+        "business": ["Someone with business on paper.", "You have the look of someone who reads.", "Ink on your sleeve is enough here."],
+        "through": ["They let you through.", "The flap comes up.", "Nobody stops you."]
+      }
+    },
+    "entry.refused.office": {
+      "frames": ["#clerk# #why#", "#shut# #why#"],
+      "rules": {
+        "clerk": ["The clerk shakes their head.", "The clerk keeps the flap down.", "The clerk looks you over and says no.", "A hand on the counter flap, holding it shut.", "The clerk doesn't look up.", "The clerk taps a sign on the counter."],
+        "why": ["Offices are for people with business on paper.", "No papers, no counter.", "Business here is done in ink.", "Come back with something written down.", "The office deals in signatures, not visitors.", "They want a name on a paper before they'll talk."],
+        "shut": ["The ledger office keeps its counter shut to you.", "The counter stays shut.", "The office door stays on the latch for you.", "No way past the counter for you."]
+      }
+    },
+    "food_starve": {
+      "frames": ["#bare#, and #hungry#.", "#bare#. #detail#", "#hungry#. #detail#"],
+      "rules": {
+        "bare": ["the larders are bare", "there's nothing left in the stores", "the bins are scraped clean", "the last of the meal went into yesterday's pot", "there wasn't bread enough to go round"],
+        "hungry": ["folk went to bed hungry last night", "half the houses ate nothing at supper", "there was no supper in most houses", "people went without last night"],
+        "detail": ["The children ate first.", "The old ones gave theirs away.", "Nobody's said it out loud yet.", "Folk are boiling bones twice.", "Some are out looking for nettles.", "The ovens were cold this morning."]
+      }
+    },
+    "food_short": {
+      "frames": ["#thin#: {days} of food, #if#.", "there's only {days} of food left in the stores. #note#", "#thin#, {days} of food at most. #note#"],
+      "rules": {
+        "thin": ["the stores are thin", "the stores are getting low", "the bins are half empty", "the larders are going down fast"],
+        "if": ["if nobody is greedy", "if we're careful", "at the rate we're eating", "and that's if nothing spoils", "if the mice don't get it"],
+        "note": ["", "Folk are cutting the loaves thinner.", "Nobody's baking for the market now.", "The miller's counting every sack.", "A cart of grain would not go amiss.", "People are eating at home, not at the inn."]
+      }
+    },
+    "food_eased": {
+      "frames": ["#full#. #ease#", "#full#, and #ease_l#."],
+      "rules": {
+        "full": ["the larders are filling again", "there's food enough in the stores now", "the bins are full for once", "fresh sacks came in", "the stores have a bit put by again"],
+        "ease": ["Nobody went hungry last night.", "Folk are breathing easier.", "The ovens are lit again.", "The children had seconds.", "There was bread on every table last night."],
+        "ease_l": ["nobody went hungry last night", "folk are breathing easier", "there was bread on every table", "the ovens are lit again"]
+      }
+    },
+    "workshop_unpaid": {
+      "frames": ["#none#. #count#", "#none#. #feel#", "#none#. #count# #feel#"],
+      "rules": {
+        "none": ["no wage came from your {building} this morning", "the till at your {building} was empty again", "there was nothing in the pay tin at your {building}", "your {building} paid out nothing at dawn", "the cash box at your {building} was empty when they opened it"],
+        "count": ["", "That's {days} unpaid.", "That makes {days} without pay.", "It's been {days}."],
+        "feel": ["", "They're still working, for now.", "The others are asking questions.", "Rent's due all the same.", "They'd like a word."]
+      }
+    },
+    "workshop_quit": {
+      "frames": ["#nowage#. #done#", "nobody works for nothing. #nowage_s# #done#"],
+      "rules": {
+        "nowage": ["there's been no wage from your {building} in {days}", "your {building} hasn't paid in {days}", "it's {days} now since your {building} paid anyone", "not a coin has come from your {building} in {days}", "the {building} hasn't seen a wage in {days}", "nothing's come from your {building} in {days}"],
+        "nowage_s": ["That's {days} unpaid.", "It's been {days} with nothing.", "Not a coin in {days}.", "{days} and nothing to show."],
+        "done": ["That's the end of it.", "They've hung up their apron.", "They're done with your {building}.", "They've taken their tools home.", "They're looking for work elsewhere.", "They've given the key back.", "They'll not be in tomorrow."]
+      }
+    },
+    "dawn_inherited_dependence_held": {
+      "frames": ["{who} says you #lean#, #like#.", "{who} says you #lean#. #note#", "{who} #notices# you #lean#, #like#."],
+      "rules": {
+        "lean": ["lean on people", "still reach for a hand", "wait for someone to say yes first", "look round for help before you've tried", "ask twice when once would do"],
+        "like": ["the way {prev} did", "like {prev} taught you", "just as {prev} used to", "the same as {prev}", "the way the one before you did", "as your line always has"],
+        "notices": ["has noticed", "can tell"],
+        "note": ["It isn't said unkindly.", "They say it gently.", "They don't mind, they say. Not yet.", "They say {prev} was the same."]
+      }
+    },
+    "dawn_inherited_dependence_resolved": {
+      "frames": ["{who} says #stand#. #gone#", "{who} #noticed# #stand#. #gone#"],
+      "rules": {
+        "stand": ["you stand on your own now", "something in you steadied overnight", "you didn't look round for anyone this morning", "you carry yourself differently today", "you made up your own mind yesterday, and it held"],
+        "noticed": ["has noticed", "can see"],
+        "gone": ["The need you had from {prev} has let go of you.", "You don't need {prev}'s crutch anymore.", "Whatever {prev} handed down, you've set it aside.", "Not even {prev} would know you now.", "The old habit from {prev} has gone quiet.", "What the one before you handed down has let go of you.", "The old lean has gone out of you."]
       }
     }
   },

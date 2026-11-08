@@ -13,13 +13,14 @@
           "id": "fx_den_recovery",
           "target": "player.spark",
           "op": "add",
-          "value": 10,
+          "value": 3,
           "tags": [
             "recovery",
             "den"
           ]
         }
-      ]
+      ],
+      "notes": "Balance (game/scripts/balance-probe.mts): was +10. Waking at home softens the day (+3 against the dawn's -6), it no longer refills you on its own, so staying in the den doing nothing still runs the fire down."
     },
     {
       "id": "recovery_base_dawn",
@@ -31,12 +32,13 @@
           "id": "fx_base_dawn",
           "target": "player.spark",
           "op": "add",
-          "value": 12,
+          "value": -6,
           "tags": [
             "recovery"
           ]
         }
-      ]
+      ],
+      "notes": "Balance (game/scripts/balance-probe.mts): was +12, now -6. Each dawn asks something of you: with only the archetype's own small comfort (+3) idle play loses about 3 a day and burns out in three to four weeks. Spark comes back from real deeds (seeing people grow, working beside them), not from sleeping."
     },
     {
       "id": "recovery_ledger_truth",
@@ -52,13 +54,14 @@
           "id": "fx_ledger_truth",
           "target": "player.spark",
           "op": "add",
-          "value": 10,
+          "value": 3,
           "tags": [
             "recovery",
             "ink"
           ]
         }
-      ]
+      ],
+      "notes": "Balance (game/scripts/balance-probe.mts): was +10. A clean ledger is a comfort (+3), not a refill, so idle play stays net-negative."
     },
     {
       "id": "recovery_witness_genuine",
@@ -70,13 +73,14 @@
           "id": "fx_witness",
           "target": "player.spark",
           "op": "add",
-          "value": 6,
+          "value": 3,
           "tags": [
             "recovery",
             "witness"
           ]
         }
-      ]
+      ],
+      "notes": "Balance (game/scripts/balance-probe.mts): was +6. This is where kind play earns its spark back: at +3 four kind deeds a day hold the fire (mean ~83, rarely burns out); at +6 kindness paid more than it cost and spark never moved off full; at +2 kind play burned out within 20-90 days."
     },
     {
       "id": "recovery_brood_bask",
@@ -90,13 +94,14 @@
           "id": "fx_brood_bask",
           "target": "player.spark",
           "op": "add",
-          "value": 12,
+          "value": 3,
           "tags": [
             "recovery",
             "brood"
           ]
         }
-      ]
+      ],
+      "notes": "Balance (game/scripts/balance-probe.mts): was +12. Basking together is a comfort (+3), not a refill, so idle play stays net-negative."
     },
     {
       "id": "recovery_shared_bread",
@@ -112,14 +117,14 @@
           "id": "fx_shared_bread",
           "target": "player.spark",
           "op": "add",
-          "value": 8,
+          "value": 6,
           "tags": [
             "recovery",
             "row"
           ]
         }
       ],
-      "notes": "Worked beside someone yesterday: the row was full again for a shift."
+      "notes": "Worked beside someone yesterday: the row was full again for a shift. Balance (game/scripts/balance-probe.mts): was +8; +6 still outweighs the dawn (-6) and the empty row (-1), so a Bren who works alongside holds steady."
     }
   ]
 }

@@ -11,6 +11,7 @@ import {
 import type { CompatRuntime } from '../interaction';
 import { activeDistrict, arrivalTown, catchUp, freezeBlob, noteLeft, realmOf, refId, settleFresh, summarize, trunkRoads, withCarried, worldFor } from '../realm';
 import { deliverInbox, parkLeaving } from '../realm-away';
+import { awayParts } from '../civic/lod-away';
 import { CHRONICLE_TAG } from '../chronicle';
 import { loadData, type DataTables } from '../load-data';
 import { exportWorld } from '../legacy/world-file';
@@ -25,9 +26,8 @@ import {
   type TravelSimState,
 } from '../travel/travel';
 import { roadViews, type JourneyResult } from '../travel/journey';
-import { tickPackets } from '../packets';
-import { regrowNodes } from '../goods/nodes';
-import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
+import { runDuskHooks } from '../scenario/scenario-advance';
+import { fastForward, fullDay } from '../civic/clock';
 import { firstTrust } from '../embodiment';
 import { carryHistory } from '../history-voice';
 import '../contrib';
@@ -118,12 +118,20 @@ function createPlayModeSession(defaults: {
   }
 
   /** Load/import path: swap in a whole SimState and rebuild what lives outside it. */
-  function adopt(next: TravelSimState): void {
+  /**
+   * `settle` runs once the district's economy is bound (its facilities, routes and hooks) but before the
+   * presentation hears its bus: a thawed district's catch-up days are history, not news shouted on arrival.
+   */
+  function adopt(next: TravelSimState, settle?: (s: TravelSimState) => void): void {
     state = next;
-    connectJuice();
+    if (!settle) connectJuice();
     seed = next.seed;
     world = worldFor(seed, activeDistrict(next));
     bindWorldEconomy(next, world);
+    if (settle) {
+      settle(next);
+      connectJuice();
+    }
     // History is the seed's beats (regenerated), then what was lived (the chronicle loadState carried).
     next.history = [...carryHistory(world.history), ...(next.history ?? []).filter((h) => h.tags?.includes(CHRONICLE_TAG))];
     routes = toTravelRoutes(world.routes ?? []);
@@ -184,12 +192,17 @@ function createPlayModeSession(defaults: {
       return outcome;
     },
     tick() {
+      session.wait(1);
+    },
+    wait(days) {
       if (!state) return;
-      tickN += 1;
+      const n = Math.max(1, Math.floor(days));
+      tickN += n;
       const beforeLen = state.bus?.lastIds?.length ?? 0;
       const settleMoments = beginMomentAct(state, 'rest');
       // Rest is a real dusk then a real dawn: the evening's personal costs, then recovery and the world's day.
-      // A fire that goes out in the night burns out before dawn can rekindle it.
+      // A fire that goes out in the night burns out before dawn can rekindle it. Waiting longer is one
+      // evening, then the days pass on the clock (civic/clock: whole dawns, or the LOD stretch past ten).
       runDuskHooks(state);
       if (maybeOpenSuccession(state, eventLog, successionOpen)) {
         settleMoments();
@@ -197,9 +210,7 @@ function createPlayModeSession(defaults: {
         eventLog.push({ type: 'tick' });
         return;
       }
-      advanceToDawn(state);
-      tickPackets(state);
-      regrowNodes(state);
+      fastForward(state, n);
       settleMoments();
       admitNewcomers();
       appendJuiceSince(beforeLen);
@@ -221,13 +232,10 @@ function createPlayModeSession(defaults: {
       if (!state) return null;
       const road = trunkRoads(seed, activeDistrict(state)).find((r) => r.to.col === to.col && r.to.row === to.row);
       if (!road) return null;
-      // The trunk road takes real days: the district you leave lives them before it freezes.
-      for (let i = 0; i < road.days; i++) {
-        advanceToDawn(state);
-        tickPackets(state);
-        regrowNodes(state);
-        tickN += 1;
-      }
+      // The trunk road takes real days: the district you leave lives them before it freezes (the clock
+      // runs them whole, or on the LOD day for a road longer than FULL_DAYS).
+      fastForward(state, road.days);
+      tickN += road.days;
       const townId = session.enterDistrict(to);
       return townId ? { ok: true, days: road.days, townId, name: road.name } : null;
     },
@@ -240,28 +248,31 @@ function createPlayModeSession(defaults: {
       // Leave: mail and news for this district wait in its inbox; the district folds (whole if recent, a
       // summary always); the player's parts travel on.
       parkLeaving(cur, refId(from));
-      noteLeft(realm, refId(from), summarize(cur), { day: cur.day, blob: freezeBlob(saveState(cur), cur) });
+      noteLeft(realm, refId(from), { ...summarize(cur), ...awayParts(cur) }, { day: cur.day, blob: freezeBlob(saveState(cur), cur) });
       realm.active = to;
       const carried = saveState(cur);
       const toId = refId(to);
       const frozen = realm.frozen[toId];
       const archetype = cur.player.archetypeId ?? archetypeId;
       let next: TravelSimState;
+      // The days it lived without you, run once it is bound (adopt): from when it froze, or from its summary.
+      let since = cur.day;
       if (frozen) {
         next = loadState(withCarried(frozen.blob, carried), undefined, archetype) as TravelSimState;
-        catchUp(next, cur.day - frozen.day);
+        // It lived the days you were gone: the LOD day from when it froze (people, stock, despair, doctrines).
+        since = frozen.day;
       } else {
         const fresh = bootPlayState(seed, archetype, undefined, to).state;
         next = loadState(withCarried(saveState(fresh), carried), undefined, archetype) as TravelSimState;
         const known = realm.summaries[toId];
         if (known) {
           for (const t of Object.values(next.towns ?? {}) as { despair: number }[]) t.despair = known.despair;
-          // The away-tick (sim/realm-away) already drifted the summary up to lastTick.
-          catchUp(next, cur.day - (known.lastTick ?? known.day));
+          // The away-tick (sim/realm-away) already drifted the summary up to lastTick; the LOD day runs the rest.
+          since = known.lastTick ?? known.day;
         } else settleFresh(next, to);
       }
       delete realmOf(next).frozen[toId];
-      adopt(next);
+      adopt(next, (s) => catchUp(s, cur.day - since));
       const arrive = arrivalTown(world!, to, next.player.homeTownId);
       if (arrive) next.player.townId = arrive;
       // What waited for this district lands now: after adopt, so replies plan real roads (economy routes
@@ -275,12 +286,9 @@ function createPlayModeSession(defaults: {
       const st = state;
       const beforeLen = st.bus?.lastIds?.length ?? 0;
       const nameOf = (id: string): string => world?.settlements?.find((t) => t.id === id)?.name ?? id;
-      // Each road day is a real world day: the dawn pipeline (no hearth dusk; the road does its own spark).
-      const runDay = (s: TravelSimState): void => {
-        advanceToDawn(s);
-        tickPackets(s);
-        regrowNodes(s);
-      };
+      // Each road day is a real world day: the clock's whole dawn (no hearth dusk; the road does its own
+      // spark). The road decides its days one at a time (encounters, stops), so they run whole.
+      const runDay = (s: TravelSimState): void => fullDay(s);
       const settleMoments = beginMomentAct(st, `travel:${routeId}`);
       const res: JourneyResult = startTravel(st, routeId, { tradeId, runDay, nameOf, ...plan }).journey;
       settleMoments();

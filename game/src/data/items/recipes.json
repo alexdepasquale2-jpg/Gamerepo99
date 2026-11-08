@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "spec": "What the player crafts by hand (sim/craft). A recipe has the shape of a jobs.json recipe ({in, out}) plus: id, label (full), short (chip, ≤16), station (where: hearth | workbench | forge), tool? (any one of these items must be carried; kept, not spent), hours? (time the work takes, default 1). stations: where each station stands: hearth = every town hearth; facilities = facility kinds (economy/facilities.json) that keep one; buildings = building ids (items/buildings.json) of your own built workshops that keep one. The craft sheet lists a station's recipes in data order.",
+  "stations": {
+    "hearth": { "name": "Hearth", "label": "Craft at the hearth", "hearth": true },
+    "workbench": { "name": "Workbench", "label": "Use the workbench", "facilities": ["lumber_camp", "mill", "waystation"], "buildings": ["sawmill", "ropewalk", "weavery", "pottery", "mill", "bakery", "farm"] },
+    "forge": { "name": "Forge", "label": "Work the forge", "facilities": ["mine"], "buildings": ["smithy"] }
+  },
+  "recipes": [
+    { "id": "bread", "label": "Bake two loaves from flour", "short": "Bake bread", "station": "hearth", "in": { "flour": 2 }, "out": { "bread": 2 } },
+    { "id": "kindling", "label": "Split wood into kindling", "short": "Kindling", "station": "hearth", "in": { "wood": 1 }, "out": { "kindling": 2 } },
+    { "id": "rope", "label": "Twist flax into rope", "short": "Twist rope", "station": "hearth", "in": { "flax": 2 }, "out": { "rope": 1 } },
+    { "id": "timber", "label": "Square wood into timber", "short": "Square timber", "station": "workbench", "tool": ["tools", "axe"], "in": { "wood": 2 }, "out": { "timber": 1 } },
+    { "id": "mallet", "label": "Shape a mallet", "short": "Make a mallet", "station": "workbench", "in": { "wood": 2 }, "out": { "mallet": 1 } },
+    { "id": "rope_bench", "label": "Lay rope on the bench", "short": "Lay rope", "station": "workbench", "in": { "flax": 1 }, "out": { "rope": 1 }, "hours": 2 },
+    { "id": "tools", "label": "Forge a set of tools", "short": "Forge tools", "station": "forge", "in": { "ore": 1, "wood": 1 }, "out": { "tools": 1 }, "hours": 2 },
+    { "id": "axe", "label": "Forge an axe", "short": "Forge an axe", "station": "forge", "in": { "ore": 1, "wood": 1 }, "out": { "axe": 1 }, "hours": 2 },
+    { "id": "nails", "label": "Draw ore into nails", "short": "Draw nails", "station": "forge", "in": { "ore": 1 }, "out": { "nails": 2 } }
+  ]
+}

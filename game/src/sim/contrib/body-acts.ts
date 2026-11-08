@@ -14,10 +14,11 @@
  * Pure and deterministic: no Phaser/DOM.
  */
 import actsJson from '../../data/people/body-acts.json';
-import fallbackJson from '../../data/dialogue/surface-fallbacks.json';
 import { isShort } from '../caravan-visit';
 import type { CaravanMobile } from '../caravans-types';
 import { registerDawnLines } from '../dawn-lines';
+import { prettyTownId } from '../map/districts';
+import { fallbackLine } from '../fallback-lines';
 import { HOUSEHOLD, townNeeds as villageNeeds } from '../economy/village-economy';
 import { leaveBodyHere, WITH_YOU } from '../embodiment';
 import { ITEMS, itemName } from '../goods/inventory';
@@ -38,17 +39,13 @@ export type BodyActsState = { watches: Record<string, BodyWatch> };
 type ActRow = { id: string; targets: TargetKind[]; family: string; label: string; short: string; tagsAny?: string[]; approachAny?: string[] };
 const FILE = actsJson as { acts: ActRow[]; lift: { stuckChance: number; progress: number; tip: number }; carry: { crates: number; tip: number }; ledger: { despairRelief: number } };
 const ACTS = FILE.acts;
-const LINES = (fallbackJson as { lines: Record<string, string[]> }).lines;
 
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
 const pretty = (id: string): string => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-const fill = (s: string, v: Record<string, string>): string => s.replace(/\{(\w+)\}/g, (m, k: string) => v[k] ?? m);
 
-function line(state: SimState, key: string, salt: string, vars: Record<string, string> = {}): string {
-  const pool = LINES[key] ?? [];
-  if (!pool.length) return '';
-  return fill(pool[deriveRng(state.seed, 'body-line', key, salt, state.day).int(0, pool.length)]!, vars);
-}
+/** A body-act line (grammar in surface-fallbacks.json talk), seeded per save, act, salt and day. */
+const line = (state: SimState, key: string, salt: string, vars: Record<string, string | undefined> = {}, tags: string[] = []): string =>
+  fallbackLine(key, `${state.seed}|body-line|${salt}|${state.day}`, vars, tags);
 
 /** This body has the act: its trait tags and ways in match the row. */
 function hasAct(state: SimState, row: ActRow): boolean {
@@ -61,7 +58,7 @@ function hasAct(state: SimState, row: ActRow): boolean {
 /** The town hears of it: a resident says so (not the person the act was about). */
 function heard(state: SimState, townId: string | undefined, key: string, salt: string, not?: string): void {
   const who = residentOf(state, townId, `${key}:${salt}`);
-  const said = line(state, key, salt);
+  const said = line(state, key, salt, townId ? { town: prettyTownId(townId) } : {});
   if (who && who !== not && said) pushJuice(state, 'moment.beat', { personId: who, line: said, townId, momentId: key });
 }
 
@@ -142,7 +139,7 @@ function readLedger(state: SimState, townId: string | undefined): ActOutcome {
   if (town && town.economyOptIn !== false) town.despair = Math.max(0, town.despair - FILE.ledger.despairRelief);
   markUsed(state, ledgerKey(townId));
   heard(state, townId, 'body.read_ledger.heard', townId, owing?.id);
-  return { ok: true, line: line(state, 'body.read_ledger', townId, { cover, short, who }) || `The ledger: ${cover}. ${short}` };
+  return { ok: true, line: line(state, 'body.read_ledger', townId, { cover, short, who: owing ? who : undefined }, owing ? [] : ['no_folk']) || `The ledger: ${cover}. ${short}` };
 }
 
 // ---------- board / hearth: a sibling keeps watch ----------
@@ -174,7 +171,7 @@ export function watchReports(state: SimState): string[] {
     const need = villageNeeds(state, watch.townId)[0];
     const item = need ? (need.itemId === 'food' ? 'food' : itemName(need.itemId).toLowerCase()) : '';
     const key = watch.place === 'hearth' ? 'body.watch_report.hearth' : item ? 'body.watch_report.board' : 'body.watch_report.quiet';
-    const said = line(state, key, bodyId, { body: body.name, town: pretty(watch.townId), who: seen.name ?? pretty(seen.id), item });
+    const said = line(state, key, bodyId, { body: body.name, town: prettyTownId(watch.townId), who: seen.name ?? pretty(seen.id), item });
     if (said) out.push(said);
   }
   return out;

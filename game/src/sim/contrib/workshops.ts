@@ -8,9 +8,9 @@
  * data/dialogue/surface-fallbacks.json). Logic lives in sim/economy/workshops.ts. Pure: no Phaser/DOM.
  */
 import { prettyTownId } from '../map/districts';
-import fallbacks from '../../data/dialogue/surface-fallbacks.json';
 import { registerDawnLines } from '../dawn-lines';
 import { BUILDING_BY_ID } from '../economy/build-plans';
+import { asClause, fallbackLine } from '../fallback-lines';
 import { inventoryOf } from '../goods/inventory';
 import {
   abandonPlot, bringGoods, buyMaterials, companyHiring, companyOnClaim, employerOf, hire, lendHand, letGo,
@@ -18,7 +18,6 @@ import {
 } from '../economy/workshops';
 import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '../play-session/action-providers';
 import { targetActionId, type Target } from '../play-session/targets';
-import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { isGrave } from './target-data';
 
@@ -104,7 +103,6 @@ registerTargetProvider({
 
 // ---- Dawn: workers tell you about their wages, in their own town or by word from it. ----
 
-const LINES = (fallbacks as { lines: Record<string, string[]> }).lines;
 const DEFAULT: Record<string, string> = {
   workshop_unpaid: 'no wage came from your {building} this morning.',
   workshop_quit: "there's been no wage from your {building} in {days}. That's the end of it.",
@@ -117,9 +115,10 @@ export function workshopDawnLines(state: SimState): string[] {
     for (const n of c.news ?? []) {
       if (n.day !== state.day) continue;
       const key = n.kind === 'quit' ? 'workshop_quit' : 'workshop_unpaid';
-      const pool = LINES[key]?.length ? LINES[key]! : [DEFAULT[key]!];
-      const text = pool[deriveRng(state.seed, key, state.day, n.personId).int(0, pool.length)]!
-        .replace('{building}', buildingOf(c.kind)).replace('{days}', n.days === 1 ? 'a day' : `${n.days} days`);
+      const slots = { building: buildingOf(c.kind), days: n.days === 1 ? 'a day' : `${n.days} days` };
+      // The worker's own wording, seeded per save, day and worker; the DEFAULT only if the key is gone.
+      const said = fallbackLine(key, `${state.seed}|${state.day}|${n.personId}`, slots);
+      const text = said ? asClause(said) : DEFAULT[key]!.replace(/\{(\w+)\}/g, (_, k: string) => slots[k as keyof typeof slots] ?? '');
       const who = (state.people[n.personId]?.name ?? n.personId).split(' ')[0]!;
       const away = c.townId !== state.player.townId ? `Word from ${townLabel(c.townId)}: ` : '';
       lines.push(`${away}${who} says ${text}`);
