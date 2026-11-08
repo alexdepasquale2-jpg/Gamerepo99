@@ -111,6 +111,8 @@
     "fauna_handled": ["Saw you with the animals. Gentle hands.", "The beasts are settled today."],
     "fauna_handled.drive": ["Something was at the growing things. Not now.", "You chased it off? The stores thank you."],
     "fauna_handled.watch": ["You stood still so long, I thought you'd grown roots.", "Nice to see someone stop and look."],
+    "packet_lifted": ["Had word from kin away. Somebody there got their fire back. Made me think I might.", "News came down the road: one of ours is burning again over there. Strange how that warms you."],
+    "packet_dimmed": ["Bad word from away. Someone we know has gone hollow. It sits on you.", "Heard one of ours over the hill has given up. Hard to shake."],
     "prop_used": ["Saw you out past the fields. Find anything?", "You've been about the wild places, I hear."],
     "happening": ["Strange morning. Did you feel it too?", "Something's happened. Everyone's talking."]
   },

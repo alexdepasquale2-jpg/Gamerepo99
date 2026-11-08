@@ -165,6 +165,18 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
     if (add > 0) {
       town.despair = Math.min(despairMax, Math.max(despairMin, town.despair + add));
     }
+
+    // 6. Lit people lift their town: the share of residents burning eases despair a little each dawn
+    // (reigniting people one by one shows on the town's colour; an untended lit town still drifts).
+    const relief = (despairCfg as { flameRelief?: { perDawn: number; minShare: number } }).flameRelief;
+    if (relief) {
+      const burnAt = (state.data as DataTables | undefined)?.reigniteThreshold ?? 35;
+      const folk = Object.values(state.people).filter((p) => p.townId === town.id && !p.tags?.includes('retired'));
+      const share = folk.length ? folk.filter((p) => p.flame >= burnAt).length / folk.length : 0;
+      if (share >= relief.minShare && town.despair > despairMin) {
+        town.despair = Math.max(despairMin, town.despair - relief.perDawn * share);
+      }
+    }
   }
   return result;
 }

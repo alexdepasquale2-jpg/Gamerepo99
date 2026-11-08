@@ -126,12 +126,43 @@ export function tickPackets(state: SimState): string[] {
       fromTownId: p.fromTownId,
       toTownId: p.toTownId,
     });
-    (state.deliveredProofs ??= []).push({
-      packetId: p.id,
-      kind: p.kind,
-      toTownId: p.toTownId,
-    });
+    const proofs = (state.deliveredProofs ??= []);
+    proofs.push({ packetId: p.id, kind: p.kind, toTownId: p.toTownId, day: state.day });
+    if (proofs.length > PROOFS_KEPT) proofs.splice(0, proofs.length - PROOFS_KEPT);
+    landPacket(state, p);
   }
   state.packets = next;
   return delivered;
+}
+
+/** How many delivered packets the save keeps (newest last). */
+const PROOFS_KEPT = 24;
+/** What a packet does when it lands: word of someone's change reaches kin in another town. */
+const LAND = { proofFlame: 4, proofTrust: 0.03, proofDespair: -0.01, relapseFlame: -3, relapseDespair: 0.01 };
+
+/**
+ * A proof (someone rekindled) lifts one struggling person there and eases the town a little; a relapse
+ * (someone hollowed) dims one burning person and weighs on the town. The person is picked by packet id.
+ */
+function landPacket(state: SimState, p: PacketState): void {
+  if (!p.toTownId) return;
+  const burnAt = (state.data as DataTables | undefined)?.reigniteThreshold ?? 35;
+  const proof = p.kind !== 'relapse_pressure';
+  const folk = Object.values(state.people)
+    .filter((x) => x.townId === p.toTownId && !x.tags?.includes('retired') && (proof ? x.flame < burnAt : x.flame >= burnAt))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const who = folk.length ? folk[hashIdx(p.id, folk.length)] : undefined;
+  if (who) {
+    who.flame = Math.max(0, Math.min(100, who.flame + (proof ? LAND.proofFlame : LAND.relapseFlame)));
+    if (proof) who.trust = Math.min(1, (who.trust ?? 0.5) + LAND.proofTrust);
+  }
+  const town = (state as SimState & { towns?: Record<string, { despair: number }> }).towns?.[p.toTownId];
+  if (town) town.despair = Math.min(1, Math.max(0, town.despair + (proof ? LAND.proofDespair : LAND.relapseDespair)));
+  if (who) pushJuice(state, proof ? 'packet.lifted' : 'packet.dimmed', { townId: p.toTownId, personId: who.id, kind: p.kind });
+}
+
+function hashIdx(id: string, n: number): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return (h >>> 0) % n;
 }

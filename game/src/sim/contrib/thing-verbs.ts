@@ -35,6 +35,18 @@ export const propRow = (type: string): PropRow | null => PROP_BY_TYPE.get(type) 
 export const nodeVerbs = (kindId: string): readonly ThingVerbRow[] => NODE_VERBS.get(kindId) ?? [];
 export const faunaVerbs = (kindId: string): readonly ThingVerbRow[] => FAUNA_VERBS.get(kindId) ?? [];
 
+/** Spark the wild can give in one day across every prop (rest is a balm, not a fuel line). */
+export const PROP_SPARK_PER_DAY = 12;
+const propSparkLeft = (state: SimState): number => {
+  const k = state.flags.propSpark as { day: number; got: number } | undefined;
+  return PROP_SPARK_PER_DAY - (k && k.day === state.day ? k.got : 0);
+};
+const notePropSpark = (state: SimState, n: number): void => {
+  const k = state.flags.propSpark as { day: number; got: number } | undefined;
+  state.flags.propSpark = { day: state.day, got: (k && k.day === state.day ? k.got : 0) + n };
+};
+const onlySpark = (b: Bundle): boolean => !!b.spark && !b.gain && !b.town && !b.thanks && !b.despair && !b.regrow && !b.tend;
+
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
 const needsText = (needs: Record<string, number>): string => Object.entries(needs).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`).join(' and ');
 const canPay = (state: SimState, needs?: Record<string, number>): boolean => Object.entries(needs ?? {}).every(([id, n]) => hasItem(state, id, n));
@@ -46,6 +58,7 @@ function listRows(state: SimState, t: Target, prefix: string, rows: readonly Thi
   for (const v of rows) {
     if ((v.oncePerDay || prefix === 'fauna' || prefix === 'prop') && usedToday(state, onceKey(v))) continue;
     if (v.effect.charge && (!n || nodeCharges(state, n) < v.effect.charge)) continue;
+    if (prefix === 'prop' && onlySpark(v.effect) && propSparkLeft(state) <= 0) continue;
     // A use that would do nothing right now (mend a whole seam) stays off the ring.
     if (v.needs && bundleRefusal(state, v.effect, { node: n, key: '' })) continue;
     out.push({ id: targetActionId(`${prefix}.${v.id}`, t), label: v.needs && !canPay(state, v.needs) ? `${v.label} (needs ${needsText(v.needs)})` : v.label, short: v.short, family: 'work' });
@@ -66,8 +79,17 @@ function actRow(state: SimState, actionId: string, t: Target, prefix: string, ro
   const ctx = { townId, node: nodeData(t), nearNodes: (t.data as FaunaTargetData | undefined)?.nearNodes, key: `${verb}@${t.kind}:${t.id}` };
   const refusal = bundleRefusal(state, v.effect, ctx);
   if (refusal) return { ok: false, line: refusal };
+  // Props share one day's worth of spark; past it a pure rest does nothing, a mixed use keeps its other parts.
+  let effect = v.effect;
+  if (prefix === 'prop' && effect.spark) {
+    const left = Math.max(0, propSparkLeft(state));
+    if (left <= 0 && onlySpark(effect)) return { ok: false, line: 'You have rested all you can out here today. The road is waiting.' };
+    effect = { ...effect, spark: Math.min(effect.spark, left) || undefined };
+  }
   for (const [id, n] of Object.entries(v.needs ?? {})) removeItem(state, id, n);
-  const res = applyBundle(state, v.effect, ctx);
+  const sparkBefore = state.player.spark;
+  const res = applyBundle(state, effect, ctx);
+  if (prefix === 'prop' && state.player.spark > sparkBefore) notePropSpark(state, state.player.spark - sparkBefore);
   if (once) markUsed(state, onceKey(v));
   pushJuice(state, juice, { verb: v.id, target: t.kind, id: t.id, townId, personId: res.residentId, line: res.line });
   return { ok: true, line: res.line || v.label };

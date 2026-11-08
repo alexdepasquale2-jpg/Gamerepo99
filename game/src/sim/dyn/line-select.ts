@@ -8,6 +8,7 @@ import {
   type ReactionPickCtx,
 } from '../method-reactions';
 import { buildStateVector, type PersonStateVector } from './person-vector';
+import { dampRecent, linesSaid } from './line-memory';
 import { genericVoiceLine, placeBias, placeOf } from './generic-voice';
 import { createRng } from '../rng';
 import { kinStrainOf, STRAINED } from '../social/kin-strain';
@@ -62,10 +63,11 @@ function vectorFor(ctx: ReactionPickCtx): PersonStateVector {
   const row = data.peopleById[ctx.personId] ?? { id: ctx.personId };
   const person = ctx.state.people[ctx.personId];
   const flags = ctx.state.flags as { trust?: number; notoriety?: number };
+  const trust = typeof person?.trust === 'number' ? person.trust : typeof flags.trust === 'number' ? flags.trust : 0.5;
   const hollow = person?.marks?.find((m) => m.markId === 'hollowness')?.stacks ?? 0;
   return buildStateVector(row, {
     data,
-    trust: typeof flags.trust === 'number' ? flags.trust : 0.5,
+    trust,
     notoriety: typeof flags.notoriety === 'number' ? flags.notoriety : 0,
     kinStrain: kinStrainFor(ctx),
     hollowness: clamp01(hollow / 3),
@@ -119,8 +121,8 @@ function methodCandidates(data: DataTables, personId: string, methodId: string):
   });
 }
 
-function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: string, methodId: string): Frag {
-  const rng = createRng((seed ^ hashStr(`${personId}:${methodId}`)) >>> 0);
+function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: string, methodId: string, salt = ''): Frag {
+  const rng = createRng((seed ^ hashStr(`${personId}:${methodId}${salt}`)) >>> 0);
   let r = rng.next() * scores.reduce((a, b) => a + b, 0);
   for (let i = 0; i < frags.length; i++) {
     r -= scores[i]!;
@@ -143,7 +145,10 @@ function fixedFromCandidates(cands: Frag[], ctx: ReactionPickCtx): ReactionLineR
   return pickFixedReactionLine(ctx);
 }
 
+/** Their own trust toward the player (the interaction runtime mirrors it), else the old global flag. */
 function trustOf(ctx: ReactionPickCtx): number {
+  const own = ctx.state.people[ctx.personId]?.trust;
+  if (typeof own === 'number') return own;
   const t = (ctx.state.flags as { trust?: number }).trust;
   return typeof t === 'number' ? t : 0.5;
 }
@@ -229,7 +234,9 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
     // D7: city, town and village people speak differently (place:<kind> tagged lines).
     scores[i] = placeBias(pickPool[i]!, place, scores[i]!);
   }
-  const picked = pickWeighted(pickPool, scores, ctx.seed, ctx.personId, ctx.methodId);
+  // Each visit draws afresh (day + lines said so far), and what they said lately is damped.
+  const damped = dampRecent(ctx.state, ctx.personId, pickPool, scores);
+  const picked = pickWeighted(pickPool, damped, ctx.seed, ctx.personId, ctx.methodId, `:${ctx.state.day}:${linesSaid(ctx.state, ctx.personId)}`);
   return { lineId: picked.id, text: picked.text, source: 'blend' };
 }
 

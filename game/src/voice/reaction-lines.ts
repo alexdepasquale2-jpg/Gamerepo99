@@ -33,11 +33,20 @@ type FallbackFile = {
 const FILE = fallbackJson as FallbackFile;
 const FALLBACK = FILE.lines;
 
+/** How often each person has been handed each key this run, so they move on through the pool. */
+const handed = new Map<string, number>();
+
+/** A fallback line: starts where the person's hash says, then steps on each time they say that key again. */
 function pickFallback(key: string, seed: string): string {
   const arr = FALLBACK[key] ?? [];
+  if (!arr.length) return '';
   let h = 0;
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return arr.length ? arr[h % arr.length]! : '';
+  const k = `${key}|${seed}`;
+  const n = handed.get(k) ?? 0;
+  handed.set(k, n + 1);
+  if (handed.size > 4000) handed.clear();
+  return arr[(h + n) % arr.length]!;
 }
 
 /** `base.specific` when authored, else `base`. */
@@ -174,6 +183,9 @@ export const SURFACED: Record<string, Entry> = {
   'happening.start': nearby('happening', 'happening', 'glance', (p) => str(p.line)),
   // Unsilenced: the world's quieter news, always through someone nearby.
   'packet.deliver': inTown('rumor', 'packet_deliver', 'none', 'toTownId'),
+  // A packet landed (sim/packets landPacket): the person it reached says what the news did to them.
+  'packet.lifted': own('rumor', 'packet_lifted', 'glance', (p) => str(p.personId)),
+  'packet.dimmed': own('rumor', 'packet_dimmed', 'none', (p) => str(p.personId)),
   'status.lose': nearby('notoriety', 'status_lose', 'glance'),
   'route.break': nearby('notoriety', 'route_break', 'none'),
   'stock.deliver': inTown('letter', 'stock_deliver', 'none', 'townId'),

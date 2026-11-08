@@ -5,6 +5,7 @@
  */
 
 import { deriveRng } from '../rng';
+import { happeningTownName } from '../happenings';
 import { enqueueLetter } from '../letters-scale';
 import { pushJuice } from '../packets';
 import type { SimState } from '../types/runtime';
@@ -175,7 +176,7 @@ function fillSlots(text: string, inst: UnspokenInstance, carrierId: string, ctx:
   const slots: Record<string, string> = {
     carrier: ctx.nameOf?.(carrierId) ?? 'a neighbour',
     kinLabel: kinds.includes('kin') ? KIN_LABELS.kin : 'a friend',
-    otherTown: inst.placeTownId && inst.placeTownId !== carrierTown ? inst.placeTownId : 'the next town over',
+    otherTown: inst.placeTownId && inst.placeTownId !== carrierTown ? happeningTownName(inst.placeTownId) : 'the next town over',
   };
   return text.replace(/\{(\w+)\}/g, (m, k: string) => slots[k] ?? m);
 }
