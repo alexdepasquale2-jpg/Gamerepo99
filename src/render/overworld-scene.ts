@@ -47,7 +47,6 @@ import { collectDawnLines } from '../sim/dawn-lines';
 import { kinStrainOf } from '../sim/social/kin-strain';
 import { attachRoads, type RoadsHandle } from './road-signs';
 import { featuresIn } from '../sim/map/ladder/features';
-import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
 import { DEFAULT_SOCIAL_SEED } from '../sim/social/social-web-build';
 import { collectDevHooks } from './dev-hooks';
 import './dev';
@@ -93,9 +92,7 @@ export class OverworldScene extends Phaser.Scene {
   private room!: InteriorRoom;
   /** Last walking direction (tiles), so X works the ground in front of you. */
   private facing = { dx: 0, dy: 1 };
-  private landTowns: LandTown[] = [];
   /** Drawn ground + prop types per tile of chunks the player tried to work (built on demand, dropped on edit). */
-  private drawnCache = new Map<string, Map<string, { ground?: string; props: string[] }>>();
   private roads!: RoadsHandle;
 
   constructor() {
@@ -110,7 +107,6 @@ export class OverworldScene extends Phaser.Scene {
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed, () => this.session.getState()?.tileEdits);
     this.terrain = createTerrainAccess(this.layout, seed, undefined, () => this.session.getState()?.tileEdits);
-    this.landTowns = this.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: world.settlements?.find((s) => s.id === t.id)?.name }));
     this.nav = createNavigator(this.terrain);
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
@@ -255,8 +251,6 @@ export class OverworldScene extends Phaser.Scene {
         arriveAt: (townId: string) => this.arriveAt(townId),
         /** Ground at a tile: current biome, the player's edit there (if any), whether it can be walked. */
         tile: (q: number, r: number) => ({ biome: this.terrain.biome(q, r), edit: this.terrain.edit(q, r) ?? null, passable: this.terrain.passable(q, r) }),
-        /** Work the land in reach (as pressing X), optionally facing (dx, dy) first. */
-        work: (dx?: number, dy?: number) => { if (dx !== undefined || dy !== undefined) this.facing = { dx: dx ?? 0, dy: dy ?? 0 }; return this.workLand(); },
         /** Roads out of the player's town with today's travellers; a town's signpost tile; take a road (resolves on arrival). */
         roads: () => this.session.roads(),
         signpost: (townId: string) => this.roads.signpost(townId),
@@ -325,12 +319,8 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
     this.input.keyboard?.on('keydown-F', () => {
-      // Stone or timber in hand beside ground it can mend: F works the land with it.
-      const held = this.goods.selectedItem();
-      if (held && this.workLand(held)) return;
       const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true);
     });
-    this.input.keyboard?.on('keydown-X', () => this.workLand());
     this.input.keyboard?.on('keydown-G', () => { const st = this.session.getState(); if (!this.room.active || !st) return; this.say(lightLantern(st, this.room.state()!.buildingId)); this.room.paintLantern(); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
@@ -575,49 +565,6 @@ export class OverworldScene extends Phaser.Scene {
     if (this.room.active) this.room.interact();
   }
 
-  /**
-   * X (or F with stone/timber selected): lay stones, clear brush or mend the path in reach (sim/land-acts).
-   * With `itemId`, only acts that use that item; returns false when there was nothing for it to do.
-   */
-  private workLand(itemId?: string): boolean {
-    const st = this.session.getState();
-    if (!st || this.resting || this.room.active || this.goods.overlayOpen() || this.ring.isOpen()) return false;
-    const at = this.nav.tileAt(this.player.x, this.player.y);
-    const view = { ...this.terrain, drawn: (q: number, r: number) => this.drawnAt(q, r) };
-    const res = workLandHere(st, view, at, this.facing, this.landTowns, itemId);
-    // F with an item only takes over when the work happens; otherwise the item is used as usual.
-    if (!res || (itemId && !res.ok)) return false;
-    if (res.ok && res.q !== undefined && res.r !== undefined) {
-      const cx = Math.floor(res.q / CHUNK_SIZE), cy = Math.floor(res.r / CHUNK_SIZE);
-      this.drawnCache.delete(`${cx},${cy}`);
-      this.layer.invalidate([{ cx, cy }]);
-      this.syncChunks(true);
-      this.goods.refreshInventory();
-      this.tweens.add({ targets: this.player, y: this.player.y - 3, duration: 90, yoyo: true, repeat: 1 });
-      const left = labourLeft(st);
-      this.say(left > 0 ? res.line : `${res.line} Your back is done for today.`);
-    } else this.say(res.line);
-    return true;
-  }
-
-  private drawnAt(q: number, r: number): { ground?: string; props: string[] } {
-    const cx = Math.floor(q / CHUNK_SIZE), cy = Math.floor(r / CHUNK_SIZE), key = `${cx},${cy}`;
-    let tiles = this.drawnCache.get(key);
-    if (!tiles) {
-      tiles = new Map();
-      const chunk = this.source.getChunk({ cx, cy });
-      for (const t of chunk.tiles) tiles.set(`${t.q},${t.r}`, { ground: t.biomeId, props: [] });
-      for (const p of chunk.props) {
-        const k = `${p.position.x},${p.position.y}`;
-        const cell = tiles.get(k) ?? { props: [] };
-        cell.props.push(p.type);
-        tiles.set(k, cell);
-      }
-      this.drawnCache.set(key, tiles);
-    }
-    return tiles.get(`${q},${r}`) ?? { props: [] };
-  }
-
   /** Walk through a door: fade, then the camera moves to the room. The world keeps running behind it. */
   private enterBuilding(b: Building, instant = false): void {
     if (this.inside || this.entering) return;
@@ -835,7 +782,6 @@ export class OverworldScene extends Phaser.Scene {
 
   /** Rebuild the chunks around the player (after the land itself changed, e.g. a tile edit). */
   refreshChunks(): void {
-    this.drawnCache.clear();
     this.layer.invalidate();
     this.syncChunks(true);
   }
