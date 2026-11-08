@@ -3,11 +3,10 @@
  * Lines come through someone in the player's town (the one leaning hardest on you, if anyone is).
  * Texts live in data/dialogue/surface-fallbacks.json. Pure and deterministic.
  */
-import fallbackJson from '../../data/dialogue/surface-fallbacks.json';
 import { registerDawnLines } from '../dawn-lines';
+import { fallbackLine } from '../fallback-lines';
 import type { SimState } from '../types/runtime';
 
-const LINES = (fallbackJson as { lines: Record<string, string[]> }).lines;
 const TRAIT = 'inherited_dependence';
 
 const pretty = (id: string): string =>
@@ -25,12 +24,13 @@ export function dependenceSpeaker(state: SimState): string | undefined {
   return best.name ?? pretty(best.id).split(' ')[0];
 }
 
+/** The key's grammar seeded per save and day (was day % list length), so each dawn can word it afresh. */
 function fill(key: string, state: SimState): string | null {
-  const arr = LINES[key] ?? [];
   const who = dependenceSpeaker(state);
-  if (!arr.length || !who) return null;
-  const prev = state.legacy?.lineage?.[state.legacy.lineage.length - 1]?.imprint.displayName ?? 'the one before you';
-  return arr[state.day % arr.length]!.replace(/\{who\}/g, () => who).replace(/\{prev\}/g, () => prev);
+  if (!who) return null;
+  // No named forebear: the grammar's slot-free options ("the one before you") carry it instead.
+  const prev = state.legacy?.lineage?.[state.legacy.lineage.length - 1]?.imprint.displayName;
+  return fallbackLine(key, `${state.seed}|${state.day}`, { who, prev }) || null;
 }
 
 /** Dawn line(s) for inherited dependence: held -> it is named; resolved this dawn -> it lets go. */

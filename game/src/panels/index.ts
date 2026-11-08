@@ -1,6 +1,6 @@
 /**
  * PANELS area: hotbar + satchel, noticeboard (a tab for every board page), wagon trade, letters, world map +
- * minimap, the road sheet at a signpost, and the company sheet (your workshops). Every sheet opens through ctx.ui.sheet, one at a time; the
+ * minimap, the road sheet at a signpost, the company sheet (your workshops), and the craft sheet at a hearth, workbench or forge. Every sheet opens through ctx.ui.sheet, one at a time; the
  * hotbar and minimap sit in a click-through layer over the canvas. See game/README.md.
  */
 import type { GameContext, PanelsApi } from '../app/contracts';
@@ -18,6 +18,7 @@ import { lettersSheet } from './letters';
 import { MAP_ID, createWorldMap } from './map';
 import { createRoads } from './roads';
 import { COMPANY_ID, companySheet, watchCompanyVerbs } from './company';
+import { CRAFT_ID, watchCraftVerbs } from './craft';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -84,11 +85,12 @@ export function attachPanels(ctx: GameContext): PanelsApi {
   window.addEventListener('keydown', onKey);
 
   const offs = [
-    ctx.events.on('inventory', () => { hotbar.sync(); hudSync(); sheets.refresh(SATCHEL_ID); sheets.refresh(TRADE_ID); }),
+    ctx.events.on('inventory', () => { hotbar.sync(); hudSync(); sheets.refresh(SATCHEL_ID); sheets.refresh(TRADE_ID); sheets.refresh(CRAFT_ID); }),
     ctx.events.on('act', () => { hotbar.sync(); hudSync(); sheets.refresh(SATCHEL_ID); }),
     ctx.events.on('held-item', () => sheets.refresh(SATCHEL_ID)),
     ctx.events.on('dawn', () => { hotbar.sync(); hudSync(); sheets.refresh(COMPANY_ID); }),
     watchCompanyVerbs(ctx),
+    watchCraftVerbs(ctx, (def) => sheets.open(def)),
     ctx.events.on('arrive', () => { hotbar.sync(); hudSync(); }),
     ctx.events.on('state-replaced', () => { sheets.close(); hotbar.reset(); map.reset(); hudSync(); }),
   ];

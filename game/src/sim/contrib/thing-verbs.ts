@@ -41,8 +41,13 @@ export const propRow = (type: string): PropRow | null => PROP_BY_TYPE.get(type) 
 export const nodeVerbs = (kindId: string): readonly ThingVerbRow[] => NODE_VERBS.get(kindId) ?? [];
 export const faunaVerbs = (kindId: string): readonly ThingVerbRow[] => FAUNA_VERBS.get(kindId) ?? [];
 
-/** Spark the wild can give in one day across every prop (rest is a balm, not a fuel line). */
-export const PROP_SPARK_PER_DAY = 12;
+/**
+ * Spark the wild can give in one day across every prop (rest is a balm, not a fuel line).
+ * Was 12. With the dawn now costing about 3 a day net (hooks/spark-recovery.json), 12 (and 4, when tried) let a
+ * walker who only sat under trees stay full forever; at 2 the wild slows the fall (an idle walker burns out
+ * in ~60-90 days instead of ~25) but cannot replace real deeds. See game/scripts/balance-probe.mts.
+ */
+export const PROP_SPARK_PER_DAY = 2;
 const propSparkLeft = (state: SimState): number => {
   const k = state.flags.propSpark as { day: number; got: number } | undefined;
   return PROP_SPARK_PER_DAY - (k && k.day === state.day ? k.got : 0);

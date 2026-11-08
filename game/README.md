@@ -82,6 +82,8 @@ Each feature names the area that owns how it looks and is reached. The content a
 | Build plans, plots, companies (F9) | world, panels | plots drawn with progress; board |
 | Households, births, newcomers (F10, #36) | actors, voice | newcomers appear named at dawn; family speaks |
 | Facilities and shifts (F12, #43) | world, interact | facility ring: work a shift; crews |
+| Player changes the land (F13, #33) | world, interact | the tile in front of you has verbs: lay stones (mallet or tools), clear brush (axe or tools), mend path (timber), mend a worn road (stone, timber, tools) |
+| Crafting (recipes.json) | panels, interact | Craft at a hearth, a facility's workbench or forge, or your own workshop → craft sheet; short inputs greyed |
 | Roads: signposts, road menu, hired travellers, days on the road, encounters (G1–G4, #40) | world, panels, voice | signpost ring → road sheet; told at the far end |
 | Hoarder: coin, hide coin, guards, theft and decay, hoard ending (H1–H7, #44) | content, world, ui | Deal/Stash in the ring; chest prop with a tally; ending modal |
 | Notoriety both ways, neglect greys towns (H5, H6) | voice, world | crowd lines; palette |

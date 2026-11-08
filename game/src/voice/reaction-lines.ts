@@ -37,16 +37,14 @@ const aboutOf = (ctx: PresentCtx, personId: string, townId?: string, extra?: Rec
 };
 
 type FallbackFile = {
-  /** Plain lists (some sim modules read these keys as lists themselves). */
-  lines: Record<string, string[]>;
-  /** Keys that may be a grammar, expanded with the shared `rules` (sim/grammar.ts). */
+  /** Keys that may be a grammar, expanded with the shared `rules` (sim/grammar.ts). Sim readers use sim/fallback-lines.ts. */
   talk: Record<string, LinePool>;
   rules: GrammarRules;
   woundChemistry: { deepAtLeast: number; slidAtMost: number };
   notorietyLevels: { id: string; min: number }[];
 };
 const FILE = fallbackJson as unknown as FallbackFile;
-const poolOf = (key: string): LinePool | undefined => FILE.talk[key] ?? FILE.lines[key];
+const poolOf = (key: string): LinePool | undefined => FILE.talk[key];
 const authored = (key: string): boolean => {
   const p = poolOf(key);
   return !!p && (isGrammar(p) ? p.frames.length > 0 : p.length > 0);

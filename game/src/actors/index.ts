@@ -78,6 +78,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
     },
     brood,
     residentsOf: (b) => people.residentsOf(b),
+    keeperOf: (b) => people.keeperOf(b),
     lookOf: (id) => people.lookOf(id),
   };
 }
