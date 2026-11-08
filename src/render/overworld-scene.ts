@@ -237,6 +237,8 @@ export class OverworldScene extends Phaser.Scene {
         roads: () => this.session.roads(),
         signpost: (townId: string) => this.roads.signpost(townId),
         travel: (routeId: string, tradeId?: string) => this.roads.travel(routeId, tradeId),
+        /** Facilities on the roads: [{ id, name, type, state, q, r }] (q, r is the foot tile; stand at r + 1). */
+        facilities: () => this.goods.facilities.views(),
         /** Last line shown by say(). */
         lastSay: () => this.hint.text,
         /** A person's 0..1 kin strain across the gap (city kin of a villager, or the reverse). */
@@ -494,6 +496,7 @@ export class OverworldScene extends Phaser.Scene {
     if (this.goods.readBoard(this.player)) return;
     if (this.roads.interact(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
+    if (this.goods.workFacility(this.player)) return this.syncSparkFromSession(true);
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);
     if (door) {
