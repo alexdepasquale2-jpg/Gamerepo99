@@ -5,10 +5,10 @@
  * trade of their own to make goods) or ones in the same trade take work. Pure + deterministic.
  */
 
-import { ITEM_BY_ID } from '../goods/inventory';
+import { ITEM_BY_ID, addItem, inventoryOf } from '../goods/inventory';
 import { JOBS, jobOf } from '../goods/jobs';
 import type { SimState } from '../types/runtime';
-import { BUILDING_BY_ID, activePlans } from './build-plans';
+import { BUILDING_BY_ID, PLAYER_OWNER, activePlans } from './build-plans';
 
 export const COMPANY = {
   startCoin: 10,
@@ -24,7 +24,12 @@ export const COMPANY = {
   reserve: 20,
 };
 
-export type Company = { id: string; planId: string; name: string; ownerId: string; townId: string; kind: string; workers: string[]; coin: number; founded: number; revenue: number; unpaid: Record<string, number> };
+export type Company = {
+  id: string; planId: string; name: string; ownerId: string; townId: string; kind: string; workers: string[]; coin: number; founded: number; revenue: number; unpaid: Record<string, number>;
+  /** Player-owned only: takings at the last dawn, revenue counted then, and what workers said about wages (told at dawn). */
+  yesterday?: number; revenueSeen?: number; news?: WageNews[];
+};
+export type WageNews = { day: number; personId: string; kind: 'unpaid' | 'quit'; days: number };
 export type Companies = { list: Company[]; next: number; purse: Record<string, number> };
 
 const cs = (state: SimState): Companies => (state.companies ??= { list: [], next: 1, purse: {} });
@@ -64,8 +69,9 @@ export function tickCompanies(state: SimState): void {
   for (const plan of b.plans) {
     if (plan.stage !== 'done' || co.list.some((c) => c.planId === plan.id)) continue;
     const def = BUILDING_BY_ID.get(plan.kind)!;
-    if (!def.slots || companyOf(state, plan.ownerId)) continue;
-    co.list.push({ id: `co${co.next++}`, planId: plan.id, name: `${first(plan.ownerId, state)}'s ${def.name.replace(/^./, (ch) => ch.toUpperCase())}`, ownerId: plan.ownerId, townId: plan.townId, kind: plan.kind, workers: [], coin: COMPANY.startCoin, founded: state.day, revenue: 0, unpaid: {} });
+    const mine = plan.ownerId === PLAYER_OWNER;
+    if (!def.slots || (!mine && companyOf(state, plan.ownerId))) continue;
+    co.list.push({ id: `co${co.next++}`, planId: plan.id, name: mine ? `Your ${def.name}` : `${first(plan.ownerId, state)}'s ${def.name.replace(/^./, (ch) => ch.toUpperCase())}`, ownerId: plan.ownerId, townId: plan.townId, kind: plan.kind, workers: [], coin: COMPANY.startCoin, founded: state.day, revenue: 0, unpaid: {} });
   }
 
   const residents = new Map<string, string[]>();
@@ -75,6 +81,7 @@ export function tickCompanies(state: SimState): void {
 
   for (const c of [...co.list].sort((a, z) => a.id.localeCompare(z.id))) {
     const def = BUILDING_BY_ID.get(c.kind)!;
+    if (c.ownerId === PLAYER_OWNER) { payPlayerWages(state, c); continue; }
     // Wages: paid in order; workers who go unpaid long enough quit.
     for (const w of [...c.workers]) {
       if (c.coin >= COMPANY.wage) {
@@ -98,4 +105,35 @@ export function tickCompanies(state: SimState): void {
       !companyOf(state, id) && !builders.has(id) && (!hasRecipes(id) || def.jobs.includes(jobOf(state, id).id)));
     if (pick) c.workers.push(pick);
   }
+}
+
+/**
+ * The player's workshop at dawn: wages come out of the till, then out of the player's own coin. A worker
+ * who goes unpaid says so; unpaid `quitAfterUnpaid` dawns running, they leave and say that too. The player
+ * hires and lets go by hand (economy/workshops) and takes the takings from the till themselves.
+ */
+function payPlayerWages(state: SimState, c: Company): void {
+  c.yesterday = Math.max(0, c.revenue - (c.revenueSeen ?? c.revenue));
+  c.revenueSeen = c.revenue;
+  const news = (c.news ?? []).filter((n) => state.day - n.day < 7);
+  for (const w of [...c.workers]) {
+    if (!state.people[w]) { c.workers = c.workers.filter((x) => x !== w); delete c.unpaid[w]; continue; }
+    const purse = Math.max(0, inventoryOf(state).coin ?? 0);
+    if (Math.max(0, c.coin) + purse >= COMPANY.wage) {
+      const fromTill = Math.min(COMPANY.wage, Math.max(0, c.coin));
+      c.coin -= fromTill;
+      if (COMPANY.wage - fromTill > 0) addItem(state, 'coin', -(COMPANY.wage - fromTill));
+      const co = state.companies!;
+      co.purse[w] = (co.purse[w] ?? 0) + COMPANY.wage;
+      delete c.unpaid[w];
+      continue;
+    }
+    const days = (c.unpaid[w] = (c.unpaid[w] ?? 0) + 1);
+    if (days >= COMPANY.quitAfterUnpaid) {
+      c.workers = c.workers.filter((x) => x !== w);
+      delete c.unpaid[w];
+      news.push({ day: state.day, personId: w, kind: 'quit', days });
+    } else news.push({ day: state.day, personId: w, kind: 'unpaid', days });
+  }
+  c.news = news.slice(-12);
 }

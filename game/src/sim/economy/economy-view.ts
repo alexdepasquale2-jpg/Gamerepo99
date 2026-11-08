@@ -11,7 +11,7 @@ import { TECHS, atWar, creedOf, techsOf, treatyOf } from './polity';
 import { townNeeds } from './village-economy';
 
 const label = (id: string): string => (id === 'food' ? 'food' : itemName(id).toLowerCase());
-const first = (state: { people: Record<string, { name?: string }> }, id: string): string => (state.people[id]?.name ?? id).split(' ')[0]!;
+const first = (state: { people: Record<string, { name?: string }> }, id: string): string => (id === 'player' ? 'you' : (state.people[id]?.name ?? id).split(' ')[0]!);
 
 export type PlanView = { id: string; owner: string; building: string; stage: 'gathering' | 'building'; progress: number; missing: { itemId: string; qty: number }[] };
 export type TownView = {
@@ -56,7 +56,7 @@ export function economyLines(v: TownView, townName: (id: string) => string): str
   if (v.incoming.length) out.push('On the road to us', ...v.incoming.slice(0, 3).map((c) => `• ${c.qty} ${label(c.itemId)} from ${townName(c.from)}, ${c.daysLeft} day${c.daysLeft === 1 ? '' : 's'} out`), '');
   if (v.plans.length) {
     out.push('Under construction');
-    for (const p of v.plans.slice(0, 3)) out.push(`• ${p.owner}'s ${p.building}: ${Math.round(p.progress * 100)}%${p.missing.length ? `, needs ${p.missing.slice(0, 3).map((m) => `${m.qty} ${label(m.itemId)}`).join(', ')}` : ', building'}`);
+    for (const p of v.plans.slice(0, 3)) out.push(`• ${p.owner === 'you' ? 'Your' : `${p.owner}'s`} ${p.building}: ${Math.round(p.progress * 100)}%${p.missing.length ? `, needs ${p.missing.slice(0, 3).map((m) => `${m.qty} ${label(m.itemId)}`).join(', ')}` : ', building'}`);
     out.push('  Give a builder what they need and it goes to their site.', '');
   }
   if (v.companies.length) out.push('Workshops', ...v.companies.slice(0, 3).map((c) => `• ${c.name} (${c.workers} working)`), '');

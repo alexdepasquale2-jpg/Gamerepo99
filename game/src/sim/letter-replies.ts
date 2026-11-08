@@ -16,6 +16,7 @@ import { surfaceUnspokenInReply } from './social/unspoken';
 import type { SimState } from './types/runtime';
 import type { DataTables } from './load-data';
 import { ensureLetters, edgesOf } from './letters-scale';
+import { FOOD_RES, isShortOf } from './economy/food-stock';
 
 export type ReplyTone = 'warm' | 'hopeful' | 'guarded' | 'weary' | 'bitter';
 export type ReplyStatus = 'writing' | 'travelling' | 'arrived' | 'lost';
@@ -181,8 +182,8 @@ export function composeReply(state: SimState, reply: LetterReply, opts: { roll?:
   const tone = toneFor(score, despair, surfaced);
   const tt = T.tones[tone];
   const ties = webTies(state, reply.fromPersonId, reply.toTownId);
-  const stock = state.towns?.[reply.fromTownId]?.stock?.food_grain;
-  const townLine = pick(stock !== undefined && stock < 4 ? T.town.shortage : despair >= 0.4 ? T.town.heavy : T.town.steady, rng);
+  const hungry = !!state.towns?.[reply.fromTownId] && isShortOf(state, reply.fromTownId, FOOD_RES);
+  const townLine = pick(hungry ? T.town.shortage : despair >= 0.4 ? T.town.heavy : T.town.steady, rng);
   const n = ties.neighbour;
   const nb = n && state.people[n.id];
   const webKey: SocialEdgeKind | 'struggling' | undefined = n && nb ? (nb.flame < 8 && n.edge.kind !== 'rival' ? 'struggling' : n.edge.kind) : undefined;

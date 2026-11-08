@@ -6,6 +6,7 @@
  */
 import type { CaravanMobile } from '../caravans-types';
 import type { SimState } from '../types/runtime';
+import { scarcityOf } from '../economy/food-stock';
 import { ITEMS, ITEM_BY_ID, addItem, hasItem, removeItem, type ItemRow } from './inventory';
 
 const byCargo = (resourceId: string | undefined): ItemRow | undefined => ITEMS.items.find((i) => i.economyResourceId === resourceId);
@@ -24,13 +25,9 @@ export function wagonDestination(state: SimState, m: CaravanMobile): string | un
   return m.heading === 'outbound' ? route?.toTownId : route?.fromTownId;
 }
 
-/** 0 (well stocked) .. 1 (nothing in store) against the shortage line the noticeboards use. */
+/** 0 (well stocked) .. 1 (nothing in store) against the shortage line the noticeboards use (food: the ledger). */
 export function scarcity(state: SimState, townId: string | undefined, resourceId: string | undefined): number {
-  if (!townId || !resourceId) return 0;
-  const stock = state.towns?.[townId]?.stock[resourceId];
-  if (stock === undefined) return 0;
-  const below = ITEMS.deeds.shortageBelow;
-  return Math.max(0, below - stock) / below;
+  return townId && resourceId ? scarcityOf(state, townId, resourceId) : 0;
 }
 
 export type Offer = {

@@ -171,7 +171,7 @@ function runPath(state: SimState, itemId: string, row: ItemVerbRow, t: Target, e
       if (!plan || !line) return fail('Their build has enough of that.');
       removeItem(state, itemId);
       giveInstance(state, itemId, plan.ownerId);
-      return { ok: true, line: `You add the ${name.toLowerCase()} to ${firstName(state, plan.ownerId)}'s pile. ${line}` };
+      return { ok: true, line: `You add the ${name.toLowerCase()} to ${plan.ownerId === 'player' ? 'your own' : `${firstName(state, plan.ownerId)}'s`} pile. ${line}` };
     }
     case 'deliver': {
       if (!townId) return fail('There is no town here to take it.');
