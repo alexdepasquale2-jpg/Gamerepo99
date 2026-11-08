@@ -24,7 +24,7 @@ const REFRESH_BY_KIND: Partial<Record<Target['kind'], WorldPart>> = {
 };
 const CUE_BY_VERB: Record<string, Sfx> = { gather: 'pickup', pick_up: 'pickup', stash_withdraw: 'pickup', read: 'open', trade: 'open', roads: 'open', enter: 'open', leave: 'close' };
 /** A shift never pushes the day past dusk into the night. */
-const SHIFT_PHASE_CAP = 0.7;
+export const SHIFT_PHASE_CAP = 0.7;
 
 export const verbOf = (actionId: string): string => parseTargetAction(actionId)?.verb ?? actionId;
 

@@ -11,7 +11,11 @@
  * Pure + deterministic: no Phaser/DOM/Math.random.
  */
 import { registerDawnTick } from '../dawn-ticks';
+import { hasItem, itemName, removeItem } from '../goods/inventory';
 import { happeningTownName } from '../happenings';
+import { consumeInstance } from '../goods/instances';
+import { labourLeft, spendLabour, toolAtHand, toolsText } from '../land-acts';
+import type { WorldLayout } from '../map/world-layout';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import type { EconomyRouteState } from './economy-lod-types';
@@ -33,6 +37,14 @@ export const ROADS = {
   reopenAt: 0.45,
   wornBelow: 0.6,
   floor: 0.05,
+  /** Mending by hand: what it takes, the day's labour it uses, what it gives back. */
+  mendCost: { stone: 1, timber: 1 } as Record<string, number>,
+  /** Any one of these must be carried to mend (kept): bare hands don't set road stone. */
+  mendTools: ['tools'] as string[],
+  mendLabour: 1,
+  mendGain: 0.12,
+  /** A road this sound or better has nothing to mend (the crews' ceiling: a kept road shows nothing). */
+  mendableBelow: 0.85,
   newsKeepDays: 8,
   newsCap: 40,
 };
@@ -172,6 +184,65 @@ export function guardCarts(state: SimState): void {
     if (w) c.escortedBy = `watch:${w.name}`;
     else if (c.escortedBy?.startsWith('watch:')) delete c.escortedBy;
   }
+}
+
+/** True when this road has something for a pair of hands to mend. */
+export const roadNeedsMending = (r: Pick<EconomyRouteState, 'condition' | 'broken'>): boolean =>
+  r.broken || r.condition < ROADS.mendableBelow;
+
+const costText = (cost: Record<string, number>): string =>
+  Object.entries(cost).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`).join(' and ');
+
+/** The player mends a stretch of road with stone and timber (one share of the day's labour). */
+export function mendRoad(state: SimState, routeId: string): { ok: boolean; line: string } {
+  const r = routeById(state, routeId);
+  if (!r) return { ok: false, line: 'This is no road anyone keeps.' };
+  if (!roadNeedsMending(r)) return { ok: false, line: 'The road is sound here. Nothing to mend.' };
+  if (toolAtHand(state, ROADS.mendTools) === null) return { ok: false, line: `Mending the road takes ${toolsText(ROADS.mendTools)} besides ${costText(ROADS.mendCost)}. Craft them at a forge.` };
+  if (labourLeft(state) < ROADS.mendLabour) return { ok: false, line: 'Your back is done for today. Rest, and mend the road tomorrow.' };
+  for (const [id, n] of Object.entries(ROADS.mendCost)) {
+    if (!hasItem(state, id, n)) return { ok: false, line: `Mending the road takes ${costText(ROADS.mendCost)}. You have ${state.inventory?.[id] ?? 0} ${itemName(id).toLowerCase()}.` };
+  }
+  for (const [id, n] of Object.entries(ROADS.mendCost)) {
+    removeItem(state, id, n);
+    for (let k = 0; k < n; k++) consumeInstance(state, id);
+  }
+  spendLabour(state, ROADS.mendLabour);
+  const wasBroken = r.broken;
+  r.condition = Math.min(1, r.condition + ROADS.mendGain);
+  if (r.broken && r.condition >= ROADS.reopenAt) r.broken = false;
+  noteRoadNews(state, { routeId, kind: 'mended', by: 'player' });
+  if (wasBroken && !r.broken) return { ok: true, line: 'You set stone in the worst of it and lay timber over the ruts. The road will carry a cart again.' };
+  if (r.broken) return { ok: true, line: 'You set stone and timber into the break. Not enough yet: it needs more hands than yours.' };
+  return { ok: true, line: `You set stone and timber into the ruts. The road is ${roadWord(r)} here now.` };
+}
+
+// ---- Which road a tile belongs to (the tile in front of the player on a road) ----
+
+const CELLS = new WeakMap<WorldLayout, Map<string, string>>();
+
+/** The road a map tile lies on (within a tile of its line), or null. Cached per layout. */
+export function roadAt(layout: WorldLayout, q: number, r: number): string | null {
+  let cells = CELLS.get(layout);
+  if (!cells) {
+    cells = new Map();
+    for (const route of layout.routes) {
+      const path = route.path;
+      for (let i = 0; i + 1 < path.length; i++) {
+        const a = path[i]!, b = path[i + 1]!;
+        const steps = Math.max(1, Math.ceil(Math.hypot(b.q - a.q, b.r - a.r) * 2));
+        for (let s = 0; s <= steps; s++) {
+          const cq = Math.round(a.q + ((b.q - a.q) * s) / steps), cr = Math.round(a.r + ((b.r - a.r) * s) / steps);
+          for (let dr = -1; dr <= 1; dr++) for (let dq = -1; dq <= 1; dq++) {
+            const k = `${cq + dq},${cr + dr}`;
+            if (!cells.has(k)) cells.set(k, route.id);
+          }
+        }
+      }
+    }
+    CELLS.set(layout, cells);
+  }
+  return cells.get(`${q},${r}`) ?? null;
 }
 
 // ---- Road news through people ----

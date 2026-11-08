@@ -4,6 +4,7 @@
  *
  *   any kind      { heldItem?: string }       the item selected in the hotbar: its "Use …" verbs join the ring
  *   node          WorldNode & { heldItem? }   (objects.ts reads the node from data, as before)
+ *   tile          TileTargetData              the tile in reach: land acts need its q, r and the live LandView
  *   fauna         FaunaTargetData             the animal's kind (fauna.json id) and its town
  *   hearth/board  { townId? }                 which town's hearth or noticeboard
  *   grave         a stone in state.legacy.graves (`<personId>#<day>`, contrib/graves); GraveData
@@ -11,11 +12,13 @@
  *   node #shrine  a herb patch at a shrine (id ends "#shrine", or data.shrine = true) takes offerings
  */
 import type { WorldNode } from '../goods/nodes';
+import type { LandTown, LandView } from '../land-acts';
 import type { Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
 
 /** Common to every kind: the held item, and the town the thing belongs to. */
 export type HeldData = { heldItem?: string | null; townId?: string };
+export type TileTargetData = HeldData & { q: number; r: number; view?: LandView; towns?: LandTown[] };
 export type FaunaTargetData = HeldData & {
   /** fauna.json id (rabbit, deer, …). Without it the id's head before '#', ':' or '_' is tried. */
   kindId?: string;
@@ -52,6 +55,11 @@ export const isShrine = (t: Target): boolean => t.kind === 'node' && (t.id.endsW
 export function nodeData(t: Target): WorldNode | undefined {
   const n = t.data as WorldNode | undefined;
   return t.kind === 'node' && n && n.id === t.id && typeof n.kindId === 'string' ? n : undefined;
+}
+
+export function tileData(t: Target): TileTargetData | undefined {
+  const d = rec(t);
+  return t.kind === 'tile' && typeof d.q === 'number' && typeof d.r === 'number' ? (d as TileTargetData) : undefined;
 }
 
 /** The fauna kind of an animal target: data.kindId, else the id's head ("rabbit#3" → rabbit). */

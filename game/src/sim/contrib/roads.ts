@@ -1,5 +1,7 @@
 /**
  * Roads (G5, G6, G8) on the shared surfaces:
+ *   tile      the road in front of you, when worn or broken: mend it with stone, timber and tools → `road.mend@tile:road:<q>,<r>`
+ *             (the world puts `{ q, r, roadId }` in target.data)
  *   wagon     a village cart on the road (`wagon:cart:<cartId>`): walk beside it to its town → `escort@wagon:cart:<id>`
  *             (the act only checks; the road sheet then runs the escort journey, as it runs a road)
  *   facility  at a waystation: rest the night (the hearth's 'rest' scene), hear the talk, hire a guide or a watch
@@ -9,9 +11,10 @@
 import { registerBoardPage } from '../board-pages';
 import { registerDawnLines } from '../dawn-lines';
 import { cartPosition } from '../economy/logistics';
-import { roadDawnLines, roadWord } from '../economy/roads';
+import { mendRoad, roadDawnLines, roadNeedsMending, roadWord, routeById, ROADS } from '../economy/roads';
 import { hearTalk, hiredOn, hirePrice, hireHelp, INNS, isWaystation, restAtInn, type HireTrade } from '../economy/waystations';
-import { itemName } from '../goods/inventory';
+import { hasItem, itemName } from '../goods/inventory';
+import { toolAtHand, toolsText } from '../land-acts';
 import { happeningTownName } from '../happenings';
 import { registerTargetProvider, type ProvidedAction } from '../play-session/action-providers';
 import { targetActionId, type Target } from '../play-session/targets';
@@ -20,6 +23,30 @@ import type { SimState } from '../types/runtime';
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
 const rec = (t: Target): Record<string, unknown> => (t.data && typeof t.data === 'object' ? (t.data as Record<string, unknown>) : {});
 const plural = (n: number, w: string): string => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+/** The road a tile Thing stands on (target.data.roadId). */
+const roadOfTile = (t: Target): string | undefined => {
+  const id = rec(t).roadId;
+  return t.kind === 'tile' && typeof id === 'string' ? id : undefined;
+};
+
+registerTargetProvider({
+  id: 'road-mend',
+  kinds: ['tile'],
+  list(state, t) {
+    const r = routeById(state, roadOfTile(t) ?? '');
+    if (!r || !roadNeedsMending(r)) return [];
+    const short = Object.entries(ROADS.mendCost).filter(([id, n]) => !hasItem(state, id, n)).length + (toolAtHand(state, ROADS.mendTools) === null ? 1 : 0);
+    const needs = [...Object.entries(ROADS.mendCost).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`), toolsText(ROADS.mendTools)].join(' and ');
+    return [{ id: targetActionId('road.mend', t), label: short ? `Mend the road (needs ${needs})` : `Mend the road · ${roadWord(r)}`, short: 'Mend the road', family: 'work' }];
+  },
+  act(state, actionId, t) {
+    if (verbOf(actionId) !== 'road.mend') return false;
+    const roadId = roadOfTile(t);
+    if (!roadId) return { ok: false, line: 'Stand on the road you mean to mend.' };
+    return mendRoad(state, roadId);
+  },
+});
 
 /** The logistics cart behind a `cart:<id>` wagon Thing. */
 const cartOf = (state: SimState, t: Target) =>
@@ -92,7 +119,7 @@ registerBoardPage({
       if (s.roadway?.crews?.[r.id]) bits.push(`${s.people[s.roadway.crews[r.id]!]?.name?.split(' ')[0] ?? 'someone'} is out mending it`);
       lines.push(`• To ${nameOf(other)}: ${bits.join(', ')}.`);
     }
-    lines.push('', 'Walk beside a cart to see it safe. Rest, hear the talk and hire help at the waystations.');
+    lines.push('', 'Mend a worn road: stand on it with stone, timber and tools. Walk beside a cart to see it safe. Rest, hear the talk and hire help at the waystations.');
     return { lines };
   },
 });
