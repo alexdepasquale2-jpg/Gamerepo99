@@ -9,3 +9,4 @@ import './history';
 import './moments';
 import './households';
 import './inner-state';
+import './power-page';
