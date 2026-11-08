@@ -10,6 +10,6 @@
   "ferryStepCost": 1.5,
   "minRun": 3,
   "maxPerSlot": 5,
-  "minGap": 9,
+  "minGap": 7,
   "lineStep": 3
 }
