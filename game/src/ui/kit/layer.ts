@@ -4,7 +4,7 @@
  * scale as CSS variables (`--hf-u` = CSS px per canvas px) plus the side-sheet box. Event-driven:
  * window resize and a ResizeObserver on the canvas; nothing polls.
  */
-import { SIZES, Z } from './tokens';
+import { PAD_RESERVE_BOTTOM_PX, SIZES, Z } from './tokens';
 
 export const GAME_W = 640;
 export const GAME_H = 360;
@@ -23,7 +23,9 @@ export function fitRect(viewW: number, viewH: number, gameW = GAME_W, gameH = GA
 
 /**
  * Where a side sheet goes, in CSS px relative to the layer's top-left.
- * - side: right edge of the canvas, at most `SIZES.sheetMaxShare` of its width, above the hotbar.
+ * - side: right edge of the canvas, at most `SIZES.sheetMaxShare` of its width (and never wider than
+ *   `SIZES.sheetMaxCss`, so a wide desktop keeps the world), above the hotbar. Phone landscape gets a
+ *   compact sheet of at least `SIZES.sheetMinCss` where the canvas allows.
  * - below: a tall phone in portrait has empty bands under the canvas; the sheet docks there, full
  *   width, and covers none of the world.
  */
@@ -41,7 +43,8 @@ export function sheetBox(view: { width: number; height: number }, canvas: Rect, 
     };
   }
   const gutter = SIZES.gutter * u;
-  const width = Math.floor(canvas.width * share);
+  const floor = Math.min(SIZES.sheetMinCss, canvas.width * 0.6);
+  const width = Math.floor(Math.max(floor, Math.min(SIZES.sheetMaxCss, canvas.width * share)));
   return {
     dock: 'side',
     left: canvas.width - gutter - width,
@@ -110,6 +113,13 @@ export function uiLayer(): UiLayer {
   let current: Rect = { left: 0, top: 0, width: 0, height: 0 };
   let dock: SheetDock = 'side';
   let reserve = 0;
+  // The on-screen pad (body[data-pad=on]) owns the bottom of the window: a sheet docked below stops
+  // above it. Its CSS variable is the source of truth, so the pad can tune it without touching this file.
+  const padReserve = (): number => {
+    if (document.body?.dataset.pad !== 'on') return 0;
+    const v = parseFloat(getComputedStyle(document.body).getPropertyValue('--hf-pad-reserve-bottom'));
+    return Number.isFinite(v) ? v : PAD_RESERVE_BOTTOM_PX;
+  };
   const subs = new Set<() => void>();
 
   const measure = (): Rect => {
@@ -125,9 +135,10 @@ export function uiLayer(): UiLayer {
   const sync = (): void => {
     current = measure();
     const view = { width: window.innerWidth, height: window.innerHeight };
+    const below = Math.max(reserve, padReserve());
     Object.assign(el.style, { left: `${current.left}px`, top: `${current.top}px`, width: `${current.width}px`, height: `${current.height}px` });
-    for (const [k, v] of Object.entries(layerVars(view, current, reserve))) el.style.setProperty(k, v);
-    dock = sheetBox(view, current, SIZES.sheetMaxShare, reserve).dock;
+    for (const [k, v] of Object.entries(layerVars(view, current, below))) el.style.setProperty(k, v);
+    dock = sheetBox(view, current, SIZES.sheetMaxShare, below).dock;
     el.dataset.dock = dock;
     for (const fn of [...subs]) fn();
   };
@@ -137,6 +148,9 @@ export function uiLayer(): UiLayer {
     requestAnimationFrame(() => requestAnimationFrame(sync));
   };
   window.addEventListener('resize', onResize);
+  if (typeof MutationObserver !== 'undefined' && document.body) {
+    new MutationObserver(onResize).observe(document.body, { attributes: true, attributeFilter: ['data-pad'] });
+  }
   layer = {
     el,
     track(c) {
