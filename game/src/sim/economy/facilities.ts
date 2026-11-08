@@ -54,6 +54,9 @@ type CatalogRow = {
 export const FACILITY_WORKERS = workersJson as unknown as WorkersTable;
 const KINDS = new Map(FACILITY_WORKERS.byKind.map((b) => [b.facilityKind, b]));
 const CATALOG = new Map(((facilitiesJson as { facilities: CatalogRow[] }).facilities).map((f) => [f.id, f]));
+/** A role facility (generated district town, id fac_<town>_<kind>) borrows its kind's authored row. */
+const TEMPLATE = ((facilitiesJson as { roles?: { templateByKind?: Record<string, string> } }).roles?.templateByKind ?? {});
+const catalogRow = (id: string, kind: string): CatalogRow | undefined => CATALOG.get(id) ?? CATALOG.get(TEMPLATE[kind] ?? '');
 
 /** A facility placed in the world. `townIds` are its road's two towns (the ones it produces for). */
 export type FacilityPlace = FacilityRow & {
@@ -156,7 +159,7 @@ export function placeFacilities(world: FabricWorld, layout: WorldLayout, seed: n
   const named = new Map<string, { name: string; id: string; workTags?: string[]; prism?: string }>();
   const extraOnRoad = new Map<string, number>();
   for (const gen of world.facilities ?? []) {
-    const row = CATALOG.get(gen.id);
+    const row = catalogRow(gen.id, gen.kind);
     const exact = generatedRoad(layout.routes, gen.routeId);
     const touching = layout.routes.filter((r) => r.id !== exact?.id && gen.townId && (r.from === gen.townId || r.to === gen.townId))
       .sort((a, b) => a.id.localeCompare(b.id));

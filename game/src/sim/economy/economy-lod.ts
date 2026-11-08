@@ -7,6 +7,8 @@
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
 import { facilityStaffMul, updateFacilityStaffing } from './facilities';
+import { roleFoodItem, roleStock } from './town-roles';
+import { supplyTown } from './village-economy';
 import { addStock, drainLegacyFood, foodCover, foodHave, foodStarving, isFoodRes, spoilFood } from './food-stock';
 import type { SimState } from '../types/runtime';
 import type {
@@ -59,10 +61,14 @@ function receiveShareFor(route: EconomyRouteState, townId: string, data: DataTab
   return townId === route.toTownId ? d.city : d.village;
 }
 
-function seedMissingStock(town: TownEconomyState, data: DataTables): void {
+function seedMissingStock(state: SimState, town: TownEconomyState, data: DataTables): void {
   if (town.economySeeded) return;
-  const seed = data.dawnStock.seedStockByTown[town.id] ?? {};
+  // Authored rows win; a generated district town falls back to its role's stock (home towns have none).
+  const authored = data.dawnStock.seedStockByTown[town.id];
+  const seed = authored ?? roleStock(state.seed, town.id) ?? {};
   for (const [rid, qty] of Object.entries(seed)) {
+    // A role seed's food goes straight to the ledger as the land's food (fish by the water), not town.stock.
+    if (!authored && isFoodRes(rid)) { if (qty > 0) supplyTown(state, town.id, roleFoodItem(state.seed, town.id), qty); continue; }
     if (typeof town.stock[rid] !== 'number') town.stock[rid] = qty;
   }
   town.economySeeded = true;
@@ -95,7 +101,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
 
   for (const town of Object.values(state.towns ?? {})) {
     if (town.economyOptIn !== true) continue;
-    seedMissingStock(town, data);
+    seedMissingStock(state, town, data);
     drainLegacyFood(state, town.id);
     let despairAdd = 0;
 

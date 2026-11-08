@@ -5,8 +5,9 @@
  * What happens to a stash overnight (theft, rot, a guard walking off) is heard at dawn through people.
  */
 import { registerDawnLines } from '../dawn-lines';
-import { actDefs, applyStashAct, siteInTown, stashRoom, storableGoods, totalGoods } from '../hoard';
+import { actDefs, applyStashAct, siteDefs, siteInTown, stashRoom, storableGoods, totalGoods } from '../hoard';
 import { townDisplayName } from '../hoard/ending';
+import { townRole } from '../economy/town-roles';
 import { registerActionProvider, registerTargetProvider, type ProvidedAction } from '../play-session/action-providers';
 import type { SimState } from '../types/runtime';
 
@@ -96,13 +97,14 @@ const nameOf = (state: SimState, id: string | undefined): string => (id ? (state
 export function stashDawnLines(state: SimState): string[] {
   const h = state.hoard;
   if (!h?.news?.length) return [];
-  const sites = (state.data as { stashSites?: { sites?: { id: string; name?: string }[] } } | undefined)?.stashSites?.sites ?? [];
+  // siteDefs, not the raw table: a district town's generated spot has its own name too.
+  const sites = siteDefs(state);
   const out: string[] = [];
   for (const n of h.news) {
     if (n.day !== state.day) continue;
     const who = nameOf(state, n.personId);
     const site = (sites.find((x) => x.id === n.siteId)?.name ?? 'your hiding place').toLowerCase();
-    const town = townDisplayName(n.townId);
+    const town = townRole(state.seed, n.townId)?.name ?? townDisplayName(n.townId);
     if (n.kind === 'theft') out.push(`${who} says someone has been at the ${site} in ${town}. ${n.coin ? `${n.coin} coin gone.` : 'Things moved.'}`);
     else if (n.kind === 'decay') out.push(`${who} says the damp got into the ${site} in ${town}. ${n.goods} ${n.goods === 1 ? 'thing' : 'things'} spoiled.`);
     else if (n.kind === 'guard_left') out.push(`${who} says your guard at the ${site} in ${town} walked off. Nobody paid them.`);

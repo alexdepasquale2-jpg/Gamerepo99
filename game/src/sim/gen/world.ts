@@ -150,6 +150,7 @@ export function generateWorld(opts: GenerateWorldOpts): FabricWorld {
     settlements,
     routes,
     fbTables.facilities,
+    seed,
   );
   const biomes = generateBiomes(geoRng, routes, fbTables.biomes, shape);
 
