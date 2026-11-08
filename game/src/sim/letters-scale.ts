@@ -19,6 +19,8 @@ import { deriveRng } from './rng';
 import { createSocialGraph, walkCascade, type SocialGraph } from './social/social-graph';
 import { DEFAULT_SOCIAL_PROPAGATION, type SocialEdge, type SocialWebTable } from './social/social-types';
 import type { SimState } from './types/runtime';
+import { districtDays, districtOfTownRef, refId } from './realm';
+import { rumourBody } from './rumours';
 
 export const MAX_PACKETS_PER_DAWN = 5;
 const DEFAULT_DAYS = 2;
@@ -35,7 +37,7 @@ export type LetterPacket = {
 
 /** `legs`/`roadDays` are set for mail the player sends: it rides the road chain between the towns. */
 export type Flight = LetterPacket & { kind: 'letter' | 'rumor'; days: number; fromTownId: string; toTownId: string; legs?: RoadLeg[]; roadDays?: number };
-type Pending = { kind: 'letter' | 'rumor'; fromPersonId: string; outcomeId: string };
+export type Pending = { kind: 'letter' | 'rumor'; fromPersonId: string; outcomeId: string };
 
 export type LettersState = {
   pending: Pending[];
@@ -97,6 +99,9 @@ function townOf(state: SimState, id: string): string | undefined {
 }
 
 function routeDays(state: SimState, a: string, b: string): number {
+  // Mail between districts rides the trunk roads (sim/realm), hop by hop.
+  const da = districtOfTownRef(a), db = districtOfTownRef(b);
+  if (da.col !== db.col || da.row !== db.row) return Math.max(1, districtDays(state.seed, da, db));
   for (const r of state.economyRoutes ?? []) {
     if ((r.fromTownId === a && r.toTownId === b) || (r.fromTownId === b && r.toTownId === a)) {
       return Math.max(1, r.days);
@@ -179,7 +184,9 @@ export function rollCrossTownLetters(
     const packetType = p.kind === 'rumor' ? 'rumor' : (t.crossTown.emitPacketType ?? 'proof_packet');
     const edge = g.edgesBetween(hit.via, hit.personId)[0];
     const tpl = p.kind === 'rumor' ? undefined : pickTemplate(t.templates, packetType, edge);
-    add(launch(state, ls, { kind: p.kind, templateId: tpl?.id ?? 'rumor', packetType, fromPersonId: p.fromPersonId, toPersonId: hit.personId }));
+    // A rumour carries what came to pass, framed as word from the teller's town.
+    const said = p.kind === 'rumor' && here ? rumourBody(state, p.outcomeId, p.fromPersonId, here, townOf(state, hit.personId) ?? here) : {};
+    add(launch(state, ls, { kind: p.kind, templateId: tpl?.id ?? 'rumor', packetType, fromPersonId: p.fromPersonId, toPersonId: hit.personId, ...said }));
   }
   return out;
 }
@@ -198,10 +205,41 @@ function render(tpl: Template | undefined, state: SimState, f: Flight): { title?
   return { title: tpl.title, body: tpl.body.replace(/\{(\w+)\}/g, (_, k: string) => sub[k] ?? '') };
 }
 
+/**
+ * A letter or rumour reaches its town: long roads thin it, the player's own mail is marked delivered
+ * (trust, a remembered show-up, a reply begun), and its juice fires. False when it was lost on the way.
+ */
+export function deliverFlight(state: SimState, f: Flight): boolean {
+  const ls = ensureLetters(state);
+  const t = tables(state);
+  // Long roads thin letters: survival falls off per day travelled beyond the first.
+  const total = f.roadDays ?? routeDays(state, f.fromTownId, f.toTownId);
+  const note = ls.correspondence?.find((n) => n.id === f.id);
+  // Mail carried along roads (the player's, or anything crossing districts on the trunk roads) thins at the
+  // courier's rate; kin gossip within a district thins with the social web's falloff.
+  const courier = f.roadDays !== undefined || refId(districtOfTownRef(f.fromTownId)) !== refId(districtOfTownRef(f.toTownId));
+  const survive = Math.pow(courier ? COURIER_SURVIVAL_PER_DAY : t.falloff, Math.max(0, total - 1));
+  if (deriveRng(state.seed, 'letter-thin', f.id).next() >= survive) {
+    if (note) note.status = 'lost';
+    retireLetter(state, f.id);
+    return false;
+  }
+  if (note) {
+    note.status = 'delivered';
+    retireLetter(state, f.id);
+    const p = state.people[f.toPersonId];
+    if (p) p.trust = Math.min(1, (p.trust ?? 0) + 0.03);
+    encodeUnspokenForState(state, 'show_up', f.toPersonId, { tags: ['letter_arrived', 'kin'] });
+    beginReply(state, f);
+  }
+  const payload = { letterId: f.id, templateId: f.templateId, packetType: f.packetType, fromPersonId: f.fromPersonId, toPersonId: f.toPersonId, ...render(t.templates.find((x) => x.id === f.templateId), state, f) };
+  pushJuice(state, f.kind === 'rumor' ? 'rumor.spread' : 'letter.deliver', payload);
+  return true;
+}
+
 /** One dawn: deliver in-flight (distance thins them), then roll new batch. Returns delivered ids. */
 export function tickLetters(state: SimState): string[] {
   const ls = ensureLetters(state);
-  const t = tables(state);
   const delivered: string[] = [];
   // Replies already on their way advance first, so a reply born this dawn waits for the next one.
   const repliesIn = tickReplies(state);
@@ -213,26 +251,7 @@ export function tickLetters(state: SimState): string[] {
       keep.push({ ...f, days: f.days - 1 });
       continue;
     }
-    // Long roads thin letters: survival falls off per day travelled beyond the first.
-    const total = f.roadDays ?? routeDays(state, f.fromTownId, f.toTownId);
-    const note = ls.correspondence?.find((n) => n.id === f.id);
-    const survive = Math.pow(f.roadDays !== undefined ? COURIER_SURVIVAL_PER_DAY : t.falloff, Math.max(0, total - 1));
-    if (deriveRng(state.seed, 'letter-thin', f.id).next() >= survive) {
-      if (note) note.status = 'lost';
-      retireLetter(state, f.id);
-      continue;
-    }
-    if (note) {
-      note.status = 'delivered';
-      retireLetter(state, f.id);
-      const p = state.people[f.toPersonId];
-      if (p) p.trust = Math.min(1, (p.trust ?? 0) + 0.03);
-      encodeUnspokenForState(state, 'show_up', f.toPersonId, { tags: ['letter_arrived', 'kin'] });
-      beginReply(state, f);
-    }
-    delivered.push(f.id);
-    const payload = { letterId: f.id, templateId: f.templateId, packetType: f.packetType, fromPersonId: f.fromPersonId, toPersonId: f.toPersonId, ...render(t.templates.find((x) => x.id === f.templateId), state, f) };
-    pushJuice(state, f.kind === 'rumor' ? 'rumor.spread' : 'letter.deliver', payload);
+    if (deliverFlight(state, f)) delivered.push(f.id);
   }
   ls.flight = keep;
   if (delivered.length || repliesIn.length) tags.push('letter_arrived');
