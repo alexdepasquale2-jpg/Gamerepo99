@@ -2,20 +2,19 @@
 
 This is a fresh front end on the proven simulation. The old game in `src/` keeps running until this one replaces it.
 
-**This version lives on branch `claude/v2-scaffold`. It is never merged into `main`.**
+**On `main` since #64 (8 Nov 2026).**
 
 ## Get it and run it
 Fresh copy:
 ```bash
-git clone --branch claude/v2-scaffold https://github.com/alexdepasquale2-jpg/Gamerepo99.git
+git clone https://github.com/alexdepasquale2-jpg/Gamerepo99.git
 cd Gamerepo99
 npm ci
 npm run game:dev
 ```
 Or, in an existing checkout:
 ```bash
-git fetch origin
-git switch claude/v2-scaffold
+git switch main
 git pull
 npm ci
 npm run game:dev
