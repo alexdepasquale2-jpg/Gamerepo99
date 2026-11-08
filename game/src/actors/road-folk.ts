@@ -87,12 +87,14 @@ export function createRoadFolk(ctx: GameContext): RoadFolk {
       const lr = viewRect(ctx.scene, 8);
       const focus = safe(() => ctx.interact.focus()?.key, undefined);
       for (const w of walkers.values()) {
-        if (indoors || !inRect(vr, w.x, w.y)) { w.fig?.destroy(); w.fig = undefined; continue; }
+        // Out of sight they keep pace with the road exactly; in sight they walk there.
+        if (indoors || !inRect(vr, w.x, w.y)) { w.fig?.destroy(); w.fig = undefined; w.x = w.to.x; w.y = w.to.y; continue; }
         if (!w.fig) w.fig = new Figure(ctx.scene, w.pl, w.x, w.y);
         const dx = w.to.x - w.x, dy = w.to.y - w.y, d = Math.hypot(dx, dy);
         const moving = d > 1;
         if (moving) {
-          const step = Math.min(d, WALK_PX * w.pl.speed * dt);
+          // A long road in one day is a brisk walk: never fall behind where the sim says they are.
+          const step = Math.min(d, Math.max(WALK_PX * w.pl.speed, d * 1.5) * dt);
           w.x += (dx / d) * step;
           w.y += (dy / d) * step;
           w.fig.face(dx, dy);
