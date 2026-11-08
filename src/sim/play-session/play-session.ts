@@ -22,6 +22,7 @@ import {
   type TravelRoute,
   type TravelSimState,
 } from '../travel/travel';
+import { roadViews, type JourneyResult } from '../travel/journey';
 import { tickPackets } from '../packets';
 import { regrowNodes } from '../goods/nodes';
 import { advanceToDawn, runDuskHooks } from '../scenario/scenario-advance';
@@ -180,13 +181,27 @@ function createPlayModeSession(defaults: {
     listRoutes: () =>
       state?.player.townId ? listRoutesFrom(routes, state.player.townId) : [],
     travel(routeId) {
-      if (!state) return;
-      const beforeLen = state.bus?.lastIds?.length ?? 0;
-      const { daysEff } = startTravel(state, routeId);
-      tickN += daysEff;
+      session.journey(routeId);
+    },
+    roads: () => (state ? roadViews(state) : []),
+    journey(routeId, tradeId) {
+      if (!state) return null;
+      const st = state;
+      const beforeLen = st.bus?.lastIds?.length ?? 0;
+      const nameOf = (id: string): string => world?.settlements?.find((t) => t.id === id)?.name ?? id;
+      // Each road day is a real world day: the dawn pipeline (no hearth dusk; the road does its own spark).
+      const runDay = (s: TravelSimState): void => {
+        advanceToDawn(s);
+        tickPackets(s);
+        regrowNodes(s);
+      };
+      const res: JourneyResult = startTravel(st, routeId, { tradeId, runDay, nameOf }).journey;
+      if (!res.ok) return res;
+      tickN += res.days;
       appendJuiceSince(beforeLen);
-      maybeOpenSuccession(state, eventLog, successionOpen);
-      eventLog.push({ type: 'travel' });
+      maybeOpenSuccession(st, eventLog, successionOpen);
+      eventLog.push({ type: 'travel', methodId: routeId });
+      return res;
     },
     dump: () => (world ? dumpWorld(world).text : ''),
     getWorld: () => world,

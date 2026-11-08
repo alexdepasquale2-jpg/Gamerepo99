@@ -36,6 +36,7 @@ import { getWalkMul, setWalkMul } from '../dev/dev-flags';
 import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
 import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
 import { collectDawnLines } from '../sim/dawn-lines';
+import { attachRoads, type RoadsHandle } from './road-signs';
 import { featuresIn } from '../sim/map/ladder/features';
 
 const CHUNK_MARGIN = 1;
@@ -79,6 +80,7 @@ export class OverworldScene extends Phaser.Scene {
   private inside: Building | null = null;
   private entering = false;
   private room!: InteriorRoom;
+  private roads!: RoadsHandle;
 
   constructor() {
     super('overworld');
@@ -130,6 +132,23 @@ export class OverworldScene extends Phaser.Scene {
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
     });
     this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav, (l) => this.say(l), () => this.room.active);
+    this.roads = attachRoads({
+      scene: this,
+      session: this.session,
+      settlements: this.layout.settlements,
+      nameOf: (id) => world.settlements?.find((s) => s.id === id)?.name ?? id,
+      arriveAt: (id) => this.arriveAt(id),
+      afterJourney: () => {
+        this.life.dawn();
+        this.people.sync();
+        this.people.settle();
+        this.goods.onDawn();
+        (this.registry.get('autosave') as (() => void) | undefined)?.();
+        this.syncSparkFromSession(false);
+      },
+      say: (t) => this.say(t),
+      setBusy: (b) => (this.resting = b),
+    });
     const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
       this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined),
     );
@@ -189,6 +208,10 @@ export class OverworldScene extends Phaser.Scene {
         board: (townId: string, page?: number | string) => this.goods.openBoard(townId, page),
         /** Put the player at a town (as arriving there). */
         arriveAt: (townId: string) => this.arriveAt(townId),
+        /** Roads out of the player's town with today's travellers; a town's signpost tile; take a road (resolves on arrival). */
+        roads: () => this.session.roads(),
+        signpost: (townId: string) => this.roads.signpost(townId),
+        travel: (routeId: string, tradeId?: string) => this.roads.travel(routeId, tradeId),
         /** Last line shown by say(). */
         lastSay: () => this.hint.text,
         give: (itemId: string, n: number) => {
@@ -266,7 +289,7 @@ export class OverworldScene extends Phaser.Scene {
 
   update(_time: number, delta: number): void {
     if (this.room.active) { this.updateRoom(_time, delta); return; }
-    if (this.goods.overlayOpen()) { this.tickLife(delta); return; }
+    if (this.goods.overlayOpen() || this.roads.isOpen()) { this.tickLife(delta); return; }
     let dx = 0;
     let dy = 0;
     if (this.cursors.left?.isDown || this.wasd.A.isDown) dx -= 1;
@@ -421,7 +444,7 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private interact(): void {
-    if (this.resting || this.goods.overlayOpen()) return;
+    if (this.resting || this.goods.overlayOpen() || this.roads.isOpen()) return;
     if (this.ring.isOpen()) return;
     if (this.room.active) {
       const who = this.room.interact();
@@ -429,6 +452,7 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
     if (this.goods.readBoard(this.player)) return;
+    if (this.roads.interact(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);

@@ -47,6 +47,14 @@ const nearby =
     return personId ? { kind: 'line', personId, townId, tell, cue, line: pickFallback(fb, personId + fb) } : null;
   };
 
+/** A road encounter is told back to you by someone at the far end (quiet stretches stay quiet). */
+const road: Entry = (p, ctx) => {
+  if (p.quiet === true) return null;
+  const townId = str(p.townId);
+  const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
+  return personId ? { kind: 'line', personId, townId, tell: 'glance', cue: 'road', line: str(p.line) ?? pickFallback('road_encounter', personId + str(p.encounterId)) } : null;
+};
+
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
 /** Every juice id that surfaces. */
@@ -63,6 +71,7 @@ export const SURFACED: Record<string, Entry> = {
   'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
+  'encounter.spawn': road,
   'person.reignite': tint,
   'site.kindle': tint,
 };
@@ -70,7 +79,7 @@ export const SURFACED: Record<string, Entry> = {
 /** Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off. */
 export const SILENT: readonly string[] = [
   'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
-  'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
+  'route.break', 'route.travel_step', 'stock.deliver', 'stock.starve',
   'caravan.arrive', 'caravan.trade', 'caravan.depart', 'letter.reply',
   'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
   'succession.carried', 'succession.rested', 'legend.heard', 'legend.act', 'grave.found',
