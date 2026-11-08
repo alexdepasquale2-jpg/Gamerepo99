@@ -63,6 +63,8 @@ export const SURFACED: Record<string, Entry> = {
   'notoriety.rise': nearby('notoriety', 'notoriety_rise', 'glance'),
   'notoriety.attractor': nearby('notoriety', 'notoriety_attractor', 'glance'),
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
+  'kin.birth': own('kin', 'kin_birth', 'ember', (p) => str(p.personId), (p) => str(p.line)),
+  'kin.grown': own('kin', 'kin_grown', 'glance', (p) => str(p.personId), (p) => str(p.line)),
   'person.reignite': tint,
   'site.kindle': tint,
 };

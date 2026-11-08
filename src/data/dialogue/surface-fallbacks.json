@@ -12,6 +12,8 @@
     "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
     "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
     "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
+    "kin_birth": ["A little one at ours. Come and see, when you can.", "We've a new mouth to feed, and glad of it."],
+    "kin_grown": ["Grown now. I'll make my own way here.", "First day keeping my own hours. Strange, and good."]
   }
 }

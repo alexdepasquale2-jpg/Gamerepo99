@@ -13,7 +13,7 @@ import { generateWorld } from '../fabric/fabric-bake';
 import { loadData, type DataTables } from '../load-data';
 import { exportWorld } from '../legacy/world-file';
 import { loadState, saveState } from '../save';
-import { buildPlaySnapshot, interactionRuntimeFromPeople } from './play-session-boot';
+import { admitNewPeople, buildPlaySnapshot, interactionRuntimeFromPeople } from './play-session-boot';
 import { actMethod, listMethodActions } from './play-session-act';
 import { bootPlayState } from './play-session-state';
 import {
@@ -55,6 +55,7 @@ import type {
 function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
   return {
     id: p.id,
+    name: p.name,
     woundId: p.woundId,
     tags: p.tags,
     siteId: p.siteId,
@@ -130,16 +131,26 @@ function createPlayModeSession(defaults: {
     interactionRt = interactionRuntimeFromPeople(next.people, next.player.spark, (next.data as DataTables).interactions, (id) => firstTrust(next, id));
   }
 
+  /** People who joined since the runtime was built (children come of age, arrivals) become actable. */
+  function admitNewcomers(): void {
+    if (state && interactionRt) admitNewPeople(interactionRt, state.people, state.player.spark, (id) => firstTrust(state!, id));
+  }
+
   const session: PlaySession = {
     start(opts) {
       boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
     },
-    listActions: () => (state ? listMethodActions(state, interactionRt as CompatRuntime | undefined) : []),
+    listActions: () => {
+      if (!state) return [];
+      admitNewcomers();
+      return listMethodActions(state, interactionRt as CompatRuntime | undefined);
+    },
     act(actionId) {
       if (!state) {
         eventLog.push({ type: 'act', methodId: actionId });
         return;
       }
+      admitNewcomers();
       actMethod(
         state,
         actionId,
@@ -170,6 +181,7 @@ function createPlayModeSession(defaults: {
       advanceToDawn(state);
       tickPackets(state);
       regrowNodes(state);
+      admitNewcomers();
       appendJuiceSince(beforeLen);
       maybeOpenSuccession(state, eventLog, successionOpen);
       eventLog.push({ type: 'tick' });

@@ -37,6 +37,7 @@ export function attachSurface(
     for (const p of session.listPeople()) if (p.townId) townOf.set(p.id, p.townId);
   };
   refreshPeople();
+  const lookedUp = new Set<string>();
 
   const ctx = {
     nearbyPersonId: (townId?: string): string | undefined =>
@@ -58,6 +59,8 @@ export function attachSurface(
   const anchor = (personId: string): { x: number; y: number } => {
     const live = positionOf?.(personId);
     if (live) return live;
+    // Someone who came of age or arrived after boot: look them up once.
+    if (!townOf.has(personId) && !lookedUp.has(personId)) { lookedUp.add(personId); refreshPeople(); }
     const town = settlements.find((s) => s.id === townOf.get(personId)) ?? settlements[0];
     if (!town) return { x: 0, y: 0 };
     let h = 0;

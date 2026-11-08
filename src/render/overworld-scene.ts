@@ -23,7 +23,7 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
-import { createPeopleLayer, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
+import { createPeopleLayer, firstName, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
 import { InteriorRoom, type InteriorEnterData } from './interior-room';
 import { allBuildings, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
 import { deedLabel } from '../sim/play-session/play-session-act';
@@ -124,7 +124,7 @@ export class OverworldScene extends Phaser.Scene {
     this.buildings = allBuildings(this.layout.settlements);
     this.life = createWorldLife(this, this.layout.settlements);
     this.room = new InteriorRoom(this, {
-      residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: pretty(id).split(' ')[0]!, tint: tintOf(id) })),
+      residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: this.nameOf(id), tint: tintOf(id) })),
       lanternLit: (id) => !!this.session.getState() && lanternLit(this.session.getState()!, id),
       phase: () => this.life.phase(),
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
@@ -370,6 +370,11 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
+  /** A villager's given name as it shows over their head. */
+  private nameOf(id: string): string {
+    return firstName({ id, name: this.session.getState()?.people[id]?.name });
+  }
+
   private chipsFor(id: string): Chip[] {
     return this.session
       .listActions()
@@ -553,7 +558,7 @@ export class OverworldScene extends Phaser.Scene {
     this.syncSparkFromSession(true);
     this.tweens.add({ targets: sprite, y: sprite.y - 5, duration: 110, yoyo: true });
     if (juiced === 0) {
-      const who = pretty(id).split(' ')[0];
+      const who = this.nameOf(id);
       const line =
         r?.kind === 'refused'
           ? `${who} turns away.`
@@ -578,9 +583,10 @@ export class OverworldScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
       this.life.dawn();
+      // Children come of age and newcomers arrive: give them a body, a free house if there is one, then place everyone.
       this.people.sync();
-      this.people.settle();
       this.goods.onDawn();
+      this.people.settle();
       (this.registry.get('autosave') as (() => void) | undefined)?.();
       this.syncSparkFromSession(false);
       this.time.delayedCall(350, () => {
