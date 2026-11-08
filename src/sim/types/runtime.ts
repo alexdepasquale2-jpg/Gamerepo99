@@ -123,6 +123,8 @@ export type SimState = {
   polity?: import('../economy/polity').Polity;
   /** M4 dawn economy LOD: mutable route condition/broken (from world/routes.json). */
   economyRoutes?: EconomyRouteState[];
+  /** Facility crews and idle/restaffed state by facility id (see sim/economy/facilities). Positions are re-derived from seed. */
+  facilityStaff?: Record<string, import('../economy/facilities').FacilityStaff>;
   /** M4 B/C hook registry (caravan dawn, doctrine supply). Defaults to no-ops. */
   economyHooks?: EconomyLodHooks;
   /** M4 packet-02: live caravan mobiles. */

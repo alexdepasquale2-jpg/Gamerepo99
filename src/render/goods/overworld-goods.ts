@@ -29,6 +29,7 @@ import { createLivingWorld } from './living-world';
 import type { Navigator } from '../../sim/map/nav';
 import { townBuildings, type Building } from '../../sim/map/interiors';
 import { placeAt, residences } from '../../sim/map/residency';
+import { createFacilitiesLayer, type FacilitiesLayer } from './facilities-layer';
 
 type Pt = { x: number; y: number };
 export type OverworldGoods = {
@@ -46,6 +47,10 @@ export type OverworldGoods = {
   letters: () => void;
   readBoard: (player: Pt) => boolean;
   meetCaravan: (player: Pt) => boolean;
+  /** Work a shift at the facility you stand at (moves the day on). True when one was in reach. */
+  workFacility: (player: Pt) => boolean;
+  /** Placed facilities on the roads (dev/e2e). */
+  facilities: FacilitiesLayer;
   closeOverlays: () => void;
   toggleInventory: () => void;
   toggleMap: () => void;
@@ -125,13 +130,14 @@ export function attachOverworldGoods(
   const trader = createCaravanTrade(scene, st, () => inv.refresh(), (tid) => world.settlements?.find((x) => x.id === tid)?.name ?? tid);
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId, nav);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
+  const facilities = createFacilitiesLayer(scene, st, (tid) => meta.get(tid)?.name ?? tid);
   const boards = createNeedsBoards(scene, session, layout, new Map([...meta].map(([id, s]) => [id, s.name])), getPlayer);
   const map = createWorldMap(
     scene,
     layout.settlements.map((t) => ({ ...t, name: meta.get(t.id)?.name ?? t.id, size: meta.get(t.id)?.politySize ?? 60 })),
     layout.routes,
     {
-      player: getPlayer, caravans: () => living.caravanPositions(), despair,
+      player: getPlayer, caravans: () => living.caravanPositions(), despair, facilities: () => facilities.markers(),
       economy: () => {
         const s = st();
         if (!s) return { carts: [], links: [], reach: {} };
@@ -191,6 +197,7 @@ export function attachOverworldGoods(
       document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
       nodes.update(player, time);
       plots.update(player);
+      facilities.update(player, time);
       living.update(time, dt);
       map.update(time);
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
@@ -212,6 +219,7 @@ export function attachOverworldGoods(
       chests.refresh();
       plots.refresh();
       living.refresh();
+      facilities.refresh();
       inv.refresh();
     },
     gatherNear(player) {
@@ -252,6 +260,16 @@ export function attachOverworldGoods(
       if (!id) return false;
       trader.open(id); return true;
     },
+    workFacility(player) {
+      const r = facilities.work(player);
+      if (!r) return false;
+      say(r.line);
+      // A shift takes the hours it takes: the day moves on (never past dusk into the night).
+      if (r.hours > 0) life.setPhase(Math.max(life.phase(), Math.min(0.7, life.phase() + r.hours / 24)));
+      inv.refresh();
+      return true;
+    },
+    facilities,
     closeOverlays: () => { trader.close(); boards.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
     toggleInventory: () => inv.toggle(),
     toggleMap: () => map.toggle(),

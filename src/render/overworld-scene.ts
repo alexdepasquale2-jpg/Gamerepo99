@@ -189,6 +189,8 @@ export class OverworldScene extends Phaser.Scene {
         board: (townId: string, page?: number | string) => this.goods.openBoard(townId, page),
         /** Put the player at a town (as arriving there). */
         arriveAt: (townId: string) => this.arriveAt(townId),
+        /** Facilities on the roads: [{ id, name, type, state, q, r }] (q, r is the foot tile; stand at r + 1). */
+        facilities: () => this.goods.facilities.views(),
         /** Last line shown by say(). */
         lastSay: () => this.hint.text,
         give: (itemId: string, n: number) => {
@@ -430,6 +432,7 @@ export class OverworldScene extends Phaser.Scene {
     }
     if (this.goods.readBoard(this.player)) return;
     if (this.goods.meetCaravan(this.player)) return;
+    if (this.goods.workFacility(this.player)) return this.syncSparkFromSession(true);
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);
     if (door) {
