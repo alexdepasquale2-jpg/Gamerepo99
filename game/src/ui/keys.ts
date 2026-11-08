@@ -1,6 +1,8 @@
 /**
- * Keyboard shortcuts: aliases for what the touch bar and HUD already reach (keys are never the only way).
+ * Keyboard shortcuts: aliases for what the pad and HUD already reach (keys are never the only way).
  *   I satchel · M map · L letters · B brood · Esc back / menu · ` dev menu (dev builds)
+ * The pad (ui/pad/bindings.ts) mirrors these: X = I, Select = M (hold: L / brood), Start = Esc with nothing
+ * open, B = Esc while something is; A is E (held for hold-to-work) and 1–6 in the ring.
  * Esc order: the overlay stack's top entry (handled in its capture listener) → the ring → anything a
  * scene claimed via overlays.claimEscape (room, map) → the pause menu. Keys typed in a field never
  * reach here, and nothing fires while a centred menu or the modal is up.

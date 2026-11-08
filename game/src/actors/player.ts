@@ -10,6 +10,7 @@ import { getWalkMul } from '../dev/dev-flags';
 import { Figure } from './figure';
 import { headHeight, inhabitantLook, type PersonLook } from './looks';
 import type { TownIndex } from './towns';
+import { padMove } from '../ui/pad/move-source';
 
 /** Matches the sim's TILES_PER_MINUTE: about two tiles a second at human pace. */
 const WALK_TILES_PER_SEC = 2.2;
@@ -163,11 +164,14 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
         mx = (keys.D!.isDown || keys.RIGHT!.isDown ? 1 : 0) - (keys.A!.isDown || keys.LEFT!.isDown ? 1 : 0);
         my = (keys.S!.isDown || keys.DOWN!.isDown ? 1 : 0) - (keys.W!.isDown || keys.UP!.isDown ? 1 : 0);
       }
+      // Pad / controller stick (ui/pad/move-source.ts): keys win; a light push walks slower.
+      let padMag = 1;
+      if (!mx && !my && !blocked() && !typing()) { const a = padMove(); if (a) ({ x: mx, y: my, mag: padMag } = a); }
       const step = speedPx() * dt;
       isMoving = false;
       if (mx || my) {
         if (walk) endWalk(false);
-        const k = step / Math.hypot(mx, my);
+        const k = (step * padMag) / Math.hypot(mx, my);
         setFacing(mx, my);
         isMoving = moveBy(mx * k, my * k) > 0.01;
       } else if (walk && !frozen) {
