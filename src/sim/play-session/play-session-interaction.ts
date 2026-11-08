@@ -50,14 +50,18 @@ function marksList(marks: Record<string, number>): { markId: string; stacks: num
     .map(([markId, stacks]) => ({ markId, stacks }));
 }
 
-/** Resolve an interaction for a legacy method act and emit play juice. Caller checks rt has personId. */
+/**
+ * Resolve an interaction for a legacy method act and emit play juice. Caller checks rt has personId.
+ * `line` replaces the host method's reaction line; `failLine` is said when the interaction's
+ * assertFailIfMarksAny trips (it then does not resolve). Returns whether it resolved.
+ */
 export function actInteraction(
   state: SimState,
   rt: CompatRuntime,
-  args: { personId: string; methodId: string; interactionId: string },
+  args: { personId: string; methodId: string; interactionId: string; line?: string; failLine?: string },
   eventLog: PlayEvent[],
   extras?: InteractionActExtras,
-): void {
+): 'resolved' | 'refused' {
   const { personId, methodId, interactionId } = args;
   const s = state as MethodSimState;
   const person = s.people[personId];
@@ -88,7 +92,15 @@ export function actInteraction(
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: refusal.line });
     fireNotorietyEvent(s, 'refusal');
     finish({ kind: 'refused', flameDelta: 0, sparkCost: sparkBefore - s.player.spark, personId, methodId });
-    return;
+    return 'refused';
+  }
+
+  // Assert-fail (e.g. empty cheer on someone hollowed out): they see through it; nothing resolves.
+  const assertMarks = (rt.catalog.get(interactionId) as { assertFailIfMarksAny?: string[] } | undefined)?.assertFailIfMarksAny;
+  if (assertMarks?.some((m) => (marksBefore[m] ?? 0) > 0)) {
+    pushJuice(s, 'refusal.coal_flicker', { personId, methodId, interactionId, line: args.failLine ?? 'They see straight through it.' });
+    finish({ kind: 'refused', flameDelta: 0, sparkCost: 0, personId, methodId });
+    return 'refused';
   }
 
   // The inhabitant's body and habits bend every act: method modifiers, status traits, ember zone.
@@ -125,7 +137,7 @@ export function actInteraction(
     state: s,
     features: { bakedDynamismLines: (data.player as { features?: { bakedDynamismLines?: boolean } }).features?.bakedDynamismLines ?? false },
   });
-  pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: reaction.text, source: reaction.source });
+  pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: args.line ?? reaction.text, source: args.line ? 'deed' : reaction.source });
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
   encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
@@ -177,4 +189,5 @@ export function actInteraction(
     methodId,
   });
   eventLog.push({ type: 'interaction', methodId: interactionId });
+  return 'resolved';
 }
