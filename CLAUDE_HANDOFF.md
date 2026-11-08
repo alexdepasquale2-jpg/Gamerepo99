@@ -2,6 +2,18 @@
 
 Everything is on `main` (https://github.com/alexdepasquale2-jpg/Gamerepo99). Start: `claude`, then "Read CLAUDE_HANDOFF.md and PLAN.md, then do <one task>". One task per session.
 
+## Latest (Nov 8, 2026), read this first
+- **Moving to a local PC.** Set up: `cd ~/Desktop && git clone https://github.com/alexdepasquale2-jpg/Gamerepo99.git && cd Gamerepo99 && npm install && npm run dev`.
+- **On main:** vision archetypes (#28), shared seams (#29: action providers, board pages, dawn lines, ring paging, `PeopleLayer.sync`, `arriveAt`, `__hearth.dev`), consolidated testing (#31), batch 1 of 16 units (#32–#47), post-batch fixes (#48). Every non-locked node in both tech trees is Live. `PLAN.md` → Status has the details.
+- **Tests:** `npm run check` (validate + tsc + vitest), `npm run test:e2e` (build + Playwright), `tests/README.md`. Playwright reads `E2E_PORT`, `E2E_REUSE_SERVER`, `PW_CHROMIUM_PATH` (locally you can leave these unset if Playwright's own Chromium is installed: `npx playwright install chromium`).
+- **Last main run:** validate, tsc and build pass, and vitest is all green on the four fixed suites. e2e: everything passes except **two specs**. These are the next task:
+  1. `tests/e2e/hoarder-path.spec.ts:17`: a `toBe(true)` check fails (received false). The likely line is `dev.ring(pid)` returning false, which means the ring did not open on the first person in the start town. Check `dev.ring` in the scene's dev hooks and whether that person is drawn/outside. Then check that the chest and the hoard-ending overlay still appear.
+  2. `tests/e2e/inner-state.spec.ts:109`: `gained` is false. Three `challenge@<id>` acts at full spark no longer give `civic_voice`. Check that `challenge` is still offered and allowed for those folk (deed gates from batch unit 6, "missing verbs", may now block it), and check the `civic_voice` status rule.
+  Run one spec: `npm run build && npx playwright test tests/e2e/<spec> --trace off`.
+- **Next batch (queued, not started):** the newly unlocked nodes. Full tree: A8–A12, B10–B12, C8, C9, C14, D2, D7, E3, F6, F11, F15, F17, F20, F21, G5–G9, H8, H9, I4, I8, J3, J7, J12, K8. Foundation: A12, A13, B9, C7, E5, J7. The tech-tree pages are claude.ai artifacts: full tree https://claude.ai/artifact/GJP1NERWGroi7VKmtgPUqU, Foundation https://claude.ai/artifact/GxqQjXtkqueSb2m7AwHmoB.
+- **Working style Alex asked for:** implement and push without running full test suites unless asked. Merge via PRs. Never force-push.
+- The Gotcha below about a container Chromium mismatch only applies to cloud sessions (`PW_CHROMIUM_PATH=/opt/pw-browsers/chromium`).
+
 ## State (Nov 7, 2026)
 - M1–M7 done earlier (sim, social web, hoarder/patrons/legacy, menus, mobile, bots). `PLAN.md` has history.
 - Economy sim phases 1–8 done and on main, deterministic and tested: named jobs, village ledger (production, processing, demand, shortage pricing), logistics (requests, carts on roads), ambitions and build plans (plots, claims, labor), companies and wages, households and family lines (gifted births, inheritance), borders and claim disputes, light polity (diplomacy, war, tech, creeds). All NPC-run; the player only helps by gifting.
