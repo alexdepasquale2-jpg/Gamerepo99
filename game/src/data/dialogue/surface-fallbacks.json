@@ -214,12 +214,6 @@
         "core": ["My hands have done their share. Someone younger can have the work.", "No more dawns at the bench for me. I'll sit and watch for once.", "My hands have done their share.", "Somebody younger can have the bench now.", "I'll sit in the sun and watch the work for once."]
       }
     },
-    "wound_deep": {
-      "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
-      "rules": {
-        "core": ["...That landed somewhere deep.", "Nobody's ever said it like that to me.", "Nobody's said it like that to me.", "That went in deep. I felt it."]
-      }
-    },
     "wound_deep.grief": {
       "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
       "rules": {
@@ -254,12 +248,6 @@
       "frames": ["#open_soft# #core# #after_deep#", "#core# #after_deep#"],
       "rules": {
         "core": ["You didn't look away from me. That landed deep.", "I thought no one would carry this with me.", "You didn't look away. That went in deep.", "I thought I'd carry this on my own."]
-      }
-    },
-    "wound_slid": {
-      "frames": ["#open_plain# #core# #after_slid#", "#core# #after_slid#"],
-      "rules": {
-        "core": ["That slid right off me.", "Words. I've heard words before.", "That didn't reach me.", "Mm. Words."]
       }
     },
     "wound_slid.grief": {
@@ -298,12 +286,6 @@
         "core": ["Don't. That just sinks me further.", "It slid off. Shame's an old coat.", "Don't. That sinks me further.", "Shame's an old coat. It didn't go in."]
       }
     },
-    "mark": {
-      "frames": ["#open_soft# #core# #after_mark#", "#core#"],
-      "rules": {
-        "core": ["Something stays with me after that.", "I'll be thinking about this.", "That'll stay with me.", "I'll be carrying that a while."]
-      }
-    },
     "mark.dependence": {
       "frames": ["#open_soft# #core# #after_mark#", "#core#"],
       "rules": {
@@ -332,12 +314,6 @@
       "frames": ["#open_soft# #core# #after_mark#", "#core#"],
       "rules": {
         "core": ["Maybe. Don't let me down.", "I want to believe you. I'm trying.", "All right. Maybe.", "I'll try to believe it. Don't make me sorry."]
-      }
-    },
-    "status_gain": {
-      "frames": ["#open_news# #core# #town_talk#", "#open_news# #core# #hedge#", "#core# #close_warm#"],
-      "rules": {
-        "core": ["People look at you differently now.", "Something's changed in how folk see you.", "Folk look at you a bit differently now.", "They've started saying your name with some weight to it.", "There's something new in how people nod to you."]
       }
     },
     "status_gain.civic_voice": {
@@ -746,6 +722,41 @@
         "clerk": ["The clerk shakes their head.", "The clerk keeps the flap down.", "The clerk looks you over and says no.", "A hand on the counter flap, holding it shut.", "The clerk doesn't look up.", "The clerk taps a sign on the counter."],
         "why": ["Offices are for people with business on paper.", "No papers, no counter.", "Business here is done in ink.", "Come back with something written down.", "The office deals in signatures, not visitors.", "They want a name on a paper before they'll talk."],
         "shut": ["The ledger office keeps its counter shut to you.", "The counter stays shut.", "The office door stays on the latch for you.", "No way past the counter for you."]
+      }
+    },
+    "proof_gained": {
+      "frames": ["#give# #why#", "#give#"],
+      "rules": {
+        "give": ["Here. Take the {proof}.", "Keep the {proof}. Show it to someone who needs it.", "I want you to have the {proof}.", "Take the {proof} with you."],
+        "why": ["It's proof I'm still here.", "Somebody else might need to see it.", "It's the truest thing I've made in a long while.", "Carry it where it's cold."]
+      }
+    },
+    "proof_shown": {
+      "frames": ["#saw# #then#", "#saw#"],
+      "rules": {
+        "saw": ["Is that the {proof}?", "You carry the {proof} about with you?", "{from} made that {proof}? {from}?", "The {proof}. Let me hold it a moment."],
+        "then": ["If they could, maybe I can.", "Huh. I didn't think anyone came back from that.", "Put it away before I cry on it.", "All right. All right, I'm listening."]
+      }
+    },
+    "ripple_help": {
+      "frames": ["#came# #after#", "#came#", "#after# #came#"],
+      "rules": {
+        "came": ["Whatever you did for my kin, they brought it home.", "They came in humming tonight.", "One of mine walked in standing straighter.", "{kin} came home with your name in their mouth, the good way."],
+        "after": ["The house is warmer for it.", "I lit the lamp myself, first time in weeks.", "It's catching, you know.", "I haven't heard that since before."]
+      }
+    },
+    "ripple_harm": {
+      "frames": ["#came# #after#", "#came#"],
+      "rules": {
+        "came": ["One of mine came home hollow.", "They won't say what you said to them.", "Our table was quiet tonight.", "{kin} came home and went straight to bed."],
+        "after": ["I know whose words did that.", "They don't have to.", "Your doing, I hear.", "Leave my family be."]
+      }
+    },
+    "ripple_cling": {
+      "frames": ["#ask#", "#ask# #why#"],
+      "rules": {
+        "ask": ["Don't go yet. Stay a little.", "You'll come back tomorrow? Say you will.", "Wait. Just a moment longer.", "Sit with me. Please."],
+        "why": ["I don't know what I'd do if you stopped coming by.", "It's only better when you're here.", "Everything goes grey when you leave."]
       }
     },
     "food_starve": {

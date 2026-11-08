@@ -1,5 +1,6 @@
 /** Fabric reaction-line blend selector. Pure; wires via state-scoped setReactionLineSelector. */
 
+import { noteUse } from '../data-use-people';
 import type { DataTables } from '../load-data';
 import {
   pickFixedReactionLine,
@@ -83,6 +84,7 @@ function curveInfluence(data: DataTables, v: PersonStateVector): Record<string, 
     secrecy: v.secrecy,
     weariness: v.weariness,
   };
+  noteUse('dialogue/reaction-curves', (data.reactionCurves.curves[0] as { id?: string } | undefined)?.id);
   const drives =
     (
       data.reactionCurves.curves[0] as {
@@ -237,7 +239,28 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
   // Each visit draws afresh (day + lines said so far), and what they said lately is damped.
   const damped = dampRecent(ctx.state, ctx.personId, pickPool, scores);
   const picked = pickWeighted(pickPool, damped, ctx.seed, ctx.personId, ctx.methodId, `:${ctx.state.day}:${linesSaid(ctx.state, ctx.personId)}`);
-  return { lineId: picked.id, text: picked.text, source: 'blend' };
+  return composedLine(ctx, picked) ?? { lineId: picked.id, text: picked.text, source: 'blend' };
+}
+
+/** How often a calm, axis-free answer is spoken at length instead (the person's opener, middle and closer). */
+const COMPOSE_CHANCE = 0.3;
+
+/**
+ * An authored person in no particular state sometimes says more: their opener, middle and closer for the
+ * method strung together ("Listen. The yeast is still alive... Warmth doesn't ask permission. Eat."). Lines
+ * shaped by an axis (a mark, a doctrine, kin strain) stay as picked. Seeded per day and lines said.
+ */
+function composedLine(ctx: ReactionPickCtx, picked: Frag): ReactionLineResult | null {
+  if ((picked.tags ?? []).some((t) => t.startsWith('axis:'))) return null;
+  const personTag = `person:${ctx.personId}`;
+  const methodTag = `method:${ctx.methodId}`;
+  const part = (slot: string): Frag | undefined =>
+    (ctx.state.data.lineFragments.fragments ?? []).find((f) => f.slot === slot && (f.tags ?? []).includes(personTag) && (f.tags ?? []).includes(methodTag));
+  const parts = ['opener', 'middle', 'closer'].map(part);
+  if (parts.some((p) => !p?.text)) return null;
+  const rng = createRng((ctx.seed ^ hashStr(`${ctx.personId}:${ctx.methodId}:compose:${ctx.state.day}:${linesSaid(ctx.state, ctx.personId)}`)) >>> 0);
+  if (rng.next() >= COMPOSE_CHANCE) return null;
+  return { lineId: parts.map((p) => p!.id).join('+'), text: parts.map((p) => p!.text).join(' '), source: 'blend' };
 }
 
 /** Attach fabric picker on this state only (no module globals). */

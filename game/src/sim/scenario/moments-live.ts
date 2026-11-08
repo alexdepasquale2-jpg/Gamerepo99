@@ -19,6 +19,8 @@
  * seed/worldSeed are test fields and ignored. People resolve through resolveScenarioPerson, so a
  * moment lands on the matching person in generated worlds. Pure and deterministic: no RNG draws.
  */
+import deedsJson from '../../data/systems/interactions/deeds.json';
+import { noteUse } from '../data-use-people';
 import { pushJuice } from '../packets';
 import { maybeFirstMoment } from '../start-rules';
 import type { DataTables } from '../load-data';
@@ -255,6 +257,7 @@ function fire(state: SimState, row: MomentRow, prog: Progress, f: MomentsFlag): 
     const id = idOf(state, row, prog, l.who);
     if (!id || !state.people[id]) continue;
     pushJuice(state, 'moment.beat', { momentId: row.id, personId: id, line: l.text, title: row.title });
+    noteUse('systems/scenarios', row.id);
   }
 }
 
@@ -270,10 +273,15 @@ export function momentDawnLines(state: SimState): string[] {
   return out;
 }
 
+/** Deed id -> the method it acts as (deeds.json hostMethod): the moments are written in methods. */
+const HOST_METHOD = new Map((deedsJson as { deeds: { id: string; hostMethod?: string }[] }).deeds.map((d) => [d.id, d.hostMethod]));
+
 function parseAct(actionId: string): { methodId: string; personId: string } | null {
   const at = actionId.indexOf('@');
   if (at <= 0 || actionId.startsWith('approach@')) return null;
-  return { methodId: actionId.slice(0, at), personId: actionId.slice(at + 1) };
+  // The ring offers deeds (talk_gentle, trade_fair...), never bare methods; a deed counts as its host method.
+  const verb = actionId.slice(0, at);
+  return { methodId: HOST_METHOD.get(verb) ?? verb, personId: actionId.slice(at + 1) };
 }
 
 /**

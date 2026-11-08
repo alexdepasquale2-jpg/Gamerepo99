@@ -3,6 +3,7 @@
  * where each one's home, work and gathering spots are, and where the day's schedule wants them now.
  * No Phaser here; people.ts draws and walks them.
  */
+import { firstNameOf } from '../sim/names';
 import type { GameContext, Pt } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
 import { townBuildings, type Building } from '../sim/map/interiors';
@@ -87,7 +88,7 @@ export function makeVillager(ctx: GameContext, row: PersonRow, folk: Folk, slot:
   const rad = TILE_PX * (2.4 + (slot % 3) * 1.1 + ((h >> 8) % 5) * 0.15);
   const home = { x: folk.centre.x + Math.cos(ang) * rad, y: folk.centre.y + 20 + Math.abs(Math.sin(ang)) * rad * 0.7 };
   return {
-    id: row.id, name, first: name.split(' ')[0]!, townId: folk.town.id, pl,
+    id: row.id, name, first: firstNameOf(name), townId: folk.town.id, pl,
     x: home.x, y: home.y, home, target: { ...home }, path: [], nextPick: (h % 4000) / 1000,
     entering: null, enteringMs: 0, inside: null, moving: false, tell: null, leader: false,
   };

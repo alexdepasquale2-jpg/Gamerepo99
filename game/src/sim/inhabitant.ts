@@ -1,5 +1,6 @@
 /** Compose runtime inhabitants from parts (trait + hook ids); archetypes are named bundles of parts. Pure: no Phaser/DOM. */
 
+import { noteUse } from './data-use-people';
 import type { DataTables } from './load-data';
 import type { ArchetypeDef } from './types/data';
 import type { BodyState, EmbodimentState, Inhabitant, InhabitantParts } from './types/runtime';
@@ -87,6 +88,11 @@ export function composeInhabitant(
   const methodModsTrait = findTrait(data.traits.methodModifiers, parts.methodModifierId, 'methodModifiers');
   const sparkProfile = findTrait(data.traits.sparkProfiles, parts.sparkProfileId, 'sparkProfiles');
 
+  // The life takes these on: its body, how folk see it, how its acts bend, how its spark runs.
+  noteUse('people/traits', `embodiment.${parts.embodimentTraitId}`);
+  noteUse('people/traits', `perception.${parts.perceptionTraitId}`);
+  noteUse('people/traits', `methodModifiers.${parts.methodModifierId}`);
+  noteUse('people/traits', `sparkProfiles.${parts.sparkProfileId}`);
   const sparkStart = typeof sparkProfile.sparkStart === 'number' ? sparkProfile.sparkStart : 70;
   const sparkMax = typeof sparkProfile.sparkMax === 'number' ? sparkProfile.sparkMax : undefined;
 
@@ -116,6 +122,7 @@ export function assembleInhabitant(data: DataTables, archetypeId: string): Inhab
   if (!arch) {
     throw new Error(`UNKNOWN archetype: ${archetypeId}`);
   }
+  noteUse('people/archetypes', arch.id);
   return composeInhabitant(data, partsFromArchetype(arch), { id: `inh-${archetypeId}`, archetypeId: arch.id });
 }
 

@@ -2,6 +2,7 @@
  * Who can carry a line: names and towns from the session, heads and nearness from ctx.actors.
  * Read-only; refreshed lazily (dawn newcomers, loads) when an id is missing.
  */
+import { firstNameOf } from '../sim/names';
 import type { GameContext, Pt } from '../app/contracts';
 
 export type PersonInfo = { id: string; name: string; given: string; townId?: string };
@@ -21,7 +22,7 @@ export function createPeople(ctx: GameContext) {
     try {
       for (const p of ctx.session.listPeople()) {
         const name = p.name ?? '';
-        next.set(p.id, { id: p.id, name, given: name.split(/\s+/)[0] ?? '', townId: p.townId });
+        next.set(p.id, { id: p.id, name, given: firstNameOf(name), townId: p.townId });
       }
     } catch { /* session between states */ }
     byId = next;

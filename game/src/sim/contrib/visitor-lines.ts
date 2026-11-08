@@ -3,6 +3,7 @@
  * data/dialogue/visitors.json, placeholder filling, coin and food in the satchel, and the dawn source that
  * tells the player's town who came and went ("Wren says a pilgrim came in at dawn…"). Pure.
  */
+import { trackedTable } from '../data-use-people';
 import linesJson from '../../data/dialogue/visitors.json';
 import { registerDawnLines } from '../dawn-lines';
 import { hasItem, inventoryOf, itemName, removeItem } from '../goods/inventory';
@@ -11,14 +12,14 @@ import { carrierIn, type Visitor } from '../visitors';
 import { townLabel } from './power-page';
 
 type Lines = Record<string, string[]>;
-export const VL = linesJson as unknown as {
+export const VL = trackedTable('dialogue/visitors', linesJson as unknown as {
   reason: Record<string, string>;
   bound: Lines;
   news: Lines;
   answers: Lines;
   townNews: Record<string, string>;
   legitimacy: Lines;
-};
+}, ['reason', 'bound', 'news', 'answers', 'townNews', 'legitimacy']);
 
 export type Vars = Record<string, string | number | undefined>;
 

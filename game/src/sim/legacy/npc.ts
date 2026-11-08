@@ -1,5 +1,6 @@
 /** Former PCs as legends / NPCs / graves, their budget-capped LOD acts, and inherited-dependence decay. */
 
+import { noteHookFired } from '../hooks';
 import { applyEffect } from '../effects';
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
@@ -99,6 +100,7 @@ export function tickInheritedDependence(state: SimState): boolean {
   if (!met) return false;
   state.player.statusTraits = state.player.statusTraits.filter((t) => t !== (row?.decay?.removeStatusTraitId ?? traitId));
   const hook = row?.decay?.onResolveHookId ? data.hooksById.get(row.decay.onResolveHookId) : undefined;
+  if (hook) noteHookFired(state, hook.id);
   for (const fx of hook?.effects ?? []) applyEffect(state, fx, { data, rng: deriveRng(state.seed, 'dep_resolve', state.day) });
   lg.dependenceResolvedDay = state.day;
   pushJuice(state, 'status.lose', { traitId });

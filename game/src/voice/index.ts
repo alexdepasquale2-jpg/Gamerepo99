@@ -5,6 +5,7 @@
  */
 import type { GameContext, Pt, SayOpts, VoiceApi } from '../app/contracts';
 import { registerDevHook } from '../app/dev-hooks';
+import { usedSnapshot } from '../sim/data-use-people';
 import { armUnlock, isMuted, playCue, setMuted, toggleMuted, type Cue } from './audio';
 import { createStage, type Anchor, type ShownItem } from './bubbles';
 import { speakDawn } from './dawn';
@@ -225,6 +226,8 @@ export function attachVoice(ctx: GameContext): VoiceApi {
 }
 
 registerDevHook('lastSay', (ctx) => () => ctx.voice.last());
+// QA: which people / voice / hooks / systems data rows have taken effect this run (sim/data-use-people).
+registerDevHook('uses', () => () => usedSnapshot());
 registerDevHook('say', (ctx) => (personId: string, line: string) => ctx.voice.say(personId, line));
 registerDevHook('voice', () => ({
   /** Bubbles, tells and tips up right now. */

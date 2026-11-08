@@ -3,6 +3,16 @@
 import type { HookDef, HookWhen } from './types/data';
 import type { SimState } from './types/runtime';
 import { applyEffect, type EffectCtx } from './effects';
+import { noteUse } from './data-use-people';
+
+/** A hook just took effect (any trigger path): proof-of-use, plus the felt line it leaves (contrib/hook-felt). */
+export function noteHookFired(state: SimState, hookId: string): void {
+  noteUse('hooks', hookId);
+  const felt = (state.hookFelt ??= { day: state.day, ids: [] });
+  // Keep yesterday's too: the dusk hooks of day N are felt at the dawn of day N+1.
+  if (felt.day !== state.day) Object.assign(felt, { prev: felt.day === state.day - 1 ? felt.ids : [], day: state.day, ids: [] });
+  if (!felt.ids.includes(hookId)) felt.ids.push(hookId);
+}
 
 export type HookCtx = EffectCtx;
 
@@ -104,6 +114,7 @@ export function runHooks(state: SimState, trigger: string, ctx: HookCtx): void {
     if (!hook) continue;
     if (hook.trigger !== trigger) continue;
     if (!matchesWhen(hook.when, state, ctx)) continue;
+    noteHookFired(state, hook.id);
     for (const effect of hook.effects ?? []) {
       applyEffect(state, effect, ctx);
     }

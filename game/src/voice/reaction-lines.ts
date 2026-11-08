@@ -4,10 +4,14 @@
  * VFX-only ids (reignite, kindle, burnout, spark spend) are handled in juice.ts, not here.
  */
 
+import { firstNameOf } from '../sim/names';
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
 import { jobOf } from '../sim/goods/jobs';
 import type { SimState } from '../sim/types/runtime';
 import { expandGrammar, isGrammar, type GrammarCtx, type GrammarRules, type LinePool } from '../sim/grammar';
+import { noteUse } from '../sim/data-use-people';
+
+const noteRule = (r: string): void => noteUse('dialogue/surface-fallbacks', `rules.${r}`);
 
 export type Tell = 'ember' | 'glance' | 'none';
 export type Presentation = {
@@ -64,8 +68,13 @@ export function pickFallback(key: string, seed: string, about: GrammarCtx = {}):
   const n = handed.get(k) ?? 0;
   handed.set(k, n + 1);
   if (handed.size > 4000) handed.clear();
-  if (isGrammar(pool)) return expandGrammar(pool, FILE.rules, about, `${k}|${n}`);
+  if (isGrammar(pool)) {
+    const line = expandGrammar(pool, FILE.rules, about, `${k}|${n}`, noteRule);
+    if (line) noteUse('dialogue/surface-fallbacks', `talk.${key}`);
+    return line;
+  }
   if (!pool.length) return '';
+  noteUse('dialogue/surface-fallbacks', `talk.${key}`);
   let h = 0;
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return pool[(h + n) % pool.length]!;
@@ -133,6 +142,17 @@ const ownKeyed =
     return personId && line ? { kind: 'line', personId, tell, cue, line } : null;
   };
 
+/** Someone who saw a use of a thing says a word about it: the payload's resident, else whoever is nearby. */
+const witness =
+  (cue: string, key: (p: P) => string): Entry =>
+  (p, ctx) => {
+    const townId = str(p.townId);
+    const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
+    const k = key(p);
+    const line = personId ? pickFallback(k, personId + k + (str(p.id) ?? ''), aboutOf(ctx, personId, townId)) : '';
+    return personId && line ? { kind: 'line', personId, townId, tell: 'glance', cue, line } : null;
+  };
+
 /** A road encounter is told back to you by someone at the far end (quiet stretches stay quiet). */
 const road: Entry = (p, ctx) => {
   if (p.quiet === true) return null;
@@ -184,7 +204,8 @@ export const SURFACED: Record<string, Entry> = {
     const b = woundChemistry(p.woundMul);
     return b ? keyed(`wound_${b}`, str(p.woundId)) : null;
   }, 'none'),
-  'mark.applied': ownKeyed('mark', (p) => (str(p.markId) ? keyed('mark', str(p.markId)) : null), 'glance'),
+  'mark.applied': (p, ctx) => (str(p.line) && str(p.personId) ? { kind: 'line', personId: str(p.personId), tell: 'glance', cue: 'mark', line: str(p.line) } : null)
+    ?? ownKeyed('mark', (q) => (str(q.markId) ? keyed('mark', str(q.markId)) : null), 'glance')(p, ctx),
   'status.gain': crowd('status', (p) => keyed('status_gain', str(p.traitId)), 'glance'),
   'notoriety.rise': crowd('notoriety', (p) => keyed('notoriety_rise', notorietyLevel(p.notoriety) ?? undefined), 'glance'),
   'notoriety.fall': crowd('notoriety', () => 'notoriety_fall', 'glance'),
@@ -225,6 +246,19 @@ export const SURFACED: Record<string, Entry> = {
   'legend.heard': own('rumor', 'legend_heard', 'none', (p) => str(p.personId), (p) => (Array.isArray(p.lines) ? str(p.lines[0]) : undefined)),
   'legend.act': own('reaction', 'legend_act', 'none', (p) => str(p.personId)),
   'grave.found': inTown('reaction', 'grave_found', 'none', 'townId', (p) => str(p.line)),
+  // Ripples (sim/ripples): the kin an act reached say what came home; someone clinging asks you to stay.
+  'ripple.help': own('reaction', 'ripple_help', 'ember', (p) => str(p.personId)),
+  'ripple.harm': own('reaction', 'ripple_harm', 'none', (p) => str(p.personId)),
+  'ripple.cling': own('reaction', 'ripple_cling', 'glance', (p) => str(p.personId)),
+  // Proofs (sim/proofs): a rekindled person hands you what they made; shown later, it reaches a like wound.
+  'proof.gained': own('reignite', 'proof_gained', 'ember', (p) => str(p.personId), (p) => str(p.line)),
+  'proof.shown': own('reaction', 'proof_shown', 'ember', (p) => str(p.personId), (p) => str(p.line)),
+  // Using a thing in the world (contrib/item-verbs, thing-verbs): the act's own line is yours; a resident
+  // who saw it remarks (the payload's residentId, else someone nearby).
+  'item.used': witness('reaction', (p) => keyed('item_used', str(p.target))),
+  'node.tended': witness('reaction', () => 'node_tended'),
+  'fauna.handled': witness('reaction', (p) => keyed('fauna_handled', str(p.verb))),
+  'prop.used': witness('reaction', () => 'prop_used'),
 };
 
 /** Ids the stream carries that have no line: VFX only (juice.ts) or another area's screen. */
@@ -233,7 +267,7 @@ export const SILENT: readonly string[] = [
   'packet.emit', 'route.travel_step', 'stock.starve', 'hoard.ending_open',
 ];
 
-const given = (name: string | undefined): string | undefined => name?.split(' ')[0] || undefined;
+const given = (name: string | undefined): string | undefined => (name ? firstNameOf(name) : undefined) || undefined;
 
 /**
  * Who the speaker is, for the fallback grammar: given name, town, job, one of their household by name.

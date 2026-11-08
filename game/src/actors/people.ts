@@ -4,6 +4,7 @@
  * a town that wakes up puts its people where the schedule says they are. Newcomers, births and the dead
  * are settled at sync().
  */
+import { firstNameOf } from '../sim/names';
 import type { GameContext, Pt, Thing } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
 import { isIndoorsAt, placeAt, DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS } from '../sim/map/residency';
@@ -173,7 +174,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
       const v = byId.get(row.id);
       const folk = folkFor(row.townId, row.id);
       if (!folk) continue;
-      if (v && v.townId === folk.town.id) { if (row.name && row.name !== v.name) { v.name = row.name; v.first = row.name.split(' ')[0]!; } continue; }
+      if (v && v.townId === folk.town.id) { if (row.name && row.name !== v.name) { v.name = row.name; v.first = firstNameOf(row.name); } continue; }
       if (v) { // moved town
         hide(v);
         const old = folkByTown.get(v.townId);

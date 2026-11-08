@@ -20,7 +20,11 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +10. Waking at home softens the day (+3 against the dawn's -6), it no longer refills you on its own, so staying in the den doing nothing still runs the fire down."
+      "notes": "Balance (game/scripts/balance-probe.mts): was +10. Waking at home softens the day (+3 against the dawn's -6), it no longer refills you on its own, so staying in the den doing nothing still runs the fire down.",
+      "felt": [
+        "You woke by your own hearth. That steadies something.",
+        "Your own fire, your own stones. You wake a little more whole."
+      ]
     },
     {
       "id": "recovery_base_dawn",
@@ -38,7 +42,11 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +12, now -6. Each dawn asks something of you: with only the archetype's own small comfort (+3) idle play loses about 3 a day and burns out in three to four weeks. Spark comes back from real deeds (seeing people grow, working beside them), not from sleeping."
+      "notes": "Balance (game/scripts/balance-probe.mts): was +12, now -6. Each dawn asks something of you: with only the archetype's own small comfort (+3) idle play loses about 3 a day and burns out in three to four weeks. Spark comes back from real deeds (seeing people grow, working beside them), not from sleeping.",
+      "felt": [
+        "You wake, and the morning takes its small cut of your fire, as it always does.",
+        "Your fire is a little lower at dawn. Each morning asks a little of you."
+      ]
     },
     {
       "id": "recovery_ledger_truth",
@@ -61,7 +69,11 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +10. A clean ledger is a comfort (+3), not a refill, so idle play stays net-negative."
+      "notes": "Balance (game/scripts/balance-probe.mts): was +10. A clean ledger is a comfort (+3), not a refill, so idle play stays net-negative.",
+      "felt": [
+        "You told no lie yesterday. Your ink sits clean, and so do you.",
+        "You wake light. Nothing false written yesterday."
+      ]
     },
     {
       "id": "recovery_witness_genuine",
@@ -80,7 +92,11 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +6. This is where kind play earns its spark back: at +3 four kind deeds a day hold the fire (mean ~83, rarely burns out); at +6 kindness paid more than it cost and spark never moved off full; at +2 kind play burned out within 20-90 days."
+      "notes": "Balance (game/scripts/balance-probe.mts): was +6. This is where kind play earns its spark back: at +3 four kind deeds a day hold the fire (mean ~83, rarely burns out); at +6 kindness paid more than it cost and spark never moved off full; at +2 kind play burned out within 20-90 days.",
+      "felt": [
+        "You saw someone grow for real. It lit you too.",
+        "You watched them come back to themselves, and it warmed you more than you expected."
+      ]
     },
     {
       "id": "recovery_brood_bask",
@@ -101,7 +117,11 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +12. Basking together is a comfort (+3), not a refill, so idle play stays net-negative."
+      "notes": "Balance (game/scripts/balance-probe.mts): was +12. Basking together is a comfort (+3), not a refill, so idle play stays net-negative.",
+      "felt": [
+        "You all slept under one roof. The brood basks together this morning.",
+        "Your bodies lay in one town last night. You wake as one warm heap."
+      ]
     },
     {
       "id": "recovery_shared_bread",
@@ -124,7 +144,11 @@
           ]
         }
       ],
-      "notes": "Worked beside someone yesterday: the row was full again for a shift. Balance (game/scripts/balance-probe.mts): was +8; +6 still outweighs the dawn (-6) and the empty row (-1), so a Bren who works alongside holds steady."
+      "notes": "Worked beside someone yesterday: the row was full again for a shift. Balance (game/scripts/balance-probe.mts): was +8; +6 still outweighs the dawn (-6) and the empty row (-1), so a Bren who works alongside holds steady.",
+      "felt": [
+        "You worked alongside someone yesterday. Shared bread tastes of it this morning.",
+        "Your hands remember yesterday's work beside someone. It still sits warm in you."
+      ]
     }
   ]
 }

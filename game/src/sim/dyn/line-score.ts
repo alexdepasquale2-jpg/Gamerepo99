@@ -1,5 +1,7 @@
 /** Fragment scoring + constraint checks for fabric line blend. Pure. */
 
+import { noteUse } from '../data-use-people';
+
 export type Frag = {
   id: string;
   text: string;
@@ -25,11 +27,13 @@ export function violatesConstraints(
 ): boolean {
   const tags = new Set(frag.tags ?? []);
   for (const c of constraints) {
+    // A constraint is used when it actually keeps a fragment out of someone's mouth.
+    const id = (c as { id?: string }).id;
     for (const pair of c.forbidTagsTogether ?? []) {
-      if (pair.every((t) => tags.has(t))) return true;
+      if (pair.every((t) => tags.has(t))) return noteUse('dialogue/voice-constraints', id), true;
     }
     for (const rule of c.neverContradict ?? []) {
-      if (memory.has(rule.ifMemory) && tags.has(rule.forbidFragmentTag)) return true;
+      if (memory.has(rule.ifMemory) && tags.has(rule.forbidFragmentTag)) return noteUse('dialogue/voice-constraints', id), true;
     }
   }
   return false;

@@ -4,6 +4,7 @@
  * Surfacing is indirect: a non-player carrier speaks via person.reaction / packet.emit.
  */
 
+import { noteUse } from '../data-use-people';
 import { deriveRng } from '../rng';
 import { happeningTownName } from '../happenings';
 import { enqueueLetter } from '../letters-scale';
@@ -83,6 +84,7 @@ export function encodeUnspoken(st: UnspokenState, t: UnspokenTables, ctx: Encode
   for (const c of t.classes) {
     if (!classMatches(c, ctx.interactionId, ctx.tags ?? [], ctx.reignited === true)) continue;
     const seq = ++st.seq;
+    noteUse('people/unspoken/classes', c.id);
     const { edgeIds, personIds } = depositPath(ctx.graph, ctx.sourcePersonId, rt.maxDepositHops);
     const inst: UnspokenInstance = {
       id: `unspoken_${seq}_${ctx.seed >>> 0}`,
@@ -286,6 +288,8 @@ function applyResult(state: SimState, t: UnspokenTables, r: ComeToPassResult): v
   const townId = carrier?.townId;
   const town = townId ? state.towns?.[townId] : undefined;
   if (town && e.despair) town.despair = clamp(town.despair + e.despair, 0, 1);
+  noteUse('people/unspoken/outcomes', r.outcome.id);
+  noteUse('dialogue/fragments', r.fragmentId);
   pushJuice(state, 'person.reaction', {
     personId: r.carrierId,
     line: r.line,

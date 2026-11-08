@@ -1,5 +1,6 @@
 /** Per-person continuous state vector for fabric line blending. Pure sim. */
 
+import { noteUse } from '../data-use-people';
 import type { DataTables } from '../load-data';
 
 export type PersonStateVector = {
@@ -84,6 +85,7 @@ function anchorVoice(person: PersonRow, data?: DataTables): typeof BASE_VOICE {
   if (!anchors) return fallback;
   const row = anchors.find((a) => a.personId === person.id);
   if (!row?.vector) return fallback;
+  noteUse('dialogue/voice-anchors', (row as { id?: string }).id);
   const out = { ...fallback };
   for (const k of VOICE_KEYS) {
     const n = row.vector[k];
