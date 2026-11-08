@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import { FEEL, feelShakeIntensity } from '../feel';
-import { emitBurst, type SparkSpentPayload } from './shared';
+import { emitBurst, FX_DEPTH, type SparkSpentPayload } from './shared';
 
 function playCostToSelf(scene: Phaser.Scene, x: number, y: number): void {
   const cfg = FEEL.spark.costSelf;
   const flash = scene.add.circle(x, y, 18, cfg.flashColor, cfg.flashAlpha);
-  flash.setDepth(22);
+  flash.setDepth(FX_DEPTH + 22);
   flash.setBlendMode(Phaser.BlendModes.ADD);
   scene.tweens.add({
     targets: flash,
@@ -16,7 +16,7 @@ function playCostToSelf(scene: Phaser.Scene, x: number, y: number): void {
     onComplete: () => flash.destroy(),
   });
   const ghost = scene.add.circle(x, y, 10, FEEL.spark.colorCyan, cfg.afterimageAlpha);
-  ghost.setDepth(21);
+  ghost.setDepth(FX_DEPTH + 21);
   scene.tweens.add({
     targets: ghost,
     alpha: 0,
@@ -41,7 +41,7 @@ function playCostToSelf(scene: Phaser.Scene, x: number, y: number): void {
     cfg.vignetteAlpha,
   );
   vig.setScrollFactor(0);
-  vig.setDepth(30);
+  vig.setDepth(FX_DEPTH + 30);
   scene.tweens.add({
     targets: vig,
     alpha: 0,
@@ -77,7 +77,7 @@ export function playSparkSpent(
   const ring = scene.add
     .circle(x, y, 28, FEEL.spark.colorGold, 0.0)
     .setStrokeStyle(2, FEEL.spark.colorCyan, 0.9);
-  ring.setDepth(19);
+  ring.setDepth(FX_DEPTH + 19);
   scene.tweens.add({
     targets: ring,
     radius: 4,

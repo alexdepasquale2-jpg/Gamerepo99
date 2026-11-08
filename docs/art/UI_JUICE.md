@@ -43,9 +43,9 @@
 - Default: **Carry it on** · Quit: **Let it rest** (never shamed)  
 - Visual: burnout snuff → soft ember on successor portrait.
 
-## Demo keys (WanderScene)
+## Live wiring (overworld)
 
-`1` spark spend · `2` reignite · `3` refusal · `4` burnout
+Spark spend on any deed · reignite on `person.reignite`/`site.kindle` · refusal on `refusal.coal_flicker` at the person's head · burnout snuff when succession opens, before the overlay (`src/render/spark-fx/session-fx.ts`).
 
 ## Out of scope for this draft
 

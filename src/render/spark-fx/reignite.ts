@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { FEEL, feelShakeIntensity } from '../feel';
-import { emitBurst, type ReignitePayload } from './shared';
+import { emitBurst, FX_DEPTH, type ReignitePayload } from './shared';
 
 function playColorWash(
   scene: Phaser.Scene,
@@ -12,12 +12,12 @@ function playColorWash(
   const wash = FEEL.reignite.wash;
   const delta = Math.max(0.15, Math.min(1, (warmthAfter - warmthBefore) / 0.8));
   const fill = scene.add.circle(x, y, wash.startRadius, wash.color, wash.startAlpha * delta);
-  fill.setDepth(17);
+  fill.setDepth(FX_DEPTH + 17);
   fill.setBlendMode(Phaser.BlendModes.ADD);
   const ring = scene.add
     .circle(x, y, wash.startRadius, wash.ringColor, 0)
     .setStrokeStyle(wash.ringWidth, wash.ringColor, 0.85 * delta);
-  ring.setDepth(17);
+  ring.setDepth(FX_DEPTH + 17);
   scene.tweens.add({
     targets: [fill, ring],
     radius: wash.endRadius,
@@ -50,7 +50,7 @@ export function playReignite(scene: Phaser.Scene, p: ReignitePayload): void {
     feelShakeIntensity(FEEL.reignite.shakeIntensity),
   );
   const bloom = scene.add.circle(x, y, 8, FEEL.reignite.colorGold, FEEL.reignite.bloomAlpha);
-  bloom.setDepth(18);
+  bloom.setDepth(FX_DEPTH + 18);
   bloom.setBlendMode(Phaser.BlendModes.ADD);
   scene.tweens.add({
     targets: bloom,
