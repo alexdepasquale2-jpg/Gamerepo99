@@ -103,6 +103,16 @@ const road: Entry = (p, ctx) => {
   return personId ? { kind: 'line', personId, townId, tell: 'glance', cue: 'road', line: str(p.line) ?? pickFallback('road_encounter', personId + str(p.encounterId)) } : null;
 };
 
+/** A townsperson where it happened notices; `{patron}` in the line is the payload's patronName. */
+const noticed =
+  (cue: string, fb: string, tell: Tell): Entry =>
+  (p, ctx) => {
+    const townId = str(p.townId);
+    const personId = ctx.nearbyPersonId?.(townId);
+    const line = pickFallback(fb, (personId ?? '') + fb + (str(p.dealId) ?? '')).replace(/\{patron\}/g, str(p.patronName) ?? 'patron');
+    return personId ? { kind: 'line', personId, townId, tell, cue, line } : null;
+  };
+
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
 /** A townsperson in `townKey`'s town says the line (payload text first, else a fallback). */
@@ -142,6 +152,11 @@ export const SURFACED: Record<string, Entry> = {
   'kin.birth': own('kin', 'kin_birth', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'kin.grown': own('kin', 'kin_grown', 'glance', (p) => str(p.personId), (p) => str(p.line)),
   'encounter.spawn': road,
+  'patron.offer': own('patron', 'patron_offer', 'none', (p) => str(p.personId), (p) => str(p.line)),
+  'patron.deal': noticed('patron', 'patron_deal', 'glance'),
+  'patron.fulfilled': noticed('patron', 'patron_fulfilled', 'none'),
+  'patron.broken': noticed('patron', 'patron_broken', 'glance'),
+  'patron.betrayed': noticed('patron', 'patron_betrayed', 'glance'),
   'person.reignite': tint,
   'site.kindle': tint,
   // Unsilenced: the world's quieter news, always through someone nearby.
@@ -164,7 +179,7 @@ export const SURFACED: Record<string, Entry> = {
 export const SILENT: readonly string[] = [
   // Sender-side or VFX-only: the delivery/arrival side surfaces instead.
   'packet.emit', 'spark.spend', 'route.travel_step', 'stock.starve',
-  'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
+  'stash.guard_left',
 ];
 
 export function presentJuice(id: string, payload: unknown, ctx: PresentCtx = {}): Presentation | null {
