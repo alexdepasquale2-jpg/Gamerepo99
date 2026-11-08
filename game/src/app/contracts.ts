@@ -264,3 +264,10 @@ export interface AppHooks {
  * actors area draws it on the player's figure). null is upright and walking.
  */
 export type PlayerPose = 'sit' | 'stand' | null;
+// ---- carrying by hand (sim/carry, actors/carry-draw) ----
+/** The load in your arms and the drop-at-your-feet the pad's B button calls (actors/carry-draw: carryApi(ctx)). */
+export interface CarryApi {
+  carrying(): import('../sim/carry').Carried | null;
+  /** Let the load fall where you stand (ground items); undefined when your arms are empty. */
+  drop(): ActOutcome | undefined;
+}

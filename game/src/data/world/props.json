@@ -48,9 +48,7 @@
       { "id": "glean", "label": "Glean the field edge", "short": "Glean the edge", "effect": { "gain": { "grain": 1 }, "done": "You glean what the harvest left behind." } }
     ] },
     { "type": "farmstead", "name": "Farmstead", "scenery": true, "verbs": [] },
-    { "type": "build_site", "name": "Build site", "verbs": [
-      { "id": "timber", "label": "Leave timber for the builders", "short": "Leave timber", "needs": { "timber": 1 }, "effect": { "spark": 4, "despair": -0.01, "done": "You stack the timber by the frame. Someone will be glad of it." } }
-    ] },
+    { "type": "build_site", "name": "Build site", "scenery": true, "verbs": [] },
     { "type": "campfire", "name": "Campfire", "linger": "fire", "verbs": [
       { "id": "roast", "label": "Roast a fish on the embers", "short": "Roast a fish", "needs": { "fish": 1 }, "effect": { "spark": 10, "done": "The fish crisps on a stick. Best meal in days." } }
     ] },

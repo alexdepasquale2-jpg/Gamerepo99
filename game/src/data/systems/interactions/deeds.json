@@ -86,13 +86,6 @@
       "family": "give"
     },
     {
-      "id": "carry_goods",
-      "label": "Carry goods for them",
-      "short": "Carry goods",
-      "hostMethod": "carry_burden",
-      "family": "help"
-    },
-    {
       "id": "promise_make",
       "label": "Make a promise",
       "short": "Make a promise",

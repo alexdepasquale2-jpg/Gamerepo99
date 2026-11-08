@@ -13,6 +13,7 @@ import { onPlayerPose } from '../app/pose';
 import { UPRIGHT, type Posture } from './marks';
 import type { TownIndex } from './towns';
 import { padMove } from '../ui/pad/move-source';
+import { createCarryDraw } from './carry-draw';
 
 /** Matches the sim's TILES_PER_MINUTE: about two tiles a second at human pace. */
 const WALK_TILES_PER_SEC = 2.2;
@@ -41,6 +42,9 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
   const cam = scene.cameras.main;
   const follow = () => cam.startFollow(figure.sprite, true, 0.18, 0.18, 0, headHeight(look.scale) / 2);
   follow();
+  // ---- carry: the load in your arms, drawn over the head; it slows the walk (actors/carry-draw) ----
+  const carry = createCarryDraw(scene, () => ({ x: figure.x, y: figure.y - headHeight(look.scale) }), () => ({ x: figure.x, y: figure.y }), () => ctx.session.getState());
+  // ---- end carry ----
 
   let frozen = false;
   let facing = { dx: 0, dy: 1 };
@@ -93,7 +97,7 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
     facing = figure.dir === 2 ? { dx: dx < 0 ? -1 : 1, dy: 0 } : { dx: 0, dy: figure.dir === 1 ? -1 : 1 };
   }
 
-  const speedPx = () => WALK_TILES_PER_SEC * TILE_PX * look.speed * getWalkMul();
+  const speedPx = () => WALK_TILES_PER_SEC * TILE_PX * look.speed * getWalkMul() * carry.speed();
 
   function walkTo(p: Pt): Promise<boolean> {
     endWalk(false);
@@ -193,10 +197,12 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
         }
       }
       figure.animate(dt, isMoving, timeSec);
+      carry.update(figure.sprite.visible); // carry
       checkTown(dt);
     },
     destroy() {
       endWalk(false);
+      carry.destroy(); // carry
       figure.destroy();
     },
   };
