@@ -5,9 +5,10 @@
     "trustPerUnit": 0.5, "trustDrift": 0.2,
     "feudPerTension": 0.025, "creedFriction": 1.05, "feudDecay": 1,
     "unservedFeud": 2, "lostCartFeud": 3, "doctrineFriction": 0.6, "despairFeudMul": 0.5,
-    "tradeTrust": 20, "tradeFeud": 20, "allyTrust": 60, "allyFeud": 10, "breakFeud": 40,
-    "warFeud": 80, "warCooldown": 30, "warMin": 15, "warSpread": 16, "raidChance": 0.5, "raidShare": 0.15, "lootShare": 0.4, "claimRaidChance": 0.2, "truceFeud": 35, "truceTrust": -20,
+    "tradeTrust": 20, "tradeFeud": 20, "allyTrust": 60, "allyFeud": 10, "breakFeud": 20,
+    "warFeud": 20, "warCooldown": 30, "warMin": 15, "warSpread": 16, "raidChance": 0.5, "raidShare": 0.15, "lootShare": 0.4, "claimRaidChance": 0.2, "truceFeud": 12, "truceTrust": -20,
     "warCartSurvivalPow": 3,
+    "balanceNote": "breakFeud 40 -> 20, warFeud 80 -> 20, truceFeud 35 -> 12 (game/scripts/balance-probe.mts). Feuds peak around 14-26 in a 120-day run, so 80 meant no war ever began. At 20 a treaty breaks where a new one could not form (tradeFeud), a war can follow, and a truce leaves the feud below the war line. Wars come out rare but present: about 0.1-0.4 per 120-day run, in every probed seed.",
     "knowledgeBase": 0.3, "knowledgePerWorkshop": 0.7, "knowledgePerGifted": 2, "costRisePerTech": 0.6, "learnTrade": 0.05, "learnAlliance": 0.1, "learnAfterDays": 10,
     "spareDays": 5, "spareFlat": 2, "foodPool": ["bread", "fish", "berries", "grain"]
   },
