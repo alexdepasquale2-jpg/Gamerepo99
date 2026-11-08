@@ -55,6 +55,12 @@ export type EventMap = {
   'state-replaced': Record<string, never>;
   /** The player arrived in a town (walking or by road). */
   arrive: { townId: string };
+  /**
+   * An item is being dragged out of the hotbar (panels emits, interact handles: drop on a person gives it).
+   * `world` is the pointer in world px, `screen` in client px. 'drop' fires on release over the world,
+   * 'cancel' on release over the hotbar or Escape.
+   */
+  'item-drag': { itemId: string; phase: 'start' | 'move' | 'drop' | 'cancel'; world: Pt; screen: Pt };
 };
 export interface GameEvents {
   on<K extends keyof EventMap>(name: K, fn: (e: EventMap[K]) => void): () => void;
@@ -155,10 +161,13 @@ export interface UiApi {
 export interface PanelsApi {
   satchel: { toggle(): void; held(): string | null; hold(itemId: string | null): void };
   board: { open(townId: string, page?: string | number): void };
-  trade: { open(caravanId: string): void };
+  /** `current()` is the wagon being traded with while the trade sheet is open (it should stay halted). */
+  trade: { open(caravanId: string): void; current(): string | null };
   letters: { open(): void };
   map: { toggle(): void };
   roads: { open(townId: string): void };
+  /** The item being dragged from the hotbar right now (see the 'item-drag' event), or null. */
+  dragging(): string | null;
   closeAll(): void;
   anyOpen(): boolean;
 }
