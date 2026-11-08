@@ -1,9 +1,11 @@
-# Wave B: revamp finish (3 units; needs wave A merged)
+# Wave B: revamp finish (4 units; needs wave A merged)
 
-Merge order: R3 items, R4 surfacing, R5 touch.
+Merge order: R3 items, R4 surfacing, R5 touch, then B04 reachability last, because it checks the other three.
+
+Why B04 exists: Alex played the wave-A build and felt that the work from ~50 PRs was missing. Every batch-1 system runs, but in play it is buried. Verbs sit on ring pages 2–3. History, stash and patrons are chips 15–17. The power and road pages are noticeboard pages 4–5. Births, kin strain and happenings are 2.6-second corner lines. Land edits need the X key. Marks are a tiny glyph. B04 proves that each one is reachable and noticeable through real input.
 
 ```text
-/batch Batch 2, wave B: finish the revamp of The Last Spark (items, surfacing, touch). Wave A has merged: src/ui/kit (tokens, side sheets, overlay stack) and the single interaction model (target kinds, focus resolver, two-level ring of at most 6 chips). Read docs/superpowers/plans/batch2/index.md first; its unit contract and house rules apply. Run exactly these 3 units in parallel, one branch and one PR each.
+/batch Batch 2, wave B: finish the revamp of The Last Spark (items, surfacing, touch, reachability). Wave A has merged: src/ui/kit (tokens, side sheets, overlay stack) and the single interaction model (target kinds, focus resolver, two-level ring of at most 6 chips). Read docs/superpowers/plans/batch2/index.md first; its unit contract and house rules apply. Run exactly these 4 units in parallel, one branch and one PR each.
 
 UNIT B01 "items" (branch claude/batch2-b01-items)
 Goal: a full item-interaction pass where every item, resource node and animal has at least 2 real uses with a supply and a demand, and items are used through the same ring as everything else.
@@ -65,4 +67,34 @@ Goal: the whole game plays on a phone, with no keyboard needed. This delivers tr
   - acts on a person and a node
   - rests at a hearth
   - with the brood, splits the brood
+
+UNIT B04 "reachability" (branch claude/batch2-b04-reachability)
+Goal: every Live tech-tree node is something a player finds and notices in normal play, on desktop and phone. No tests: make the changes, run `npx tsc --noEmit` and `npm run build`, and open the PR.
+- For each batch-1 feature, make it findable in at most 2 steps and on screen for at least about 4 seconds, through its own surface:
+  - a ring family placement
+  - a sheet tab
+  - a world prop or tell
+  - a first-encounter contextual tip at the thing (once per save, never a popup)
+- Features:
+  - refusal flicker and burnout (#39)
+  - marks on people (#37)
+  - power page (#41)
+  - "ask about the old days" (#34)
+  - births and newcomers at dawn (#36)
+  - ask a favor / show up / empty cheer / return item (#47)
+  - patron deals (#42)
+  - hide coin and the stash chest (#44)
+  - signpost road menu and hired travellers (#40)
+  - land edits on a tile (#33): give them a ring verb on the tile in front of you, not only X
+  - facility shifts (#43)
+  - new world at New Game (#46)
+  - kin strain talk (#32)
+  - world file (#38)
+  - authored moments (#35)
+  - happenings (#45)
+  - civic voice
+  - notoriety
+  - succession and heir
+- Owns: small discoverability edits in src/sim/contrib/* labels and families, needs-board tabs, prompt and tip text. Don't restructure B01–B03 code.
+- The PR body has a table of every feature → how a player reaches it now.
 ```
