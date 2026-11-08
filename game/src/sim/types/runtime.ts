@@ -197,4 +197,8 @@ export type SimState = {
   bodyActs?: import('../contrib/body-acts').BodyActsState;
   /** Road news, crews out, help hired at waystations, watches on the carts (sim/economy/roads; saveable). */
   roadway?: import('../economy/roads').Roadway;
+  /** Visitors: temporary people on the roads and in towns (see sim/visitors; saveable). */
+  visitors?: import('../visitors').VisitorsState;
+  /** What townsfolk last said of their leader, and each compact's promises kept or broken (see sim/promise-tally). */
+  legitimacyVoices?: import('../promise-tally').LegitimacyVoices;
 };

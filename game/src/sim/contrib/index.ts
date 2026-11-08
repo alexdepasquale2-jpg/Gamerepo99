@@ -24,3 +24,6 @@ import './legends';
 import './graves';
 import './body-acts';
 import './roads';
+import './road-folk';
+import './visitors';
+import './legitimacy-voices';

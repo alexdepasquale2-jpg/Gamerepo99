@@ -65,6 +65,7 @@ export function assignSettlementTowns(
   let i = 0;
   for (const p of Object.values(people)) {
     if (p.townId && settlements.includes(p.townId)) continue;
+    if (p.tags?.includes('on_road')) continue; // a visitor between towns (sim/visitors)
     p.townId = settlements[i % settlements.length]!;
     i += 1;
   }
