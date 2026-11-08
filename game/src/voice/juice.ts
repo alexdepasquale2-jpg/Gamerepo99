@@ -8,8 +8,9 @@ import type { GameContext, Pt } from '../app/contracts';
 import type { Cue } from './audio';
 import type { Fx } from './fx';
 import type { People } from './people';
-import { presentJuice, SURFACED, woundChemistry, type Presentation } from './reaction-lines';
+import { presentJuice, SURFACED, voiceAbout, woundChemistry, type Presentation } from './reaction-lines';
 import type { Tone } from './bubbles';
+import { prettyTownId } from '../sim/map/districts';
 
 export type Beat = { personId: string; line: string; tone?: Tone; ember?: boolean; townId?: string };
 export type JuiceDeps = {
@@ -128,13 +129,27 @@ export function attachJuice(d: JuiceDeps): JuiceHandle {
     }
   };
 
+  // The speaker's name, town, job and kin for the fallback grammar (reaction-lines voiceAbout).
+  // Settlement names are rebuilt only when the world changes (a load or new world swaps it).
+  let namesFor: unknown;
+  let names = new Map<string, string>();
+  const townName = (t: string): string => {
+    const world = ctx.session.getWorld();
+    if (world !== namesFor) {
+      namesFor = world;
+      names = new Map((world?.settlements ?? []).map((s) => [s.id, s.name]));
+    }
+    return names.get(t) ?? prettyTownId(t);
+  };
+  const about = (personId: string, townId?: string) => voiceAbout(ctx.session.getState(), personId, townId, townName);
+
   const handle = (id: string, raw: unknown): void => {
     const payload = (raw ?? {}) as Rec;
     let done = false;
     try { done = effects(id, payload); } catch (err) { console.error('voice fx failed', id, err); }
     if (done) return;
     let p: Presentation | null = null;
-    try { p = presentJuice(id, payload, { nearbyPersonId: (townId, excludeId) => people.carrier(townId, excludeId) }); } catch (err) { console.error('voice juice failed', id, err); }
+    try { p = presentJuice(id, payload, { nearbyPersonId: (townId, excludeId) => people.carrier(townId, excludeId), about }); } catch (err) { console.error('voice juice failed', id, err); }
     if (!p?.personId || !p.line) {
       if (SURFACED[id]) note(id, 'no carrier in sight');
       return;
