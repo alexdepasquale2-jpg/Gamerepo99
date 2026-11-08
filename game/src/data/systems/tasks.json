@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "spec": "Tasks (sim/tasks): what people are working on, derived each day from build plans, civic sites, facility crews, road crews, stuck wagons and the household pot. The player helps by holding E at a task's work spot (interact/hold.ts): one hold of holdMs is one effort unit. Effort goes to the real thing (a plan's labour, a road's condition, a wagon's wheel) or, for sites, facilities and the pot, waits as a bonus applied at the next dawn. Rewards replace the old work_alongside verb (sparkGain 4, flame +0.04, despair -0.01) spread over effort, and spark stays scarce: sparkPerDay caps it across every task.",
+  "holdMs": 2500,
+  "tapMs": 320,
+  "capPerPersonPerDay": 3,
+  "rewards": {
+    "sparkPerEffort": 1,
+    "sparkPerDay": 3,
+    "flamePerEffort": 0.015,
+    "despairPerEffort": -0.0035,
+    "trustPerEffort": 0.015
+  },
+  "plan": { "laborPerEffort": 0.5 },
+  "site": { "needPerDay": 4, "outputPerEffort": 0.5 },
+  "facility": { "needPerDay": 4, "shareOfDayPerEffort": 0.12 },
+  "household": { "needPerDay": 3, "despairPerEffort": -0.004, "minFlame": 0.15 },
+  "road": { "conditionPerEffort": 0.02, "ceiling": 0.95 },
+  "wagon": { "stuckChance": 0.25, "progressPerEffort": 0.04, "effortsToFree": 2, "tip": 1 },
+  "kinds": {
+    "cook":      { "look": "pot",    "spot": "Cook pot",     "verb": "with the cooking" },
+    "process":   { "look": "mill",   "spot": "Millstone",    "verb": "at the stone" },
+    "saw":       { "look": "logs",   "spot": "Log pile",     "verb": "with the logs" },
+    "mine":      { "look": "seam",   "spot": "Ore seam",     "verb": "at the seam" },
+    "build":     { "look": "frame",  "spot": "Building frame", "verb": "with the frame" },
+    "mend":      { "look": "anvil",  "spot": "Work bench",   "verb": "at the bench" },
+    "farm":      { "look": "sheaf",  "spot": "Field row",    "verb": "in the field" },
+    "road":      { "look": "road",   "spot": "Road break",   "verb": "with the road" },
+    "haul-free": { "look": "wheel",  "spot": "Stuck wheel",  "verb": "with the wheel" }
+  },
+  "goals": {
+    "plan": "raising {a} {building}",
+    "farm": "bringing in the field",
+    "mill": "milling the harvest",
+    "camp": "sawing timber",
+    "smithy": "mending tools at the forge",
+    "bakery": "baking the town's bread",
+    "workshop": "keeping the workshop busy",
+    "facility.mill": "milling the harvest",
+    "facility.lumber_camp": "sawing timber",
+    "facility.mine": "working the seam",
+    "facility.waystation": "cooking for the road",
+    "road": "mending the road",
+    "road.broken": "opening the broken road",
+    "wagon": "freeing the wheel",
+    "household": "cooking for the households"
+  },
+  "hint": "Hold to help {name} {verb}.",
+  "hintNobody": "Hold to lend a hand {verb}.",
+  "done": [
+    "You put your back into it beside {name}.",
+    "You work a while with {name}. It goes quicker with two.",
+    "You take a turn {verb}; {name} nods and keeps on."
+  ],
+  "doneNobody": [
+    "You put your back into it.",
+    "You lend your hands {verb}."
+  ],
+  "thanks": [
+    "That's a help. It goes quicker with you.",
+    "Good hands. We'll have it done sooner.",
+    "I didn't ask, but I'm glad of it.",
+    "Stay as long as you like. There's plenty of it."
+  ],
+  "wheelFree": "The wheel lurches out of the rut. The driver whistles thanks and tosses you a coin.",
+  "enough": "{name} waves you off: \"That's plenty for today. Come back tomorrow.\"",
+  "enoughNobody": "Your hands have done what they can here today.",
+  "gone": "There's nothing to help with here now.",
+  "dawn": [
+    "{name} says {goal} went quicker yesterday for your hands.",
+    "{name} is telling people you turned up and worked {verb} without being asked."
+  ]
+}

@@ -91,6 +91,12 @@ export type PlaySession = {
   adoptState(state: SimState): void;
   /** Live sim state (render-side goods/nodes read + mutate through sim helpers). */
   getState(): SimState | undefined;
+  /** Tasks (sim/tasks): what people in a town are working on today (the player's town by default). */
+  tasksNear(townId?: string): import('../tasks').Task[];
+  /** The task at a work spot (`prop:work@<taskId>`, `work@<taskId>` or the bare task id), or null. */
+  taskAt(spotKey: string): import('../tasks').Task | null;
+  /** Help by doing: put `effort` units (one per held E) into the task at a work spot. */
+  workAt(spotKey: string, effort?: number): import('../tasks').WorkResult;
 };
 export type CreatePlaySessionOpts =
   | { mode: 'inspect'; seed: number; peopleCount?: number }

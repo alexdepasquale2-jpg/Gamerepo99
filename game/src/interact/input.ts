@@ -3,6 +3,7 @@
  *  - E / Enter: open the focused thing's ring (the touch bar's Act button calls interact.open()).
  *  - While the ring is open: 1–6 pick a chip, Esc / Backspace step out of a family and then close,
  *    E closes. These keys are taken before anyone else sees them (hotbar digits, pause on Esc).
+ *  - E / Enter on a work spot: held, not opened (interact/hold.ts): hold to help, a quick tap gives the hint.
  *  - Tap or click a thing: open its ring; when it is out of reach, walk there first, then open.
  *    Taps on empty ground are the actors' (walk); a tap outside an open ring closes it.
  */
@@ -24,6 +25,8 @@ export type InputDeps = {
   fresh(key: string): Thing | null;
   open(thing: Thing): void;
   close(): void;
+  /** Hold to work on the focused work spot; start() is false when the focus is not one. */
+  hold?: { start(): boolean; end(): void; active(): boolean };
 };
 
 /** A press that travelled farther than this (CSS-free canvas px) was a drag, not a tap. */
@@ -62,15 +65,31 @@ export function attachInput(d: InputDeps): () => void {
       }
       return;
     }
+    if ((k === 'e' || k === 'E' || k === 'Enter') && d.hold?.active()) {
+      consume(e); // key repeat while holding
+      return;
+    }
     if ((k === 'e' || k === 'E' || k === 'Enter') && !e.repeat && !d.blocked()) {
       const f = d.focus();
       if (!f) return;
       consume(e);
+      if (d.hold?.start()) return;
       d.open(f);
+    }
+  };
+  const onKeyUp = (e: KeyboardEvent): void => {
+    const k = e.key;
+    if ((k === 'e' || k === 'E' || k === 'Enter') && d.hold?.active()) {
+      consume(e);
+      d.hold.end();
     }
   };
   // Capture on window: we see the key before the hotbar, the pause menu or Phaser's keyboard.
   window.addEventListener('keydown', onKey, true);
+  window.addEventListener('keyup', onKeyUp, true);
+  // A hold must not stick when the window loses the key-up.
+  const onBlur = (): void => { if (d.hold?.active()) d.hold.end(); };
+  window.addEventListener('blur', onBlur);
 
   async function walkThenOpen(thing: Thing): Promise<void> {
     const token = ++walkToken;
@@ -106,6 +125,8 @@ export function attachInput(d: InputDeps): () => void {
 
   return () => {
     window.removeEventListener('keydown', onKey, true);
+    window.removeEventListener('keyup', onKeyUp, true);
+    window.removeEventListener('blur', onBlur);
     scene.input.off('pointerup', onUp);
   };
 }

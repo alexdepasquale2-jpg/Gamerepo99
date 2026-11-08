@@ -92,6 +92,8 @@ registerDevHook('facilities', (ctx) => () => internals.get(ctx)?.things.faciliti
 registerDevHook('plots', (ctx) => () => internals.get(ctx)?.things.plots.list());
 registerDevHook('graves', (ctx) => () => internals.get(ctx)?.things.graves.list());
 registerDevHook('chest', (ctx) => (siteId: string) => internals.get(ctx)?.things.chests.tally(siteId));
+/** Every work spot drawn now (sim/tasks): key, task, kind, goal, where, who is at it. */
+registerDevHook('workSpots', (ctx) => () => internals.get(ctx)?.things.work.list());
 
 const galleries = new WeakMap<GameContext, Phaser.GameObjects.Image[]>();
 registerDevHook('artGallery', (ctx) => async (on = true) => {

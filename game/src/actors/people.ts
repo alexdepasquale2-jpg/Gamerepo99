@@ -9,7 +9,7 @@ import { TILE_PX } from '../sim/map/constants';
 import { isIndoorsAt, DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS } from '../sim/map/residency';
 import type { Building } from '../sim/map/interiors';
 import { Figure } from './figure';
-import { doorStep, findSpots, makeFolk, makeVillager, rehouse, scheduleSpot, wantInside, type Folk, type PersonRow, type Villager } from './folk';
+import { doorStep, findSpots, makeFolk, makeVillager, rehouse, scheduleSpot, wantInside, workPose, type Folk, type PersonRow, type Villager } from './folk';
 import { headHeight, lookTexture } from './looks';
 import { doctrineLeaders, postureOf, strongestMarkTell } from './marks';
 import type { NameLayer } from './name-layer';
@@ -213,6 +213,7 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
     } else if (v.path.length) v.path.shift();
     fig.place(v.x, v.y);
     fig.animate(dt, v.moving, timeSec);
+    workPose(folk, v, ph, timeSec);
   }
 
   const folkNear = (p: Pt, radius: number): Folk[] =>

@@ -7,6 +7,7 @@ import type { GameContext, Pt } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
 import { townBuildings, type Building } from '../sim/map/interiors';
 import { houseNewcomers, placeAt, scheduledBuilding } from '../sim/map/residency';
+import { personTask } from '../sim/tasks';
 import type { LayoutSettlement, SettlementKind } from '../sim/map/world-layout';
 import type { Figure } from './figure';
 import { villagerLook, type PersonLook } from './looks';
@@ -47,6 +48,8 @@ export type Folk = {
   active: boolean;
   work: Pt[];
   gather: Pt | null;
+  /** Where this person's task (sim/tasks) is today, when it is in town; set by findSpots. */
+  taskSpot?: (personId: string) => Pt | null;
 };
 
 export type PersonRow = { id: string; name?: string; townId?: string; age?: number; tags?: string[] };
@@ -96,6 +99,16 @@ export function rehouse(folk: Folk, passing?: (id: string) => boolean): void {
 
 /** Work and gathering spots: the town's nodes and facilities, its hearth or board; else a ring around it. */
 export function findSpots(ctx: GameContext, folk: Folk): void {
+  if (!folk.taskSpot) {
+    // Asked every frame by the work pose: re-read the tasks once a second at most.
+    let memo = new Map<string, Pt | null>(), at = 0;
+    folk.taskSpot = (id) => {
+      const now = performance.now();
+      if (now - at > 1000) { memo = new Map(); at = now; }
+      if (!memo.has(id)) memo.set(id, taskSpotOf(ctx, folk, id));
+      return memo.get(id) ?? null;
+    };
+  }
   if (folk.gather) return;
   let things: { kind: string; x: number; y: number }[] = [];
   try { things = ctx.world.things(folk.centre, TILE_PX * 16); } catch { things = []; }
@@ -120,6 +133,12 @@ export const wantInside = (folk: Folk, v: Villager, phase: number): Building | n
 export function scheduleSpot(folk: Folk, v: Villager, phase: number): Pt {
   const place = placeAt(phase);
   const h = hash(v.id);
+  const task = place === 'work' ? folk.taskSpot?.(v.id) : null;
+  if (task) {
+    // At their own task: stand just beside the spot (left or right), so the spot itself stays in reach.
+    const side = h % 2 ? 1 : -1;
+    return { x: task.x + side * TILE_PX * (0.9 + ((h >> 4) % 3) * 0.2), y: task.y + ((h >> 7) % 3) * 3 };
+  }
   if (place === 'work' && folk.work.length) {
     const w = folk.work[h % folk.work.length]!;
     // Each worker keeps their own patch around a shared node.
@@ -131,4 +150,33 @@ export function scheduleSpot(folk: Folk, v: Villager, phase: number): Pt {
     return { x: folk.gather.x + Math.cos(a) * r, y: folk.gather.y + Math.sin(a) * r * 0.6 };
   }
   return v.home;
+}
+
+/** A task spot people walk to: only ones the town can reach on foot (a road crew far out keeps its own pace). */
+const TASK_RANGE = TILE_PX * 22;
+
+/** This person's task spot today in world px, or null (no task, or one placed outside the town). */
+function taskSpotOf(ctx: GameContext, folk: Folk, personId: string): Pt | null {
+  const st = ctx.session.getState();
+  const t = st ? personTask(st, personId) : undefined;
+  if (!t) return null;
+  // The pot is at the hearth, which the folk know as their gathering spot.
+  const at = t.spot.x !== undefined && t.spot.y !== undefined ? { x: t.spot.x, y: t.spot.y } : t.spot.hearth && folk.gather ? { x: folk.gather.x + TILE_PX, y: folk.gather.y - 16 } : null;
+  if (!at || Math.hypot(at.x - folk.centre.x, at.y - folk.centre.y) > TASK_RANGE) return null;
+  return footing(ctx, at);
+}
+
+/**
+ * The work pose: someone standing at their task in working hours turns to it and bends to the work in a
+ * slow rhythm (after the figure's own animate, which set its scale this frame).
+ */
+export function workPose(folk: Folk, v: Villager, phase: number, timeSec: number): void {
+  const fig = v.fig;
+  if (!fig || v.moving || v.inside || placeAt(phase) !== 'work') return;
+  const spot = folk.taskSpot?.(v.id);
+  if (!spot || Math.hypot(spot.x - v.x, spot.y - v.y) > TILE_PX * 1.8) return;
+  fig.face(spot.x - v.x, spot.y - v.y);
+  const beat = Math.max(0, Math.sin(timeSec * 4.2 + (hash(v.id) % 97) / 15));
+  fig.sprite.setScale(fig.sprite.scaleX, fig.sprite.scaleY * (1 - beat * 0.09));
+  fig.sprite.setRotation((spot.x < v.x ? -1 : 1) * beat * 0.12);
 }

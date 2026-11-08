@@ -61,7 +61,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
 
   const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits, ctx.seed);
   const towns = createSettlements(scene, ctx.layout.settlements);
-  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear });
+  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear, roadPoint: nav.roadPoint });
   const clock = createDayClock(0.3);
   const fx = createLightFx(scene);
   const townOf = (p: Pt): string | null => {
@@ -80,7 +80,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     if (all || what === 'ground') things.ground.refresh();
     if (all || what === 'plots') things.plots.refresh();
     if (all || what === 'edits') chunks.refreshEdits(edits());
-    if (all) { things.facilities.refresh(); things.graves.refresh(); towns.refresh(st(), session.townDespair()); }
+    if (all) { things.facilities.refresh(); things.graves.refresh(); things.work.refresh(); towns.refresh(st(), session.townDespair()); }
   };
 
   let lastKey = '';
@@ -200,6 +200,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
       syncChunks(player);
       things.nodes.update(player);
       things.facilities.update(time);
+      things.work.update();
       towns.update(time, player, night);
       const lights = towns.spots
         .filter((s) => Math.hypot(s.hearth.x - player.x, s.hearth.y - player.y) < LIGHT_RANGE)
