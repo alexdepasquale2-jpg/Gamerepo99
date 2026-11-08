@@ -1,27 +1,22 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import { collectErrors, pickInhabitant, shotsDir } from './support/game';
 
-const SHOTS = 'docs/qa/reports/m6';
 const status = (page: import('@playwright/test').Page) =>
   page.locator('#hf-status').evaluate((el) => ({ day: (el as HTMLElement).dataset.day, fp: (el as HTMLElement).dataset.fingerprint, text: el.textContent }));
 
 test.describe('M6 saves and menus', () => {
   test('title -> play dawns -> save -> reload -> continue; world file round trip', async ({ page }) => {
-    fs.mkdirSync(SHOTS, { recursive: true });
-    const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    const SHOTS = shotsDir('m6-menus', 'docs/qa/reports/m6');
+    const errors = collectErrors(page, { console: false });
 
     await page.goto('/');
     await expect(page.locator('#hf-title-menu')).toBeVisible();
     await expect(page.locator('[data-id=continue]')).toBeDisabled();
     await page.screenshot({ path: `${SHOTS}/title.png` });
 
-    await page.locator('[data-id=new]').click();
-
-    await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-    await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
+    await pickInhabitant(page);
     // Resting moved to the hearth (E); advance days through the session instead.
-    await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth);
     // The scene's autosave callback (what a hearth rest fires at dawn) refreshes the status line.
     await page.evaluate(() => {
       const h = (window as unknown as { __hearth: { session: { act(id: string): void }; scene: { registry: { get(k: string): () => void } } } }).__hearth;

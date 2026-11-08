@@ -36,6 +36,7 @@ import { getWalkMul, setWalkMul } from '../dev/dev-flags';
 import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
 import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
 import { collectDawnLines } from '../sim/dawn-lines';
+import { kinStrainOf } from '../sim/social/kin-strain';
 import { featuresIn } from '../sim/map/ladder/features';
 import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
 
@@ -202,6 +203,8 @@ export class OverworldScene extends Phaser.Scene {
         work: (dx?: number, dy?: number) => { if (dx !== undefined || dy !== undefined) this.facing = { dx: dx ?? 0, dy: dy ?? 0 }; return this.workLand(); },
         /** Last line shown by say(). */
         lastSay: () => this.hint.text,
+        /** A person's 0..1 kin strain across the gap (city kin of a villager, or the reverse). */
+        kinStrain: (personId: string) => { const st = this.session.getState(); return st ? kinStrainOf(st, personId) : 0; },
         give: (itemId: string, n: number) => {
           const st = this.session.getState();
           if (!st) return;

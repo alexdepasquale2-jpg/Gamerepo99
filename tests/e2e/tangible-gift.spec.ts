@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pickInhabitant } from './support/game';
 
 const OUT = path.join('tests', 'e2e', 'artifacts', 'tangible');
 
@@ -15,9 +16,7 @@ type Scene = {
 test('gift handoff shows the item between player and villager', async ({ page }) => {
   fs.mkdirSync(OUT, { recursive: true });
   await page.goto('/');
-  await page.locator('[data-id=new]').click();
-  await page.locator('[data-id=arch-marrow]').click(); // pick who you are
-  await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
+  await pickInhabitant(page);
   const res = await page.evaluate(() => {
     const s = (window as unknown as { __hearth: { scene: Scene } }).__hearth.scene;
     const p = s.people.people[0]!;

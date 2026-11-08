@@ -21,8 +21,9 @@ import type {
 import { layoutWorld, type WorldLayout } from './world-layout';
 import { createTerrainAccess } from './terrain-access';
 import { terrainMode } from './terrain';
-import { scatterProps, type ScatterCtx } from './ladder/scatter';
-import { dressChunk, type DressCtx } from './ladder/dress';
+import { scatterProps } from './ladder/scatter';
+import { dressChunk } from './ladder/dress';
+import { ladderContexts } from './ladder/ctx';
 import { chunkEdits, type TileEdits } from './tile-edits';
 import landActs from '../../data/world/land-acts.json';
 
@@ -122,29 +123,8 @@ export function createStampRasterSource(
   const terrain = createTerrainAccess(layout, seed, roads, edits);
   const props = buildProps(roads, seed);
   const bbox = layoutBBox(layout);
-  const roadCells = [...roads.values()];
   // Generation reads the natural land only; the player's edits are laid over the result per tile.
-  const scatterCtx: ScatterCtx = {
-    biome: terrain.natural,
-    isRoad: (q, r) => roads.has(cellKey(q, r)),
-    townDistance: (q, r) => Math.min(...layout.settlements.map((s) => Math.hypot(q - s.q, r - s.r))),
-    roadDistance: (q, r, cap) => {
-      let best = cap;
-      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) best = d; }
-      return best;
-    },
-  };
-  const dressCtx: DressCtx = {
-    biome: terrain.natural,
-    isRoad: scatterCtx.isRoad,
-    townDistance: scatterCtx.townDistance,
-    towns: layout.settlements,
-    nearestRoad: (q, r, cap) => {
-      let best = cap, at: { q: number; r: number } | null = null;
-      for (const c of roadCells) { const d = Math.abs(c.q - q) + Math.abs(c.r - r); if (d < best) { best = d; at = c; } }
-      return at;
-    },
-  };
+  const { scatter: scatterCtx, dress: dressCtx } = ladderContexts(layout, { ...terrain, biome: terrain.natural }, roads);
   const fp = fingerprintHex([
     String(seed >>> 0),
     terrainMode(),
