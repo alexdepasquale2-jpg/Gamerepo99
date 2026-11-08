@@ -74,6 +74,10 @@ export const FEEL = {
   burnout: {
     desatMs: 320,
     snuffMs: 200,
+    /** How long the dying coal stays on screen before the succession overlay may open. */
+    holdMs: 1100,
+    /** World dim behind the dying coal (the coal itself stays bright above it). */
+    dimAlpha: 0.55,
   },
   /** Continuous overworld walk + follow cam (presentation only) */
   overworld: {

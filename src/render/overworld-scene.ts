@@ -30,6 +30,8 @@ import { deedLabel } from '../sim/play-session/play-session-act';
 import { createActionRing, type ActionRing, type Chip } from './action-ring';
 import { createWorldLife, type WorldLife } from './world-life';
 import { attachSparkFx } from './spark-fx';
+import { attachSessionFx } from './spark-fx/session-fx';
+import { isSuccessionOpen } from '../sim/succession';
 import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
 
@@ -108,15 +110,26 @@ export class OverworldScene extends Phaser.Scene {
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
     });
     this.goods = attachOverworldGoods(this, this.session, world, this.layout, this.people, this.life, () => ({ x: this.player.x, y: this.player.y }), this.nav, (l) => this.say(l), () => this.room.active);
-    const surface = attachSurface(this, this.session, this.layout.settlements, (id) =>
-      this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined),
-    );
-    attachSparkFx(this, this.bus, { getPlayerPos: () => { const a = this.room.active ? this.room.playerPos() : this.player; return { x: a.x, y: a.y - 20 }; } });
+    const headOf = (id: string): { x: number; y: number } | undefined =>
+      this.room.residentHead(id) ?? (this.ringFor === id || this.people.byId.has(id) ? this.people.headOf(id) : undefined);
+    const surface = attachSurface(this, this.session, this.layout.settlements, headOf);
+    const playerCoal = (): { x: number; y: number } => { const a = this.room.active ? this.room.playerPos() : this.player; return { x: a.x, y: a.y - 20 }; };
+    attachSparkFx(this, this.bus, { getPlayerPos: playerCoal });
+    // Refusals flicker at the person's head; burnout snuffs the player's coal before succession opens.
+    const sessionFx = attachSessionFx(this, this.session, this.bus, {
+      // Indoors only the room's residents are on screen; overworld heads would be off camera.
+      headOf: (id) => (this.room.active ? this.room.residentHead(id) ?? undefined : headOf(id)),
+      playerPos: playerCoal,
+      // Not while resting or while any camera fade covers the screen (running, or held black after a fade-out).
+      canPlayBurnout: () => !this.resting && !this.cameras.main.fadeEffect.isRunning && !(this.cameras.main.fadeEffect.isComplete && this.cameras.main.fadeEffect.direction),
+      say: (line) => this.say(line),
+    });
     // QA hook (presentation-side overrides + synthetic feed; real sim path for ticks/spark).
     (window as unknown as { __hearth?: unknown }).__hearth = {
       session: this.session,
       scene: this,
       surface,
+      fx: sessionFx.log,
       towns: this.layout.settlements.map((t) => t.id),
       burnOut: () => {
         forceSpark(this.session, 0);
@@ -343,7 +356,8 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   private interact(): void {
-    if (this.resting || this.goods.overlayOpen()) return;
+    // The coal is out: no deeds or rest while the burnout plays and succession is pending.
+    if (this.resting || this.goods.overlayOpen() || isSuccessionOpen(this.session)) return;
     if (this.ring.isOpen()) return;
     if (this.room.active) {
       const who = this.room.interact();
