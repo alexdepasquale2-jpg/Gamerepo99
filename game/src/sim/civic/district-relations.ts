@@ -297,14 +297,22 @@ function stepPair(state: SimState, r: DistrictRelation, live: string): void {
   }
 }
 
-/** One dawn for every neighbouring pair in the realm (once per day). */
-export function tickDistrictRelations(state: SimState): void {
+/**
+ * One dawn for every neighbouring pair in the realm (once per day). `liveOnly`: just the live district's
+ * own pairs (a long wait's in-between days, civic/lod: far pairs step on fewer days while nobody watches).
+ */
+export function tickDistrictRelations(state: SimState, liveOnly = false): void {
   const p = ensurePolity(state);
   if (p.lastTick >= state.day) return;
   p.lastTick = state.day;
   p.news = [];
   const live = liveId(state);
-  p.leaders[live] = liveLeader(state);
+  // Who leads is read again at every full step; on a long wait's in-between days the record stands.
+  if (!liveOnly || !p.leaders[live]) p.leaders[live] = liveLeader(state);
+  if (liveOnly) {
+    for (const r of liveRelations(state)) stepPair(state, r, live);
+    return;
+  }
   for (const key of allPairs()) {
     const [a, b] = key.split('|') as [string, string];
     stepPair(state, relationOf(state, a, b), live);
