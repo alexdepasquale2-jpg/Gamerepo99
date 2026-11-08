@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, land = land act, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
+  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
   "items": [
     { "id": "bread", "name": "Bread", "icon": "food", "color": "#d9a45b", "price": 3, "economyResourceId": "food_grain", "tags": ["food","comfort"], "use": {"spark":6}, "verbs": [
       {"id":"eat","label":"Eat the bread","short":"Eat bread","target":"self","effect":{"spark":6}},
@@ -23,12 +23,10 @@
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}}
     ] },
     { "id": "timber", "name": "Timber", "icon": "wood", "color": "#a8743e", "price": 5, "economyResourceId": "timber", "tags": ["build"], "verbs": [
-      {"id":"mend","label":"Mend the path with timber","short":"Mend the path","target":"tile","qty":0,"effect":{"do":"land","act":"mend_path"}},
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
     ] },
     { "id": "stone", "name": "Stone", "icon": "stone", "color": "#9a9a92", "price": 2, "economyResourceId": "timber", "tags": ["build"], "verbs": [
-      {"id":"lay","label":"Lay stepping stones","short":"Lay stones","target":"tile","qty":0,"effect":{"do":"land","act":"lay_stones"}},
       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
     ] },

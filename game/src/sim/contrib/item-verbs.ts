@@ -2,7 +2,7 @@
  * The held item joins the ring. When the scene passes `heldItem` in target.data, every verb the item's
  * row in data/items/items.json offers on that kind of target is listed as `use.<item>.<verb>@<target>`;
  * on any thing (not a person) the item's self-uses ("Eat bread", "Wrap up warm") are listed too.
- * Effects reuse the sim's own paths: the gift_give deed and gift affinity, the hearth keepsake, land acts,
+ * Effects reuse the sim's own paths: the gift_give deed and gift affinity, the hearth keepsake,
  * build plans, the town ledger, stash acts and node gathering; the rest is a bundle (contrib/use-effects).
  * Act ids carry the item, so acting needs no data. Pure: no Phaser/DOM.
  */
@@ -17,23 +17,22 @@ import { jobOf } from '../goods/jobs';
 import { gatherNode } from '../goods/nodes';
 import { applyStashAct, siteInTown } from '../hoard';
 import type { CompatRuntime } from '../interaction';
-import { landActOn, workLand } from '../land-acts';
 import { pushJuice } from '../packets';
 import { registerTargetProvider, type ActOutcome, type ProvidedAction, type ProviderEvent } from '../play-session/action-providers';
 import { actInteraction } from '../play-session/play-session-interaction';
 import { targetActionId, type Target } from '../play-session/targets';
 import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
-import { faunaKindOf, heldItemOf, isGrave, isShrine, nodeData, tileData, townOfTarget } from './target-data';
+import { faunaKindOf, heldItemOf, isGrave, isShrine, nodeData, townOfTarget } from './target-data';
 import { applyBundle, bundleRefusal, firstName, markUsed, residentOf, usedToday, type Bundle } from './use-effects';
 
-export type VerbTarget = 'self' | 'person' | 'hearth' | 'tile' | 'node' | 'shrine' | 'grave' | 'plot' | 'wagon' | 'board' | 'chest' | 'fauna';
+export type VerbTarget = 'self' | 'person' | 'hearth' | 'node' | 'shrine' | 'grave' | 'plot' | 'wagon' | 'board' | 'chest' | 'fauna';
 export type ItemEffect = Bundle & {
   /** An existing sim path to run first (the bundle's fields apply after it succeeds). */
-  do?: 'gift' | 'memory' | 'land' | 'plan' | 'deliver' | 'stash' | 'gather' | 'alms' | 'buy';
+  do?: 'gift' | 'memory' | 'plan' | 'deliver' | 'stash' | 'gather' | 'alms' | 'buy';
   /** gift: extra item tags for affinity (wood given as firewood counts as warmth). */
   tags?: string[];
-  /** land: the land act id; stash: the stash act id. */
+  /** stash: the stash act id. */
   act?: string;
   /** buy: what the coin buys. */
   item?: string;
@@ -95,10 +94,6 @@ export function verbFits(state: SimState, row: ItemVerbRow, t: Target, itemId: s
     case 'grave': return isGrave(t);
     case 'plot': return t.kind === 'plot' && !isGrave(t) && !!planNeeding(state, itemId, undefined, t.id);
     case 'fauna': { const k = faunaKindOf(t); return !!k && (!row.faunaKinds || row.faunaKinds.includes(k)); }
-    case 'tile': {
-      const d = tileData(t);
-      return !!d?.view && (row.effect.do !== 'land' || landActOn(d.view, d.q, d.r)?.id === row.effect.act);
-    }
     case 'chest': return t.kind === 'chest' && siteInTown(state, state.player.townId)?.id === t.id;
     default: return t.kind === row.target;
   }
@@ -159,11 +154,6 @@ function runPath(state: SimState, itemId: string, row: ItemVerbRow, t: Target, e
       const before = state.inventory?.[itemId] ?? 0;
       const line = useItem(state, itemId, townId);
       return { ok: (state.inventory?.[itemId] ?? 0) < before, line };
-    }
-    case 'land': {
-      const d = tileData(t)!;
-      const r = workLand(state, d.view!, e.act ?? '', d.q, d.r, d.towns ?? []);
-      return { ok: r.ok, line: r.line };
     }
     case 'plan': {
       const plan = planNeeding(state, itemId, undefined, t.id);

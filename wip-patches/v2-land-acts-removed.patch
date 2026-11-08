@@ -1,0 +1,741 @@
+diff --git a/game/README.md b/game/README.md
+index e66541a..58ea837 100644
+--- a/game/README.md
++++ b/game/README.md
+@@ -82,7 +82,6 @@ Each feature names the area that owns how it looks and is reached. The content a
+ | Build plans, plots, companies (F9) | world, panels | plots drawn with progress; board |
+ | Households, births, newcomers (F10, #36) | actors, voice | newcomers appear named at dawn; family speaks |
+ | Facilities and shifts (F12, #43) | world, interact | facility ring: work a shift; crews |
+-| Player changes the land (F13, #33) | world, interact | the tile in front of you has verbs: lay stones, clear brush, mend path |
+ | Roads: signposts, road menu, hired travellers, days on the road, encounters (G1–G4, #40) | world, panels, voice | signpost ring → road sheet; told at the far end |
+ | Hoarder: coin, hide coin, guards, theft and decay, hoard ending (H1–H7, #44) | content, world, ui | Deal/Stash in the ring; chest prop with a tally; ending modal |
+ | Notoriety both ways, neglect greys towns (H5, H6) | voice, world | crowd lines; palette |
+diff --git a/game/src/data/items/items.json b/game/src/data/items/items.json
+index ba6e70f..fb20d41 100644
+--- a/game/src/data/items/items.json
++++ b/game/src/data/items/items.json
+@@ -1,6 +1,6 @@
+ {
+   "version": 1,
+-  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, land = land act, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
++  "spec": "Carryable items. economyResourceId ties an item to town stock; price is base coin value; tags drive NPC gift affinity. verbs = what the held item does on a target: {id, label (full), short (chip, ≤16), target (self|person|hearth|tile|node|shrine|grave|plot|wagon|board|chest|fauna), qty (consumed, default 1), oncePerDay?, who? (person gate: jobs, household 'new', plan), nodeKinds?/faunaKinds?, effect}. effect.do picks an existing path (gift = gift_give deed + affinity, memory = hearth keepsake, plan = build plan, deliver = town ledger, stash = stash act, gather = gather the node, alms, buy); the rest is a bundle: spark, gain (items), town (ledger goods), despair, thanks (a resident's Blessing tags), done (line; {name} = that resident). See sim/contrib/item-verbs.ts.",
+   "items": [
+     { "id": "bread", "name": "Bread", "icon": "food", "color": "#d9a45b", "price": 3, "economyResourceId": "food_grain", "tags": ["food","comfort"], "use": {"spark":6}, "verbs": [
+       {"id":"eat","label":"Eat the bread","short":"Eat bread","target":"self","effect":{"spark":6}},
+@@ -23,12 +23,10 @@
+       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}}
+     ] },
+     { "id": "timber", "name": "Timber", "icon": "wood", "color": "#a8743e", "price": 5, "economyResourceId": "timber", "tags": ["build"], "verbs": [
+-      {"id":"mend","label":"Mend the path with timber","short":"Mend the path","target":"tile","qty":0,"effect":{"do":"land","act":"mend_path"}},
+       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
+       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
+     ] },
+     { "id": "stone", "name": "Stone", "icon": "stone", "color": "#9a9a92", "price": 2, "economyResourceId": "timber", "tags": ["build"], "verbs": [
+-      {"id":"lay","label":"Lay stepping stones","short":"Lay stones","target":"tile","qty":0,"effect":{"do":"land","act":"lay_stones"}},
+       {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
+       {"id":"builder","label":"Give it to a builder","short":"Give to builder","target":"person","who":{"plan":true},"effect":{"do":"gift","tags":["build"]}}
+     ] },
+diff --git a/game/src/sim/contrib/index.ts b/game/src/sim/contrib/index.ts
+index d2f81e5..c59dce3 100644
+--- a/game/src/sim/contrib/index.ts
++++ b/game/src/sim/contrib/index.ts
+@@ -4,7 +4,6 @@
+  */
+ import './core';
+ import './kin-strain';
+-import './land';
+ import './history';
+ import './moments';
+ import './households';
+diff --git a/game/src/sim/contrib/item-verbs.ts b/game/src/sim/contrib/item-verbs.ts
+index e4b002c..61d1b11 100644
+--- a/game/src/sim/contrib/item-verbs.ts
++++ b/game/src/sim/contrib/item-verbs.ts
+@@ -2,7 +2,7 @@
+  * The held item joins the ring. When the scene passes `heldItem` in target.data, every verb the item's
+  * row in data/items/items.json offers on that kind of target is listed as `use.<item>.<verb>@<target>`;
+  * on any thing (not a person) the item's self-uses ("Eat bread", "Wrap up warm") are listed too.
+- * Effects reuse the sim's own paths: the gift_give deed and gift affinity, the hearth keepsake, land acts,
++ * Effects reuse the sim's own paths: the gift_give deed and gift affinity, the hearth keepsake,
+  * build plans, the town ledger, stash acts and node gathering; the rest is a bundle (contrib/use-effects).
+  * Act ids carry the item, so acting needs no data. Pure: no Phaser/DOM.
+  */
+@@ -17,23 +17,22 @@ import { jobOf } from '../goods/jobs';
+ import { gatherNode } from '../goods/nodes';
+ import { applyStashAct, siteInTown } from '../hoard';
+ import type { CompatRuntime } from '../interaction';
+-import { landActOn, workLand } from '../land-acts';
+ import { pushJuice } from '../packets';
+ import { registerTargetProvider, type ActOutcome, type ProvidedAction, type ProviderEvent } from '../play-session/action-providers';
+ import { actInteraction } from '../play-session/play-session-interaction';
+ import { targetActionId, type Target } from '../play-session/targets';
+ import { encodeUnspokenForState } from '../social/unspoken';
+ import type { SimState } from '../types/runtime';
+-import { faunaKindOf, heldItemOf, isGrave, isShrine, nodeData, tileData, townOfTarget } from './target-data';
++import { faunaKindOf, heldItemOf, isGrave, isShrine, nodeData, townOfTarget } from './target-data';
+ import { applyBundle, bundleRefusal, firstName, markUsed, residentOf, usedToday, type Bundle } from './use-effects';
+ 
+-export type VerbTarget = 'self' | 'person' | 'hearth' | 'tile' | 'node' | 'shrine' | 'grave' | 'plot' | 'wagon' | 'board' | 'chest' | 'fauna';
++export type VerbTarget = 'self' | 'person' | 'hearth' | 'node' | 'shrine' | 'grave' | 'plot' | 'wagon' | 'board' | 'chest' | 'fauna';
+ export type ItemEffect = Bundle & {
+   /** An existing sim path to run first (the bundle's fields apply after it succeeds). */
+-  do?: 'gift' | 'memory' | 'land' | 'plan' | 'deliver' | 'stash' | 'gather' | 'alms' | 'buy';
++  do?: 'gift' | 'memory' | 'plan' | 'deliver' | 'stash' | 'gather' | 'alms' | 'buy';
+   /** gift: extra item tags for affinity (wood given as firewood counts as warmth). */
+   tags?: string[];
+-  /** land: the land act id; stash: the stash act id. */
++  /** stash: the stash act id. */
+   act?: string;
+   /** buy: what the coin buys. */
+   item?: string;
+@@ -95,10 +94,6 @@ export function verbFits(state: SimState, row: ItemVerbRow, t: Target, itemId: s
+     case 'grave': return isGrave(t);
+     case 'plot': return t.kind === 'plot' && !isGrave(t) && !!planNeeding(state, itemId, undefined, t.id);
+     case 'fauna': { const k = faunaKindOf(t); return !!k && (!row.faunaKinds || row.faunaKinds.includes(k)); }
+-    case 'tile': {
+-      const d = tileData(t);
+-      return !!d?.view && (row.effect.do !== 'land' || landActOn(d.view, d.q, d.r)?.id === row.effect.act);
+-    }
+     case 'chest': return t.kind === 'chest' && siteInTown(state, state.player.townId)?.id === t.id;
+     default: return t.kind === row.target;
+   }
+@@ -160,11 +155,6 @@ function runPath(state: SimState, itemId: string, row: ItemVerbRow, t: Target, e
+       const line = useItem(state, itemId, townId);
+       return { ok: (state.inventory?.[itemId] ?? 0) < before, line };
+     }
+-    case 'land': {
+-      const d = tileData(t)!;
+-      const r = workLand(state, d.view!, e.act ?? '', d.q, d.r, d.towns ?? []);
+-      return { ok: r.ok, line: r.line };
+-    }
+     case 'plan': {
+       const plan = planNeeding(state, itemId, undefined, t.id);
+       const line = plan ? contributeToPlan(state, plan.ownerId, itemId) : null;
+diff --git a/game/src/sim/contrib/land.ts b/game/src/sim/contrib/land.ts
+deleted file mode 100644
+index ad6d9e3..0000000
+--- a/game/src/sim/contrib/land.ts
++++ /dev/null
+@@ -1,5 +0,0 @@
+-/** Land acts: townsfolk talk at dawn about ground the player worked near their town. */
+-import { registerDawnLines } from '../dawn-lines';
+-import { landDawnLines } from '../land-acts';
+-
+-registerDawnLines('land-acts', landDawnLines);
+diff --git a/game/src/sim/contrib/roads.ts b/game/src/sim/contrib/roads.ts
+index 7cb8a10..ef21d1a 100644
+--- a/game/src/sim/contrib/roads.ts
++++ b/game/src/sim/contrib/roads.ts
+@@ -1,7 +1,5 @@
+ /**
+  * Roads (G5, G6, G8) on the shared surfaces:
+- *   tile      the road in front of you, when worn or broken: mend it with stone and timber  → `road.mend@tile:road:<q>,<r>`
+- *             (the world puts `{ q, r, roadId }` in target.data)
+  *   wagon     a village cart on the road (`wagon:cart:<cartId>`): walk beside it to its town → `escort@wagon:cart:<id>`
+  *             (the act only checks; the road sheet then runs the escort journey, as it runs a road)
+  *   facility  at a waystation: rest the night (the hearth's 'rest' scene), hear the talk, hire a guide or a watch
+@@ -11,9 +9,9 @@
+ import { registerBoardPage } from '../board-pages';
+ import { registerDawnLines } from '../dawn-lines';
+ import { cartPosition } from '../economy/logistics';
+-import { mendRoad, roadDawnLines, roadNeedsMending, roadWord, routeById, ROADS } from '../economy/roads';
++import { roadDawnLines, roadWord } from '../economy/roads';
+ import { hearTalk, hiredOn, hirePrice, hireHelp, INNS, isWaystation, restAtInn, type HireTrade } from '../economy/waystations';
+-import { hasItem, itemName } from '../goods/inventory';
++import { itemName } from '../goods/inventory';
+ import { happeningTownName } from '../happenings';
+ import { registerTargetProvider, type ProvidedAction } from '../play-session/action-providers';
+ import { targetActionId, type Target } from '../play-session/targets';
+@@ -23,30 +21,6 @@ const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf(
+ const rec = (t: Target): Record<string, unknown> => (t.data && typeof t.data === 'object' ? (t.data as Record<string, unknown>) : {});
+ const plural = (n: number, w: string): string => `${n} ${w}${n === 1 ? '' : 's'}`;
+ 
+-/** The road a tile Thing stands on (target.data.roadId). */
+-const roadOfTile = (t: Target): string | undefined => {
+-  const id = rec(t).roadId;
+-  return t.kind === 'tile' && typeof id === 'string' ? id : undefined;
+-};
+-
+-registerTargetProvider({
+-  id: 'road-mend',
+-  kinds: ['tile'],
+-  list(state, t) {
+-    const r = routeById(state, roadOfTile(t) ?? '');
+-    if (!r || !roadNeedsMending(r)) return [];
+-    const short = Object.entries(ROADS.mendCost).filter(([id, n]) => !hasItem(state, id, n));
+-    const needs = Object.entries(ROADS.mendCost).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`).join(' and ');
+-    return [{ id: targetActionId('road.mend', t), label: short.length ? `Mend the road (needs ${needs})` : `Mend the road · ${roadWord(r)}`, short: 'Mend the road', family: 'work' }];
+-  },
+-  act(state, actionId, t) {
+-    if (verbOf(actionId) !== 'road.mend') return false;
+-    const roadId = roadOfTile(t);
+-    if (!roadId) return { ok: false, line: 'Stand on the road you mean to mend.' };
+-    return mendRoad(state, roadId);
+-  },
+-});
+-
+ /** The logistics cart behind a `cart:<id>` wagon Thing. */
+ const cartOf = (state: SimState, t: Target) =>
+   t.kind === 'wagon' && t.id.startsWith('cart:') ? state.logistics?.carts.find((c) => c.id === t.id.slice(5)) : undefined;
+@@ -118,7 +92,7 @@ registerBoardPage({
+       if (s.roadway?.crews?.[r.id]) bits.push(`${s.people[s.roadway.crews[r.id]!]?.name?.split(' ')[0] ?? 'someone'} is out mending it`);
+       lines.push(`• To ${nameOf(other)}: ${bits.join(', ')}.`);
+     }
+-    lines.push('', 'Mend a worn road: stand on it with stone and timber. Walk beside a cart to see it safe. Rest, hear the talk and hire help at the waystations.');
++    lines.push('', 'Walk beside a cart to see it safe. Rest, hear the talk and hire help at the waystations.');
+     return { lines };
+   },
+ });
+diff --git a/game/src/sim/contrib/target-data.ts b/game/src/sim/contrib/target-data.ts
+index db12d1a..7739264 100644
+--- a/game/src/sim/contrib/target-data.ts
++++ b/game/src/sim/contrib/target-data.ts
+@@ -4,7 +4,6 @@
+  *
+  *   any kind      { heldItem?: string }       the item selected in the hotbar: its "Use …" verbs join the ring
+  *   node          WorldNode & { heldItem? }   (objects.ts reads the node from data, as before)
+- *   tile          TileTargetData              the tile in reach: land acts need its q, r and the live LandView
+  *   fauna         FaunaTargetData             the animal's kind (fauna.json id) and its town
+  *   hearth/board  { townId? }                 which town's hearth or noticeboard
+  *   grave         a stone in state.legacy.graves (`<personId>#<day>`, contrib/graves); GraveData
+@@ -12,13 +11,11 @@
+  *   node #shrine  a herb patch at a shrine (id ends "#shrine", or data.shrine = true) takes offerings
+  */
+ import type { WorldNode } from '../goods/nodes';
+-import type { LandTown, LandView } from '../land-acts';
+ import type { Target } from '../play-session/targets';
+ import type { SimState } from '../types/runtime';
+ 
+ /** Common to every kind: the held item, and the town the thing belongs to. */
+ export type HeldData = { heldItem?: string | null; townId?: string };
+-export type TileTargetData = HeldData & { q: number; r: number; view?: LandView; towns?: LandTown[] };
+ export type FaunaTargetData = HeldData & {
+   /** fauna.json id (rabbit, deer, …). Without it the id's head before '#', ':' or '_' is tried. */
+   kindId?: string;
+@@ -57,11 +54,6 @@ export function nodeData(t: Target): WorldNode | undefined {
+   return t.kind === 'node' && n && n.id === t.id && typeof n.kindId === 'string' ? n : undefined;
+ }
+ 
+-export function tileData(t: Target): TileTargetData | undefined {
+-  const d = rec(t);
+-  return t.kind === 'tile' && typeof d.q === 'number' && typeof d.r === 'number' ? (d as TileTargetData) : undefined;
+-}
+-
+ /** The fauna kind of an animal target: data.kindId, else the id's head ("rabbit#3" → rabbit). */
+ export function faunaKindOf(t: Target): string | undefined {
+   if (t.kind !== 'fauna') return undefined;
+diff --git a/game/src/sim/contrib/thing-verbs.ts b/game/src/sim/contrib/thing-verbs.ts
+index 21c00d5..84d467a 100644
+--- a/game/src/sim/contrib/thing-verbs.ts
++++ b/game/src/sim/contrib/thing-verbs.ts
+@@ -4,20 +4,16 @@
+  *          share the fishing spot, return a stray sheep, shore up the seam …)  → `node.<verb>@node:<id>`
+  *   fauna  each animal's verbs in data/world/fauna.json (shoo, drive off, scare, watch, drive home …),
+  *          once per animal per verb per day                                       → `fauna.<verb>@fauna:<id>`
+- *   tile   the land act the ground in reach allows (lay stones, clear brush, mend the path), through
+- *          sim/land-acts.ts; target.data carries q, r and the live LandView       → `land.<act>@tile:<id>`
+  * Effects are bundles (contrib/use-effects). Pure: no Phaser/DOM.
+  */
+ import faunaJson from '../../data/world/fauna.json';
+ import { hasItem, itemName, removeItem } from '../goods/inventory';
+ import { NODES, nodeCharges, type NodeKind } from '../goods/nodes';
+-import { LAND_RULES, landActOn, workLand } from '../land-acts';
+ import { pushJuice } from '../packets';
+ import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '../play-session/action-providers';
+ import { targetActionId, type Target } from '../play-session/targets';
+ import type { SimState } from '../types/runtime';
+-import { itemVerbs } from './item-verbs';
+-import { faunaKindOf, heldItemOf, nodeData, tileData, townOfTarget, type FaunaTargetData } from './target-data';
++import { faunaKindOf, nodeData, townOfTarget, type FaunaTargetData } from './target-data';
+ import { applyBundle, bundleRefusal, markUsed, usedToday, type Bundle } from './use-effects';
+ 
+ export type ThingVerbRow = { id: string; label: string; short: string; needs?: Record<string, number>; oncePerDay?: boolean; effect: Bundle };
+@@ -93,30 +89,3 @@ registerTargetProvider({
+     return k ? actRow(state, actionId, t, 'fauna', faunaVerbs(k), (v) => `fauna.${v.id}@${t.id}`, 'fauna.handled') : false;
+   },
+ });
+-
+-/** The held item already offers this land act (stone → lay stones): don't list it twice. */
+-function heldCovers(t: Target, actId: string): boolean {
+-  const held = heldItemOf(t);
+-  return !!held && itemVerbs(held).some((v) => v.target === 'tile' && v.effect.do === 'land' && v.effect.act === actId);
+-}
+-
+-registerTargetProvider({
+-  id: 'tile-land',
+-  kinds: ['tile'],
+-  list(_state, t) {
+-    const d = tileData(t);
+-    const act = d?.view ? landActOn(d.view, d.q, d.r) : null;
+-    if (!act || heldCovers(t, act.id)) return [];
+-    return [{ id: targetActionId(`land.${act.id}`, t), label: act.label, short: act.short ?? act.label, family: 'work' }];
+-  },
+-  act(state, actionId, t) {
+-    const verb = verbOf(actionId);
+-    if (!verb.startsWith('land.')) return false;
+-    const actId = verb.slice('land.'.length);
+-    const d = tileData(t);
+-    if (!LAND_RULES.acts.some((a) => a.id === actId)) return false;
+-    if (!d?.view) return { ok: false, line: 'Stand by the ground you mean to work.' };
+-    const r = workLand(state, d.view, actId, d.q, d.r, d.towns ?? []);
+-    return { ok: r.ok, line: r.line };
+-  },
+-});
+diff --git a/game/src/sim/contrib/uses-check.ts b/game/src/sim/contrib/uses-check.ts
+index fedc6fc..27f8e96 100644
+--- a/game/src/sim/contrib/uses-check.ts
++++ b/game/src/sim/contrib/uses-check.ts
+@@ -3,14 +3,14 @@
+  *
+  * The rule, checked over the data tables (pure; no state):
+  *   item   ≥ 2 verbs in items.json (each a demand: it spends or needs the item), and ≥ 1 supply: a job's
+- *          work or recipe, a resource node, a roadside trader, the starting satchel, a land act's yield,
++ *          work or recipe, a resource node, a roadside trader, the starting satchel,
+  *          a patron's offer, or another verb's output (gain / buy).
+  *   node   ≥ 2 uses (Gather + its own verbs in resource-nodes.json + held-item verbs aimed at its kind),
+  *          and ≥ 1 supply (what Gather yields).
+  *   fauna  ≥ 2 uses (its own verbs in fauna.json + held-item verbs aimed at it), and ≥ 1 that supplies
+  *          something (spark, items, town goods, regrowth or a resident's thanks).
+- *   every verb (items, nodes, fauna, land acts, deeds) has a full label and a chip ≤ SHORT_MAX characters,
+- *          and points at things that exist (items, node and fauna kinds, jobs, land and stash acts).
++ *   every verb (items, nodes, fauna, deeds) has a full label and a chip ≤ SHORT_MAX characters,
++ *          and points at things that exist (items, node and fauna kinds, jobs, stash acts).
+  * Run: `npx vite-node game/scripts/uses-check.mts` (exits 1 on any error).
+  */
+ import deedsJson from '../../data/systems/interactions/deeds.json';
+@@ -18,7 +18,6 @@ import jobsJson from '../../data/items/jobs.json';
+ import patronsJson from '../../data/economy/patrons.json';
+ import { ITEMS } from '../goods/inventory';
+ import { NODES } from '../goods/nodes';
+-import { LAND_RULES } from '../land-acts';
+ import { SHORT_MAX } from '../play-session/verb-families';
+ import { allItemVerbs, type ItemVerbRow } from './item-verbs';
+ import { FAUNA, faunaVerbs, nodeVerbs, type ThingVerbRow } from './thing-verbs';
+@@ -29,8 +28,8 @@ export type UsesReport = { ok: boolean; errors: string[]; rows: UsesRow[] };
+ 
+ type Job = { id: string; yield: { itemId: string }[]; recipes: { out: Record<string, number> }[] };
+ const JOBS = (jobsJson as unknown as { jobs: Job[] }).jobs;
+-const TARGETS = new Set(['self', 'person', 'hearth', 'tile', 'node', 'shrine', 'grave', 'plot', 'wagon', 'board', 'chest', 'fauna']);
+-const DOES = new Set(['gift', 'memory', 'land', 'plan', 'deliver', 'stash', 'gather', 'alms', 'buy']);
++const TARGETS = new Set(['self', 'person', 'hearth', 'node', 'shrine', 'grave', 'plot', 'wagon', 'board', 'chest', 'fauna']);
++const DOES = new Set(['gift', 'memory', 'plan', 'deliver', 'stash', 'gather', 'alms', 'buy']);
+ const STASH_ACTS = new Set(['stash_hide', 'stash_store', 'stash_guard_hire', 'stash_withdraw']);
+ const BUNDLE_KEYS: (keyof Bundle)[] = ['spark', 'gain', 'town', 'despair', 'thanks', 'regrow', 'tend', 'charge'];
+ const an = (w: string): string => (/^[aeiou]/i.test(w) ? `an ${w}` : `a ${w}`);
+@@ -47,7 +46,6 @@ function supplyMap(): Map<string, string[]> {
+   for (const k of NODES.kinds) for (const y of k.yields) add(y.itemId, `gather ${an(k.name.toLowerCase())}`);
+   for (const id of ITEMS.market.goods) add(id, 'roadside traders');
+   for (const id of Object.keys(ITEMS.startingInventory)) add(id, 'in your satchel at the start');
+-  for (const a of LAND_RULES.acts) for (const id of Object.keys(a.yield ?? {})) add(id, a.label.toLowerCase());
+   for (const p of (patronsJson as { patrons: { name: string; deals: { offer: { coin?: number; goods?: Record<string, number> } }[] }[] }).patrons) {
+     for (const d of p.deals) {
+       if (d.offer.coin) add('coin', `${p.name} deal`);
+@@ -76,7 +74,6 @@ export function checkUses(): UsesReport {
+   const nodeKinds = new Set(NODES.kinds.map((k) => k.id));
+   const faunaKinds = new Set(FAUNA.map((f) => f.id));
+   const jobs = new Set(JOBS.map((j) => j.id));
+-  const landActs = new Set(LAND_RULES.acts.map((a) => a.id));
+   const sup = supplyMap();
+   const itemRefs = (where: string, rec?: Record<string, number>): void => {
+     for (const id of Object.keys(rec ?? {})) if (!items.has(id)) errors.push(`${where}: unknown item ${id}`);
+@@ -101,8 +98,6 @@ export function checkUses(): UsesReport {
+       const e = v.effect;
+       if (e.do && !DOES.has(e.do)) errors.push(`${where}: unknown effect ${e.do}`);
+       if (!e.do && !BUNDLE_KEYS.some((k) => e[k] !== undefined)) errors.push(`${where}: effect does nothing`);
+-      if (e.do === 'land' && !landActs.has(e.act ?? '')) errors.push(`${where}: unknown land act ${e.act}`);
+-      if (e.do === 'land' && v.target !== 'tile') errors.push(`${where}: a land act needs a tile target`);
+       if (e.do === 'stash' && !STASH_ACTS.has(e.act ?? '')) errors.push(`${where}: unknown stash act ${e.act}`);
+       if ((e.do === 'gift' || e.do === 'alms' || e.do === 'buy') && v.target !== 'person') errors.push(`${where}: ${e.do} needs a person target`);
+       if (e.do === 'plan' && v.target !== 'plot') errors.push(`${where}: plan needs a plot target`);
+@@ -116,7 +111,7 @@ export function checkUses(): UsesReport {
+     if (new Set(verbs.map((v) => v.id)).size !== verbs.length) errors.push(`item ${item.id}: duplicate verb ids`);
+     if (verbs.length < 2) errors.push(`item ${item.id}: ${verbs.length} use(s), needs at least 2`);
+     const s = sup.get(item.id) ?? [];
+-    if (!s.length) errors.push(`item ${item.id}: no supply (job, node, trader, start, land act, patron or verb output)`);
++    if (!s.length) errors.push(`item ${item.id}: no supply (job, node, trader, start, patron or verb output)`);
+     rows.push({ kind: 'item', id: item.id, uses: verbs.map((v) => v.label), supplies: [...new Set(s)] });
+   }
+ 
+@@ -144,7 +139,6 @@ export function checkUses(): UsesReport {
+     rows.push({ kind: 'fauna', id: f.id, uses, supplies: giving.map((v) => v.label) });
+   }
+ 
+-  for (const a of LAND_RULES.acts) checkLabel(errors, `land ${a.id}`, { id: a.id, label: a.label, short: a.short ?? a.label });
+   const families = new Set((deedsJson as { families: { id: string; aliases?: string[] }[] }).families.flatMap((f) => [f.id, ...(f.aliases ?? [])]));
+   for (const d of (deedsJson as { deeds: { id: string; label: string; short?: string; family?: string }[] }).deeds) {
+     checkLabel(errors, `deed ${d.id}`, { id: d.id, label: d.label, short: d.short ?? d.label });
+diff --git a/game/src/sim/economy/roads.ts b/game/src/sim/economy/roads.ts
+index 3c2681e..829e379 100644
+--- a/game/src/sim/economy/roads.ts
++++ b/game/src/sim/economy/roads.ts
+@@ -11,10 +11,7 @@
+  * Pure + deterministic: no Phaser/DOM/Math.random.
+  */
+ import { registerDawnTick } from '../dawn-ticks';
+-import { hasItem, itemName, removeItem } from '../goods/inventory';
+ import { happeningTownName } from '../happenings';
+-import { labourLeft } from '../land-acts';
+-import type { WorldLayout } from '../map/world-layout';
+ import { deriveRng } from '../rng';
+ import type { SimState } from '../types/runtime';
+ import type { EconomyRouteState } from './economy-lod-types';
+@@ -36,12 +33,6 @@ export const ROADS = {
+   reopenAt: 0.45,
+   wornBelow: 0.6,
+   floor: 0.05,
+-  /** Mending by hand: what it takes, the day's labour it uses, what it gives back. */
+-  mendCost: { stone: 1, timber: 1 } as Record<string, number>,
+-  mendLabour: 1,
+-  mendGain: 0.12,
+-  /** A road this sound or better has nothing to mend (the crews' ceiling: a kept road shows nothing). */
+-  mendableBelow: 0.85,
+   newsKeepDays: 8,
+   newsCap: 40,
+ };
+@@ -183,61 +174,6 @@ export function guardCarts(state: SimState): void {
+   }
+ }
+ 
+-/** True when this road has something for a pair of hands to mend. */
+-export const roadNeedsMending = (r: Pick<EconomyRouteState, 'condition' | 'broken'>): boolean =>
+-  r.broken || r.condition < ROADS.mendableBelow;
+-
+-const costText = (cost: Record<string, number>): string =>
+-  Object.entries(cost).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`).join(' and ');
+-
+-/** The player mends a stretch of road with stone and timber (one share of the day's labour). */
+-export function mendRoad(state: SimState, routeId: string): { ok: boolean; line: string } {
+-  const r = routeById(state, routeId);
+-  if (!r) return { ok: false, line: 'This is no road anyone keeps.' };
+-  if (!roadNeedsMending(r)) return { ok: false, line: 'The road is sound here. Nothing to mend.' };
+-  if (labourLeft(state) < ROADS.mendLabour) return { ok: false, line: 'Your back is done for today. Rest, and mend the road tomorrow.' };
+-  for (const [id, n] of Object.entries(ROADS.mendCost)) {
+-    if (!hasItem(state, id, n)) return { ok: false, line: `Mending the road takes ${costText(ROADS.mendCost)}. You have ${state.inventory?.[id] ?? 0} ${itemName(id).toLowerCase()}.` };
+-  }
+-  for (const [id, n] of Object.entries(ROADS.mendCost)) removeItem(state, id, n);
+-  state.landWork!.used += ROADS.mendLabour;
+-  const wasBroken = r.broken;
+-  r.condition = Math.min(1, r.condition + ROADS.mendGain);
+-  if (r.broken && r.condition >= ROADS.reopenAt) r.broken = false;
+-  noteRoadNews(state, { routeId, kind: 'mended', by: 'player' });
+-  if (wasBroken && !r.broken) return { ok: true, line: 'You set stone in the worst of it and lay timber over the ruts. The road will carry a cart again.' };
+-  if (r.broken) return { ok: true, line: 'You set stone and timber into the break. Not enough yet: it needs more hands than yours.' };
+-  return { ok: true, line: `You set stone and timber into the ruts. The road is ${roadWord(r)} here now.` };
+-}
+-
+-// ---- Which road a tile belongs to (the tile in front of the player on a road) ----
+-
+-const CELLS = new WeakMap<WorldLayout, Map<string, string>>();
+-
+-/** The road a map tile lies on (within a tile of its line), or null. Cached per layout. */
+-export function roadAt(layout: WorldLayout, q: number, r: number): string | null {
+-  let cells = CELLS.get(layout);
+-  if (!cells) {
+-    cells = new Map();
+-    for (const route of layout.routes) {
+-      const path = route.path;
+-      for (let i = 0; i + 1 < path.length; i++) {
+-        const a = path[i]!, b = path[i + 1]!;
+-        const steps = Math.max(1, Math.ceil(Math.hypot(b.q - a.q, b.r - a.r) * 2));
+-        for (let s = 0; s <= steps; s++) {
+-          const cq = Math.round(a.q + ((b.q - a.q) * s) / steps), cr = Math.round(a.r + ((b.r - a.r) * s) / steps);
+-          for (let dr = -1; dr <= 1; dr++) for (let dq = -1; dq <= 1; dq++) {
+-            const k = `${cq + dq},${cr + dr}`;
+-            if (!cells.has(k)) cells.set(k, route.id);
+-          }
+-        }
+-      }
+-    }
+-    CELLS.set(layout, cells);
+-  }
+-  return cells.get(`${q},${r}`) ?? null;
+-}
+-
+ // ---- Road news through people ----
+ 
+ const otherEnd = (r: EconomyRouteState, townId: string): string => (r.fromTownId === townId ? r.toTownId : r.fromTownId);
+diff --git a/game/src/sim/land-acts.ts b/game/src/sim/land-acts.ts
+deleted file mode 100644
+index 4d32812..0000000
+--- a/game/src/sim/land-acts.ts
++++ /dev/null
+@@ -1,162 +0,0 @@
+-/**
+- * Land acts: the player changes the ground beside them. Lay stepping stones into shallow water (a
+- * ford), clear brush (forest to open ground), mend a path (ground to a worked track). Each act is a
+- * tile edit (saved, drawn, read by passability and the navigator), costs items and a share of the
+- * day's labour, and is talked about in the nearest town the next dawn. Rules and costs come from
+- * data/world/land-acts.json. Pure: no Phaser/DOM, no archetype branches.
+- */
+-import table from '../data/world/land-acts.json';
+-import { addItem, hasItem, itemName, removeItem } from './goods/inventory';
+-import { setTileEdit } from './map/tile-edits';
+-import type { TerrainAccess } from './map/terrain-access';
+-import type { SimState } from './types/runtime';
+-
+-export type LandActRow = {
+-  id: string; label: string; short?: string; on: string[]; becomes: string;
+-  cost: Record<string, number>; labour: number; yield?: Record<string, number>;
+-  done: string; heard: string;
+-};
+-export type LandRules = {
+-  labourPerDay: number; shallowReach: number; noticeRadiusTiles: number; logCap: number; clearsProps: string[]; acts: LandActRow[];
+-};
+-export type LandWorkEntry = { act: string; q: number; r: number; day: number; townId?: string; townName?: string };
+-export type LandWork = { day: number; used: number; log: LandWorkEntry[] };
+-/**
+- * The terrain a land act reads: the live, edit-aware access the overworld walks on, plus (optional)
+- * what is drawn there: the tile's drawn ground id and the props standing on it.
+- */
+-export type LandView = Pick<TerrainAccess, 'biome' | 'natural' | 'edit' | 'onRoad' | 'inTown' | 'passable'> & {
+-  drawn?: (q: number, r: number) => { ground?: string; props: string[] };
+-};
+-export type LandTown = { id: string; q: number; r: number; name?: string };
+-export type LandResult = { ok: boolean; line: string; act?: string; q?: number; r?: number };
+-
+-export const LAND_RULES = table as unknown as LandRules;
+-const ACT_BY_ID = new Map(LAND_RULES.acts.map((a) => [a.id, a]));
+-const CLEARS = new Set(LAND_RULES.clearsProps);
+-
+-function work(state: SimState): LandWork {
+-  const w = (state.landWork ??= { day: state.day, used: 0, log: [] });
+-  if (w.day !== state.day) { w.day = state.day; w.used = 0; }
+-  return w;
+-}
+-
+-/** Labour left today (refills each dawn). */
+-export function labourLeft(state: SimState): number {
+-  return Math.max(0, LAND_RULES.labourPerDay - work(state).used);
+-}
+-
+-/** Shallow: naturally dry land within shallowReach tiles (a bank, not open lake). */
+-function shallow(view: LandView, q: number, r: number): boolean {
+-  const R = LAND_RULES.shallowReach;
+-  for (let dr = -R; dr <= R; dr++) for (let dq = -R; dq <= R; dq++) if (view.natural(q + dq, r + dr) !== 'water') return true;
+-  return false;
+-}
+-
+-/** Which act (if any) the ground at (q,r) allows, by terrain alone (costs are checked on work). */
+-export function landActOn(view: LandView, q: number, r: number): LandActRow | null {
+-  const ground = view.biome(q, r), edited = view.edit(q, r);
+-  for (const a of LAND_RULES.acts) {
+-    if (!a.on.includes(ground) || edited === a.becomes) continue;
+-    if (ground === 'water') {
+-      if (edited === undefined && !view.passable(q, r) && shallow(view, q, r)) return a;
+-      continue;
+-    }
+-    if (view.inTown(q, r) || view.onRoad(q, r)) continue;
+-    // Streams and farm tracks are drawn over the land; a farmstead, fence or field is in the way.
+-    const drawn = view.drawn?.(q, r);
+-    if (drawn && (drawn.ground === 'stream' || drawn.ground?.startsWith('road') || drawn.props.some((p) => !CLEARS.has(p)))) return null;
+-    return a;
+-  }
+-  return null;
+-}
+-
+-/** Tiles in reach, nearest first: the one faced, the one stood on, then the 4 and the diagonal neighbours. */
+-export function reachTiles(at: { q: number; r: number }, face: { dx: number; dy: number }): { q: number; r: number }[] {
+-  const out: { q: number; r: number }[] = [];
+-  const add = (dq: number, dr: number) => { if (!out.some((t) => t.q === at.q + dq && t.r === at.r + dr)) out.push({ q: at.q + dq, r: at.r + dr }); };
+-  const fx = Math.sign(face.dx), fy = Math.sign(face.dy);
+-  if (fx || fy) add(fx, fy);
+-  add(0, 0);
+-  for (const [dq, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]] as const) add(dq, dr);
+-  return out;
+-}
+-
+-/** Why `act` cannot be paid for right now (labour or items), or null when it can. */
+-function shortfall(state: SimState, act: LandActRow): string | null {
+-  if (LAND_RULES.labourPerDay - work(state).used < act.labour) return 'Your back is done for today. Rest, and work the land tomorrow.';
+-  for (const [id, n] of Object.entries(act.cost)) {
+-    if (!hasItem(state, id, n)) return `${act.label} needs ${costText(act.cost)}. You have ${state.inventory?.[id] ?? 0} ${itemName(id).toLowerCase()}.`;
+-  }
+-  return null;
+-}
+-
+-/**
+- * The tile in reach to work: the nearest one the player can pay for, else the nearest workable one
+- * (so the refusal names what is missing). With `itemId`, only acts that use that item (F with stone selected).
+- */
+-export function pickLandWork(state: SimState, view: LandView, at: { q: number; r: number }, face: { dx: number; dy: number }, itemId?: string): { act: LandActRow; q: number; r: number } | null {
+-  let first: { act: LandActRow; q: number; r: number } | null = null;
+-  for (const t of reachTiles(at, face)) {
+-    const act = landActOn(view, t.q, t.r);
+-    if (!act || (itemId && !((act.cost[itemId] ?? 0) > 0))) continue;
+-    if (!shortfall(state, act)) return { act, q: t.q, r: t.r };
+-    first ??= { act, q: t.q, r: t.r };
+-  }
+-  return first;
+-}
+-
+-const costText = (cost: Record<string, number>) => Object.entries(cost).map(([id, n]) => `${n} ${itemName(id).toLowerCase()}`).join(' and ');
+-
+-/** Do one act on one tile: checks the ground, labour and costs, then edits the land. */
+-export function workLand(state: SimState, view: LandView, actId: string, q: number, r: number, towns: LandTown[] = []): LandResult {
+-  const act = ACT_BY_ID.get(actId);
+-  if (!act) return { ok: false, line: 'Nothing to do here.' };
+-  if (landActOn(view, q, r)?.id !== act.id) return { ok: false, line: `You can't ${act.label.toLowerCase()} there.` };
+-  const short = shortfall(state, act);
+-  if (short) return { ok: false, line: short };
+-  const w = work(state);
+-  for (const [id, n] of Object.entries(act.cost)) removeItem(state, id, n);
+-  for (const [id, n] of Object.entries(act.yield ?? {})) addItem(state, id, n);
+-  w.used += act.labour;
+-  setTileEdit(state, q, r, act.becomes);
+-  const town = nearestTown(towns, q, r);
+-  w.log.push({ act: act.id, q, r, day: state.day, ...(town ? { townId: town.id, townName: town.name ?? prettyTown(town.id) } : {}) });
+-  if (w.log.length > LAND_RULES.logCap) w.log.splice(0, w.log.length - LAND_RULES.logCap);
+-  return { ok: true, line: act.done, act: act.id, q, r };
+-}
+-
+-/** X: work whatever ground is in reach. Null when `itemId` was given and nothing in reach uses it. */
+-export function workLandHere(state: SimState, view: LandView, at: { q: number; r: number }, face: { dx: number; dy: number }, towns: LandTown[] = [], itemId?: string): LandResult | null {
+-  const pick = pickLandWork(state, view, at, face, itemId);
+-  if (!pick) return itemId ? null : { ok: false, line: 'Nothing here to work. Stand by shallow water, brush or open ground.' };
+-  return workLand(state, view, pick.act.id, pick.q, pick.r, towns);
+-}
+-
+-function nearestTown(towns: LandTown[], q: number, r: number): LandTown | undefined {
+-  let best: LandTown | undefined, bd = LAND_RULES.noticeRadiusTiles;
+-  for (const t of towns) { const d = Math.hypot(t.q - q, t.r - r); if (d <= bd) { bd = d; best = t; } }
+-  return best;
+-}
+-
+-const prettyTown = (id: string) => id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+-
+-/** Dawn: townsfolk talk about yesterday's work near their town (one line per town, at most two). */
+-export function landDawnLines(state: SimState): string[] {
+-  const log = state.landWork?.log ?? [];
+-  const byTown = new Map<string, LandWorkEntry[]>();
+-  for (const e of log) if (e.townId && e.day === state.day - 1) byTown.set(e.townId, [...(byTown.get(e.townId) ?? []), e]);
+-  const out: string[] = [];
+-  for (const [townId, entries] of byTown) {
+-    if (out.length >= 2) break;
+-    // Data order is notability order (stones before paths before brush).
+-    const act = LAND_RULES.acts.find((a) => entries.some((e) => e.act === a.id));
+-    if (!act) continue;
+-    const folk = Object.values(state.people).filter((p) => p.townId === townId).sort((a, b) => a.id.localeCompare(b.id));
+-    const who = folk.length ? folk[state.day % folk.length]! : undefined;
+-    const town = entries[0]!.townName ?? prettyTown(townId);
+-    const name = who ? (who.name ?? prettyTown(who.id)).split(' ')[0] : 'A traveller';
+-    out.push(`${name} says someone ${act.heard} outside ${town}.`);
+-  }
+-  return out;
+-}
+diff --git a/game/src/sim/types/runtime.ts b/game/src/sim/types/runtime.ts
+index e805d3c..69c39d0 100644
+--- a/game/src/sim/types/runtime.ts
++++ b/game/src/sim/types/runtime.ts
+@@ -161,8 +161,6 @@ export type SimState = {
+   hearthKeepsakes?: Record<string, { day: number; by: string }>;
+   /** Per-chunk tile edits ("cx,cy" -> "q,r" -> biomeId); generated tiles are never saved. */
+   tileEdits?: import('../map/tile-edits').TileEdits;
+-  /** Land the player worked (sim/land-acts): today's labour and a short log for townsfolk to notice. */
+-  landWork?: import('../land-acts').LandWork;
+   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
+   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
+   /** Cargo the player carries for a person: delivered to someone in another town. */
+diff --git a/game/src/world/things/index.ts b/game/src/world/things/index.ts
+index d272085..ba63fc5 100644
+--- a/game/src/world/things/index.ts
++++ b/game/src/world/things/index.ts
+@@ -1,6 +1,6 @@
+ /**
+  * Every interactable world Thing in one place: town fixtures (noticeboard, signpost, hearth, doors),
+- * nodes, facilities, stash chests, ground items, plots, graves, and the workable tile in front of the player.
++ * nodes, facilities, stash chests, ground items, plots, graves.
+  * Keys are `${kind}:${id}`; each target carries what its sim provider (sim/contrib/objects, stash) needs.
+  */
+ import type Phaser from 'phaser';
+@@ -9,8 +9,6 @@ import type { SimState } from '../../sim/types/runtime';
+ import type { WorldLayout } from '../../sim/map/world-layout';
+ import type { TerrainAccess } from '../../sim/map/terrain-access';
+ import { DOOR_REACH, INTERIOR_TITLE } from '../../sim/map/interiors';
+-import { pickLandWork, reachTiles, type LandTown, type LandView } from '../../sim/land-acts';
+-import { roadAt, roadNeedsMending, roadWord } from '../../sim/economy/roads';
+ import { TILE_PX } from '../../sim/map/constants';
+ import { tileFoot, type Pt } from '../depth';
+ import type { TownSpots } from '../town-spots';
+@@ -22,27 +20,11 @@ import { createGroundItems, type GroundLayer } from './ground';
+ import { createPlots, type PlotsLayer } from './plots';
+ import { createGraves, type GravesLayer } from './graves';
+ 
+-/** What a `tile:<q>,<r>` Thing carries: the faced workable tile and everything sim/land-acts needs to work it. */
+-export type TileData = {
+-  q: number; r: number;
+-  /** The land act this tile allows (data/world/land-acts.json id). */
+-  act: string;
+-  /** Where the player stands and faces (pickLandWork / workLandHere take these). */
+-  from: { q: number; r: number };
+-  facing: { dx: number; dy: number };
+-  /** Live, edit-aware terrain plus what is drawn on each tile. */
+-  view: LandView;
+-  towns: LandTown[];
+-};
+-
+-const TILE_LABEL: Record<string, string> = { lay_stones: 'Shallows', clear_brush: 'Brush', mend_path: 'Open ground' };
+-const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44, TILE_REACH = 56;
++const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44;
+ 
+ export type WorldThings = {
+   nodes: NodesLayer; facilities: FacilitiesLayer; chests: ChestsLayer; ground: GroundLayer; plots: PlotsLayer; graves: GravesLayer;
+   things(near: Pt, radius: number, facing?: { dx: number; dy: number }): Thing[];
+-  /** The tile Thing in front of a point (null when nothing there can be worked). */
+-  tileThing(at: Pt, facing: { dx: number; dy: number }): Thing | null;
+   setVisible(on: boolean): void;
+   destroy(): void;
+ };
+@@ -65,8 +47,6 @@ export function createWorldThings(o: {
+   const ground = createGroundItems(scene, getState);
+   const plots = createPlots(scene, getState);
+   const graves = createGraves(scene, getState, (townId, n) => byTown.get(townId)?.grave(n));
+-  const landTowns: LandTown[] = o.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: o.nameOf(t.id) }));
+-  const view: LandView = { ...o.terrain, drawn: o.drawn };
+ 
+   const fixtures = (near: Pt, radius: number): Thing[] => {
+     const out: Thing[] = [];
+@@ -85,44 +65,13 @@ export function createWorldThings(o: {
+     return out;
+   };
+ 
+-  const tileThing = (at: Pt, facing: { dx: number; dy: number }): Thing | null => {
+-    const st = getState();
+-    if (!st) return null;
+-    const from = { q: Math.floor(at.x / TILE_PX), r: Math.floor((at.y - 2) / TILE_PX) };
+-    // On a worn road, the road comes first; step off it to work the land beside.
+-    const road = roadThing(st, from, facing);
+-    if (road) return road;
+-    const pick = pickLandWork(st, view, from, facing);
+-    if (!pick) return null;
+-    const f = tileFoot(pick.q, pick.r);
+-    const id = `${pick.q},${pick.r}`;
+-    const data: TileData = { q: pick.q, r: pick.r, act: pick.act.id, from, facing: { ...facing }, view, towns: landTowns };
+-    return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: TILE_LABEL[pick.act.id] ?? pick.act.label, target: { kind: 'tile', id, data } };
+-  };
+-
+-  /** A worn or broken road in front of you (or under you), outside towns: `tile:road:<q>,<r>` with its road id. */
+-  const roadThing = (st: SimState, from: { q: number; r: number }, facing: { dx: number; dy: number }): Thing | null => {
+-    for (const t of reachTiles(from, facing).slice(0, 2)) {
+-      if (!o.terrain.onRoad(t.q, t.r) || o.terrain.inTown(t.q, t.r)) continue;
+-      const roadId = roadAt(o.layout, t.q, t.r);
+-      const route = roadId ? st.economyRoutes?.find((r) => r.id === roadId) : undefined;
+-      if (!route || !roadNeedsMending(route)) return null;
+-      const f = tileFoot(t.q, t.r);
+-      const id = `road:${t.q},${t.r}`;
+-      return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: route.broken ? 'Broken road' : `Road · ${roadWord(route)}`, target: { kind: 'tile', id, data: { q: t.q, r: t.r, roadId, towns: landTowns } } };
+-    }
+-    return null;
+-  };
+-
+   const all = [nodes, facilities, chests, ground, plots, graves];
+   return {
+     nodes, facilities, chests, ground, plots, graves,
+     things(near, radius, facing) {
+       const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius)];
+-      if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }
+       return out;
+     },
+-    tileThing,
+     setVisible(on) { for (const l of all) l.setVisible(on); },
+     destroy() { for (const l of all) l.destroy(); },
+   };

@@ -1,6 +1,6 @@
 /**
  * Every interactable world Thing in one place: town fixtures (noticeboard, signpost, hearth, doors),
- * nodes, facilities, stash chests, ground items, plots, graves, and the workable tile in front of the player.
+ * nodes, facilities, stash chests, ground items, plots, graves.
  * Keys are `${kind}:${id}`; each target carries what its sim provider (sim/contrib/objects, stash) needs.
  */
 import type Phaser from 'phaser';
@@ -9,8 +9,6 @@ import type { SimState } from '../../sim/types/runtime';
 import type { WorldLayout } from '../../sim/map/world-layout';
 import type { TerrainAccess } from '../../sim/map/terrain-access';
 import { DOOR_REACH, INTERIOR_TITLE } from '../../sim/map/interiors';
-import { pickLandWork, reachTiles, type LandTown, type LandView } from '../../sim/land-acts';
-import { roadAt, roadNeedsMending, roadWord } from '../../sim/economy/roads';
 import { TILE_PX } from '../../sim/map/constants';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
@@ -22,27 +20,11 @@ import { createGroundItems, type GroundLayer } from './ground';
 import { createPlots, type PlotsLayer } from './plots';
 import { createGraves, type GravesLayer } from './graves';
 
-/** What a `tile:<q>,<r>` Thing carries: the faced workable tile and everything sim/land-acts needs to work it. */
-export type TileData = {
-  q: number; r: number;
-  /** The land act this tile allows (data/world/land-acts.json id). */
-  act: string;
-  /** Where the player stands and faces (pickLandWork / workLandHere take these). */
-  from: { q: number; r: number };
-  facing: { dx: number; dy: number };
-  /** Live, edit-aware terrain plus what is drawn on each tile. */
-  view: LandView;
-  towns: LandTown[];
-};
-
-const TILE_LABEL: Record<string, string> = { lay_stones: 'Shallows', clear_brush: 'Brush', mend_path: 'Open ground' };
-const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44, TILE_REACH = 56;
+const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44;
 
 export type WorldThings = {
   nodes: NodesLayer; facilities: FacilitiesLayer; chests: ChestsLayer; ground: GroundLayer; plots: PlotsLayer; graves: GravesLayer;
   things(near: Pt, radius: number, facing?: { dx: number; dy: number }): Thing[];
-  /** The tile Thing in front of a point (null when nothing there can be worked). */
-  tileThing(at: Pt, facing: { dx: number; dy: number }): Thing | null;
   setVisible(on: boolean): void;
   destroy(): void;
 };
@@ -65,8 +47,6 @@ export function createWorldThings(o: {
   const ground = createGroundItems(scene, getState);
   const plots = createPlots(scene, getState);
   const graves = createGraves(scene, getState, (townId, n) => byTown.get(townId)?.grave(n));
-  const landTowns: LandTown[] = o.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: o.nameOf(t.id) }));
-  const view: LandView = { ...o.terrain, drawn: o.drawn };
 
   const fixtures = (near: Pt, radius: number): Thing[] => {
     const out: Thing[] = [];
@@ -85,44 +65,13 @@ export function createWorldThings(o: {
     return out;
   };
 
-  const tileThing = (at: Pt, facing: { dx: number; dy: number }): Thing | null => {
-    const st = getState();
-    if (!st) return null;
-    const from = { q: Math.floor(at.x / TILE_PX), r: Math.floor((at.y - 2) / TILE_PX) };
-    // On a worn road, the road comes first; step off it to work the land beside.
-    const road = roadThing(st, from, facing);
-    if (road) return road;
-    const pick = pickLandWork(st, view, from, facing);
-    if (!pick) return null;
-    const f = tileFoot(pick.q, pick.r);
-    const id = `${pick.q},${pick.r}`;
-    const data: TileData = { q: pick.q, r: pick.r, act: pick.act.id, from, facing: { ...facing }, view, towns: landTowns };
-    return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: TILE_LABEL[pick.act.id] ?? pick.act.label, target: { kind: 'tile', id, data } };
-  };
-
-  /** A worn or broken road in front of you (or under you), outside towns: `tile:road:<q>,<r>` with its road id. */
-  const roadThing = (st: SimState, from: { q: number; r: number }, facing: { dx: number; dy: number }): Thing | null => {
-    for (const t of reachTiles(from, facing).slice(0, 2)) {
-      if (!o.terrain.onRoad(t.q, t.r) || o.terrain.inTown(t.q, t.r)) continue;
-      const roadId = roadAt(o.layout, t.q, t.r);
-      const route = roadId ? st.economyRoutes?.find((r) => r.id === roadId) : undefined;
-      if (!route || !roadNeedsMending(route)) return null;
-      const f = tileFoot(t.q, t.r);
-      const id = `road:${t.q},${t.r}`;
-      return { key: `tile:${id}`, kind: 'tile', id, x: f.x, y: f.y, reach: TILE_REACH, label: route.broken ? 'Broken road' : `Road · ${roadWord(route)}`, target: { kind: 'tile', id, data: { q: t.q, r: t.r, roadId, towns: landTowns } } };
-    }
-    return null;
-  };
-
   const all = [nodes, facilities, chests, ground, plots, graves];
   return {
     nodes, facilities, chests, ground, plots, graves,
     things(near, radius, facing) {
       const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius)];
-      if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }
       return out;
     },
-    tileThing,
     setVisible(on) { for (const l of all) l.setVisible(on); },
     destroy() { for (const l of all) l.destroy(); },
   };

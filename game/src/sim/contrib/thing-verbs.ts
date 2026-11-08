@@ -4,20 +4,16 @@
  *          share the fishing spot, return a stray sheep, shore up the seam …)  → `node.<verb>@node:<id>`
  *   fauna  each animal's verbs in data/world/fauna.json (shoo, drive off, scare, watch, drive home …),
  *          once per animal per verb per day                                       → `fauna.<verb>@fauna:<id>`
- *   tile   the land act the ground in reach allows (lay stones, clear brush, mend the path), through
- *          sim/land-acts.ts; target.data carries q, r and the live LandView       → `land.<act>@tile:<id>`
  * Effects are bundles (contrib/use-effects). Pure: no Phaser/DOM.
  */
 import faunaJson from '../../data/world/fauna.json';
 import { hasItem, itemName, removeItem } from '../goods/inventory';
 import { NODES, nodeCharges, type NodeKind } from '../goods/nodes';
-import { LAND_RULES, landActOn, workLand } from '../land-acts';
 import { pushJuice } from '../packets';
 import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '../play-session/action-providers';
 import { targetActionId, type Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
-import { itemVerbs } from './item-verbs';
-import { faunaKindOf, heldItemOf, nodeData, tileData, townOfTarget, type FaunaTargetData } from './target-data';
+import { faunaKindOf, nodeData, townOfTarget, type FaunaTargetData } from './target-data';
 import { applyBundle, bundleRefusal, markUsed, usedToday, type Bundle } from './use-effects';
 
 export type ThingVerbRow = { id: string; label: string; short: string; needs?: Record<string, number>; oncePerDay?: boolean; effect: Bundle };
@@ -91,32 +87,5 @@ registerTargetProvider({
   act(state, actionId, t) {
     const k = faunaKindOf(t);
     return k ? actRow(state, actionId, t, 'fauna', faunaVerbs(k), (v) => `fauna.${v.id}@${t.id}`, 'fauna.handled') : false;
-  },
-});
-
-/** The held item already offers this land act (stone → lay stones): don't list it twice. */
-function heldCovers(t: Target, actId: string): boolean {
-  const held = heldItemOf(t);
-  return !!held && itemVerbs(held).some((v) => v.target === 'tile' && v.effect.do === 'land' && v.effect.act === actId);
-}
-
-registerTargetProvider({
-  id: 'tile-land',
-  kinds: ['tile'],
-  list(_state, t) {
-    const d = tileData(t);
-    const act = d?.view ? landActOn(d.view, d.q, d.r) : null;
-    if (!act || heldCovers(t, act.id)) return [];
-    return [{ id: targetActionId(`land.${act.id}`, t), label: act.label, short: act.short ?? act.label, family: 'work' }];
-  },
-  act(state, actionId, t) {
-    const verb = verbOf(actionId);
-    if (!verb.startsWith('land.')) return false;
-    const actId = verb.slice('land.'.length);
-    const d = tileData(t);
-    if (!LAND_RULES.acts.some((a) => a.id === actId)) return false;
-    if (!d?.view) return { ok: false, line: 'Stand by the ground you mean to work.' };
-    const r = workLand(state, d.view, actId, d.q, d.r, d.towns ?? []);
-    return { ok: r.ok, line: r.line };
   },
 });
