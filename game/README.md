@@ -22,7 +22,7 @@ npm run game:dev
 Then open http://localhost:5174.
 
 - Dev server: `npm run game:dev` (port 5174)
-- Type check: `npm run game:check`
+- Type check and unit tests: `npm run game:check` (tests alone: `npm run game:test`)
 - Build: `npm run game:build` (writes `game/dist`; open with `npx vite preview --config game/vite.config.ts`)
 - The old game still runs on the same branch with `npm run dev` (port 5173).
 
@@ -105,7 +105,7 @@ Each feature names the area that owns how it looks and is reached. The content a
 - **lead:** `src/app/**`, `src/main.ts`, this README, merging
 
 ## Working rules for agents
-- Don't write tests. Before the PR, run `npm run game:check` and `npm run game:build`.
+- Tests live only under `game/tests/`: small Vitest suites for pure sim modules (`npm run game:test`, which `npm run game:check` runs after the type check); browser tests under `game/tests/e2e`. Whole-world proofs are scripts in `game/scripts/check-*.mts`. Before the PR, run `npm run game:check` and `npm run game:build`.
 - Keep every export your stub has. You may add to your API in `src/app/contracts.ts`; say so in the PR.
 - Register QA hooks with `registerDevHook` from `src/app/dev-hooks.ts`.
 - Commit with `git -c user.name=alexdepasquale2-jpg -c user.email=alexdepasquale2@gmail.com commit`, and end messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.

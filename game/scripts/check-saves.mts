@@ -36,7 +36,10 @@ function bootSession(): { session: PlaySession; state: SimState } {
   return { session, state: session.getState()! };
 }
 
-/** v1/v2/v3 example blobs, from one booted session. v2 is the v3 blob with a ground item on the old map scale. */
+/**
+ * v1..v4 example blobs, from one booted session. v2 is the v3 blob with a ground item on the old map scale;
+ * v3 is the v4 blob without the civic registry (sim.civic), which v4 added.
+ */
 function writeFixtures(): void {
   const { session, state } = bootSession();
   const v1: SaveBlob = { version: 1, seed: SEED, tick: state.day, npcs: [], coin: (inventoryOf(state).coin ?? 0) + 7 };
@@ -47,12 +50,14 @@ function writeFixtures(): void {
   const old = { x: (base.q + 2) * TILE_PX, y: (base.r + 1) * TILE_PX };
   addItem(state, itemId, 1);
   dropItem(state, itemId, old);
-  const v2 = { ...saveState(state), version: 2 };
-  // v3: the same item where the 40x world puts it now.
-  const v3 = saveState(state);
-  for (const g of (v3.sim!.groundItems as { x: number; y: number }[]) ?? []) Object.assign(g, rescalePoint(settlements, SEED, g.x, g.y));
+  // v4: the same item where the 40x world puts it now; v3 is that without the civic registry.
+  const v4 = saveState(state);
+  for (const g of (v4.sim!.groundItems as { x: number; y: number }[]) ?? []) Object.assign(g, rescalePoint(settlements, SEED, g.x, g.y));
+  const { civic: _civic, ...v3sim } = v4.sim!;
+  const v3: SaveBlob = { ...v4, version: 3, sim: v3sim };
+  const v2 = { ...v3, version: 2, sim: { ...v3sim, groundItems: saveState(state).sim!.groundItems } };
 
-  for (const [name, blob] of [['v1', v1], ['v2', v2], ['v3', v3]] as const) {
+  for (const [name, blob] of [['v1', v1], ['v2', v2], ['v3', v3], ['v4', v4]] as const) {
     writeFileSync(join(DIR, `${name}.json`), serializeSave(blob as SaveBlob) + '\n');
     console.log(`wrote save-fixtures/${name}.json (version ${blob.version}, day ${blob.tick})`);
   }
@@ -97,6 +102,26 @@ function checkRescale(): Row {
   return { file: 'v2 vs v3', ok: a !== '' && a === b, note: a === b ? `ground items migrate to the v3 place (${a})` : `v2 gives ${a || 'none'}, v3 has ${b || 'none'}` };
 }
 
+/**
+ * v3 -> v4 builds the civic registry: a v3 company (here one laid into the v3 fixture by hand) comes back as
+ * a working site run by its owner, so no old company stops for want of a manager. v4 keeps its registry.
+ */
+function checkCivicMigration(): Row {
+  const v3 = JSON.parse(readFileSync(join(DIR, 'v3.json'), 'utf8')) as SaveBlob;
+  const sim = v3.sim as Record<string, any>;
+  const owner = Object.keys(sim.people).sort().find((id) => !sim.people[id].tags?.length && sim.people[id].townId)!;
+  const townId = sim.people[owner].townId;
+  sim.build = { plans: [{ id: 'plan900', ownerId: owner, townId, kind: 'mill', claimId: 'claim901', stage: 'done', have: {}, laborDone: 99, startDay: 1, stalledDays: 0, doneDay: 2 }],
+    claims: [{ id: 'claim901', planId: 'plan900', ownerId: owner, townId, dx: 7, dy: 0, w: 2, h: 2, kind: 'mill', status: 'built' }], next: 902 };
+  sim.companies = { list: [{ id: 'co1', planId: 'plan900', name: 'Old Mill', ownerId: owner, townId, kind: 'mill', workers: [], coin: 30, founded: 2, revenue: 0, unpaid: {} }], next: 2, purse: {} };
+  const state = loadState(v3) as SimState & { civic?: { sites: Record<string, { managerId?: string; status: string; source: { ref: string } }> } };
+  const site = state.civic?.sites.site_plan900;
+  const v4 = parseAndValidateSave(readFileSync(join(DIR, 'v4.json'), 'utf8'));
+  const kept = v4.ok && !!(loadState(v4.blob) as { civic?: unknown }).civic;
+  const ok = site?.managerId === owner && site.status === 'working' && site.source.ref === 'co1' && kept;
+  return { file: 'v3 -> v4 civic', ok, note: ok ? `a v3 company becomes a working site run by its owner (${owner}); v4 keeps its registry` : `site ${JSON.stringify(site)}, v4 registry kept: ${kept}` };
+}
+
 function checkNewerRefused(): Row {
   const v3 = JSON.parse(readFileSync(join(DIR, 'v3.json'), 'utf8')) as SaveBlob;
   const p = parseAndValidateSave(JSON.stringify({ ...v3, version: SAVE_VERSION + 1 }));
@@ -129,7 +154,7 @@ for (const f of files) {
     rows.push({ file: f, ok: false, note: `threw: ${(e as Error).message}` });
   }
 }
-for (const check of [checkRescale, checkNewerRefused, checkUnknownField]) {
+for (const check of [checkRescale, checkCivicMigration, checkNewerRefused, checkUnknownField]) {
   try {
     rows.push(check());
   } catch (e) {
