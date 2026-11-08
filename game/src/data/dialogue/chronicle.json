@@ -1,7 +1,11 @@
 {
   "version": 1,
-  "spec": "The living chronicle (sim/chronicle.ts): what happens in play becomes history people retell, through the same voice as the old beats (history-voice.ts). Each kind has summary templates (one is picked per event, seeded) and a gist (the noun phrase a dawn line uses). Slots: {name} the person, {town} the town, {heir}, {doctrine}, {challenger}, {incumbent}, {event}, {age}. keep = how many entries of each kind live at once (oldest of that kind drop out, so a run of happenings cannot push out a death); onlyFirstPerPerson = kinds recorded once per key (a second reignite of the same person, or the same happening in the same town, is not news). events = how each happening is named in a sentence.",
+  "spec": "The living chronicle (sim/chronicle.ts): what happens in play becomes history people retell, through the same voice as the old beats (history-voice.ts). Each kind has summary templates (one is picked per event, seeded) and a gist (the noun phrase a dawn line uses). Slots: {name} the person, {town} the town, {heir}, {doctrine}, {challenger}, {incumbent}, {event}, {age}. keep = how many entries of each kind live at once (oldest of that kind drop out, so a run of happenings cannot push out a death); onlyFirstPerPerson = kinds recorded once per key (a second reignite of the same person, or the same happening in the same town, is not news). events = how each happening is named in a sentence. keepByKind = a kind's own keep where it differs (civic history: every generated town writes its backstory at founding). Civic kinds (sim/chronicle chronicleCivic): raised (a building went up; {building}, {when}, {owner}) and tier (a town grew; {tier}, {when}).",
   "keep": 6,
+  "keepByKind": {
+    "raised": 60,
+    "tier": 30
+  },
   "onlyFirstPerPerson": [
     "reignite",
     "happening",
@@ -70,6 +74,21 @@
         "A patron made fine promises in {town}, then turned on the one who trusted them. It was talked about for a long while.",
         "Never shake hands with a patron, they say in {town}. They have a story to go with it."
       ]
+    },
+    "raised": {
+      "gist": "when the {building} went up in {town}",
+      "summaries": [
+        "The {building} at {town} went up {when}. {owner} carried the first stones.",
+        "{owner} raised the {building} in {town} {when}. It has stood ever since.",
+        "They say the {building} at {town} went up {when}, and nobody has agreed about the roof since."
+      ]
+    },
+    "tier": {
+      "gist": "when {town} became a {tier}",
+      "summaries": [
+        "{town} was a scatter of roofs once. It became a {tier} {when}.",
+        "Nobody voted on it, but {town} was a {tier} {when}. You could tell by the noise."
+      ]
     }
   },
   "codas": {
@@ -104,6 +123,14 @@
     "betrayal": [
       "Keep your own counsel.",
       "Promises from the city weigh nothing."
+    ],
+    "raised": [
+      "Somebody built it. Somebody always does.",
+      "Walk past it and you can still see the mason's marks."
+    ],
+    "tier": [
+      "Places grow when nobody is watching.",
+      "The old ones still call it the hamlet."
     ]
   },
   "events": {
