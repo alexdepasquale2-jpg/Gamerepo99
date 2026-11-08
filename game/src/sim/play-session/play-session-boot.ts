@@ -6,7 +6,9 @@ import { siteKindFromSiteId } from '../scenario/scenario-resolve';
 import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
 import { deriveRng } from '../rng';
-import type { PersonState, SimState } from '../types/runtime';
+import { generatedVector, seedWounds, woundIdsOf, type VoiceVector } from '../social/seeded-wounds';
+import type { InhabitantParts, PersonState, SimState } from '../types/runtime';
+import { resolveStartTown } from '../start-rules';
 import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
 
 /** Default trust for people seeded into the interaction compat runtime (no trust in PersonState yet). */
@@ -96,7 +98,7 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   const out: Record<string, PersonState> = {};
   // Authored doctrine leaders are always seeded, even if world gen did not draft them.
   const doctrineRows = ((data as { doctrines?: { doctrines?: { leaderPersonId?: string | null }[] } }).doctrines?.doctrines ?? []);
-  const drafts: { id: string; anchor?: boolean }[] = [...world.people];
+  const drafts: { id: string; anchor?: boolean; vector?: VoiceVector }[] = [...world.people];
   const have = new Set(drafts.map((d) => d.id));
   for (const d of doctrineRows) {
     const id = d.leaderPersonId;
@@ -126,16 +128,33 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   }
   assignSettlementTowns(out, world);
   assignNames(out, world, data, seed);
+  // B12: everyone without an authored wound gets a seeded one, weighted by their worldgen voice.
+  const vectors = new Map(drafts.map((d) => [d.id, d.vector]));
+  seedWounds(out, seed, woundIdsOf(data), (id) => vectors.get(id) ?? generatedVector(id));
   return out;
 }
 
-/** Prefer authored town when it sits on a generated route; else first routed settlement. */
-export function pickTownId(playerTown: string | undefined, world: FabricWorld): string {
+/**
+ * Where the run starts. With a start rule (parts.startRule) and the world's seed, the rule picks among
+ * the routed settlements (sim/start-rules: den near hills, the largest town's ledger office, warm rock,
+ * the mill row). Otherwise: the authored town when it sits on a generated route, else the first routed one.
+ */
+export function pickTownId(
+  playerTown: string | undefined,
+  world: FabricWorld,
+  rule?: InhabitantParts['startRule'],
+  seed?: number,
+): string {
   const routes = world.routes ?? [];
   const endpoints = new Set<string>();
   for (const r of routes) {
     endpoints.add(r.fromId);
     endpoints.add(r.toId);
+  }
+  if (rule && seed !== undefined) {
+    const routed = (world.settlements ?? []).map((s) => s.id).filter((id) => endpoints.has(id));
+    const picked = resolveStartTown(rule, world, seed, routed.length ? routed : (world.settlements ?? []).map((s) => s.id));
+    if (picked) return picked;
   }
   if (playerTown && endpoints.has(playerTown)) return playerTown;
   if (playerTown && (world.settlements ?? []).some((s) => s.id === playerTown)) {

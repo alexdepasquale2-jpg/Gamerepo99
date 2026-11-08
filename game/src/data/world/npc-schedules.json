@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Day phases (0..1 of the day clock) -> where villagers go. 'home' near their house, 'work' at a nearby node, 'gather' at the hearth. 'inside' lists the building kinds (house/shop/inn) whose resident is indoors in that phase; everyone else is out. A person is never both indoors and outdoors.",
+  "spec": "Day phases (0..1 of the day clock) -> where villagers go. 'home' near their house, 'work' at a nearby node, 'gather' at the hearth. 'inside' lists the building kinds (house/shop/inn/office) whose resident is indoors in that phase; everyone else is out. A person is never both indoors and outdoors.",
   "phases": [
     {
       "until": 0.12,
@@ -8,6 +8,7 @@
       "inside": [
         "house",
         "shop",
+        "office",
         "inn"
       ]
     },
@@ -16,6 +17,7 @@
       "place": "work",
       "inside": [
         "shop",
+        "office",
         "inn"
       ]
     },
@@ -29,6 +31,7 @@
       "place": "work",
       "inside": [
         "shop",
+        "office",
         "inn"
       ]
     },
@@ -45,6 +48,7 @@
       "inside": [
         "house",
         "shop",
+        "office",
         "inn"
       ]
     }

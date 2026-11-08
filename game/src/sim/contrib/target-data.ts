@@ -7,7 +7,8 @@
  *   tile          TileTargetData              the tile in reach: land acts need its q, r and the live LandView
  *   fauna         FaunaTargetData             the animal's kind (fauna.json id) and its town
  *   hearth/board  { townId? }                 which town's hearth or noticeboard
- *   plot          a build claim id; a grave is a plot whose id starts with "grave" (or data.grave = true)
+ *   grave         a stone in state.legacy.graves (`<personId>#<day>`, contrib/graves); GraveData
+ *   plot          a build claim id; an older grave is a plot whose id starts with "grave" (or data.grave = true)
  *   node #shrine  a herb patch at a shrine (id ends "#shrine", or data.shrine = true) takes offerings
  */
 import type { WorldNode } from '../goods/nodes';
@@ -47,7 +48,7 @@ export function townOfTarget(state: SimState, t: Target): string | undefined {
   return state.player.townId;
 }
 
-export const isGrave = (t: Target): boolean => t.kind === 'plot' && (t.id.startsWith('grave') || rec(t).grave === true);
+export const isGrave = (t: Target): boolean => t.kind === 'grave' || (t.kind === 'plot' && (t.id.startsWith('grave') || rec(t).grave === true));
 export const isShrine = (t: Target): boolean => t.kind === 'node' && (t.id.endsWith('#shrine') || rec(t).shrine === true);
 
 /** The node in the data (the scene's own node object; objects.ts uses the same check). */

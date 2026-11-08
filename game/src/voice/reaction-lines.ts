@@ -156,6 +156,9 @@ export const SURFACED: Record<string, Entry> = {
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
   'kin.birth': own('kin', 'kin_birth', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'kin.grown': own('kin', 'kin_grown', 'glance', (p) => str(p.personId), (p) => str(p.line)),
+  // A death in the family (sim/economy/mortality): kin speak their own grief after the dawn news.
+  'kin.death': own('kin', 'kin_death', 'none', (p) => str(p.personId), (p) => str(p.line)),
+  'person.retired': own('kin', 'retired', 'glance', (p) => str(p.personId)),
   'encounter.spawn': road,
   'patron.offer': own('patron', 'patron_offer', 'none', (p) => str(p.personId), (p) => str(p.line)),
   'patron.deal': noticed('patron', 'patron_deal', 'glance'),

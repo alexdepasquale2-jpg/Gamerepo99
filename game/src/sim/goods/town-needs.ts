@@ -1,13 +1,15 @@
 /** A view of real stock and people, not a second quest currency or completion flag. */
 import type { SimState } from '../types/runtime';
+import { shortfall } from '../economy/food-stock';
 import { ITEMS } from './inventory';
 export function townNeeds(state: SimState, townId: string) {
   const people = Object.values(state.people).filter((p) => p.townId === townId).sort((a, b) => a.flame - b.flame || a.id.localeCompare(b.id));
-  const stock = state.towns?.[townId]?.stock ?? {};
   const resources = [...new Set(ITEMS.items.flatMap((i) => i.economyResourceId ? [i.economyResourceId] : []))];
-  const shortages = resources.filter((r) => (stock[r] ?? 0) < ITEMS.deeds.shortageBelow).map((r) => ({
+  // A town with no stock record still lists every good as missing (as before); food reads the ledger.
+  const lack = (r: string): number => (state.towns?.[townId] ? shortfall(state, townId, r) : ITEMS.deeds.shortageBelow);
+  const shortages = resources.filter((r) => lack(r) > 0).map((r) => ({
     resource: r,
-    missing: Math.ceil(ITEMS.deeds.shortageBelow - (stock[r] ?? 0)),
+    missing: Math.ceil(lack(r)),
     items: ITEMS.items.filter((i) => i.economyResourceId === r).map((i) => i.name),
     /** Roadside traders deal in this good, so a wagon can carry it there. */
     tradeable: ITEMS.items.some((i) => i.economyResourceId === r && ITEMS.market.goods.includes(i.id)),

@@ -1,0 +1,804 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_miller_carry_burden_middle_b",
+      "text": "Sacks are lighter with two at the rope.",
+      "tags": [
+        "generic:gen_miller",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:mill",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_challenge_middle_b",
+      "text": "Grind me if you must. I come out finer.",
+      "tags": [
+        "generic:gen_miller",
+        "method:challenge",
+        "slot:middle",
+        "dict:mill",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_inspire_middle_b",
+      "text": "Wheel's still turning. So am I.",
+      "tags": [
+        "generic:gen_miller",
+        "method:inspire",
+        "slot:middle",
+        "dict:mill",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_lie_middle_b",
+      "text": "Flour's all good flour, is it? Mm.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:middle",
+        "dict:mill",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_shame_middle_b",
+      "text": "Chaff talks loud. Grain keeps quiet.",
+      "tags": [
+        "generic:gen_miller",
+        "method:shame",
+        "slot:middle",
+        "dict:mill",
+        "tone:weary",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_carry_burden_middle_b",
+      "text": "Load it in the middle. We'll make the far side.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:water",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_challenge_middle_b",
+      "text": "Current's against you there, friend.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:challenge",
+        "slot:middle",
+        "dict:water",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_inspire_middle_b",
+      "text": "Tide turns. Always has.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:inspire",
+        "slot:middle",
+        "dict:water",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_lie_middle_b",
+      "text": "Water is calm, you say. I see the eddies.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:middle",
+        "dict:water",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_ferry_shame_middle_b",
+      "text": "I've been called worse by gulls.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:shame",
+        "slot:middle",
+        "dict:water",
+        "tone:weary",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_carry_burden_middle_b",
+      "text": "Put it in my column. I'll balance it.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:ink",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_challenge_middle_b",
+      "text": "Your figures don't add. Try again.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:challenge",
+        "slot:middle",
+        "dict:ink",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_inspire_middle_b",
+      "text": "A clean page. I'd forgotten how that feels.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:inspire",
+        "slot:middle",
+        "dict:ink",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_lie_middle_b",
+      "text": "I'll note it down. In pencil.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:middle",
+        "dict:ink",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_clerk_shame_middle_b",
+      "text": "Duly recorded. Kindly leave.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:shame",
+        "slot:middle",
+        "dict:ink",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_carry_burden_middle_b",
+      "text": "Many hands, short row. Come on then.",
+      "tags": [
+        "generic:gen_grower",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:soil",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_challenge_middle_b",
+      "text": "Pull on a root and it pulls back.",
+      "tags": [
+        "generic:gen_grower",
+        "method:challenge",
+        "slot:middle",
+        "dict:soil",
+        "tone:bite",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_inspire_middle_b",
+      "text": "Green's coming through. I see it now.",
+      "tags": [
+        "generic:gen_grower",
+        "method:inspire",
+        "slot:middle",
+        "dict:soil",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_lie_middle_b",
+      "text": "Frost won't come, you say. Frost always comes.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:middle",
+        "dict:soil",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_grower_shame_middle_b",
+      "text": "Muck on my boots, aye. It feeds the bread.",
+      "tags": [
+        "generic:gen_grower",
+        "method:shame",
+        "slot:middle",
+        "dict:soil",
+        "tone:weary",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_carry_burden_middle_b",
+      "text": "Sit with me a while. That's carrying enough.",
+      "tags": [
+        "generic:gen_widow",
+        "method:carry_burden",
+        "slot:middle",
+        "dict:hearth",
+        "tone:warm",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_challenge_middle_b",
+      "text": "I've no fight left for strangers.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:middle",
+        "dict:hearth",
+        "tone:weary",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_inspire_middle_b",
+      "text": "She'd have liked that. I'll try, for her.",
+      "tags": [
+        "generic:gen_widow",
+        "method:inspire",
+        "slot:middle",
+        "dict:hearth",
+        "tone:pious",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_lie_middle_b",
+      "text": "Kind of you to say. Untrue, but kind.",
+      "tags": [
+        "generic:gen_widow",
+        "method:lie",
+        "slot:middle",
+        "dict:hearth",
+        "tone:guarded",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_widow_shame_middle_b",
+      "text": "Grief's shamed me worse. You'll not manage it.",
+      "tags": [
+        "generic:gen_widow",
+        "method:shame",
+        "slot:middle",
+        "dict:hearth",
+        "tone:weary",
+        "generic_blend",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle"
+    },
+    {
+      "id": "frag_gen_miller_carry_burden_middle_kin_strain",
+      "text": "My brother sold his share of the mill for a city desk. I'll carry this, at least.",
+      "tags": [
+        "generic:gen_miller",
+        "method:carry_burden",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:mill",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_challenge_middle_kin_strain",
+      "text": "My own son calls the mill a relic. Go on, you too.",
+      "tags": [
+        "generic:gen_miller",
+        "method:challenge",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:mill",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_inspire_middle_kin_strain",
+      "text": "Maybe I'll send flour to my sister in the city. She used to love the first bake.",
+      "tags": [
+        "generic:gen_miller",
+        "method:inspire",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:mill",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_lie_middle_kin_strain",
+      "text": "My cousin writes that the city's fine too. Everyone's fine, far away.",
+      "tags": [
+        "generic:gen_miller",
+        "method:lie",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:mill",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_miller_shame_middle_kin_strain",
+      "text": "My kin in the city say it kinder, but they say it.",
+      "tags": [
+        "generic:gen_miller",
+        "method:shame",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:mill",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_carry_burden_middle_kin_strain",
+      "text": "I ferry letters to my daughter across the gap. Never a reply. Give it here.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:carry_burden",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:water",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_challenge_middle_kin_strain",
+      "text": "My brother rows the city barges now. He'd argue like you.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:challenge",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:water",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_inspire_middle_kin_strain",
+      "text": "Maybe the far bank's not so far. Maybe I'll visit her.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:inspire",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:water",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_lie_middle_kin_strain",
+      "text": "Same as the letters from my kin. Calm water, nothing under it.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:lie",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:water",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_ferry_shame_middle_kin_strain",
+      "text": "My own family crossed over and stopped waving. Your words don't sting like that.",
+      "tags": [
+        "generic:gen_ferry",
+        "method:shame",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:water",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_carry_burden_middle_kin_strain",
+      "text": "My kin back in the village think I've forgotten how to carry. Watch me.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:carry_burden",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:ink",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_challenge_middle_kin_strain",
+      "text": "My mother says I talk like a ledger now. Maybe I do.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:challenge",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:ink",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_inspire_middle_kin_strain",
+      "text": "I keep my father's letters in a drawer. Maybe I'll answer one.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:inspire",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:ink",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_lie_middle_kin_strain",
+      "text": "My village cousins tell me lies like that. Kind ones.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:lie",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:ink",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_clerk_shame_middle_kin_strain",
+      "text": "My own family can't follow what I do all day. Your judgement is at least legible.",
+      "tags": [
+        "generic:gen_clerk",
+        "method:shame",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:ink",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_carry_burden_middle_kin_strain",
+      "text": "My boy went to the city. There's no one to share the row with now.",
+      "tags": [
+        "generic:gen_grower",
+        "method:carry_burden",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:soil",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_challenge_middle_kin_strain",
+      "text": "My daughter in the city says the same. Fields are for fools, she says.",
+      "tags": [
+        "generic:gen_grower",
+        "method:challenge",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:soil",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_inspire_middle_kin_strain",
+      "text": "Maybe I'll send seed to my boy in the city. They have window boxes, he says.",
+      "tags": [
+        "generic:gen_grower",
+        "method:inspire",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:soil",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_lie_middle_kin_strain",
+      "text": "My boy writes that the city's grand. I believe that like I believe this.",
+      "tags": [
+        "generic:gen_grower",
+        "method:lie",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:soil",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_grower_shame_middle_kin_strain",
+      "text": "My own kin in the city are ashamed of the mud. You're late to it.",
+      "tags": [
+        "generic:gen_grower",
+        "method:shame",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:soil",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_carry_burden_middle_kin_strain",
+      "text": "Her sister never came back from the city for the burying. Help me, then.",
+      "tags": [
+        "generic:gen_widow",
+        "method:carry_burden",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:hearth",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_challenge_middle_kin_strain",
+      "text": "My kin across the gap don't even write to argue.",
+      "tags": [
+        "generic:gen_widow",
+        "method:challenge",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:hearth",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_inspire_middle_kin_strain",
+      "text": "Maybe I'll write to my sister. We used to be close as thread.",
+      "tags": [
+        "generic:gen_widow",
+        "method:inspire",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:hearth",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_lie_middle_kin_strain",
+      "text": "Like the letters from the city. Kind words, no one behind them.",
+      "tags": [
+        "generic:gen_widow",
+        "method:lie",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:hearth",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    },
+    {
+      "id": "frag_gen_widow_shame_middle_kin_strain",
+      "text": "My own kin went quiet on me. You at least say it to my face.",
+      "tags": [
+        "generic:gen_widow",
+        "method:shame",
+        "slot:middle",
+        "axis:kin_strain",
+        "dict:hearth",
+        "generic_voice"
+      ],
+      "weight": 0.8,
+      "slot": "middle",
+      "requiresAny": [
+        "kin:strain"
+      ]
+    }
+  ]
+}

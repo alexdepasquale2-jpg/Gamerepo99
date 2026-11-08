@@ -1,7 +1,8 @@
 /**
  * Village economy: per-town goods ledger. Each dawn villagers produce and process by job,
  * households eat and wear things out, and unmet demand is recorded as shortage (drives price,
- * and later build plans). Phase 2 only records shortage; it does not touch despair or spark.
+ * and build plans). The food pool here is the town's one food stock (food-stock.ts): despair's starve
+ * check reads it at the next dawn. Nothing here touches despair or spark directly.
  * Pure + deterministic (seed + day + person id).
  */
 

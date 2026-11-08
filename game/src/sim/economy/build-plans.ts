@@ -4,7 +4,8 @@
  * as town need (price + logistics requests). When the goods are on site and enough labor is done,
  * the building stands and boosts its trade in that town. The player helps by gifting the owner a
  * needed item. Plots are abstract cells around the town centre; the map places them later.
- * Pure + deterministic.
+ * The player can own a plan too (ownerId PLAYER_OWNER, see economy/workshops): its goods come only from
+ * what the player brings or buys, and it never stalls out. Pure + deterministic.
  */
 
 import buildingsJson from '../../data/items/buildings.json';
@@ -45,6 +46,9 @@ export type BuildPlan = {
 };
 export type BuildState = { plans: BuildPlan[]; claims: Claim[]; next: number };
 
+/** ownerId of a plan, claim or company the player owns. */
+export const PLAYER_OWNER = 'player';
+
 const bs = (state: SimState): BuildState => (state.build ??= { plans: [], claims: [], next: 1 });
 const live = (p: BuildPlan): boolean => p.stage === 'gathering' || p.stage === 'building';
 
@@ -68,24 +72,26 @@ export function workshopMul(state: SimState, townId: string, jobId: string): num
 
 /** The player gives the owner a good their build needs: it goes to the site. Returns a line, or null. */
 export function contributeToPlan(state: SimState, personId: string, itemId: string): string | null {
-  const p = activePlans(state).find((x) => x.ownerId === personId && x.stage === 'gathering' && (BUILDING_BY_ID.get(x.kind)!.cost[itemId] ?? 0) > (x.have[itemId] ?? 0));
+  const here = state.player.townId;
+  const fits = (x: BuildPlan): boolean => x.ownerId === personId && x.stage === 'gathering' && (BUILDING_BY_ID.get(x.kind)!.cost[itemId] ?? 0) > (x.have[itemId] ?? 0);
+  // The player's own builds: the one in this town first.
+  const p = activePlans(state).filter(fits).sort((a, b) => Number(b.townId === here) - Number(a.townId === here))[0];
   if (!p) return null;
   p.have[itemId] = (p.have[itemId] ?? 0) + 1;
   p.stalledDays = 0;
-  return `It goes toward their ${BUILDING_BY_ID.get(p.kind)!.name}.`;
+  return `It goes toward ${p.ownerId === PLAYER_OWNER ? 'your' : 'their'} ${BUILDING_BY_ID.get(p.kind)!.name}.`;
 }
 
 /** First free spot, nearest the centre ring by ring, outside the town-centre reserve. */
-function findPlot(state: SimState, townId: string, w: number, h: number): { dx: number; dy: number } | null {
+export function findPlot(state: SimState, townId: string, w: number, h: number): { dx: number; dy: number } | null {
   const taken = claimsIn(state, townId);
   const R = PLANS.centerRadius;
   const o = state.towns?.[townId];
-  /** With a map position: the whole footprint must be inside the world (no negative tiles) and off water. */
+  /** With a map position: the whole footprint must be off water (v2 map tiles run negative too, so no sign check). */
   const unbuildable = (dx: number, dy: number): boolean => {
     if (o?.q === undefined || o.r === undefined) return false;
     for (let i = 0; i < w * CELL_TILES; i++) for (let j = 0; j < h * CELL_TILES; j++) {
       const tq = o.q + dx * CELL_TILES + i, tr = o.r + dy * CELL_TILES + j;
-      if (tq < 0 || tr < 0) return true;
       if (Math.abs(tq - o.q) > TOWN_TILES || Math.abs(tr - o.r) > TOWN_TILES) { if (biomeAt(state.seed, tq, tr) === 'water') return true; }
     }
     return false;
@@ -115,7 +121,11 @@ export function tickBuildPlans(state: SimState): void {
     if (!live(plan)) continue;
     const def = BUILDING_BY_ID.get(plan.kind)!;
     const l = ve.towns[plan.townId];
-    if (plan.stage === 'gathering') {
+    if (plan.stage === 'gathering' && plan.ownerId === PLAYER_OWNER) {
+      // The player's own build: goods come from what they bring or buy, and it waits for them.
+      if (Object.entries(def.cost).every(([i, q]) => (plan.have[i] ?? 0) >= q)) plan.stage = 'building';
+      plan.stalledDays = 0;
+    } else if (plan.stage === 'gathering') {
       let moved = 0;
       for (const [item, q] of Object.entries(def.cost)) {
         const missing = q - (plan.have[item] ?? 0);

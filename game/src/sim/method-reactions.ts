@@ -5,7 +5,8 @@ import type { DataTables } from './load-data';
 import type { Rng } from './rng';
 import type { EffectCtx } from './effects';
 import type { HookDef } from './types/data';
-import type { SimState } from './types/runtime';
+import type { Inhabitant, SimState } from './types/runtime';
+import { voiceOf } from './inhabitant';
 
 export type MethodSimState = SimState & {
   data: DataTables;
@@ -83,9 +84,14 @@ export function selectReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
   return sel(ctx);
 }
 
-export function pickRefusalLine(hook: RefusalHook, archetypeId: string, rng: Rng): string {
+/**
+ * The refusal's line in the inhabitant's voice: `lineVoiceFrom` ('voice', or the older 'archetypeId')
+ * keys the hook's lines bag by the parts' voiceId (sim/inhabitant voiceOf). Falls back to `default`.
+ */
+export function pickRefusalLine(hook: RefusalHook, player: Inhabitant, rng: Rng): string {
   const bag = hook.lines ?? {};
-  const lines = (hook.lineVoiceFrom === 'archetypeId' ? bag[archetypeId] : undefined) ?? bag.default ?? [];
+  const voiced = hook.lineVoiceFrom === 'voice' || hook.lineVoiceFrom === 'archetypeId';
+  const lines = (voiced ? bag[voiceOf(player)] : undefined) ?? bag.default ?? [];
   if (!lines.length) return '';
   return lines[rng.int(0, lines.length)] ?? lines[0] ?? '';
 }

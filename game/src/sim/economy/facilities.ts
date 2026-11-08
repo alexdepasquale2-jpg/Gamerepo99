@@ -28,6 +28,7 @@ import { deriveRng } from '../rng';
 import { addItem, itemName } from '../goods/inventory';
 import type { SimState } from '../types/runtime';
 import type { FacilityRow } from './economy-lod-types';
+import { addStock } from './food-stock';
 
 type Worker = { id: string; role: string; shiftHours: number; sparkDrainIfHelp: number; meaningTag: string };
 type KindBlock = {
@@ -93,7 +94,7 @@ function producerResource(seed: number, route: LayoutRoute): string {
 }
 
 /** A dry tile a few tiles off the road near `progress`, side chosen by seed; tries nearby spots before giving up. */
-function besideRoad(seed: number, route: LayoutRoute, progress: number, id: string): MapPoint {
+export function besideRoad(seed: number, route: LayoutRoute, progress: number, id: string): MapPoint {
   const side = deriveRng(seed, 'facility-side', id).next() < 0.5 ? -1 : 1;
   const off = Math.max(3, Math.round(0.7 * WORLD_SCALE));
   // The building's footprint (3 wide, 2 deep above its foot) must be dry ground.
@@ -207,7 +208,7 @@ export function facilityById(state: SimState, id: string): FacilityPlace | undef
 
 const fitToWork = (state: SimState, place: FacilityPlace, pid: string | null, flame: number): boolean => {
   const p = pid ? state.people[pid] : undefined;
-  return !!p && p.flame >= flame && !!p.townId && place.townIds.includes(p.townId);
+  return !!p && p.flame >= flame && !!p.townId && place.townIds.includes(p.townId) && !p.tags?.includes('retired');
 };
 
 const stableKey = (seed: number, a: string, b: string): number => deriveRng(seed, 'facility-crew', a, b).next();
@@ -353,7 +354,7 @@ export function workShift(state: SimState, facilityId: string, nameOf: (townId: 
     for (const [townId, share] of Object.entries(shares)) {
       const town = state.towns?.[townId];
       if (!town || !(share > 0)) continue;
-      town.stock[out.resourceId] = (town.stock[out.resourceId] ?? 0) + qty * share;
+      addStock(state, townId, out.resourceId, qty * share); // food_grain lands in the village ledger
       (stock[townId] ??= {})[out.resourceId] = qty * share;
     }
     const itemId = block?.shiftItems?.[out.resourceId];

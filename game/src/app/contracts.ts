@@ -199,6 +199,8 @@ export interface PanelsApi {
   letters: { open(): void };
   map: { toggle(): void };
   roads: { open(townId: string): void };
+  /** The company sheet: your workshops and plots to let in a town, or one workshop's books (F20). */
+  company: { open(townId: string, companyId?: string): void };
   /** The item being dragged from the hotbar right now (see the 'item-drag' event), or null. */
   dragging(): string | null;
   closeAll(): void;
