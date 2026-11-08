@@ -201,4 +201,6 @@ export type SimState = {
   visitors?: import('../visitors').VisitorsState;
   /** What townsfolk last said of their leader, and each compact's promises kept or broken (see sim/promise-tally). */
   legitimacyVoices?: import('../promise-tally').LegitimacyVoices;
+  /** Civic slice 3: each town's granary, storehouse and yard, and the named goods flows (see sim/civic/town-stores). */
+  townStores?: import('../civic/town-stores').TownStoresState;
 };

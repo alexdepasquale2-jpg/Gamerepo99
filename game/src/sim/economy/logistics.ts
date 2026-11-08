@@ -1,7 +1,10 @@
 /**
  * Village logistics: a town short of something posts a request; a town with surplus loads a cart
  * and sends it down the road (road-journey legs). Roads have a cart cap, travel is slowed by repair
- * and carts can be lost on the way (same per-day odds as couriers). Pure + deterministic.
+ * and carts can be lost on the way (same per-day odds as couriers). A cart loads out of the sending town's
+ * stores (yard and storehouse first, then the granary, then sites' shelves) and unloads into the receiving
+ * town's granary or storehouse (civic/town-stores); a lost cart's load is the named sink `sink:lost`.
+ * Pure + deterministic.
  */
 
 import { COURIER_SURVIVAL_PER_DAY } from '../letter-replies';
@@ -9,7 +12,8 @@ import { planRoad, positionOnLegs, type RoadLeg, type RoadPosition } from '../ro
 import { deriveRng } from '../rng';
 import { atWar, pairKey, safeRoads } from './polity';
 import type { SimState } from '../types/runtime';
-import { COVER_DAYS, HOUSEHOLD, supplyTown } from './village-economy';
+import { COVER_DAYS, HOUSEHOLD } from './village-economy';
+import { drawStores, loseCartLoad, unloadIntoStores } from '../civic/town-stores';
 
 export const LOGISTICS = {
   cartCapacity: 6,
@@ -76,12 +80,13 @@ export function tickLogistics(state: SimState): void {
     if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** guarded) {
       log.carts.splice(log.carts.indexOf(cart), 1);
       log.lost += 1;
+      loseCartLoad(state, cart.qty);
       if (req) delete req.cartId; // goods lost; the request stays open
       continue;
     }
     if (cart.daysLeft <= 0) {
       log.carts.splice(log.carts.indexOf(cart), 1);
-      supplyTown(state, cart.toTownId, cart.itemId, cart.qty);
+      unloadIntoStores(state, cart.toTownId, cart.itemId, cart.qty, cart.id);
       log.delivered += cart.qty;
       const k = pairKey(cart.fromTownId, cart.toTownId);
       (log.flow ??= {})[k] = (log.flow[k] ?? 0) + cart.qty;
@@ -115,10 +120,12 @@ export function tickLogistics(state: SimState): void {
       if (!best || road.days < best.road.days) best = { from, item, road };
     }
     if (!best) continue;
-    const qty = Math.min(req.qty, LOGISTICS.cartCapacity, surplus(state, best.from, best.item));
-    ve.towns[best.from]!.goods[best.item]! -= qty;
+    const id = `cart${log.next}`;
+    const qty = drawStores(state, best.from, best.item, Math.min(req.qty, LOGISTICS.cartCapacity, surplus(state, best.from, best.item)), `cart:${id}`);
+    if (qty <= 0) continue;
+    log.next++;
     sent.set(best.from, (sent.get(best.from) ?? 0) + 1);
-    const cart: Cart = { id: `cart${log.next++}`, itemId: best.item, qty, fromTownId: best.from, toTownId: req.townId, legs: best.road.legs, roadDays: best.road.days, daysLeft: best.road.days, requestId: req.id };
+    const cart: Cart = { id, itemId: best.item, qty, fromTownId: best.from, toTownId: req.townId, legs: best.road.legs, roadDays: best.road.days, daysLeft: best.road.days, requestId: req.id };
     log.carts.push(cart);
     req.cartId = cart.id;
   }

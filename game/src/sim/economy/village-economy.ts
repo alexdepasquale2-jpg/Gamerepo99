@@ -3,11 +3,17 @@
  * households eat and wear things out, and unmet demand is recorded as shortage (drives price,
  * and build plans). The food pool here is the town's one food stock (food-stock.ts): despair's starve
  * check reads it at the next dawn. Nothing here touches despair or spark directly.
+ *
+ * Since civic slice 3 the goods sit in stores (civic/town-stores): a hand at a site makes onto its
+ * shelves and works inputs from them and the town depots; everyone else makes into the depots; households
+ * eat from anywhere in town. `goods` is the view summed from those stores, kept current by every write.
  * Pure + deterministic (seed + day + person id).
  */
 
 import { JOBS } from '../goods/jobs';
-import { creditCompany, workJobId } from './companies';
+import { companyManaged, companyOf, creditCompany, siteIdForPlan, workJobId } from './companies';
+import { drawStores, openTown, produce, reachable, supplyStores, useInput } from '../civic/town-stores';
+import type { Site } from '../civic/sites';
 import { workshopMul } from './build-plans';
 import { polityMul } from './polity';
 import { deriveRng } from '../rng';
@@ -35,11 +41,19 @@ const ledgerOf = (state: SimState, townId: string): TownLedger => {
   return (ve.towns[townId] ??= { goods: {}, need: {}, short: {} });
 };
 
-/** Add goods to a town's ledger (player gifts and sales, deliveries). */
+/** Add goods to a town (player gifts and sales, deliveries): into its granary or storehouse; the ledger shows them. */
 export function supplyTown(state: SimState, townId: string, itemId: string, qty: number): void {
   if (!townId || qty <= 0) return;
-  const g = ledgerOf(state, townId).goods;
-  g[itemId] = (g[itemId] ?? 0) + qty;
+  ledgerOf(state, townId);
+  supplyStores(state, townId, itemId, qty);
+}
+
+/** The site whose shelves a person makes onto: their company's, while someone runs it and it trades in this town. */
+function workSite(state: SimState, personId: string, townId: string): Site | undefined {
+  const c = companyOf(state, personId);
+  if (!c || c.townId !== townId || !companyManaged(state, c)) return undefined;
+  const s = (state as { civic?: { sites: Record<string, Site> } }).civic?.sites[siteIdForPlan(c.planId)];
+  return s && s.townId === townId && s.status !== 'closed' ? s : undefined;
 }
 
 /** 0..1: how short a town is of an item, from days of cover. 0 when the town does not need it. */
@@ -67,20 +81,23 @@ export function tickVillageEconomy(state: SimState): void {
   for (const [townId, ids] of [...byTown].sort(([a], [b]) => a.localeCompare(b))) {
     ids.sort();
     const l = ledgerOf(state, townId);
-    const g = l.goods;
+    openTown(state, townId);
     // Produce and process: JOBS order puts raw jobs before the processors that use their output.
     const rolls = new Map(ids.map((id) => [id, deriveRng(state.seed, 'prod', state.day, id)]));
+    const sites = new Map(ids.map((id) => [id, workSite(state, id, townId)]));
     for (const job of JOBS) {
       for (const id of ids) {
         if (workJobId(state, id) !== job.id) continue;
         const rng = rolls.get(id)!;
+        const site = sites.get(id);
         const mul = workshopMul(state, townId, job.id) * polityMul(state, townId, job.id);
         for (const r of job.recipes) {
           if (r.chance !== undefined && rng.next() >= r.chance) continue;
           const inputs = Object.entries(r.in ?? {});
-          if (inputs.some(([item, q]) => (g[item] ?? 0) < q)) continue;
-          for (const [item, q] of inputs) g[item] = (g[item] ?? 0) - q;
-          for (const [item, q] of Object.entries(r.out)) g[item] = (g[item] ?? 0) + q * mul;
+          // A hand works what is on their own shelves or in the town's stores, not another site's.
+          if (inputs.some(([item, q]) => reachable(state, townId, site, item) < q - 1e-9)) continue;
+          for (const [item, q] of inputs) useInput(state, townId, site, item, q);
+          for (const [item, q] of Object.entries(r.out)) produce(state, townId, site, item, q * mul);
           creditCompany(state, id, r.out, mul);
         }
       }
@@ -91,16 +108,12 @@ export function tickVillageEconomy(state: SimState): void {
     const pop = ids.length + 0.5 * (state.kin?.children ?? []).filter((c) => c.status === 'child' && c.townId === townId).length;
     let food = pop * HOUSEHOLD.food.perPerson;
     l.need.food = food;
-    for (const item of HOUSEHOLD.food.eats) {
-      const take = Math.min(food, g[item] ?? 0);
-      g[item] = (g[item] ?? 0) - take;
-      food -= take;
-    }
+    // Households buy anywhere in town: the granary, or at the farm gate off a site's shelves.
+    for (const item of HOUSEHOLD.food.eats) food -= drawStores(state, townId, item, food, 'sink:eaten');
     if (food > 1e-9) l.short.food = food;
     for (const [item, per] of Object.entries(HOUSEHOLD.goods)) {
       const want = pop * per;
-      const take = Math.min(want, g[item] ?? 0);
-      g[item] = (g[item] ?? 0) - take;
+      const take = drawStores(state, townId, item, want, 'sink:worn');
       l.need[item] = want;
       if (want - take > 1e-9) l.short[item] = want - take;
     }
