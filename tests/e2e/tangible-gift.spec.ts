@@ -17,6 +17,7 @@ test('gift handoff shows the item between player and villager', async ({ page })
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
   const res = await page.evaluate(() => {
     const s = (window as unknown as { __hearth: { scene: Scene } }).__hearth.scene;

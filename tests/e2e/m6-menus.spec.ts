@@ -19,6 +19,7 @@ test.describe('M6 saves and menus', () => {
     await page.locator('[data-id=new]').click();
 
     await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+    await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
     await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
     // Resting moved to the hearth (E); advance days through the session instead.
     await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth);

@@ -20,6 +20,7 @@ test('drag bread from hotbar to a villager and to the ground', async ({ page }) 
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
   const setup = await page.evaluate(() => {
     const s = (window as unknown as W).hs();

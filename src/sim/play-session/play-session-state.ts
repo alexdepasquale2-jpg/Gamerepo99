@@ -7,7 +7,7 @@ import type { FabricWorld } from '../gen/world';
 import { assembleInhabitant } from '../inhabitant';
 import { firstTrust } from '../embodiment';
 import type { CompatRuntime } from '../interaction';
-import { loadData } from '../load-data';
+import { dataForSeed, loadData, type DataTables } from '../load-data';
 import { createRng } from '../rng';
 import {
   loadBiomeTerrainMuls,
@@ -29,8 +29,9 @@ export interface PlayBoot {
 }
 
 /** Fresh world + SimState for one play run (seed + archetype). */
-export function bootPlayState(seed: number, archetypeId: string): PlayBoot {
-  const data = loadData();
+export function bootPlayState(seed: number, archetypeId: string, tables?: DataTables): PlayBoot {
+  // This world's own tables: the social web is per seed (baked for 42, built at boot for any other world).
+  const data = dataForSeed(tables ?? loadData(), seed);
   const world = generateWorld({ seed, includeAnchors: true, peopleCount: 60 });
   const routes = toTravelRoutes(world.routes ?? []);
   const player = assembleInhabitant(data, archetypeId);

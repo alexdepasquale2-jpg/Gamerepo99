@@ -68,6 +68,8 @@ export function openMenu(title: string, items: MenuItem[], opts: { id: string; o
   };
   function onKey(e: KeyboardEvent): void {
     if (!el.isConnected) return;
+    // A form inside the menu (e.g. a number field + Go) keeps its own keys: Enter submits it, arrows move the caret.
+    if (e.target instanceof Element && e.target.closest('form') && e.key !== 'Escape') return;
     if (e.key === 'Escape') opts.onEscape ? opts.onEscape() : close();
     else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       const d = e.key === 'ArrowDown' ? 1 : -1;

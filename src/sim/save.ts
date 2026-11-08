@@ -1,7 +1,7 @@
 import type { HoardState } from './hoard/state';
 import type { LegacyState, ProtagonistImprint } from './legacy/types';
 import type { UnspokenState } from './social/unspoken-types';
-import type { DataTables } from './load-data';
+import { dataForSeed, type DataTables } from './load-data';
 import type { SimState } from './types/runtime';
 import type { TravelSimState } from './travel/travel';
 import { tickCaravans } from './caravans';
@@ -76,6 +76,8 @@ export function saveState(state: SimState): SaveBlob {
 /** The one load path: blob (+ static data) -> SimState with derived parts rebuilt. */
 export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marrow'): SimState {
   let state: TravelSimState;
+  // The save's own world: its social web follows its seed, whatever world `data` came from.
+  data = dataForSeed(data, blob.seed);
   if (blob.sim) {
     const world = generateWorld({ seed: blob.seed, includeAnchors: true, peopleCount: 60 });
     state = {
@@ -97,7 +99,7 @@ export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marro
     installPlayReactions(state);
   } else {
     // v1 thin blob: fresh boot, overlay what v1 carried.
-    state = bootPlayState(blob.seed, archetypeId).state;
+    state = bootPlayState(blob.seed, archetypeId, data).state;
     state.day = blob.tick > 0 ? blob.tick : state.day;
     if (blob.coin !== undefined) state.player.coin = blob.coin;
   }

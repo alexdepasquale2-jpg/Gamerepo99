@@ -32,6 +32,7 @@ async function boot(page: Page, archetypeId = 'marrow'): Promise<string[]> {
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator(`[data-id=arch-${archetypeId}]`).click(); // pick who you are
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth, undefined, { timeout: 20_000 });
   return errors;

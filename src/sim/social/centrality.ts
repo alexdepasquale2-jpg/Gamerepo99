@@ -1,6 +1,7 @@
 /**
- * Read-only centrality table access (01 §Centrality). Values are prebaked offline
- * (src/sim/social/bake/); runtime never computes betweenness/eigenvector.
+ * Read-only centrality table access (01 §Centrality). The known world (seed 42)
+ * reads the offline bake (src/sim/social/bake/); any other world's table is built
+ * once at boot (social-web-build.ts). Play never recomputes it mid-run.
  */
 
 import type { SocialGraph } from './social-graph';

@@ -251,6 +251,14 @@ describe('social-graph 05 — test 6: tables only, no ML runtime', () => {
       expect(src, f).not.toMatch(ml);
       if (!f.includes(`${join('social', 'bake')}`)) expect(src, f).not.toMatch(/from\s+['"][^'"]*bake[^'"]*['"]/);
     }
+    // Why the builder is allowed at runtime: a new world (any seed but the baked
+    // one) has its own gen_p_<seed>_* people, so the baked web cannot serve it and
+    // the web is built once at boot. The pure builder therefore lives outside bake/
+    // (social-web-build.ts, tables + graph math only); bake/ stays the offline
+    // writer and only re-exports it, so the two can never drift apart.
+    const bake = readFileSync(join(root, 'bake', 'social-bake.ts'), 'utf8');
+    expect(bake).toMatch(/from '\.\.\/social-web-build'/);
+    expect(bake).not.toMatch(/\bfunction\b/);
     const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
     const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
     for (const d of deps) expect(d).not.toMatch(/onnx|tensorflow|xenova|huggingface|openai|anthropic/);

@@ -37,6 +37,7 @@ import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitan
 import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
 import { collectDawnLines } from '../sim/dawn-lines';
 import { featuresIn } from '../sim/map/ladder/features';
+import { DEFAULT_SOCIAL_SEED } from '../sim/social/social-web-build';
 
 const CHUNK_MARGIN = 1;
 const VERB: Record<string, string> = {
@@ -605,10 +606,12 @@ export class OverworldScene extends Phaser.Scene {
       this.session = existing;
       return;
     }
-    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' });
+    // Fallback only (scene booted without the menu flow): the known world. New Game passes its chosen world in.
+    const seed = DEFAULT_SOCIAL_SEED;
+    const s = createPlaySession({ mode: 'play', seed, archetypeId: 'marrow' });
     if (!s || !('start' in s)) throw new Error('overworld requires play session');
     this.session = s as PlaySession;
-    this.session.start({ seed: 42, archetypeId: 'marrow' });
+    this.session.start({ seed, archetypeId: 'marrow' });
     this.registry.set('playSession', this.session);
   }
 

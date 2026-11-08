@@ -11,6 +11,7 @@ test('capture reignite + despair', async ({ page }) => {
   if (await nw.count()) {
     await nw.click();
     await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+    await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   }
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as any).__hearth, null, { timeout: 20_000 });

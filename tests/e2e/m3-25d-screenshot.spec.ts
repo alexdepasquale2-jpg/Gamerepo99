@@ -9,6 +9,7 @@ test('capture continuous overworld screenshots', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-id=new]').click(); // title menu first (M6)
   await page.locator('[data-id=arch-marrow]').click(); // pick who you are
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   const canvas = page.locator('#game canvas');
   await expect(canvas).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(1000);
