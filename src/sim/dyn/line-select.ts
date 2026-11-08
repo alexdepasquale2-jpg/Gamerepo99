@@ -9,6 +9,7 @@ import {
 } from '../method-reactions';
 import { buildStateVector, type PersonStateVector } from './person-vector';
 import { createRng } from '../rng';
+import { kinStrainOf, STRAINED } from '../social/kin-strain';
 import type { SimState } from '../types/runtime';
 import {
   scoreFragment,
@@ -31,25 +32,39 @@ function hashStr(s: string): number {
   return h >>> 0;
 }
 
+/**
+ * This person's kin strain across the gap: the ctx value when the caller passed one, else a
+ * `flags.kinStrain` override (tests / dev), else derived from where their kin live (social/kin-strain).
+ */
+export function kinStrainFor(ctx: ReactionPickCtx): number {
+  if (typeof ctx.kinStrain === 'number') return clamp01(ctx.kinStrain);
+  const flag = (ctx.state.flags as { kinStrain?: unknown }).kinStrain;
+  if (typeof flag === 'number') return clamp01(flag);
+  return kinStrainOf(ctx.state, ctx.personId);
+}
+
 function memoryTags(ctx: ReactionPickCtx): Set<string> {
   const person = ctx.state.people[ctx.personId];
   const tags = new Set<string>(person?.tags ?? []);
   for (const m of person?.marks ?? []) tags.add(`mark:${m.markId}`);
   if (person?.woundId) tags.add(`wound:${person.woundId}`);
+  if (kinStrainFor(ctx) >= STRAINED) tags.add('kin:strain');
   return tags;
 }
+
+const isKinStrainFrag = (f: Frag): boolean => (f.tags ?? []).includes('axis:kin_strain');
 
 function vectorFor(ctx: ReactionPickCtx): PersonStateVector {
   const data = ctx.state.data;
   const row = data.peopleById[ctx.personId] ?? { id: ctx.personId };
   const person = ctx.state.people[ctx.personId];
-  const flags = ctx.state.flags as { trust?: number; notoriety?: number; kinStrain?: number };
+  const flags = ctx.state.flags as { trust?: number; notoriety?: number };
   const hollow = person?.marks?.find((m) => m.markId === 'hollowness')?.stacks ?? 0;
   return buildStateVector(row, {
     data,
     trust: typeof flags.trust === 'number' ? flags.trust : 0.5,
     notoriety: typeof flags.notoriety === 'number' ? flags.notoriety : 0,
-    kinStrain: typeof flags.kinStrain === 'number' ? flags.kinStrain : 0,
+    kinStrain: kinStrainFor(ctx),
     hollowness: clamp01(hollow / 3),
     flame01: typeof person?.flame === 'number' ? person.flame / 100 : undefined,
   });
@@ -101,6 +116,23 @@ function methodCandidates(data: DataTables, personId: string, methodId: string):
   });
 }
 
+/**
+ * People without their own fragments (generated villagers) still voice the drift when strained: a
+ * generic voice's kin_strain line for this method. Each person keeps one generic voice across methods.
+ */
+function genericKinStrainLine(data: DataTables, ctx: ReactionPickCtx): ReactionLineResult | null {
+  const methodTag = `method:${ctx.methodId}`;
+  const voiceOf = (f: Frag): string | undefined => (f.tags ?? []).find((t) => t.startsWith('generic:'));
+  const pool = (data.lineFragments.fragments ?? []).filter(
+    (f) => isKinStrainFrag(f) && (f.tags ?? []).includes(methodTag) && isAloneSlot(f) && !!voiceOf(f) && !!f.text,
+  );
+  if (!pool.length) return null;
+  const voices = [...new Set(pool.map((f) => voiceOf(f)!))].sort();
+  const voice = voices[hashStr(`${ctx.seed}:${ctx.personId}:voice`) % voices.length]!;
+  const picked = pool.filter((f) => voiceOf(f) === voice).sort((a, b) => a.id.localeCompare(b.id))[0]!;
+  return { lineId: picked.id, text: picked.text, source: 'blend' };
+}
+
 function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: string, methodId: string): Frag {
   const rng = createRng((seed ^ hashStr(`${personId}:${methodId}`)) >>> 0);
   let r = rng.next() * scores.reduce((a, b) => a + b, 0);
@@ -137,9 +169,16 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
   if (!ctx.features.bakedDynamismLines) return fixedFromCandidates(cands, ctx);
 
   const memory = memoryTags(ctx);
+  const strained = memory.has('kin:strain');
+  if (!cands.length && strained) {
+    const generic = genericKinStrainLine(data, ctx);
+    if (generic) return generic;
+  }
   const constraints = (data.voiceConstraints.constraints ?? []) as Constraint[];
-  const pool = cands.filter((f) => !violatesConstraints(f, memory, constraints));
-  const use = pool.length ? pool : cands;
+  // Kin-strain lines need kin strain (their requiresAny: kin:strain): unstrained people never say them.
+  const allowed = strained ? cands : cands.filter((f) => !isKinStrainFrag(f));
+  const pool = allowed.filter((f) => !violatesConstraints(f, memory, constraints));
+  const use = pool.length ? pool : allowed;
   if (!use.length) return fixedFromCandidates([], ctx);
 
   const v = vectorFor(ctx);
@@ -176,6 +215,10 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
       );
     });
     if (preferred.length) pickPool = preferred;
+  } else if (strained) {
+    // Family split by the drift is what is on their mind.
+    const preferred = use.filter(isKinStrainFrag);
+    if (preferred.length) pickPool = preferred;
   }
 
   const scores = pickPool.map((f) =>
@@ -193,6 +236,7 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
     if ((lonely || lowTrust) && highExtreme) {
       scores[i] = Math.max(0.01, scores[i]! * 0.12);
     }
+    if (isKinStrainFrag(pickPool[i]!)) scores[i] = scores[i]! + (influence['axis:kin_strain'] ?? 0) * 4;
   }
   const picked = pickWeighted(pickPool, scores, ctx.seed, ctx.personId, ctx.methodId);
   return { lineId: picked.id, text: picked.text, source: 'blend' };

@@ -24,6 +24,7 @@ export function addNotoriety(state: SimState, gainId: string): void {
   const h = ensureHoard(state);
   h.notoriety = clamp01(h.notoriety + row.add);
   mirror(state);
+  if (row.add < 0) pushJuice(state, 'notoriety.fall', { gainId, notoriety: h.notoriety });
   if (row.add <= 0) return;
   pushJuice(state, 'notoriety.rise', { gainId, notoriety: h.notoriety, rippleTag: t.spread.rippleTag });
   const from = Object.keys(state.people).sort().filter((p) => state.people[p]!.townId === state.player.townId);

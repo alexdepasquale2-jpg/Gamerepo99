@@ -96,7 +96,7 @@ describe('lake crossings', () => {
     }
     expect(fords + ferries).toBeGreaterThan(0);
     expect(ferries).toBeGreaterThan(0);
-  });
+  }, 60_000); // ~1.4M cells x 2 terrains per run on the 40x world: well past the 5s default.
 
   it('ferries cost more to cross than fords, and both more than dry land', () => {
     const t = setup(SEEDS[0]!), { q0, q1, r0, r1 } = box(t);
@@ -129,6 +129,7 @@ describe('lake crossings', () => {
     ratios.sort((a, b) => a - b); extras.sort((a, b) => a - b);
     const mean = ratios.reduce((s, x) => s + x, 0) / ratios.length;
     // Before lake crossings: mean ~1.37, p90 ~1.97, p90 extra ~28 tiles.
+    // 40x world (crossings minGap 7): mean ~1.23, p90 ~1.50, p90 extra ~7 tiles.
     expect(mean).toBeLessThan(1.3);
     expect(ratios[Math.floor(ratios.length * 0.9)]!).toBeLessThan(1.6);
     expect(extras[Math.floor(extras.length * 0.9)]!).toBeLessThan(15);
