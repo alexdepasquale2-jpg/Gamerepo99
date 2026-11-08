@@ -33,6 +33,8 @@ import { placeAt, residences } from '../../sim/map/residency';
 type Pt = { x: number; y: number };
 export type OverworldGoods = {
   update: (time: number, dt: number, player: Pt) => void;
+  /** Open a town's noticeboard at a page index or page id (tests/dev). */
+  openBoard: (townId: string, page?: number | string) => void;
   onDawn: () => void;
   /** Call after any session.act: stash acts change chests and carried goods. */
   onAct: () => void;
@@ -244,6 +246,7 @@ export function attachOverworldGoods(
     },
     letters: () => mail.open(),
     readBoard: (player) => boards.interact(player),
+    openBoard: (townId, page) => boards.openAt(townId, page),
     meetCaravan(player) {
       const id = living.nearestCaravan(player);
       if (!id) return false;

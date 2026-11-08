@@ -69,6 +69,8 @@ export type PeopleLayer = {
   settle: () => void;
   /** Ids of the villagers actually inside this building right now. */
   insideOf: (buildingId: string) => string[];
+  /** Add bodies for people who joined since the layer was built (births, arrivals); remove the gone. */
+  sync: () => void;
 };
 
 export function createPeopleLayer(
@@ -83,9 +85,10 @@ export function createPeopleLayer(
   const byId = new Map<string, Person>();
   const idx = new Map<string, number>();
   const hasFrame = scene.textures.exists(HERO_TEX) && scene.textures.get(HERO_TEX).has('7');
-  for (const p of session.listPeople()) {
+  const addPerson = (p: { id: string; townId?: string }): void => {
+    if (byId.has(p.id)) return;
     const town = settlements.find((s) => s.id === p.townId) ?? settlements[hash(p.id) % settlements.length];
-    if (!town) continue;
+    if (!town) return;
     const n = idx.get(town.id) ?? 0;
     idx.set(town.id, n + 1);
     const foot = tileFootWorld(town.q, town.r);
@@ -109,7 +112,8 @@ export function createPeopleLayer(
     sprite.on('pointerdown', () => onTap(person));
     people.push(person);
     byId.set(p.id, person);
-  }
+  };
+  for (const p of session.listPeople()) addPerson(p);
 
   const prompt = scene.add
     .text(0, 0, '…', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
@@ -158,6 +162,21 @@ export function createPeopleLayer(
     people,
     byId,
     headOf,
+    sync() {
+      // People born or arrived since the layer was built get a body; anyone gone loses theirs.
+      const now = session.listPeople();
+      for (const p of now) addPerson(p);
+      const alive = new Set(now.map((p) => p.id));
+      for (let i = people.length - 1; i >= 0; i--) {
+        const p = people[i]!;
+        if (alive.has(p.id)) continue;
+        p.sprite.destroy();
+        p.shadow?.destroy();
+        p.label.destroy();
+        people.splice(i, 1);
+        byId.delete(p.id);
+      }
+    },
     freeze: (id) => (frozen = id),
     setSchedule: (fn) => (schedule = fn),
     setResidency(c, h) {

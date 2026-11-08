@@ -7,7 +7,7 @@ import type { FabricWorld } from '../gen/world-types';
 
 import type { ScenarioPersonView } from '../scenario/scenario-resolve';
 
-export type PlayAction = { id: string; family?: string };
+export type PlayAction = { id: string; family?: string; label?: string };
 export type PlayEvent = { type: string; methodId?: string };
 export type PlaySnapshot = {
   tick: number;
