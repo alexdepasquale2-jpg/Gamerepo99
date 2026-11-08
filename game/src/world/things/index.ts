@@ -11,7 +11,9 @@ import type { TerrainAccess } from '../../sim/map/terrain-access';
 import { DOOR_REACH, INTERIOR_TITLE } from '../../sim/map/interiors';
 import { TILE_PX } from '../../sim/map/constants';
 import type { FacilityRenderView } from '../../sim/map/types';
-import { FAUNA, propRow } from '../../sim/contrib/thing-verbs';
+import { FAUNA, propRow, spotStoryKey } from '../../sim/contrib/thing-verbs';
+import { spotTagOf } from '../../sim/map/ladder/dress';
+import { isSpotHeart, spotLore, title } from '../../sim/map/ladder/spot-lore';
 import { usedToday } from '../../sim/contrib/use-effects';
 import { tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
@@ -85,9 +87,13 @@ export function createWorldThings(o: {
       }
       const row = propRow(prop.type);
       if (!row) continue;
-      if (st && row.verbs.every((v) => usedToday(st, `prop.${v.id}@${row.type}`))) continue;
+      // A named spot's props keep its name, and stay while its story is untold today.
+      const spot = spotTagOf(prop), lore = spot ? spotLore(o.seed, spot.id, spot.type) : null;
+      const storyLeft = !!spot && !!st && !usedToday(st, spotStoryKey(spot));
+      if (st && !storyLeft && row.verbs.every((v) => usedToday(st, `prop.${v.id}@${row.type}`))) continue;
       const id = `${prop.type}@${q},${r}`;
-      out.push({ key: `prop:${id}`, kind: 'prop', id, x, y, reach: PROP_REACH, label: row.name, target: { kind: 'prop', id, data: { type: prop.type } } });
+      const label = !spot || !lore ? row.name : isSpotHeart(spot.type, prop.type) ? title(lore.name) : `${row.name} by ${lore.name}`;
+      out.push({ key: `prop:${id}`, kind: 'prop', id, x, y, reach: PROP_REACH, label, target: { kind: 'prop', id, data: spot ? { type: prop.type, spot } : { type: prop.type } } });
     }
     return out;
   };

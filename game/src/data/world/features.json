@@ -1,5 +1,5 @@
 {
-  "_doc": "Structured wilderness, one roll per anchor cell (lazy, seeded): a farm, else a rock outcrop, else a 'spot' picked by biome. Streams run across cells. Only roads (roadClearTiles) and towns (townClearTiles) stay open: those are for building and logistics. Woods/life passes fill the gaps. Critters wander (render only).",
+  "_doc": "Structured wilderness, one roll per anchor cell (lazy, seeded): a farm, else a rock outcrop, else a 'spot' picked by biome (its layout variants, names and stories: spots.json). Streams run across cells. Only roads (roadClearTiles) and towns (townClearTiles) stay open: those are for building and logistics. Woods/life passes fill the gaps. Critters wander (render only).",
   "anchorTiles": 20,
   "townClearTiles": 44,
   "roadClearTiles": 3,
