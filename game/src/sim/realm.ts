@@ -15,6 +15,7 @@ import type { DataTables } from './load-data';
 import { DISTRICTS, districtAt, districtBox, districtId, districtOfTown, isHome, neighbours } from './map/districts';
 import { CHRONICLE_TAG } from './chronicle';
 import { deriveRng } from './rng';
+import { catchUpDistrict } from './civic/clock';
 import type { SaveBlob } from './save';
 import type { PacketState, SimState } from './types/runtime';
 import type { Flight, Pending } from './letters-scale';
@@ -111,17 +112,12 @@ export function withCarried(blob: SaveBlob, from: SaveBlob): SaveBlob {
 }
 
 /**
- * Days away, in one step: towns drift toward the neglect cap unless half their people burn; a lit
- * district holds. (The same rules a dawn applies, folded: despair converges, so this is exact enough.)
+ * Days away, in one step: the district lives them on the LOD day (civic/lod via civic/clock): its people
+ * age, die, pair and have children, its stores fill and empty, despair follows neglect, hunger and flame,
+ * its doctrines tick. The calendar (the player's) is already on today; the district is run up to it.
  */
 export function catchUp(state: SimState, days: number): void {
-  if (days <= 0) return;
-  const burnAt = (state.data as DataTables | undefined)?.reigniteThreshold ?? 35;
-  for (const [id, t] of Object.entries(state.towns ?? {}) as [string, { despair: number }][]) {
-    const folk = Object.values(state.people).filter((p) => p.townId === id);
-    const lit = folk.length ? folk.filter((p) => p.flame >= burnAt).length / folk.length : 0;
-    t.despair = driftDespair(state, t.despair, lit, days);
-  }
+  if (days > 0) catchUpDistrict(state, state.day - days);
 }
 
 /** One town's (or a whole away district's) despair after `days` of the dawn's neglect and flame relief. */

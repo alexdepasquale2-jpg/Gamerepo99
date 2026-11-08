@@ -106,7 +106,7 @@ registerTargetProvider({
     // the body's traits and ways in decide (data/world/entrances.json), not its name.
     ensureInhabitantParts(state);
     const way = entranceFor(state.player, kind);
-    if (!way) return { ok: false, line: refusedDoorLine(state.player, kind) };
+    if (!way) return { ok: false, line: refusedDoorLine(state.player, kind, `${t.id}:${state.day}`) };
     const line = entryLine(state.player, way, `${t.id}:${state.day}`);
     return line ? { ok: true, line } : { ok: true };
   },

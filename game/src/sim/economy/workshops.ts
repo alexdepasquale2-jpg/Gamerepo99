@@ -11,7 +11,7 @@ import { priceAt } from '../goods/deed-goods';
 import { addItem, hasItem, inventoryOf, itemName } from '../goods/inventory';
 import { jobOf } from '../goods/jobs';
 import type { SimState } from '../types/runtime';
-import { BUILDINGS, BUILDING_BY_ID, PLAYER_OWNER, activePlans, findPlot, type BuildPlan, type BuildingDef } from './build-plans';
+import { BUILDINGS, BUILDING_BY_ID, PLAYER_OWNER, activePlans, claimBlocked, stakePlan, zoneWords, type BuildPlan, type BuildingDef } from './build-plans';
 import { COMPANY, companyOf, type Company } from './companies';
 
 export const WORKSHOPS = {
@@ -55,12 +55,13 @@ export function stakeWorkshop(state: SimState, townId: string, kind: string): Re
   if (!def?.slots) return no('Nobody could work in that.');
   if (!state.towns?.[townId]) return no('There is no town here to build in.');
   if (playerPlans(state, townId).length >= WORKSHOPS.plansPerTown) return no('Finish the build you have going here first.');
-  const plot = findPlot(state, townId, def.w, def.h);
-  if (!plot) return no('There is no free plot left near the town.');
-  const b = (state.build ??= { plans: [], claims: [], next: 1 });
-  const planId = `plan${b.next++}`, claimId = `claim${b.next++}`;
-  b.claims.push({ id: claimId, planId, ownerId: PLAYER_OWNER, townId, dx: plot.dx, dy: plot.dy, w: def.w, h: def.h, kind, status: 'claimed' });
-  b.plans.push({ id: planId, ownerId: PLAYER_OWNER, townId, kind, claimId, stage: 'gathering', have: {}, laborDone: 0, startDay: state.day, stalledDays: 0 });
+  // The player stakes like anyone: the kind must be open to this town's tier and fit a zoned lot (civic/zoning).
+  const blocked = claimBlocked(state, townId, kind);
+  if (blocked) return no(blocked);
+  // Through the one staking path, so a turned-away stake counts toward what the council re-zones for.
+  const staked = stakePlan(state, PLAYER_OWNER, townId, kind);
+  if (!staked) return no(`There is no free plot zoned for ${zoneWords(kind)} near the town. The council could be petitioned.`);
+  const claimId = staked.claim.id;
   return { ok: true, claimId, line: `You stake a plot for a ${def.name}. It needs ${costText(def.cost)}.` };
 }
 

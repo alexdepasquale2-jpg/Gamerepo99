@@ -46,6 +46,8 @@ export type PlaySession = {
    */
   act(actionId: string, target?: import('./targets').Target): import('./action-providers').ActOutcome | undefined;
   tick(): void;
+  /** Rest and let `days` pass (one evening, then the clock: civic/clock fastForward). tick() is wait(1). */
+  wait(days: number): void;
   snapshot(): PlaySnapshot;
   events(): PlayEvent[];
   listRoutes(): string[];

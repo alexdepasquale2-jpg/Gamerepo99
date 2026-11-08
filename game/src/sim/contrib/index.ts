@@ -27,4 +27,8 @@ import './road-folk';
 import './visitors';
 import './legitimacy-voices';
 import '../realm-away';
+import './land';
+import './craft';
+import './civic-zoning';
+import './clock';
 import './district-polity';

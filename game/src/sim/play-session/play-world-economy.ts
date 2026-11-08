@@ -12,6 +12,7 @@ import { assignSettlementTowns } from './play-session-boot';
 import { FOOD_RES } from '../economy/food-stock';
 import { supplyTown } from '../economy/village-economy';
 import { roleFoodItem, roleStock } from '../economy/town-roles';
+import { foundCivicTowns } from '../civic/founding';
 
 export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   const data = state.data as DataTables;
@@ -51,6 +52,8 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   state.economyHooks = { caravan: (s) => void tickCaravans(s, s.day), doctrine: doctrineSupplyHook };
   assignSettlementTowns(state.people, world);
   ensureFacilityCrews(state);
+  // A generated district town's pre-aged buildings and backstory, once, now its people are home.
+  foundCivicTowns(state);
   if (!state.flags.caravansStarted) {
     tickCaravans(state, state.day);
     state.flags.caravansStarted = true;

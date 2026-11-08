@@ -33,3 +33,25 @@ export function namePool(seed: number | { seed: number }, townId: string | undef
   }
   return pool;
 }
+
+/**
+ * The set a full name must be unique within: a whole generated district (folk travel between its towns, so two
+ * "Kit Medlar"s a day apart read as one person), else the single town (home towns keep their authored repeats).
+ */
+export function nameScope(townId: string | undefined): string {
+  const d = townId ? districtOfTown(townId) : null;
+  return d ? `d${d.col}_${d.row}` : townId ?? '';
+}
+
+/**
+ * A full name `<given> <family>` not yet in `used`. `roll(k)` is the caller's seeded given-name index for try k
+ * (so the first try keeps the name it always had); after a few tries it walks the pool from the first roll, which
+ * guarantees a free name whenever one exists. The family name never changes: kin keep their surname.
+ */
+export function distinctName(given: readonly string[], family: string, used: ReadonlySet<string>, roll: (k: number) => number): string {
+  const nameAt = (i: number) => `${given[((i % given.length) + given.length) % given.length]!} ${family}`;
+  for (let k = 0; k < 8; k++) { const n = nameAt(roll(k)); if (!used.has(n)) return n; }
+  const start = roll(0);
+  for (let j = 1; j < given.length; j++) { const n = nameAt(start + j); if (!used.has(n)) return n; }
+  return nameAt(start);
+}

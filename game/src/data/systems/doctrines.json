@@ -18,6 +18,20 @@
       "tithe": { "start": { "realDelivery": 0.4, "perceivedDelivery": 0.45, "propaganda": 0.3, "control": 0.3, "exposure": 0.1, "legitimacy": 0.51 }, "hearsay": { "holds": "the tenth still buys protection", "ledger": "the tithe-roll" } },
       "quiet": { "start": { "realDelivery": 0.35, "perceivedDelivery": 0.4, "propaganda": 0.2, "control": 0.3, "exposure": 0.05, "legitimacy": 0.47 }, "hearsay": { "holds": "nobody has come to harm", "ledger": "the quiet-keeper's list" } },
       "quota": { "start": { "realDelivery": 0.4, "perceivedDelivery": 0.55, "propaganda": 0.4, "control": 0.4, "exposure": 0.1, "legitimacy": 0.6 }, "hearsay": { "holds": "the quota is met", "ledger": "the quota book" } }
+    },
+    "dissentNote": "Generated districts only (sim/doctrine-dissent). Pressure = clamp(meanDespair*despairWeight + wounds[wound]) * (1 - control*controlDamp). Each dawn the seat's doctrine gains pressure*exposurePerDawn exposure and its perceived delivery slides toward the real by pressure*truthPull of the gap. While it stands alone, pressure accrues; at riseAfter a rival creed rises in a route-linked town (perceived = its style's start * rivalStartMul, control * rivalControlMul) and is fed pressure*rivalGrowth perceived and pressure*rivalVoice propaganda a dawn (up to rivalCeiling) until it takes the seat through the challenger rules.",
+    "dissent": {
+      "despairWeight": 1.0,
+      "wounds": { "grief": 0.1, "apathy": 0.04, "fear": 0.08, "exhaustion": 0.06, "disillusionment": 0.16, "shame_wound": 0.1 },
+      "controlDamp": 0.6,
+      "exposurePerDawn": 0.006,
+      "truthPull": 0.04,
+      "riseAfter": 12,
+      "rivalStartMul": 0.7,
+      "rivalControlMul": 0.5,
+      "rivalGrowth": 0.04,
+      "rivalVoice": 0.02,
+      "rivalCeiling": 0.9
     }
   },
   "acts": [

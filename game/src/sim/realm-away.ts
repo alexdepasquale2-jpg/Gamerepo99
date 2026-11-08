@@ -3,15 +3,17 @@
  * addressed to another district would otherwise land on nobody. Instead they wait in that district's
  * inbox (RealmState.inbox) and are applied the day you arrive: a letter is delivered (and its reply
  * begun), a proof lifts someone struggling, a relapse dims someone lit, a reply that was being written
- * is finished and sent. A late dawn tick also lets the districts you have left drift (the same neglect
- * and flame relief catchUp applies), stamping `lastTick` so arriving never counts those days twice.
+ * is finished and sent. A late dawn tick also lets the districts you have left drift by the LOD rates they
+ * left with (civic/lod-away: people, food, despair by neglect and flame), stamping `lastTick` so arriving
+ * (which runs the district itself on the LOD day from there) never counts those days twice.
  * Pure over SimState (no Phaser/DOM).
  */
 import { registerDawnTick } from './dawn-ticks';
 import { composeReply } from './letter-replies';
 import { deliverFlight, ensureLetters } from './letters-scale';
 import { deliverPacket } from './packets';
-import { districtOfTownRef, driftDespair, inboxOf, realmIfAny, refId, type InboxItem } from './realm';
+import { districtOfTownRef, inboxOf, realmIfAny, refId, type InboxItem } from './realm';
+import { driftSummary } from './civic/lod-away';
 import type { SimState } from './types/runtime';
 
 const districtIdOf = (townId: string): string => refId(districtOfTownRef(townId));
@@ -102,7 +104,7 @@ function tickRealmAway(state: SimState): void {
   const here = refId(realm.active);
   for (const [id, s] of Object.entries(realm.summaries)) {
     if (id === here || (s.lastTick ?? s.day) >= state.day) continue;
-    s.despair = driftDespair(state, s.despair, s.lit, state.day - (s.lastTick ?? s.day));
+    driftSummary(state, s, state.day - (s.lastTick ?? s.day));
     s.lastTick = state.day;
   }
   park(state, here, false);
