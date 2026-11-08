@@ -183,7 +183,7 @@ describe('gaps', () => {
 describe('JSON mirror', () => {
   it('exists and shares biome + fauna + crop keys', () => {
     const raw = readFileSync(
-      resolve(__dirname, '../../assets/manifest/overworld-assets.json'),
+      resolve(__dirname, '../../src/data/art/overworld-assets.json'),
       'utf8',
     );
     const doc = JSON.parse(raw) as {

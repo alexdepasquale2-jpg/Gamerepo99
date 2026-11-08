@@ -1,12 +1,12 @@
 /**
  * Overworld asset manifest — maps Loom WorldRenderSnapshot keys → sheet/frame/variant.
- * Presentation only. Data lives in assets/manifest/overworld-assets.json.
+ * Presentation only. Data lives in src/data/art/overworld-assets.json.
  *
  * Grid: Loom LOCKED square ortho — q = x (column), r = y (row).
  * Doc: docs/art/OVERWORLD_ASSET_MAP.md
  */
 
-import manifestJson from '../../assets/manifest/overworld-assets.json';
+import manifestJson from '../data/art/overworld-assets.json';
 
 export type AssetStatus = 'ready' | 'stub' | 'missing' | 'alias' | 'placeholder' | 'proposed';
 export type AssetVariant = 'palette' | 'swap' | 'none';

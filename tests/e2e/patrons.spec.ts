@@ -2,7 +2,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
-const OUT = 'docs/qa/reports/patrons';
+const OUT = process.env.E2E_UPDATE_SHOTS ? 'docs/qa/reports/patrons' : 'test-results/shots/patrons';
 const BROKER = 'leon_march';
 
 type Chip = { id: string; label: string };

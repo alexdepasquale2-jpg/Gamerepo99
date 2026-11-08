@@ -2,7 +2,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
-const OUT = 'docs/qa/reports/kin-strain';
+const OUT = process.env.E2E_UPDATE_SHOTS ? 'docs/qa/reports/kin-strain' : 'test-results/shots/kin-strain';
 
 type Person = { id: string; townId?: string; name?: string };
 type Hearth = {
