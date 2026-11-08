@@ -31,6 +31,7 @@ test('lay stepping stones across shallow water with X', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator('[data-id=arch-marrow]').click();
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: { dev?: unknown } }).__hearth?.dev, undefined, { timeout: 20_000 });
 

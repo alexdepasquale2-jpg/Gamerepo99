@@ -20,6 +20,7 @@ test('signpost opens the road menu; hiring a traveller runs the days and lands y
   await page.goto('/');
   await page.locator('[data-id=new]').click();
   await page.locator('[data-id=arch-marrow]').click();
+  await page.locator('[data-id=world-known]').click(); // the world you know (seed 42)
   await page.waitForFunction(() => !!(window as unknown as { __hearth?: unknown }).__hearth);
   await page.waitForTimeout(800);
 
