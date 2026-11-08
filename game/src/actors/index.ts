@@ -15,8 +15,9 @@ import { createPlayer, type PlayerCtl } from './player';
 import { createTownIndex } from './towns';
 import { createWagons, type WagonsCtl } from './wagons';
 import { createRoomFolk } from './room-folk';
+import { createRoadFolk, type RoadFolk } from './road-folk';
 
-type Internals = { player: PlayerCtl; people: PeopleCtl; fauna: FaunaCtl; wagons: WagonsCtl; brood: BroodCtl; names: NameLayer };
+type Internals = { player: PlayerCtl; people: PeopleCtl; fauna: FaunaCtl; wagons: WagonsCtl; brood: BroodCtl; names: NameLayer; roadFolk: RoadFolk };
 const runs = new WeakMap<GameContext, Internals>();
 
 export function attachActors(ctx: GameContext): ActorsApi {
@@ -28,7 +29,8 @@ export function attachActors(ctx: GameContext): ActorsApi {
   const brood = createBrood(ctx, player);
   const names = createNameLayer(ctx.scene);
   const roomFolk = createRoomFolk(ctx, people);
-  runs.set(ctx, { player, people, fauna, wagons, brood, names });
+  const roadFolk = createRoadFolk(ctx);
+  runs.set(ctx, { player, people, fauna, wagons, brood, names, roadFolk });
 
   const sync = (): void => {
     people.sync();
@@ -41,6 +43,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
     offs.forEach((off) => off());
     names.destroy();
     roomFolk.destroy();
+    roadFolk.destroy();
     people.destroy();
     fauna.destroy();
     wagons.destroy();
@@ -52,10 +55,10 @@ export function attachActors(ctx: GameContext): ActorsApi {
 
   return {
     player,
-    headOf: (id) => (id === 'player' ? player.head() : roomFolk.headOf(id) ?? people.headOf(id)),
+    headOf: (id) => (id === 'player' ? player.head() : roomFolk.headOf(id) ?? people.headOf(id) ?? roadFolk.headOf(id)),
     things(near: Pt, radius: number): Thing[] {
       if (ctx.world.room()) return roomFolk.things(near, radius);
-      const out = [...people.things(near, radius), ...fauna.things(near, radius), ...wagons.things(near, radius)];
+      const out = [...people.things(near, radius), ...roadFolk.things(near, radius), ...fauna.things(near, radius), ...wagons.things(near, radius)];
       const d = (t: Thing) => (t.x - near.x) ** 2 + (t.y - near.y) ** 2;
       return out.sort((a, b) => d(a) - d(b));
     },
@@ -69,6 +72,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
       people.update(dt, time, p, names);
       fauna.update(dt, time, p);
       wagons.update(dt, time, names);
+      roadFolk.update(dt, time, names);
       roomFolk.update(names);
       names.end();
     },
@@ -98,6 +102,7 @@ registerDevHook('teleportTo', (ctx) => (personId: string) => {
 registerDevHook('speed', () => ({ get: () => getWalkMul(), set: (n: number) => setWalkMul(n) }));
 registerDevHook('fauna', (ctx) => () => internals(ctx).fauna.list());
 registerDevHook('traffic', (ctx) => () => internals(ctx).wagons.list());
+registerDevHook('roadFolk', (ctx) => () => internals(ctx).roadFolk.list());
 registerDevHook('actorThings', (ctx) => (radius = 160) => ctx.actors.things(ctx.actors.player.pos(), radius).map((t) => ({ key: t.key, label: t.label, x: Math.round(t.x), y: Math.round(t.y) })));
 registerDevHook('brood', (ctx) => ({
   withYou: () => ctx.actors.brood.withYou(),

@@ -14,6 +14,7 @@ import { LAND, bordersOf } from '../economy/borders';
 import { CREEDS, TECHS, pairKey, type Creed, type Treaty } from '../economy/polity';
 import type { DataTables } from '../load-data';
 import { deriveRng } from '../rng';
+import { promiseNote } from '../promise-tally';
 import type { SimState } from '../types/runtime';
 
 // ---------- data ----------
@@ -141,6 +142,7 @@ export function compactLines(state: SimState, townId: string, nameOf?: (id: stri
     const promises = (row?.goals ?? []).slice(0, 2).map((g) => `"${g.promise}"`);
     if (promises.length) out.push(`• It promises ${promises.join(' and ')}.`);
     out.push(`• ${deliveryHearsay(live.perceivedDelivery, live.realDelivery, row?.hearsay)}`);
+    out.push(...promiseNote(state, live.id, row?.hearsay?.ledger, live.perceivedDelivery));
     out.push(`• ${[legitimacyPhrase(live.legitimacy), ...streetTalk(live)].join(' ')}`);
   } else {
     const lead = voiceIn(state, townId);
