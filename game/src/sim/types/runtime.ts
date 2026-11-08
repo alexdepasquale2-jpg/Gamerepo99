@@ -207,4 +207,6 @@ export type SimState = {
   shops?: Record<string, import('../goods/shop').ShopPurse>;
   /** Carrying by hand (sim/carry): today's take from facility yards, thanks to tell at dawn (created lazily). */
   carry?: import('../carry').CarryState;
+  /** Civic slice 3: each town's granary, storehouse and yard, and the named goods flows (see sim/civic/town-stores). */
+  townStores?: import('../civic/town-stores').TownStoresState;
 };

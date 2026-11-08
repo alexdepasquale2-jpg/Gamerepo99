@@ -3,11 +3,14 @@
  * households eat from it at dawn, and what they could not eat is `short.food`. The LOD resource
  * `food_grain` (routes, caravans, patrons, road encounters, facility shifts, deliveries) is only a name
  * for that pool: reads and writes of it go through here, never to `state.towns[id].stock`.
- * Despair reads the same pool (economy-lod starve). Pure + deterministic.
+ * Despair reads the same pool (economy-lod starve). The pool's food sits in the town's stores (the granary,
+ * the yard, sites' shelves: civic/town-stores); takes and spoilage go through those, and the ledger shows the
+ * sum. Pure + deterministic.
  */
 
 import { ITEMS } from '../goods/inventory';
 import type { SimState } from '../types/runtime';
+import { drawStores, spoilInTown } from '../civic/town-stores';
 import { COVER_DAYS, HOUSEHOLD, supplyTown } from './village-economy';
 
 /** The LOD resource id that names the town's food. */
@@ -47,15 +50,10 @@ export function foodStarving(state: SimState, townId: string, below = 1): boolea
 
 /** Remove up to `qty` food, bulk grain first, then what keeps worst. Returns what was taken. */
 export function takeFood(state: SimState, townId: string, qty: number): number {
-  const g = ledger(state, townId)?.goods;
-  if (!g || qty <= 0) return 0;
+  if (!ledger(state, townId) || qty <= 0) return 0;
   let left = qty;
-  for (const item of [BULK_FOOD_ITEM, 'berries', 'fish', 'bread']) {
-    const take = Math.min(left, Math.max(0, g[item] ?? 0));
-    if (take <= 0) continue;
-    g[item] = (g[item] ?? 0) - take;
-    left -= take;
-  }
+  // Food taken out of town (war rations, the LOD's hauls to a hungrier neighbour): named so the stores balance.
+  for (const item of [BULK_FOOD_ITEM, 'berries', 'fish', 'bread']) left -= drawStores(state, townId, item, left, 'sink:taken');
   return qty - left;
 }
 
@@ -63,7 +61,8 @@ export function takeFood(state: SimState, townId: string, qty: number): number {
 export function spoilFood(state: SimState, townId: string, rate: number, floor = 0): void {
   const g = ledger(state, townId)?.goods;
   if (!g || !(rate > 0)) return;
-  for (const item of HOUSEHOLD.food.eats) if (typeof g[item] === 'number') g[item] = Math.max(floor, g[item]! * (1 - rate));
+  // Each store loses its share, so the floor holds for the town as a whole (spoilInTown).
+  for (const item of HOUSEHOLD.food.eats) if (typeof g[item] === 'number') spoilInTown(state, townId, item, rate, floor);
 }
 
 // ---- Any LOD resource: food goes to the ledger, the rest to town.stock. ----

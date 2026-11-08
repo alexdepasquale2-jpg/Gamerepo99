@@ -7,7 +7,9 @@
  *   4. Each paid hand buys a day's ration from a food site in town (closing the coin loop); a town
  *      that went short at this dawn's meal leaves some hands unfed. Unfed long enough they fall sick,
  *      then leave, and each time the town's despair is nudged up.
- *   5. The owner draws profit above the reserve; the manager hires one hand when there is room and coin.
+ *   5. The owner draws profit above the reserve; the manager hires one hand when there is room and coin,
+ *      and a hauler (slice 3: an idle hand with no trade of their own) for a kind that has the post, who
+ *      carries the site's goods to and from the town stores (civic/hauling) and is paid like any hand.
  * Coin only moves between tills and purses here (moveCoin logs each move): the loop creates and destroys
  * none. Road crews (crew-run sites) and the player's workshops keep their own rules. Pure + deterministic.
  */
@@ -19,8 +21,11 @@ import { ITEM_BY_ID } from '../goods/inventory';
 import { JOBS, jobOf } from '../goods/jobs';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { STORES } from './town-stores';
+// Side effect: registers the hauling dawn tick, its dawn lines and dev hook alongside the staffing tick.
+import './hauling';
 import {
-  CIVIC, canWork, civicOf, companyOfSite, managedBy, moveCoin, remember, setWorkers, sitesIn, syncSites, vacate, type CivicNews, type Site,
+  SITE_KIND_BY_ID, CIVIC, canWork, civicOf, companyOfSite, managedBy, moveCoin, remember, setWorkers, sitesIn, syncSites, vacate, type CivicNews, type Site,
 } from './sites';
 
 const NEWS_KEEP = 40;
@@ -98,6 +103,7 @@ function fillPost(state: SimState, site: Site): void {
 /** Someone leaves a site's crew (or post): off the payroll, not hired back for a while. */
 function leave(state: SimState, site: Site, c: Company, id: string, why: 'quit' | 'unfed'): void {
   if (site.managerId === id) vacate(state, site, why === 'quit' ? 'unpaid' : 'hungry');
+  else if (site.haulers.includes(id)) site.haulers = site.haulers.filter((h) => h !== id);
   else setWorkers(state, site, site.workers.filter((w) => w !== id));
   delete c.unpaid[id];
   delete site.unfed?.[id];
@@ -105,8 +111,8 @@ function leave(state: SimState, site: Site, c: Company, id: string, why: 'quit' 
   remember(site, { day: state.day, what: 'quit', personId: id, note: why });
 }
 
-/** The hands a site pays: its workers, and a manager who does not own it. */
-const payroll = (site: Site): string[] => [...site.workers, ...(site.managerId && site.managerId !== site.ownerId ? [site.managerId] : [])];
+/** The hands a site pays: its workers, its haulers, and a manager who does not own it. */
+const payroll = (site: Site): string[] => [...site.workers, ...(site.haulers ?? []), ...(site.managerId && site.managerId !== site.ownerId ? [site.managerId] : [])];
 
 function payWages(state: SimState, site: Site, c: Company): string[] {
   const paid: string[] = [];
@@ -173,6 +179,29 @@ function hire(state: SimState, site: Site, c: Company, residents: string[], busy
   remember(site, { day: state.day, what: 'hired', personId: pick });
 }
 
+/** Haulers who died, moved away or can no longer carry come off the books (no wage owed, no news). */
+function pruneHaulers(state: SimState, site: Site, c: Company): void {
+  // One promoted to run a site has other work now.
+  const keep = (site.haulers ?? []).filter((id) => canWork(state, id, true) && state.people[id]?.townId === site.townId && !managedBy(state, id).length);
+  for (const id of site.haulers ?? []) if (!keep.includes(id)) { delete c.unpaid[id]; delete site.unfed?.[id]; }
+  site.haulers = keep;
+}
+
+/**
+ * Hire a hauler for a kind with the post (sites.json roles): someone with no trade of their own (their hands
+ * are free), not on another site's books, and only when the till can carry one more wage.
+ */
+function hireHauler(state: SimState, site: Site, c: Company, residents: string[], busy: Set<string>): void {
+  if (!site.managerId || !(SITE_KIND_BY_ID.get(site.kind)?.roles ?? []).includes('hauler')) return;
+  if ((site.haulers ??= []).length >= STORES.maxHaulers) return;
+  if (c.coin < site.wage * COMPANY.hireBufferDays * (payroll(site).length + 1)) return;
+  const pick = residents.find((id) => !busy.has(id) && canWork(state, id) && fresh(state, site, id) && !companyOf(state, id) && jobOf(state, id).recipes.length === 0);
+  if (!pick) return;
+  site.haulers = [...site.haulers, pick];
+  busy.add(pick);
+  remember(site, { day: state.day, what: 'hired', personId: pick, note: 'hauler' });
+}
+
 /** Days off hunger before the sick are well again. */
 const MEND_DAYS = 2;
 
@@ -218,6 +247,7 @@ export function tickSites(state: SimState): void {
     if (site.status === 'building') continue;
     const c = companyOfSite(state, site);
     if (!c) continue;
+    pruneHaulers(state, site, c);
     fillPost(state, site);
     if (site.managerId) {
       // A raise once the till is full, back to the base wage only when it falls under the reserve (no flip-flop).
@@ -230,8 +260,12 @@ export function tickSites(state: SimState): void {
     feedHands(state, site, c, sellersIn(site.townId));
     if (c.coin > COMPANY.reserve) moveCoin(state, tillOf(site), purseOf(c.ownerId), Math.floor((c.coin - COMPANY.reserve) * COMPANY.ownerDraw), 'draw');
     // Builders, and anyone who already runs a site, are not free to be hired.
-    const busy = new Set([...activePlans(state).map((p) => p.ownerId), ...sitesIn(state).flatMap((s) => (s.managerId ? [s.managerId] : []))]);
+    const busy = new Set([
+      ...activePlans(state).map((p) => p.ownerId),
+      ...sitesIn(state).flatMap((s) => [...(s.managerId ? [s.managerId] : []), ...(s.haulers ?? [])]),
+    ]);
     hire(state, site, c, residents.get(site.townId) ?? [], busy);
+    hireHauler(state, site, c, residents.get(site.townId) ?? [], busy);
     site.coin = c.coin;
     site.status = site.managerId ? 'working' : 'idle';
   }
