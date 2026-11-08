@@ -8,7 +8,7 @@
 import type { DataTables } from './load-data';
 import { pushDelta } from './legacy/state';
 import { districtAt, districtId, districtOfTown } from './map/districts';
-import { deriveRng } from './rng';
+import { pickLeader, residentsOf, tickDissent } from './doctrine-dissent';
 import { findCrossTownKin, pushJuice } from './packets';
 import type { SimState } from './types/runtime';
 import type { DoctrineSupplyHook } from './economy/economy-lod-types';
@@ -30,6 +30,10 @@ export type DoctrineState = DoctrineMeters & {
   gen?: { name: string; style: string; promise: string; leaderPersonId?: string };
   /** The patron that took this doctrine as its own because its authored one is not in this world (patrons/doctrine-link). */
   patronId?: string;
+  /** Generated districts: discontent built up against this doctrine while it stood alone (sim/doctrine-dissent). */
+  dissent?: number;
+  /** A rival creed dissent raised: the doctrine it rose against (fed by the district's discontent until it holds the seat). */
+  risenAgainst?: string;
 };
 
 const GAP_MIN = 0.25;
@@ -156,12 +160,6 @@ export const doctrineRow = (state: SimState, id: string): DoctrineRow | undefine
 
 /** Every town this world holds: its economy towns (set at boot from the world layout, kept in saves). */
 const worldTowns = (state: SimState): Set<string> => new Set(Object.keys(state.towns ?? {}));
-const residents = (state: SimState, townId: string): string[] =>
-  Object.keys(state.people ?? {}).sort().filter((id) => {
-    const p = state.people[id]!;
-    // Visitors (vis_*) and folk on the road or retired are not the town's own to lead.
-    return p.townId === townId && !id.startsWith('vis_') && !p.tags?.some((t) => t === 'on_road' || t === 'retired');
-  });
 
 /** The generated district this world is (from its towns' ids), if it is one. */
 function districtOfWorld(towns: Set<string>): { col: number; row: number } | null {
@@ -181,7 +179,7 @@ export function worldSeat(state: SimState): string | undefined {
   const seat = d && districtAt(state.seed, d.col, d.row).towns.find((t) => t.seat)?.id;
   if (seat && towns.has(seat)) return seat;
   const ranked = [...towns].sort();
-  return ranked.map((t) => [t, residents(state, t).length] as const).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return ranked.map((t) => [t, residentsOf(state, t).length] as const).sort((a, b) => b[1] - a[1])[0]?.[0];
 }
 
 /** A generated district's one doctrine: at its seat, meters by style, led by one of the seat's own folk. */
@@ -189,13 +187,8 @@ function seedGenerated(state: SimState, d: { col: number; row: number }, seat: s
   const char = districtAt(state.seed, d.col, d.row).character.doctrine;
   const start = styleOf(state, char.style)?.start;
   if (!start) return undefined;
-  const folk = residents(state, seat);
-  const adults = folk.filter((id) => (state.people[id]!.age ?? 30) >= 18);
-  const pool = adults.length ? adults : folk;
-  const leader = pool.length ? pool[deriveRng(state.seed, 'doctrine-leader', districtId(d.col, d.row)).int(0, pool.length)] : undefined;
   // Tagged as leader so doctrine voices, the Power page and patron brokers find them (power-page leaderOf).
-  const lp = leader ? state.people[leader] : undefined;
-  if (lp && !lp.tags?.includes('leader')) lp.tags = [...(lp.tags ?? []), 'leader'];
+  const leader = pickLeader(state, seat, 'doctrine-leader', districtId(d.col, d.row));
   return { id: `doctrine_${districtId(d.col, d.row)}`, townId: seat, ...start, gen: { ...char, ...(leader ? { leaderPersonId: leader } : {}) } };
 }
 
@@ -288,6 +281,8 @@ function linked(state: SimState, a: string, b: string): boolean {
 /** One dawn of doctrine pressure. */
 export function tickDoctrines(state: SimState): { collapsed: string[]; competed: string[] } {
   const all = ensureDoctrines(state);
+  // A generated district's lone doctrine has its own discontent (and may raise a rival) before rivals compete.
+  tickDissent(state, all, worldSeat(state), (a, b) => linked(state, a, b));
   const ids = Object.keys(all).sort();
   const result = { collapsed: [] as string[], competed: [] as string[] };
 

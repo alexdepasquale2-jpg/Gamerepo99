@@ -7,7 +7,7 @@ import { siteKindFromSiteId } from '../scenario/scenario-resolve';
 import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
 import { deriveRng } from '../rng';
-import { namePool } from '../names';
+import { distinctName, namePool, nameScope } from '../names';
 import { generatedVector, seedWounds, woundIdsOf, type VoiceVector } from '../social/seeded-wounds';
 import type { InhabitantParts, PersonState, SimState } from '../types/runtime';
 import { resolveStartTown } from '../start-rules';
@@ -76,7 +76,7 @@ export function assignSettlementTowns(
 /**
  * Deterministic generated names; kin-edge components share a family name. Own rng streams only. Home towns
  * draw from data.names exactly as before; a generated district town draws from its culture (sim/names) and
- * rerolls the given name so no two folk in one town share a full name.
+ * rerolls the given name so no two folk anywhere in the district share a full name (sim/names nameScope).
  */
 function assignNames(out: Record<string, PersonState>, world: FabricWorld, data: DataTables, seed: number): void {
   if (!data.names.given?.length || !data.names.family?.length) return;
@@ -97,7 +97,7 @@ function assignNames(out: Record<string, PersonState>, world: FabricWorld, data:
     if (!s) taken.set(t ?? '', (s = new Set()));
     return s;
   };
-  for (const p of Object.values(out)) if (p.name) namesIn(p.townId).add(p.name);
+  for (const p of Object.values(out)) if (p.name) namesIn(nameScope(p.townId)).add(p.name);
   const poolOf = (t: string | undefined) => (t && districtOfTown(t) ? namePool(seed, t) : data.names);
   // Plain id order (not localeCompare): who keeps a colliding name must not hang on the runtime's locale.
   for (const p of Object.values(out).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
@@ -107,9 +107,9 @@ function assignNames(out: Record<string, PersonState>, world: FabricWorld, data:
     // The family name comes from the kin root's pool, so kin share it even if they live in different towns.
     const root = find(p.id), { family } = poolOf(out[root]?.townId);
     const f = family[deriveRng(seed, root, 'family').int(0, family.length)]!;
-    let name = `${given[deriveRng(seed, p.id, 'name').int(0, given.length)]!} ${f}`;
-    const here = namesIn(p.townId);
-    for (let k = 1; district && here.has(name) && k < 8; k++) name = `${given[deriveRng(seed, p.id, 'name', k).int(0, given.length)]!} ${f}`;
+    const roll = (k: number) => (k ? deriveRng(seed, p.id, 'name', k) : deriveRng(seed, p.id, 'name')).int(0, given.length);
+    const here = namesIn(nameScope(p.townId));
+    const name = district ? distinctName(given, f, here, roll) : `${given[roll(0)]!} ${f}`;
     here.add(name);
     p.name = name;
   }

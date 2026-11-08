@@ -6,7 +6,8 @@
  */
 import art from '../../data/art/settlements.json';
 import { deriveRng, type Rng } from '../rng';
-import type { LayoutSettlement } from './world-layout';
+import { bresenhamLine } from './corridor';
+import type { LayoutRoute, LayoutSettlement } from './world-layout';
 
 export type TileOff = { q: number; r: number };
 export type PlanBuilding = TileOff & { type: string; interior?: string };
@@ -52,6 +53,8 @@ export const townSeed = (town: LayoutSettlement): number => (Math.imul(town.q | 
 
 /** Graveyard: GRAVE_COLS x GRAVE_ROWS plots; later graves lie between earlier ones, inside the same yard. */
 const GRAVE_COLS = 4, GRAVE_ROWS = 3, GRAVE_STEP = { q: 0.9, r: 0.8 };
+/** How far south a graveyard steps when roads cross both of its usual spots (stays inside the town box). */
+const GRAVE_SOUTH = 3.5;
 export function graveOff(plan: TownPlan, n: number): TileOff {
   const layer = Math.floor(n / (GRAVE_COLS * GRAVE_ROWS)) % 2, k = n % (GRAVE_COLS * GRAVE_ROWS);
   return { q: plan.graves.q + (k % GRAVE_COLS) * GRAVE_STEP.q + layer * GRAVE_STEP.q / 2, r: plan.graves.r + Math.floor(k / GRAVE_COLS) * GRAVE_STEP.r + layer * GRAVE_STEP.r / 2 };
@@ -64,10 +67,43 @@ export function paletteIndexOf(town: LayoutSettlement, i: number): number {
   return (h + i) % art.palettes.length;
 }
 
+/** Clear verge kept either side of a road tile, so a track runs into town between buildings, not under them. */
+const LANE_VERGE = 0.25;
+
+/**
+ * Road tiles inside a town's box, as offsets from its centre (the same Bresenham cells the road raster paints,
+ * stamp-raster buildRoads), sorted so the plan cache key is stable. Any route crossing the box counts, not only
+ * the ones that end here.
+ */
+export function townLanes(town: LayoutSettlement, routes: readonly LayoutRoute[]): TileOff[] {
+  const seen = new Set<string>(), out: TileOff[] = [];
+  const reach = LIMIT + 2;
+  for (const route of routes) for (let i = 1; i < route.path.length; i++) {
+    const a = route.path[i - 1]!, b = route.path[i]!;
+    // Skip segments whose bounding box misses the town box before tracing them.
+    if (Math.max(a.q, b.q) < town.q - reach - 1 || Math.min(a.q, b.q) > town.q + reach + 1 || Math.max(a.r, b.r) < town.r - reach - 1 || Math.min(a.r, b.r) > town.r + reach + 1) continue;
+    for (const c of bresenhamLine(Math.round(a.q), Math.round(a.r), Math.round(b.q), Math.round(b.r))) {
+      const q = c.q - town.q, r = c.r - town.r, k = `${q},${r}`;
+      if (Math.abs(q) > reach || Math.abs(r) > reach || seen.has(k)) continue;
+      seen.add(k); out.push({ q, r });
+    }
+  }
+  return out.sort((x, y) => x.r - y.r || x.q - y.q);
+}
+
+/** A road tile's footprint in plan space (offsets are from the centre tile's foot: a tile spans y in [r-1, r]). */
+const laneRect = (c: TileOff, verge = LANE_VERGE): Rect => pad({ x0: c.q - 0.5, y0: c.r - 1, x1: c.q + 0.5, y1: c.r }, verge);
+const laneKeys = new WeakMap<LayoutSettlement, string>();
+const laneKey = (town: LayoutSettlement): string => {
+  let k = laneKeys.get(town);
+  if (k === undefined) laneKeys.set(town, (k = (town.lanes ?? []).map((c) => `${c.q},${c.r}`).join(';')));
+  return k;
+};
+
 const cache = new Map<string, TownPlan>();
 
 export function townPlan(town: LayoutSettlement, seed = townSeed(town)): TownPlan {
-  const key = `${seed}|${town.id}|${town.kind ?? 'village'}`;
+  const key = `${seed}|${town.id}|${town.kind ?? 'village'}|${laneKey(town)}`;
   const hit = cache.get(key);
   if (hit) return hit;
   const plan = makePlan(town, seed);
@@ -92,14 +128,27 @@ function makePlan(town: LayoutSettlement, seed: number): TownPlan {
   const taken: Rect[] = [rectOf(pz.rect, px, py, flip)];
   // Graveyard: a small yard beside the plaza, on the side the dice pick.
   const gSide = rng.next() < 0.5 ? -1 : 1;
-  const graves: TileOff = tall ? { q: gSide > 0 ? 3.6 : -6.6, r: round(py + 3) } : { q: gSide > 0 ? round(px + 5.6) : round(px - 8.3), r: 3.6 };
-  taken.push({ x0: graves.q - 0.6, y0: graves.r - 1.2, x1: graves.q + (GRAVE_COLS - 1) * GRAVE_STEP.q + 0.6, y1: graves.r + (GRAVE_ROWS - 1) * GRAVE_STEP.r + 0.6 });
+  // Road tiles (and a verge) are kept clear of everything placed below; plaza furniture may stand by the road.
+  const lanes = (town.lanes ?? []).map((c) => laneRect(c));
+  const onLane = (r: Rect): boolean => lanes.some((l) => hits(r, l));
+  const graveAt = (side: number): TileOff => tall ? { q: side > 0 ? 3.6 : -6.6, r: round(py + 3) } : { q: side > 0 ? round(px + 5.6) : round(px - 8.3), r: 3.6 };
+  const yardOf = (g: TileOff): Rect => ({ x0: g.q - 0.6, y0: g.r - 1.2, x1: g.q + (GRAVE_COLS - 1) * GRAVE_STEP.q + 0.6, y1: g.r + (GRAVE_ROWS - 1) * GRAVE_STEP.r + 0.6 });
+  // A road through the yard the dice picked moves it to the plaza's other side, then a row further south (no extra roll).
+  const yards = [graveAt(gSide), graveAt(-gSide)].flatMap((g) => [g, { q: g.q, r: round(g.r + GRAVE_SOUTH) }]);
+  const graves = [yards[0]!, yards[2]!, yards[1]!, yards[3]!].find((g) => !onLane(yardOf(g))) ?? yards[0]!;
+  taken.push(yardOf(graves));
   // A city's wall runs along its back (north) edge; reserve the band before the buildings go in.
   const walls: TileOff[] = [];
   const nWall = rng.int(rule.wall[0]!, rule.wall[1]! + 1);
   const wx = Math.round((rng.next() * 2 - 1) * Math.max(0, LIMIT - 2 - nWall * 2)) / 2;
-  for (let i = 0; i < nWall; i++) walls.push({ q: wx + (i - (nWall - 1) / 2) * 4, r: -LIMIT - 1 + FOOT.wall!.h });
+  for (let i = 0; i < nWall; i++) {
+    const w = { q: wx + (i - (nWall - 1) / 2) * 4, r: -LIMIT - 1 + FOOT.wall!.h };
+    if (!onLane(footRect('wall', w))) walls.push(w); // a road through the wall line leaves a gate gap
+  }
   for (const w of walls) taken.push(footRect('wall', w));
+  const solid = taken.length; // everything after this index is a building lot
+  taken.push(...lanes);
+  const offLanes = (): Rect[] => taken.filter((_, k) => k < solid || k >= solid + lanes.length);
 
   const want: { type: string; interior?: string }[] = rule.required.filter((b) => STAMPS.has(b.type)).map((b) => ({ ...b }));
   const total = Math.max(want.length, rng.int(rule.count[0]!, rule.count[1]! + 1));
@@ -111,7 +160,11 @@ function makePlan(town: LayoutSettlement, seed: number): TownPlan {
   for (const [i, b] of want.entries()) {
     // A required stamp (the inn, the ledger office) that finds no lot squeezes in with no gap.
     const spot = placeBuilding(rng, b.type, taken, tall, slope, px, py, pz.rect, flip, rule.spacing, i === 0)
-      ?? (i < nRequired ? placeBuilding(rng, b.type, taken, tall, slope, px, py, pz.rect, flip, 0, false) : null);
+      // Roads take lots, so with a road in town an ordinary house may squeeze in too (footprints are generous).
+      ?? (i < nRequired || lanes.length ? placeBuilding(rng, b.type, taken, tall, slope, px, py, pz.rect, flip, 0, false) : null)
+      // Then drop the verges (the road tiles themselves stay clear), and only then the roads, rather than lose the inn or office.
+      ?? (i < nRequired && lanes.length ? placeBuilding(rng, b.type, [...offLanes(), ...(town.lanes ?? []).map((c) => laneRect(c, 0))], tall, slope, px, py, pz.rect, flip, 0, false) : null)
+      ?? (i < nRequired && lanes.length ? placeBuilding(rng, b.type, offLanes(), tall, slope, px, py, pz.rect, flip, 0, false) : null);
     if (!spot) continue;
     buildings.push({ ...b, ...spot });
     taken.push(pad(footRect(b.type, spot), rule.spacing));

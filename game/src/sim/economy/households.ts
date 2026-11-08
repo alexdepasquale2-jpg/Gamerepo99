@@ -6,7 +6,7 @@
  * Sex is derived from the seed, not stored. Pure + deterministic.
  */
 
-import { namePool } from '../names';
+import { namePool, nameScope } from '../names';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
@@ -133,8 +133,10 @@ export function tickHouseholds(state: SimState): void {
     const id = `kid${k.next++}`;
     rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
     // Not a sibling's name, nor one that would make a second "<given> <surname>" in town once grown.
-    const used = new Set(k.children.filter((c) => c.householdId === h.id || (c.townId === h.townId && c.surname === h.surname)).map((c) => c.given));
-    for (const p of Object.values(state.people)) if (p.townId === h.townId && p.name?.endsWith(` ${h.surname}`)) used.add(p.name.slice(0, -h.surname.length - 1));
+    // A district counts as one town here (sim/names nameScope): its folk move between towns, so a name must not repeat in it.
+    const scope = nameScope(h.townId);
+    const used = new Set(k.children.filter((c) => c.householdId === h.id || (nameScope(c.townId) === scope && c.surname === h.surname)).map((c) => c.given));
+    for (const p of Object.values(state.people)) if (nameScope(p.townId) === scope && p.name?.endsWith(` ${h.surname}`)) used.add(p.name.slice(0, -h.surname.length - 1));
     const given = namePool(state, h.townId).given; // born in a district: its culture's names
     k.children.push({
       id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: [h.adults[0]!, h.adults[1]!],
