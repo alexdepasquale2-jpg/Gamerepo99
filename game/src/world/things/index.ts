@@ -27,6 +27,10 @@ import { createChests, type ChestsLayer } from './chests';
 import { createGroundItems, type GroundLayer } from './ground';
 import { createPlots, type PlotsLayer } from './plots';
 import { createGraves, type GravesLayer } from './graves';
+import { stallThings } from './stalls';
+import { createPiles } from './piles';
+import { createWorkSpots, type WorkSpotsLayer } from './work-spots';
+import type { MapPoint } from '../../sim/map/world-layout';
 
 /** What a `tile:<q>,<r>` Thing carries: the faced workable tile and everything sim/land-acts needs to work it. */
 export type TileData = {
@@ -46,6 +50,8 @@ const BOARD_REACH = 50, SIGN_REACH = TILE_PX * 1.8, HEARTH_REACH = 44, PROP_REAC
 
 export type WorldThings = {
   nodes: NodesLayer; facilities: FacilitiesLayer; chests: ChestsLayer; ground: GroundLayer; plots: PlotsLayer; graves: GravesLayer;
+  /** Where people are at work today (sim/tasks): hold E there to help. */
+  work: WorkSpotsLayer;
   things(near: Pt, radius: number, facing?: { dx: number; dy: number }): Thing[];
   /** The tile Thing in front of a point (null when nothing there can be worked). */
   tileThing(at: Pt, facing: { dx: number; dy: number }): Thing | null;
@@ -64,6 +70,8 @@ export function createWorldThings(o: {
   drawn: (q: number, r: number) => DrawnTile;
   /** Wild props standing near a point (chunk-layer), so each can be used. */
   propsNear?: (near: Pt, radius: number) => { prop: FacilityRenderView; x: number; y: number }[];
+  /** The nav's road point (work spots on roads stand on walkable ground). */
+  roadPoint?: (path: MapPoint[], f: number) => MapPoint;
 }): WorldThings {
   const { scene, getState } = o;
   const byTown = new Map(o.towns.map((t) => [t.town.id, t]));
@@ -73,6 +81,8 @@ export function createWorldThings(o: {
   const ground = createGroundItems(scene, getState);
   const plots = createPlots(scene, getState);
   const graves = createGraves(scene, getState, (townId, n) => byTown.get(townId)?.grave(n));
+  const piles = createPiles(scene, getState, o.towns); // heavy goods to carry (sim/carry)
+  const work = createWorkSpots({ scene, getState, layout: o.layout, towns: o.towns, ...(o.roadPoint ? { roadPoint: o.roadPoint } : {}) });
   const landTowns: LandTown[] = o.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: o.nameOf(t.id) }));
   const view: LandView = { ...o.terrain, drawn: o.drawn };
 
@@ -149,11 +159,11 @@ export function createWorldThings(o: {
     return null;
   };
 
-  const all = [nodes, facilities, chests, ground, plots, graves];
+  const all = [nodes, facilities, chests, ground, plots, graves, piles, work];
   return {
-    nodes, facilities, chests, ground, plots, graves,
+    nodes, facilities, chests, ground, plots, graves, work,
     things(near, radius, facing) {
-      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...wild(near, radius)];
+      const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...work.things(near, radius), ...wild(near, radius), ...stallThings(o.towns, near, radius), ...piles.things(near, radius)];
       if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }
       return out;
     },

@@ -72,20 +72,6 @@
       "family": "speak"
     },
     {
-      "id": "favor_do",
-      "label": "Do a favor",
-      "short": "Do a favor",
-      "hostMethod": "carry_burden",
-      "family": "help"
-    },
-    {
-      "id": "work_alongside",
-      "label": "Work alongside (mend, harvest)",
-      "short": "Work alongside",
-      "hostMethod": "carry_burden",
-      "family": "help"
-    },
-    {
       "id": "gift_give",
       "label": "Give a gift",
       "short": "Give a gift",
@@ -98,13 +84,6 @@
       "short": "Trade fairly",
       "hostMethod": "carry_burden",
       "family": "give"
-    },
-    {
-      "id": "carry_goods",
-      "label": "Carry goods for them",
-      "short": "Carry goods",
-      "hostMethod": "carry_burden",
-      "family": "help"
     },
     {
       "id": "promise_make",
@@ -167,19 +146,6 @@
         "{name} nods slowly. \"It's good to be needed.\""
       ],
       "family": "ask"
-    },
-    {
-      "id": "show_up",
-      "label": "Show up",
-      "short": "Show up",
-      "hostMethod": "inspire",
-      "oncePerDay": true,
-      "lines": [
-        "{name} notices you came. Neither of you says much.",
-        "{name} makes room for you without a word.",
-        "{name} glances over. \"You're here again.\""
-      ],
-      "family": "help"
     },
     {
       "id": "talk_empty_cheer",

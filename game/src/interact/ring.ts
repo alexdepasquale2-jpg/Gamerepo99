@@ -3,11 +3,12 @@
  * canvas. At most RING_MAX chips, never a page: past six verbs the chips are families (Speak, Help, …) and
  * picking one shows its verbs, with the family's name above them to step back. Chip text is short; the full
  * label is a tip on hover or long-press. Kind = teal, savage = rust, family = gold, held item = dashed.
- * Keys 1–6 pick while it is open (see input.ts); a tap or click picks too.
+ * Each chip leads with its family's glyph (ring-look.ts holds the look). Keys 1–6 pick while it is open (see input.ts); a tap or click picks too.
  */
 import type { Pt } from '../app/contracts';
 import { RING_MAX, type RingChip } from '../sim/play-session/verb-families';
 import type { Layer } from './layer';
+import { ensureRingLook, glyphFor } from './ring-look';
 
 export type RingView = {
   family: string | null;
@@ -32,6 +33,7 @@ const LONG_PRESS_MS = 450;
 const EDGE = 4;
 
 export function createRing(layer: Layer): Ring {
+  ensureRingLook();
   const root = document.createElement('div');
   root.className = 'ix-ring';
   root.style.display = 'none';
@@ -81,7 +83,12 @@ export function createRing(layer: Layer): Ring {
     b.style.animationDelay = `${i * 30}ms`;
     const n = document.createElement('sup');
     n.textContent = String(i + 1);
-    b.append(n, document.createTextNode(c.verbs ? `${c.label} ›` : c.label));
+    // The glyph leads (icon first, then the short label); it is decoration, so screen readers skip it.
+    const g = document.createElement('i');
+    g.className = 'ix-glyph';
+    g.setAttribute('aria-hidden', 'true');
+    g.textContent = glyphFor(c);
+    b.append(n, g, document.createTextNode(c.verbs ? `${c.label} ›` : c.label));
     // A press must start on this chip (not the tap that opened the ring under the finger). A long press
     // shows the full label instead of acting.
     let downAt = 0;

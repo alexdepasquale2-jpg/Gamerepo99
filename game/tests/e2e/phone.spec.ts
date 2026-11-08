@@ -1,16 +1,15 @@
-// A phone plays the whole game: the touch bar shows, a tap on the ground walks, the Act button opens a ring.
+// A phone plays the whole game: the on-screen pad shows, a tap on the ground walks, A opens a ring, B backs out.
 import { devices } from '@playwright/test';
 import { bootToPlay, dev, expect, hearth, settle, test } from './support';
 
 const { defaultBrowserType: _browser, ...pixel } = devices['Pixel 7'];
 test.use(pixel);
 
-test('phone viewport: touch bar, tap to walk, act button', async ({ page }) => {
+test('phone viewport: pad, tap to walk, A and B', async ({ page }) => {
   await bootToPlay(page);
-  const bar = page.locator('#hf-touch');
-  // The bar itself is a zero-height dock (its groups are positioned), so check it is shown and its buttons are.
-  await expect(bar).not.toHaveAttribute('hidden');
-  for (const id of ['satchel', 'map', 'letters', 'menu']) await expect(bar.locator(`[data-id=${id}]`)).toBeInViewport();
+  const bar = page.locator('#hf-pad');
+  await expect(bar).toBeVisible();
+  for (const b of ['a', 'b', 'x', 'y', 'start', 'select']) await expect(bar.locator(`[data-btn=${b}]`)).toBeInViewport();
 
   // Tap the ground a little way off the player (the camera centres on them): they walk there.
   const start = await dev<{ q: number; r: number }>(page, 'where');
@@ -30,9 +29,11 @@ test('phone viewport: touch bar, tap to walk, act button', async ({ page }) => {
   const people = await dev<{ id: string; inside: string | null }[]>(page, 'people');
   const who = people.find((p) => !p.inside) ?? people[0];
   await dev(page, 'teleportTo', who.id);
-  const act = bar.locator('[data-id=act]');
+  const act = bar.locator('[data-btn=a]');
   await expect(act).toBeVisible();
   await act.tap();
   await expect(page.locator('.ix-ring')).toBeVisible();
   expect(await hearth(page, (h) => h.dev.ring()?.chips?.length ?? 0)).toBeGreaterThan(0);
+  await bar.locator('[data-btn=b]').tap();
+  await expect(page.locator('.ix-ring')).toBeHidden();
 });

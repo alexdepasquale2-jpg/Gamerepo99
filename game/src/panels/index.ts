@@ -1,6 +1,6 @@
 /**
  * PANELS area: hotbar + satchel, noticeboard (a tab for every board page), wagon trade, letters, world map +
- * minimap, the road sheet at a signpost, the company sheet (your workshops), and the craft sheet at a hearth, workbench or forge. Every sheet opens through ctx.ui.sheet, one at a time; the
+ * minimap, the road sheet at a signpost, the company sheet (your workshops), the craft sheet at a hearth, workbench or forge, and the shop sheet at a stall, counter, pedlar or wagon. Every sheet opens through ctx.ui.sheet, one at a time; the
  * hotbar and minimap sit in a click-through layer over the canvas. See game/README.md.
  */
 import type { GameContext, PanelsApi } from '../app/contracts';
@@ -19,6 +19,8 @@ import { MAP_ID, createWorldMap } from './map';
 import { createRoads } from './roads';
 import { COMPANY_ID, companySheet, watchCompanyVerbs } from './company';
 import { CRAFT_ID, watchCraftVerbs } from './craft';
+import { SHOP_ID, shopNav, shopSheet, watchShopVerbs } from './shop';
+import { SITE_ID, siteSheet, watchSiteVerbs } from './site';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -64,12 +66,19 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     map: { toggle: () => sheets.toggle(MAP_ID, openMap) },
     roads: { open: (townId) => sheets.open(roads.sheet(townId)) },
     company: { open: (townId, companyId) => sheets.open(companySheet(ctx, townId, companyId)) },
+    site: { open: (siteId) => sheets.open(siteSheet(ctx, siteId)) },
     dragging: () => hotbar.dragging(),
     closeAll() {
       hotbar.cancelDrag();
       sheets.close();
     },
     anyOpen: () => sheets.current() !== null,
+    shop: {
+      // A wagon keeps the trade sheet (its id halts the wagon while you deal); everyone else the shop sheet.
+      open: (ref) => (ref.kind === 'wagon' ? api.trade.open(ref.id) : void sheets.open(shopSheet(ctx, ref))),
+      current: shopNav.current,
+      nav: shopNav,
+    },
   };
 
   // Keys: 1–9 pick a hotbar slot, M the map. Only while nothing else (ring, sheet, menu) has the floor;
@@ -91,8 +100,13 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     ctx.events.on('dawn', () => { hotbar.sync(); hudSync(); sheets.refresh(COMPANY_ID); }),
     watchCompanyVerbs(ctx),
     watchCraftVerbs(ctx, (def) => sheets.open(def)),
+    watchSiteVerbs(ctx, (siteId) => api.site.open(siteId)),
+    ctx.events.on('dawn', () => sheets.refresh(SITE_ID)),
+    ctx.events.on('inventory', () => sheets.refresh(SITE_ID)),
     ctx.events.on('arrive', () => { hotbar.sync(); hudSync(); }),
     ctx.events.on('state-replaced', () => { sheets.close(); hotbar.reset(); map.reset(); hudSync(); }),
+    ctx.events.on('inventory', () => sheets.refresh(SHOP_ID)),
+    watchShopVerbs(ctx, (ref) => api.shop.open(ref)),
   ];
 
   // One light tick: keep the layer on the canvas, catch inventory changes no event announced, redraw maps.

@@ -78,6 +78,8 @@ export type Inhabitant = {
   activeBodyId?: string;
   /** What this inhabitant was composed from; systems read these, never archetypeId. Older saves: filled lazily. */
   parts?: InhabitantParts;
+  /** The one heavy load in the player's arms (sim/carry; created when lifted, deleted when set down). */
+  carrying?: import('../carry').Carried;
 };
 
 export type PersonState = {
@@ -201,4 +203,10 @@ export type SimState = {
   visitors?: import('../visitors').VisitorsState;
   /** What townsfolk last said of their leader, and each compact's promises kept or broken (see sim/promise-tally). */
   legitimacyVoices?: import('../promise-tally').LegitimacyVoices;
+  /** Shop keepers' tills (and a pedlar's bought-in pack), by purse key (see sim/goods/shop; created lazily). */
+  shops?: Record<string, import('../goods/shop').ShopPurse>;
+  /** Carrying by hand (sim/carry): today's take from facility yards, thanks to tell at dawn (created lazily). */
+  carry?: import('../carry').CarryState;
+  /** Civic slice 3: each town's granary, storehouse and yard, and the named goods flows (see sim/civic/town-stores). */
+  townStores?: import('../civic/town-stores').TownStoresState;
 };

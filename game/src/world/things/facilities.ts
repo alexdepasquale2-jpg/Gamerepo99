@@ -1,7 +1,8 @@
 /**
  * Facilities on the roads (sim/economy/facilities): the mill, wood camp, mine or waystation beside its
  * road, with one crew figure per staffed role at work beside it. A facility nobody staffs stands grey and
- * empty. Things carry `{ nameOf }` as target data (workShift names the towns it feeds).
+ * empty. Its civic site's marks sit beside it (site-marks: a wanted notice when no foreman runs it, a pip
+ * per hand). Things carry `{ nameOf }` as target data (workShift names the towns it feeds).
  */
 import type Phaser from 'phaser';
 import type { Thing } from '../../app/contracts';
@@ -10,10 +11,11 @@ import { facilityPlaces, rolesFor, type FacilityPlace } from '../../sim/economy/
 import { ART_SCALE } from '../art/px';
 import { thingTex } from '../art/thing-art';
 import { tileFoot, type Pt } from '../depth';
+import { drawSiteMarks, facilitySiteLook, lookSig } from './site-marks';
 
 const REACH = 64;
 const KNOWN = new Set(['mill', 'lumber_camp', 'mine', 'waystation']);
-type View = { place: FacilityPlace; pos: Pt; img: Phaser.GameObjects.Image; crew: Phaser.GameObjects.Image[]; sig: string };
+type View = { place: FacilityPlace; pos: Pt; img: Phaser.GameObjects.Image; crew: Phaser.GameObjects.Image[]; marks: Phaser.GameObjects.GameObject[]; sig: string };
 
 export type FacilitiesLayer = {
   things(near: Pt, radius: number): Thing[];
@@ -31,7 +33,7 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
   const staffOf = (id: string) => getState()?.facilityStaff?.[id];
 
   const build = (): void => {
-    for (const v of views) { v.img.destroy(); v.crew.forEach((c) => c.destroy()); }
+    for (const v of views) { v.img.destroy(); v.crew.forEach((c) => c.destroy()); v.marks.forEach((m) => m.destroy()); }
     views = facilityPlaces(getState()).map((place) => {
       const pos = tileFoot(place.q, place.r);
       const img = scene.add.image(pos.x, pos.y, thingTex(KNOWN.has(place.kind) ? place.kind : 'waystation'))
@@ -40,7 +42,7 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
         const x = pos.x + 40 + i * 14, y = pos.y + 4 + (i % 2) * 6;
         return scene.add.image(x, y, thingTex(i === 0 ? 'crew-tool' : 'crew')).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(y).setVisible(false);
       });
-      return { place, pos, img, crew, sig: '' };
+      return { place, pos, img, crew, marks: [], sig: '' };
     });
   };
 
@@ -50,9 +52,14 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
     for (const v of views) {
       const s = staffOf(v.place.id);
       const idle = s?.idle ?? false, staffed = idle ? 0 : Math.min(v.crew.length, s?.staffed ?? v.crew.length);
-      const next = `${idle}:${staffed}`;
+      const st = getState();
+      const look = st ? facilitySiteLook(st, v.place.id) : undefined;
+      const next = `${idle}:${staffed}:${lookSig(look)}`;
       if (next === v.sig) continue;
       v.sig = next;
+      v.marks.forEach((m) => m.destroy());
+      v.marks = look ? drawSiteMarks(scene, look, v.pos.x, v.pos.y) : [];
+      for (const m of v.marks) (m as unknown as Phaser.GameObjects.Components.Visible).setVisible(visible);
       if (idle) v.img.setTint(0x8a8a8a); else v.img.clearTint();
       v.crew.forEach((c, i) => c.setVisible(visible && i < staffed).setData('on', i < staffed));
     }
@@ -76,8 +83,12 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
     }),
     setVisible(on) {
       visible = on;
-      for (const v of views) { v.img.setVisible(on); v.crew.forEach((c) => c.setVisible(on && c.getData('on') === true)); }
+      for (const v of views) {
+        v.img.setVisible(on);
+        v.crew.forEach((c) => c.setVisible(on && c.getData('on') === true));
+        for (const m of v.marks) (m as unknown as Phaser.GameObjects.Components.Visible).setVisible(on);
+      }
     },
-    destroy() { for (const v of views) { v.img.destroy(); v.crew.forEach((c) => c.destroy()); } views = []; },
+    destroy() { for (const v of views) { v.img.destroy(); v.crew.forEach((c) => c.destroy()); v.marks.forEach((m) => m.destroy()); } views = []; },
   };
 }

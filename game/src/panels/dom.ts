@@ -79,7 +79,13 @@ export function createLayer(ctx: GameContext): Layer {
     last = key;
     Object.assign(root.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
     // Hotbar slots and the minimap scale with the canvas so 9 slots always fit (phone to desktop).
-    const slot = Math.round(Math.max(26, Math.min(42, r.width / 11.5)));
+    // On a coarse pointer slots grow to a 44 px touch target whenever nine of them still fit.
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+    const slot = coarse
+      ? Math.round(Math.max(30, Math.min(46, Math.floor((r.width - 16) / 9))))
+      : Math.round(Math.max(26, Math.min(42, r.width / 11.5)));
+    // Band under the canvas: the pad reserve (CSS) only lifts the hotbar by the part that overlaps the world.
+    root.style.setProperty('--hf-below', `${Math.max(0, window.innerHeight - c.bottom)}px`);
     root.style.setProperty('--hf-slot', `${slot}px`);
     root.style.setProperty('--hf-icon-scale', String(Math.max(0.6, Math.min(1.25, (slot - 12) / 24)).toFixed(2)));
     root.style.setProperty('--hf-mini-w', `${Math.round(Math.max(96, Math.min(180, r.width * 0.2)))}px`);

@@ -18,11 +18,13 @@ import { inTownBox } from './town-spots';
 import { createWorldThings } from './things';
 import { buildRoom, roomOccupant, type Room } from './interior';
 import { occupantOf } from '../sim/map/interiors';
+import { counterThing } from './things/stalls';
 import { adoptLegacyBuildingFlags } from '../sim/map/building-ids';
 import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
 import { setWorldInternals } from './dev';
+import { attachLinger } from './linger';
 
 export { preloadWorldAssets, createWorldAssets } from './assets';
 
@@ -61,7 +63,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
 
   const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits, ctx.seed);
   const towns = createSettlements(scene, ctx.layout.settlements);
-  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear });
+  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear, roadPoint: nav.roadPoint });
   const clock = createDayClock(0.3);
   const fx = createLightFx(scene);
   const townOf = (p: Pt): string | null => {
@@ -80,7 +82,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     if (all || what === 'ground') things.ground.refresh();
     if (all || what === 'plots') things.plots.refresh();
     if (all || what === 'edits') chunks.refreshEdits(edits());
-    if (all) { things.facilities.refresh(); things.graves.refresh(); towns.refresh(st(), session.townDespair()); }
+    if (all) { things.facilities.refresh(); things.graves.refresh(); things.work.refresh(); towns.refresh(st(), session.townDespair()); }
   };
 
   let lastKey = '';
@@ -173,6 +175,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
         out = Math.hypot(e.x - near.x, e.y - near.y) <= radius
           ? [{ key: `door:${EXIT_DOOR}`, kind: 'door', id: EXIT_DOOR, x: e.x, y: e.y, reach: room.exitReach, label: 'Door', target: { kind: 'door', id: EXIT_DOOR } }]
           : [];
+        const counter = counterThing({ buildingId: room.building.id, kind: room.building.kind, seat: room.seats[0] }, keeperSeen.get(room.building.id), near, radius);
+        if (counter) out.push(counter);
       } else out = things.things(near, radius, facing);
       return out.sort((a, b) => Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y));
     },
@@ -200,6 +204,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
       syncChunks(player);
       things.nodes.update(player);
       things.facilities.update(time);
+      things.work.update();
       towns.update(time, player, night);
       const lights = towns.spots
         .filter((s) => Math.hypot(s.hearth.x - player.x, s.hearth.y - player.y) < LIGHT_RANGE)
@@ -218,6 +223,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
     ctx.events.on('dawn', () => refresh('all')),
     ctx.events.on('state-replaced', () => { leaveRoom(); tone.snap(); chunks.invalidate(); lastKey = ''; refresh('all'); }),
   ];
+  // Standing still by a tree, rock or fire sits you down (no rest verbs on the ring).
+  const offLinger = attachLinger(ctx, chunks.propsNear);
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
     for (const off of offs) off();
     tone.destroy();
@@ -226,6 +233,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     towns.destroy();
     chunks.destroy();
     fx?.destroy();
+    offLinger();
   });
   setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf });
   return api;

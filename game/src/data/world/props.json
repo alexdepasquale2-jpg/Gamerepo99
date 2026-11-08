@@ -1,98 +1,75 @@
 {
   "version": 1,
-  "spec": "What the wild props drawn in each chunk (sim/map/ladder/dress.ts, stamp-raster road props) do when you stand by them. One row per prop type: name (the prompt label) and verbs (same shape as node/fauna verbs: id, label, short <= 16, needs?, effect bundle; see contrib/use-effects). Every prop verb is once per day per prop type, so a forest of trees is not a wood pile. Critters are not here: they use their animal's verbs in fauna.json. See contrib/thing-verbs.ts.",
+  "spec": "What the wild props drawn in each chunk (sim/map/ladder/dress.ts, stamp-raster road props) do when you stand by them. One row per prop type: name (the prompt label) and verbs (same shape as node/fauna verbs: id, label, short <= 16, needs?, effect bundle; see contrib/use-effects). Every prop verb is once per day per prop type, so a forest of trees is not a wood pile. Critters are not here: they use their animal's verbs in fauna.json. See contrib/thing-verbs.ts. Only verbs that make or change something are verbs: resting is not a menu choice. linger (optional): shade, seat, fire, shelter or holy; standing still by such a prop sits you down (world/linger.ts) and spark trickles in under the shared daily prop cap (sim/linger.ts). lingerTags: per tag, secsPerSpark (seconds sat for one spark) and pose (sit: lowered; stand: upright and still), where (how a neighbour says they saw you, at dawn). scenery: true for a prop with no use at all.",
+  "lingerTags": {
+    "shade": { "secsPerSpark": 30, "pose": "sit", "where": "resting in the shade" },
+    "seat": { "secsPerSpark": 30, "pose": "sit", "where": "sitting out by the road" },
+    "fire": { "secsPerSpark": 20, "pose": "sit", "where": "warming yourself at a fire" },
+    "shelter": { "secsPerSpark": 25, "pose": "sit", "where": "resting under canvas" },
+    "holy": { "secsPerSpark": 15, "pose": "stand", "where": "standing quiet at the shrine" }
+  },
   "props": [
-    { "type": "tree", "name": "Tree", "verbs": [
-      { "id": "branches", "label": "Gather fallen branches", "short": "Gather branches", "effect": { "gain": { "wood": 1 }, "done": "You snap up a few dry branches from under the tree." } },
-      { "id": "shade", "label": "Rest in its shade", "short": "Rest in shade", "effect": { "spark": 2, "done": "The leaves move over you. For a moment nothing is asked of you." } }
+    { "type": "tree", "name": "Tree", "linger": "shade", "verbs": [
+      { "id": "branches", "label": "Gather fallen branches", "short": "Gather branches", "effect": { "gain": { "wood": 1 }, "done": "You snap up a few dry branches from under the tree." } }
     ] },
     { "type": "bush", "name": "Bush", "verbs": [
       { "id": "search", "label": "Search it for berries", "short": "Find berries", "effect": { "gain": { "berries": 1 }, "done": "A handful of berries, half hidden under the leaves." } },
       { "id": "clear", "label": "Pull the bindweed off it", "short": "Pull bindweed", "effect": { "regrow": ["berry_bush", "herb_patch"], "done": "You tear the weed away. The patches round here will come back quicker." } }
     ] },
-    { "type": "rock", "name": "Rock", "verbs": [
-      { "id": "stone", "label": "Pick up a loose stone", "short": "Take a stone", "effect": { "gain": { "stone": 1 }, "done": "A good flat stone comes away in your hand." } },
-      { "id": "sit", "label": "Sit on the rock a while", "short": "Sit a while", "effect": { "spark": 1, "done": "The stone is warm from the sun." } }
+    { "type": "rock", "name": "Rock", "linger": "seat", "verbs": [
+      { "id": "stone", "label": "Pick up a loose stone", "short": "Take a stone", "effect": { "gain": { "stone": 1 }, "done": "A good flat stone comes away in your hand." } }
     ] },
-    { "type": "boulder", "name": "Boulder", "verbs": [
-      { "id": "climb", "label": "Climb up and look out", "short": "Climb and look", "effect": { "spark": 3, "done": "From the top you can see the smoke of the nearest town." } },
+    { "type": "boulder", "name": "Boulder", "linger": "seat", "verbs": [
       { "id": "chip", "label": "Chip a stone off it", "short": "Chip a stone", "effect": { "gain": { "stone": 1 }, "done": "It takes a while, but a stone splits free." } }
     ] },
-    { "type": "log", "name": "Fallen log", "verbs": [
-      { "id": "kindling", "label": "Split off some kindling", "short": "Split kindling", "effect": { "gain": { "wood": 1 }, "done": "The rotten end breaks into good dry kindling." } },
-      { "id": "sit", "label": "Sit on the log", "short": "Sit on the log", "effect": { "spark": 2, "done": "You sit. Your legs thank you." } }
+    { "type": "log", "name": "Fallen log", "linger": "seat", "verbs": [
+      { "id": "kindling", "label": "Split off some kindling", "short": "Split kindling", "effect": { "gain": { "wood": 1 }, "done": "The rotten end breaks into good dry kindling." } }
     ] },
-    { "type": "stump", "name": "Stump", "verbs": [
-      { "id": "roots", "label": "Dig out the dry roots", "short": "Dig out roots", "effect": { "gain": { "wood": 1 }, "done": "The old roots come up dry enough to burn." } },
-      { "id": "rings", "label": "Count the rings", "short": "Count the rings", "effect": { "spark": 1, "done": "You lose count somewhere past sixty. It was old before the towns were." } }
+    { "type": "stump", "name": "Stump", "linger": "seat", "verbs": [
+      { "id": "roots", "label": "Dig out the dry roots", "short": "Dig out roots", "effect": { "gain": { "wood": 1 }, "done": "The old roots come up dry enough to burn." } }
     ] },
-    { "type": "sign", "name": "Sign", "verbs": [
-      { "id": "read", "label": "Read the sign", "short": "Read the sign", "effect": { "spark": 1, "done": "Someone has painted: Hands wanted. Timber paid for." } },
-      { "id": "straighten", "label": "Straighten the post", "short": "Straighten post", "effect": { "spark": 1, "done": "You set it upright and stamp the earth round it." } }
-    ] },
-    { "type": "hay", "name": "Haystack", "verbs": [
-      { "id": "lie", "label": "Lie back in the hay", "short": "Lie in the hay", "effect": { "spark": 3, "done": "It smells of summer. You nearly fall asleep." } },
+    { "type": "sign", "name": "Sign", "scenery": true, "verbs": [] },
+    { "type": "hay", "name": "Haystack", "linger": "seat", "verbs": [
       { "id": "grain", "label": "Shake out the loose grain", "short": "Shake out grain", "effect": { "gain": { "grain": 1 }, "done": "A little grain the threshers missed falls into your hand." } }
     ] },
     { "type": "flowers", "name": "Wildflowers", "verbs": [
-      { "id": "herbs", "label": "Pick the herbs among them", "short": "Pick herbs", "effect": { "gain": { "herbs": 1 }, "done": "Between the flowers grow a few herbs worth having." } },
-      { "id": "smell", "label": "Stop and smell them", "short": "Smell them", "effect": { "spark": 1, "done": "Sweet and a little sharp. You smile without meaning to." } }
+      { "id": "herbs", "label": "Pick the herbs among them", "short": "Pick herbs", "effect": { "gain": { "herbs": 1 }, "done": "Between the flowers grow a few herbs worth having." } }
     ] },
     { "type": "reeds", "name": "Reeds", "verbs": [
-      { "id": "cut", "label": "Cut reeds for fibre", "short": "Cut reeds", "effect": { "gain": { "flax": 1 }, "done": "The reeds split into long fibres, good for twine." } },
-      { "id": "listen", "label": "Listen to the reeds", "short": "Listen", "effect": { "spark": 1, "done": "The wind whistles through them." } }
+      { "id": "cut", "label": "Cut reeds for fibre", "short": "Cut reeds", "effect": { "gain": { "flax": 1 }, "done": "The reeds split into long fibres, good for twine." } }
     ] },
     { "type": "fence_h", "name": "Fence", "verbs": [
-      { "id": "mend", "label": "Mend a loose rail", "short": "Mend a rail", "needs": { "wood": 1 }, "effect": { "spark": 3, "done": "You lash the rail back in place. The sheep stay in another night." } },
-      { "id": "lean", "label": "Lean on the fence", "short": "Lean on it", "effect": { "spark": 1, "done": "You lean on the rail and watch the field." } }
+      { "id": "mend", "label": "Mend a loose rail", "short": "Mend a rail", "needs": { "wood": 1 }, "effect": { "spark": 3, "done": "You lash the rail back in place. The sheep stay in another night." } }
     ] },
     { "type": "fence_v", "name": "Fence", "verbs": [
-      { "id": "mend", "label": "Mend a loose rail", "short": "Mend a rail", "needs": { "wood": 1 }, "effect": { "spark": 3, "done": "You lash the rail back in place. The sheep stay in another night." } },
-      { "id": "lean", "label": "Lean on the fence", "short": "Lean on it", "effect": { "spark": 1, "done": "You lean on the rail and watch the field." } }
+      { "id": "mend", "label": "Mend a loose rail", "short": "Mend a rail", "needs": { "wood": 1 }, "effect": { "spark": 3, "done": "You lash the rail back in place. The sheep stay in another night." } }
     ] },
     { "type": "field", "name": "Field", "verbs": [
-      { "id": "glean", "label": "Glean the field edge", "short": "Glean the edge", "effect": { "gain": { "grain": 1 }, "done": "You glean what the harvest left behind." } },
-      { "id": "weed", "label": "Pull a row of weeds", "short": "Pull weeds", "effect": { "spark": 2, "done": "Hard on the back, but the row looks better for it." } }
+      { "id": "glean", "label": "Glean the field edge", "short": "Glean the edge", "effect": { "gain": { "grain": 1 }, "done": "You glean what the harvest left behind." } }
     ] },
-    { "type": "farmstead", "name": "Farmstead", "verbs": [
-      { "id": "water", "label": "Knock and ask for water", "short": "Ask for water", "effect": { "spark": 3, "done": "The farmer brings a cup of water and asks where you're headed." } },
-      { "id": "chore", "label": "Help with a chore", "short": "Help with chores", "effect": { "gain": { "grain": 1 }, "done": "You carry sacks for an hour. They pay you in grain." } }
-    ] },
-    { "type": "build_site", "name": "Build site", "verbs": [
-      { "id": "timber", "label": "Leave timber for the builders", "short": "Leave timber", "needs": { "timber": 1 }, "effect": { "spark": 4, "despair": -0.01, "done": "You stack the timber by the frame. Someone will be glad of it." } },
-      { "id": "look", "label": "Look over the frame", "short": "Look it over", "effect": { "spark": 1, "done": "Good joints, but half the walls are missing. They need hands." } }
-    ] },
-    { "type": "campfire", "name": "Campfire", "verbs": [
-      { "id": "warm", "label": "Warm your hands", "short": "Warm your hands", "effect": { "spark": 3, "done": "The embers are still warm. You hold your hands over them." } },
+    { "type": "farmstead", "name": "Farmstead", "scenery": true, "verbs": [] },
+    { "type": "build_site", "name": "Build site", "scenery": true, "verbs": [] },
+    { "type": "campfire", "name": "Campfire", "linger": "fire", "verbs": [
       { "id": "roast", "label": "Roast a fish on the embers", "short": "Roast a fish", "needs": { "fish": 1 }, "effect": { "spark": 10, "done": "The fish crisps on a stick. Best meal in days." } }
     ] },
-    { "type": "tent", "name": "Tent", "verbs": [
-      { "id": "look", "label": "Look inside the tent", "short": "Look inside", "effect": { "gain": { "rope": 1 }, "done": "Empty, but someone left a coil of rope behind." } },
-      { "id": "shelter", "label": "Rest under the canvas", "short": "Rest a while", "effect": { "spark": 3, "done": "Out of the wind for a while." } }
+    { "type": "tent", "name": "Tent", "linger": "shelter", "verbs": [
+      { "id": "look", "label": "Look inside the tent", "short": "Look inside", "effect": { "gain": { "rope": 1 }, "done": "Empty, but someone left a coil of rope behind." } }
     ] },
     { "type": "ruin_wall", "name": "Ruined wall", "verbs": [
-      { "id": "rubble", "label": "Search the rubble", "short": "Search rubble", "effect": { "gain": { "stone": 1 }, "done": "You pull a squared stone from the rubble." } },
-      { "id": "carvings", "label": "Trace the old carvings", "short": "Trace carvings", "effect": { "spark": 2, "done": "A name, worn past reading, and a little flame cut beside it." } }
+      { "id": "rubble", "label": "Search the rubble", "short": "Search rubble", "effect": { "gain": { "stone": 1 }, "done": "You pull a squared stone from the rubble." } }
     ] },
-    { "type": "shrine", "name": "Shrine", "verbs": [
-      { "id": "pray", "label": "Stand quiet at the shrine", "short": "Stand quiet", "effect": { "spark": 4, "done": "You stand still a while. Something in you settles." } },
+    { "type": "shrine", "name": "Shrine", "linger": "holy", "verbs": [
       { "id": "offer", "label": "Leave bread as an offering", "short": "Leave offering", "needs": { "bread": 1 }, "effect": { "spark": 6, "despair": -0.02, "done": "You leave the bread on the stone. Word of it will get back to town." } }
     ] },
-    { "type": "cart", "name": "Old cart", "verbs": [
-      { "id": "search", "label": "Search the old cart", "short": "Search the cart", "effect": { "gain": { "wood": 1 }, "done": "A broken board, but it will burn." } },
-      { "id": "lean", "label": "Rest against the wheel", "short": "Rest a while", "effect": { "spark": 2, "done": "You sit against the wheel and get your breath back." } }
+    { "type": "cart", "name": "Old cart", "linger": "seat", "verbs": [
+      { "id": "search", "label": "Search the old cart", "short": "Search the cart", "effect": { "gain": { "wood": 1 }, "done": "A broken board, but it will burn." } }
     ] },
     { "type": "mine", "name": "Old mine", "verbs": [
-      { "id": "spoil", "label": "Pick through the spoil heap", "short": "Sift the spoil", "effect": { "gain": { "ore": 1 }, "done": "Among the waste rock is a lump with iron in it." } },
-      { "id": "peer", "label": "Peer into the dark", "short": "Peer inside", "effect": { "spark": 1, "done": "Cold air breathes out of the shaft. You don't go in." } }
+      { "id": "spoil", "label": "Pick through the spoil heap", "short": "Sift the spoil", "effect": { "gain": { "ore": 1 }, "done": "Among the waste rock is a lump with iron in it." } }
     ] },
-    { "type": "camp", "name": "Camp", "verbs": [
-      { "id": "share", "label": "Sit by the campers' fire", "short": "Sit by the fire", "effect": { "spark": 3, "done": "They make room for you and pass the pot." } },
+    { "type": "camp", "name": "Camp", "linger": "fire", "verbs": [
       { "id": "firewood", "label": "Help gather firewood", "short": "Gather firewood", "effect": { "gain": { "wood": 1 }, "done": "You bring in an armful. They let you keep a share." } }
     ] },
-    { "type": "waystation", "name": "Wayside shelter", "verbs": [
-      { "id": "bench", "label": "Rest on the bench", "short": "Sit on the bench", "effect": { "spark": 3, "done": "Travellers have worn the bench smooth." } },
-      { "id": "marks", "label": "Read the waymarks", "short": "Read waymarks", "effect": { "spark": 1, "done": "Chalk marks: water ahead, a dog to watch for, a kind house two days on." } }
-    ] }
+    { "type": "waystation", "name": "Wayside shelter", "linger": "seat", "verbs": [] }
   ]
 }

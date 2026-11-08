@@ -18,6 +18,7 @@ import { createPrompt } from './prompt';
 import { createRing } from './ring';
 import { attachInput } from './input';
 import { actAndPresent, verbOf } from './present';
+import { createHold, isWorkSpot } from './hold';
 
 /** How far past its reach the player may wander before an open ring closes. */
 const RING_SLACK = 2.2;
@@ -151,6 +152,7 @@ export function createController(ctx: GameContext) {
   /** Per frame (after the actors moved): place the ring or pick the focus and place the prompt. */
   function update(): void {
     layer.sync();
+    hold.update();
     const player = ctx.actors.player.pos();
     if (ring.isOpen()) {
       const t = ringThing;
@@ -194,6 +196,9 @@ export function createController(ctx: GameContext) {
     return true;
   }
 
+  // Work spots are held, not opened: E down starts the hold, E up ends it (a quick tap gives the hint).
+  const hold = createHold(ctx, { focus: () => focus, fresh: (key) => fresh(key), blocked });
+
   const detachInput = attachInput({
     ctx,
     ring,
@@ -204,6 +209,7 @@ export function createController(ctx: GameContext) {
     fresh: (key) => fresh(key),
     open: (t) => open(t),
     close,
+    hold: { start: () => (isWorkSpot(focus) ? hold.start() : false), end: () => hold.end(), active: () => hold.active() },
   });
 
   const offs = [
@@ -218,6 +224,7 @@ export function createController(ctx: GameContext) {
 
   function destroy(): void {
     detachInput();
+    hold.destroy();
     for (const off of offs) off();
     layer.destroy();
   }
@@ -237,5 +244,6 @@ export function createController(ctx: GameContext) {
     verbsFor,
     targetFor,
     fresh,
+    hold,
   };
 }

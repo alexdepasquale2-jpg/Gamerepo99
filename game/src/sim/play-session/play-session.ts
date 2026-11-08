@@ -31,6 +31,9 @@ import { fastForward, fullDay } from '../civic/clock';
 import { firstTrust } from '../embodiment';
 import { carryHistory } from '../history-voice';
 import '../contrib';
+import { carryTarget, dropCarried } from '../carry';
+import { targetActionId } from './targets';
+import { contribute, taskById, tasksNear } from '../tasks';
 import { beginMomentAct } from '../scenario/moments-live';
 import { carryItOn, letItRest, offerSuccession } from '../legacy';
 import {
@@ -56,6 +59,7 @@ import type {
   PlayLastResolve,
   CreatePlaySessionOpts,
 } from './play-session-types';
+import { lingerAt } from '../linger';
 
 function toPersonView(p: TravelSimState['people'][string]): ScenarioPersonView {
   return {
@@ -325,6 +329,45 @@ function createPlayModeSession(defaults: {
     worldFile: (opts) => (state ? exportWorld(state, opts) : null),
     adoptState: (st) => adopt(st as TravelSimState),
     getState: () => state ?? undefined,
+    // Sitting by a linger prop (world/linger.ts): seconds in, spark gained out (sim/linger.ts).
+    linger(propKey, seconds) {
+      if (!state) return 0;
+      const beforeLen = state.bus?.lastIds?.length ?? 0;
+      const { gain } = lingerAt(state, propKey, seconds);
+      appendJuiceSince(beforeLen);
+      return gain;
+    },
+    // ---- carrying by hand (sim/carry): one load in your arms, through the same act path as the ring ----
+    carrying: () => (state?.player.carrying ? { ...state.player.carrying } : null),
+    pickUp(pileKey) {
+      return session.act(targetActionId('carry.lift', carryTarget(pileKey)), carryTarget(pileKey)) ?? { ok: false };
+    },
+    putDown(targetKey) {
+      if (!state) return { ok: false };
+      if (!targetKey) return state.player.x !== undefined && state.player.y !== undefined ? dropCarried(state, { x: state.player.x, y: state.player.y }) : { ok: false, line: 'Set it down where?' };
+      const t = carryTarget(targetKey);
+      return session.act(targetActionId('carry.put', t), t) ?? { ok: false };
+    },
+    dropCarried: (at) => (state ? dropCarried(state, at) : { ok: false }),
+    // ---- end carrying ----
+    tasksNear: (townId) => (state ? tasksNear(state, townId ?? state.player.townId ?? '').map((t) => structuredClone(t)) : []),
+    taskAt(spotKey) {
+      const t = state ? taskById(state, spotKey) : undefined;
+      return t ? structuredClone(t) : null;
+    },
+    workAt(spotKey, effort = 1) {
+      if (!state) return { ok: false, line: 'Nothing here.' };
+      const st = state;
+      const rt = interactionRt;
+      const beforeLen = st.bus?.lastIds?.length ?? 0;
+      // Trust goes through the interaction runtime's mirror too, as every other act's does.
+      const res = contribute(st, spotKey, effort, {
+        trust: { get: (id) => rt?.people.get(id)?.trust ?? st.people[id]?.trust ?? firstTrust(st, id), set: (id, v) => { const ip = rt?.people.get(id); if (ip) ip.trust = v; } },
+      });
+      if (res.ok) eventLog.push({ type: 'task.work', methodId: res.task?.id ?? spotKey });
+      appendJuiceSince(beforeLen);
+      return res.task ? { ...res, task: structuredClone(res.task) } : res;
+    },
   };
   attachSuccessionHandle(session, {
     setSpark: (spark) => {

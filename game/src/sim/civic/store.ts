@@ -4,8 +4,8 @@
  * spoilage, loss) or to another store, and every one of those moves can be written to a bounded
  * conservation log, so a test can sum the log and prove nothing appeared or vanished.
  *
- * This wave the town ledger stays authoritative for goods (sites read it); stores carry the site's own
- * till log and are where wave 2 moves the goods. Pure: no SimState, no Phaser/DOM.
+ * Since civic slice 3 the goods live here: a town's granary, storehouse and yard (civic/town-stores) and
+ * each site's shelves, and the town ledger is a view summed from them. Pure: no SimState, no Phaser/DOM.
  */
 
 export type Store = { items: Record<string, number>; capacity: number; spoilage: number };
@@ -74,6 +74,19 @@ export function spoil(store: Store, ctx: MoveCtx = {}): number {
   if (!(store.spoilage > 0)) return 0;
   let lost = 0;
   for (const item of Object.keys(store.items).sort()) lost += take(store, item, total(store, item) * store.spoilage, 'sink:spoiled', ctx);
+  return lost;
+}
+
+/**
+ * One dawn of spoilage, item by item: `rateOf(item)` is that good's share lost per dawn in this store (bread
+ * goes stale, timber does not). Returns what was lost, all to `sink:spoiled`.
+ */
+export function spoilItems(store: Store, rateOf: (item: string) => number, ctx: MoveCtx = {}): number {
+  let lost = 0;
+  for (const item of Object.keys(store.items).sort()) {
+    const rate = rateOf(item);
+    if (rate > 0) lost += take(store, item, total(store, item) * Math.min(1, rate), 'sink:spoiled', ctx);
+  }
   return lost;
 }
 

@@ -15,7 +15,7 @@ registerBoardPage({
     for (const n of needs.shortages) lines.push(`• ${n.missing} more: ${n.items.join(' / ')}.${n.tradeable ? ' Sell it to a roadside trader bound here.' : ''}`);
     lines.push('', 'People who could use a hand');
     if (!needs.struggling.length) lines.push('No urgent personal appeals today.');
-    for (const p of needs.struggling) lines.push(`• ${p.name ?? p.id}: ${(p.woundId ?? 'spirits low').replace(/_/g, ' ')}. Work alongside, listen or help.`);
+    for (const p of needs.struggling) lines.push(`• ${p.name ?? p.id}: ${(p.woundId ?? 'spirits low').replace(/_/g, ' ')}. Pitch in at their work, or listen.`);
     lines.push('', 'Bring supplies to a resident: select an item in your satchel, then give, trade or deliver it. The board changes when real stock and people change.');
     return { lines };
   },

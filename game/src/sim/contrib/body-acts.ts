@@ -2,8 +2,8 @@
  * Verbs only some bodies have (A9). Each is gated on the inhabitant's embodiment trait fields
  * (embodiment.tags, allowedApproachTags; data/people/body-acts.json), never on who they are:
  *
- *   wagon  large bodies     Lift the stuck wheel free   (help)  a rolling wagon in a rut: up and on, the driver tips you
- *          large bodies     Carry the heavy crates in   (work)  three crates off the back into the town's store
+ *   wagon  (a stuck wheel is no chip: it is lifted by holding to work at the wagon; stuck()/lift()
+ *          are its sim side, the `lift` tuning stays in body-acts.json)
  *   board  ledger hand +    Read the town's ledger      (deal)  food cover, what is short, who owes; the town eases a little
  *          civic way in
  *   board, multi bodies     Leave a sibling to watch    (work)  a sibling stays by the place and reports at dawn
@@ -14,14 +14,13 @@
  * Pure and deterministic: no Phaser/DOM.
  */
 import actsJson from '../../data/people/body-acts.json';
-import { isShort } from '../caravan-visit';
 import type { CaravanMobile } from '../caravans-types';
 import { registerDawnLines } from '../dawn-lines';
 import { prettyTownId } from '../map/districts';
 import { fallbackLine } from '../fallback-lines';
 import { HOUSEHOLD, townNeeds as villageNeeds } from '../economy/village-economy';
 import { leaveBodyHere, WITH_YOU } from '../embodiment';
-import { ITEMS, itemName } from '../goods/inventory';
+import { itemName } from '../goods/inventory';
 import { townNeeds as storeNeeds } from '../goods/town-needs';
 import { approachTags, bodyTags, ensureInhabitantParts } from '../inhabitant';
 import { pushJuice } from '../packets';
@@ -37,7 +36,7 @@ export type BodyWatch = { townId: string; place: 'board' | 'hearth'; since: numb
 export type BodyActsState = { watches: Record<string, BodyWatch> };
 
 type ActRow = { id: string; targets: TargetKind[]; family: string; label: string; short: string; tagsAny?: string[]; approachAny?: string[] };
-const FILE = actsJson as { acts: ActRow[]; lift: { stuckChance: number; progress: number; tip: number }; carry: { crates: number; tip: number }; ledger: { despairRelief: number } };
+const FILE = actsJson as { acts: ActRow[]; lift: { stuckChance: number; progress: number; tip: number }; ledger: { despairRelief: number } };
 const ACTS = FILE.acts;
 
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
@@ -65,54 +64,23 @@ function heard(state: SimState, townId: string | undefined, key: string, salt: s
 const payTip = (state: SimState, n: number): void => void (state.player.coin = (state.player.coin ?? 0) + n);
 const caravanOf = (state: SimState, id: string): CaravanMobile | undefined => state.caravans?.find((c) => c.id === id);
 
-// ---------- wagon: lift and carry ----------
+// ---------- wagon: lift (its crates are carried by hand now: sim/carry) ----------
 
 const liftKey = (c: CaravanMobile) => `body.lift@${c.id}`;
-const carryKey = (c: CaravanMobile) => `body.carry@${c.id}`;
 
 /** A rolling wagon is in a rut today (seeded per wagon and day), or its road is broken. */
-function stuck(state: SimState, c: CaravanMobile): boolean {
+export function stuck(state: SimState, c: CaravanMobile): boolean {
   if (c.phase || usedToday(state, liftKey(c))) return false;
   if (state.economyRoutes?.find((r) => r.id === c.routeId)?.broken) return true;
   return deriveRng(state.seed, 'wagon-stuck', c.id, state.day).next() < FILE.lift.stuckChance;
 }
-/** The town the crates would go into: where the wagon is halted, else the town you stand in. */
-const carryTown = (state: SimState, c: CaravanMobile, t: Target): string | undefined => c.visit?.townId ?? townOfTarget(state, t);
-const canCarry = (state: SimState, c: CaravanMobile, t: Target): boolean => {
-  const town = carryTown(state, c, t);
-  return c.qty >= 1 && !!town && !!state.towns?.[town] && !usedToday(state, carryKey(c));
-};
-
-function lift(state: SimState, c: CaravanMobile, t: Target): ActOutcome {
+export function lift(state: SimState, c: CaravanMobile, t: Target): ActOutcome {
   if (!stuck(state, c)) return { ok: false, line: 'The wheels are turning fine.' };
   c.progress01 = Math.min(0.98, c.progress01 + FILE.lift.progress);
   payTip(state, FILE.lift.tip);
   markUsed(state, liftKey(c));
   heard(state, townOfTarget(state, t), 'body.lift_wagon.heard', c.id);
   return { ok: true, line: line(state, 'body.lift_wagon', c.id) || 'You lift the wagon free.' };
-}
-
-/**
- * The heavy crates off the back, carried straight into the town's store (the town pays the driver for
- * them as at a stop). Each crate into a shortage eases the town's despair, as a wagon's own unloading does.
- */
-function carry(state: SimState, c: CaravanMobile, t: Target): ActOutcome {
-  if (!canCarry(state, c, t)) return { ok: false, line: 'Nothing on the wagon for you to carry.' };
-  const townId = carryTown(state, c, t)!;
-  const town = state.towns![townId]!;
-  const res = c.cargoResourceId;
-  const take = Math.min(FILE.carry.crates, Math.floor(c.qty));
-  for (let i = 0; i < take; i++) {
-    if (isShort(state, townId, res) && town.economyOptIn !== false) town.despair = Math.max(0, town.despair - ITEMS.deeds.shortageDespairRelief);
-    town.stock[res] = (town.stock[res] ?? 0) + 1;
-  }
-  c.qty -= take;
-  if (c.visit?.townId === townId) c.visit.moved = Math.min(c.visit.total, c.visit.moved + take);
-  payTip(state, FILE.carry.tip);
-  markUsed(state, carryKey(c));
-  pushJuice(state, 'stock.deliver', { townId, routeId: c.routeId, resourceId: res, qty: take });
-  heard(state, townId, 'body.carry_crates.heard', c.id);
-  return { ok: true, line: line(state, 'body.carry_crates', c.id) || 'You carry the crates in.' };
 }
 
 // ---------- board: the ledger ----------
@@ -188,7 +156,6 @@ function offer(state: SimState, row: ActRow, t: Target): ProvidedAction | null {
   const c = t.kind === 'wagon' ? caravanOf(state, t.id) : undefined;
   switch (row.id) {
     case 'lift_wagon': return c && stuck(state, c) ? chip() : null;
-    case 'carry_crates': return c && canCarry(state, c, t) ? chip() : null;
     case 'read_ledger': { const town = townOfTarget(state, t); return town && !usedToday(state, ledgerKey(town)) ? chip() : null; }
     case 'watch_place': { const f = follower(state); return f ? chip(`Leave ${f.name} to watch the ${placeName(t.kind)}`) : null; }
     default: return null;
@@ -217,7 +184,6 @@ registerTargetProvider({
     let out: ActOutcome;
     switch (row.id) {
       case 'lift_wagon': out = c ? lift(state, c, t) : { ok: false, line: 'The wagon has gone on.' }; break;
-      case 'carry_crates': out = c ? carry(state, c, t) : { ok: false, line: 'The wagon has gone on.' }; break;
       case 'read_ledger': out = readLedger(state, townOfTarget(state, t)); break;
       case 'watch_place': out = leaveToWatch(state, t); break;
       default: return false;

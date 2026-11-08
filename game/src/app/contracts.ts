@@ -203,10 +203,17 @@ export interface PanelsApi {
   roads: { open(townId: string): void };
   /** The company sheet: your workshops and plots to let in a town, or one workshop's books (F20). */
   company: { open(townId: string, companyId?: string): void };
+  /** A site's ledger sheet (civic slice 5): who runs it, hands, wage, till, shelves; run it if it is yours. */
+  site: { open(siteId: string): void };
   /** The item being dragged from the hotbar right now (see the 'item-drag' event), or null. */
   dragging(): string | null;
   closeAll(): void;
   anyOpen(): boolean;
+  /**
+   * The shop sheet for a stall, counter, keeper, pedlar or wagon (sim/goods/shop ShopRef); `current()` is
+   * the open shop as `kind:id`; `nav` drives the open sheet (moveFocus/activate/back/settle) for a gamepad.
+   */
+  shop: { open(ref: import('../sim/goods/shop').ShopRef): void; current(): string | null; nav: import('../panels/shop').ShopNav };
 }
 
 export interface InteractApi {
@@ -223,6 +230,12 @@ export interface InteractApi {
    * over empty ground, so the panels may set it down instead.
    */
   dropItem(itemId: string, client: Pt): boolean;
+  /**
+   * Hold to work (interact/hold.ts): begin holding on the focused work spot (false when it is not one), and
+   * let go. The on-screen A button calls these on press and release; E does the same from the keyboard.
+   */
+  startHold?(): boolean;
+  endHold?(): void;
 }
 
 export interface GameContext {
@@ -250,4 +263,17 @@ export interface AppHooks {
   start(session: PlaySession, autosave: () => void): void;
   stop(): void;
   setPaused(paused: boolean): void;
+}
+
+/**
+ * The player's resting pose while lingering by a prop (world/linger.ts sets it through app/pose.ts; the
+ * actors area draws it on the player's figure). null is upright and walking.
+ */
+export type PlayerPose = 'sit' | 'stand' | null;
+// ---- carrying by hand (sim/carry, actors/carry-draw) ----
+/** The load in your arms and the drop-at-your-feet the pad's B button calls (actors/carry-draw: carryApi(ctx)). */
+export interface CarryApi {
+  carrying(): import('../sim/carry').Carried | null;
+  /** Let the load fall where you stand (ground items); undefined when your arms are empty. */
+  drop(): ActOutcome | undefined;
 }

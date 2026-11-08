@@ -33,3 +33,8 @@ import './civic-zoning';
 import './clock';
 import './district-polity';
 import '../civic';
+import './shop';
+import './site-verbs';
+import '../linger';
+import './carry';
+import './tasks';

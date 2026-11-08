@@ -4,7 +4,8 @@
  * Panels open their sheets through `ctx.ui.sheet()` (one at a time); `createSheet` is here for the ui
  * area's own sheets and for completeness.
  *
- * - tokens: PALETTE_UI, COLORS, FONTS, SIZES, HUD_LAYOUT, Z, phaserColor, rgba, cssVars, phaserText
+ * - tokens: PALETTE_UI, COLORS, FONTS, THEME, SHAPE, SIZES, HUD_LAYOUT, Z, PAD_RESERVE_BOTTOM_PX,
+ *   phaserColor, rgba, cssVars, phaserText
  * - layer: uiLayer() (DOM over the 640x360 FIT canvas), fitRect, sheetBox, textSizes, GAME_W, GAME_H
  * - overlay stack: overlays, createOverlayStack, installOverlayKeys (Esc/back, focus trap, pause flag)
  * - sheet: createSheet, kitButton, kitEl

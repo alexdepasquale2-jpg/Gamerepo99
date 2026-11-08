@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Civic sites (docs/superpowers/plans/civic/index.md). Every working place in a town is a Site: a kind from this table, mapped from the building a plan raised (fromBuildings) or the facility kind a road crew works (fromFacilities). inputs/outputs mirror the jobs.json recipes of the trade the site holds; roles are the posts it has; tier is the civic tier that unlocks the kind (zoning and tiers come in a later slice). Kinds with no source (storehouse, granary, barracks, townhall) are data-only stubs this wave.",
+  "spec": "Civic sites (docs/superpowers/plans/civic/index.md). Every working place in a town is a Site: a kind from this table, mapped from the building a plan raised (fromBuildings) or the facility kind a road crew works (fromFacilities). inputs/outputs mirror the jobs.json recipes of the trade the site holds; roles are the posts it has; tier is the civic tier that unlocks the kind (zoning and tiers come in a later slice). Every town keeps one common granary and one storehouse (civic/town-stores) whatever its tier: the kinds' capacity is their size, and a built site of that kind (once a building raises one) adds its own. Barracks and townhall are data-only stubs.",
   "staffing": {
     "note": "Wages come from COMPANY (economy/companies.ts). A worker unfed sickAfterUnfed dawns running falls sick; leaveAfterUnfed running, they leave the site. Each sickness or leaving nudges the town's despair by unfedDespair. A manager raises the wage by one when the till holds wageRaiseAt. Someone who left a site is not hired back for rehireCooldown dawns. The ration is the household food share (village-economy HOUSEHOLD.food.perPerson) priced as rationItem.",
     "sickAfterUnfed": 2,
@@ -15,14 +15,28 @@
     "storeCapacity": 40,
     "storeSpoilage": 0
   },
+  "stores": {
+    "note": "Civic slice 3. Goods live in stores: a town's granary (granaryItems), its storehouse (everything else), the yard where what does not fit sits in the open, and each site's shelves. Spoilage is per good per dawn (goods not listed keep forever: timber, stone, tools), times the store's shelter (a granary keeps food best, the open yard worst). Haulers carry haulLoad units a dawn each between a site and the town stores; a manager with no hauler carries selfHaul. A site keeps inputKeep of each input it works on its own shelves. maxHaulers per site. A granary is low under lowCoverDays of the town's meal; a hauler's load is worth telling at loadLine units.",
+    "granaryItems": ["grain", "flour", "bread", "fish", "berries"],
+    "yardCapacity": 1000000000,
+    "spoilage": { "bread": 0.03, "fish": 0.05, "berries": 0.04, "grain": 0.004, "flour": 0.006 },
+    "shelter": { "granary": 0.25, "storehouse": 0.5, "site": 1, "yard": 1.5 },
+    "haulLoad": 6,
+    "selfHaul": 2,
+    "inputKeep": 4,
+    "maxHaulers": 1,
+    "lowCoverDays": 2,
+    "loadLine": 4,
+    "newsKeep": 30
+  },
   "kinds": [
     { "id": "farm", "name": "farm", "zone": "farm", "tier": "hamlet", "inputs": [], "outputs": ["grain", "flax"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["farm"], "fromFacilities": ["farm"] },
     { "id": "mill", "name": "mill", "zone": "craft", "tier": "hamlet", "inputs": ["grain"], "outputs": ["flour"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["mill"], "fromFacilities": ["mill"] },
     { "id": "smithy", "name": "smithy", "zone": "craft", "tier": "village", "inputs": ["ore", "wood"], "outputs": ["tools", "nails"], "roles": ["manager", "worker"], "fromBuildings": ["smithy"], "fromFacilities": [] },
     { "id": "workshop", "name": "workshop", "zone": "craft", "tier": "village", "inputs": ["flour", "flax", "clay"], "outputs": ["bread", "cloth", "rope", "pots"], "roles": ["manager", "worker"], "fromBuildings": ["bakery", "weavery", "pottery", "ropewalk"], "fromFacilities": [] },
     { "id": "stall", "name": "market stall", "zone": "market", "tier": "village", "inputs": [], "outputs": [], "roles": ["manager", "worker"], "fromBuildings": [], "fromFacilities": ["waystation"] },
-    { "id": "storehouse", "name": "storehouse", "zone": "market", "tier": "village", "inputs": [], "outputs": [], "roles": ["manager", "hauler"], "fromBuildings": [], "fromFacilities": [] },
-    { "id": "granary", "name": "granary", "zone": "civic", "tier": "town", "inputs": [], "outputs": [], "roles": ["manager", "hauler"], "fromBuildings": [], "fromFacilities": [] },
+    { "id": "storehouse", "name": "storehouse", "zone": "market", "tier": "village", "inputs": [], "outputs": [], "roles": ["manager", "hauler"], "fromBuildings": [], "fromFacilities": [], "capacity": 400 },
+    { "id": "granary", "name": "granary", "zone": "civic", "tier": "town", "inputs": [], "outputs": [], "roles": ["manager", "hauler"], "fromBuildings": [], "fromFacilities": [], "capacity": 300 },
     { "id": "camp", "name": "camp", "zone": "craft", "tier": "hamlet", "inputs": [], "outputs": ["wood", "timber", "ore", "stone"], "roles": ["manager", "worker", "hauler"], "fromBuildings": ["sawmill"], "fromFacilities": ["lumber_camp", "mine"] },
     { "id": "barracks", "name": "barracks", "zone": "civic", "tier": "town", "inputs": ["bread", "tools"], "outputs": [], "roles": ["manager", "worker"], "fromBuildings": [], "fromFacilities": [] },
     { "id": "townhall", "name": "town hall", "zone": "civic", "tier": "town", "inputs": [], "outputs": [], "roles": ["manager"], "fromBuildings": [], "fromFacilities": [] }

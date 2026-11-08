@@ -11,9 +11,10 @@
     },
     {
       "methodId": "carry_burden",
-      "interactionIds": ["favor_do", "work_alongside"],
-      "recipeDefault": ["favor_do"],
-      "retire": ["method_id_as_sole_kindle_button"]
+      "interactionIds": ["talk_gentle"],
+      "recipeDefault": ["talk_gentle"],
+      "retire": ["method_id_as_sole_kindle_button", "favor_do", "work_alongside"],
+      "notes": "favor_do and work_alongside left the catalog: helping is done in the world (hold-to-work on someone's task), not picked from a ring. The legacy method still resolves, as a kind word."
     },
     {
       "methodId": "challenge",
