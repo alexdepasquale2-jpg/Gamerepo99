@@ -21,6 +21,7 @@ import { facilityPlaces } from '../economy/facilities';
 import { DISTRICTS, districtId as districtIdOf } from '../map/districts';
 import type { SimState } from '../types/runtime';
 import { makeLog, makeStore, type ConservationLog, type Store } from './store';
+import { noteUse } from '../data-use-civic';
 
 export type SiteKindDef = {
   id: string; name: string; zone: string; tier: string;
@@ -135,6 +136,7 @@ function activeDistrictId(state: SimState): string {
 }
 
 function blank(state: SimState, id: string, kind: SiteKindDef, building: string, source: SiteSource, townId: string, ownerId: string, founded: number): Site {
+  noteUse('civic/sites', kind.id);
   return {
     id, districtId: activeDistrictId(state), townId, kind: kind.id, building, name: kind.name, source, plot: null, zone: kind.zone,
     ownerId, workers: [], haulers: [], wage: COMPANY.wage, coin: 0, store: makeStore(CIVIC.storeCapacity, CIVIC.storeSpoilage),

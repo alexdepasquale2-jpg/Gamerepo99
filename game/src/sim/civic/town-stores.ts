@@ -18,6 +18,7 @@
 import sitesJson from '../../data/civic/sites.json';
 import type { SimState } from '../types/runtime';
 import type { Site } from './sites';
+import { noteUse } from '../data-use-civic';
 import { makeLog, makeStore, move, put, spoilItems, take, total, type ConservationLog, type MoveCtx, type Store } from './store';
 
 type StoresTable = {
@@ -126,6 +127,9 @@ function drawAll(state: SimState, townId: string, ts: TownStores, item: string, 
 }
 
 function blankTown(): TownStores {
+  // Every town keeps one granary and one storehouse (sites.json kinds), sized by their capacity.
+  noteUse('civic/sites', 'granary');
+  noteUse('civic/sites', 'storehouse');
   return { granary: makeStore(GRANARY_CAPACITY), storehouse: makeStore(STOREHOUSE_CAPACITY), yard: makeStore(STORES.yardCapacity), seen: {} };
 }
 

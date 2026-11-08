@@ -3,10 +3,14 @@
 import { enqueueLetter } from '../letters-scale';
 import { pushJuice } from '../packets';
 import { deriveRng } from '../rng';
+import { noteUse } from '../data-use-civic';
 import type { SimState } from '../types/runtime';
 import { fireNotorietyEvent, noteCoinSpend, raidBonus } from './events';
 import { addNotoriety, despairMul } from './notoriety';
 import { addItem, inventoryOf, ITEM_BY_ID } from '../goods/inventory';
+import { townRole } from '../economy/town-roles';
+
+const townKindOfStash = (state: SimState, townId: string): string => townRole(state.seed, townId)?.kind ?? 'village';
 import {
   actDefs, ensureHoard, ensureStash, notePeakCoin, notorietyTable, shiftCarriedCoin, siteDefs, siteInTown, totalGoods,
   type HoardNews, type StashActDef, type StashSiteDef,
@@ -84,6 +88,9 @@ export function applyStashAct(state: SimState, actId: string, personId?: string)
   } else return false;
   h.lastStashActDay = state.day;
   notePeakCoin(state);
+  noteUse('economy/stash-sites', `act:${actId}`);
+  // Authored rows by id; a generated town's spot by the roles row (byKind) it was made from.
+  noteUse('economy/stash-sites', def.id === `stash_${def.townId}` ? `byKind:${townKindOfStash(state, def.townId)}` : `site:${def.id}`);
   return true;
 }
 

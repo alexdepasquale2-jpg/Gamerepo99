@@ -4,6 +4,7 @@ import type { Rng } from '../../rng';
 import type { GapBias } from '../load/load-world-tables';
 import type { SettlementSize } from '../load/load-history';
 import type { GapSite } from '../world-types';
+import { noteUse } from '../../data-use-civic';
 
 function sizeForGap(gap01: number, sizes: SettlementSize[]): SettlementSize {
   const ordered = [...sizes].sort((a, b) => a.gapAxisMax - b.gapAxisMax);
@@ -11,8 +12,9 @@ function sizeForGap(gap01: number, sizes: SettlementSize[]): SettlementSize {
     return { id: 'settlement', gapAxisMax: 1 };
   }
   for (const s of ordered) {
-    if (gap01 <= s.gapAxisMax) return s;
+    if (gap01 <= s.gapAxisMax) { noteUse('world/history/settlementSizes', s.id); return s; }
   }
+  noteUse('world/history/settlementSizes', ordered[ordered.length - 1]!.id);
   return ordered[ordered.length - 1]!;
 }
 

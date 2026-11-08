@@ -84,22 +84,6 @@
           "meaningTag": "exhaustion"
         }
       ]
-    },
-    {
-      "facilityKind": "farm",
-      "label": "Farm",
-      "shiftItems": {
-        "food_grain": "grain"
-      },
-      "workers": [
-        {
-          "id": "field_hand",
-          "role": "hand",
-          "shiftHours": 8,
-          "sparkDrainIfHelp": 1,
-          "meaningTag": "meaning"
-        }
-      ]
     }
   ]
 }

@@ -27,6 +27,7 @@ import { WORLD_SCALE } from '../map/constants';
 import { deriveRng } from '../rng';
 import { addItem, itemName } from '../goods/inventory';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-civic';
 import type { FacilityRow } from './economy-lod-types';
 import { addStock } from './food-stock';
 
@@ -83,8 +84,20 @@ export type FacilityStaff = {
 const RESOURCE_KIND: Record<string, string> = { food_grain: 'mill', timber: 'lumber_camp', ore_iron: 'mine' };
 
 /** Work tags for a kind: the first facilities.json row of that kind (mill: meaning; camp, quarry: exhaust). */
-const kindTags = (kind: string): string[] =>
-  [...([...CATALOG.values()].find((c) => c.kind === kind)?.workTags ?? (kind === 'mill' ? ['meaning'] : ['exhaust']))];
+const kindTags = (kind: string): string[] => {
+  const row = [...CATALOG.values()].find((c) => c.kind === kind);
+  if (row) noteUse('economy/facilities', row.id);
+  return [...(row?.workTags ?? (kind === 'mill' ? ['meaning'] : ['exhaust']))];
+};
+
+/** A crew slot of a kind's facility is worked today: its facility-workers row is in use. */
+function noteWorker(kind: string, slot: number): void {
+  const b = KINDS.get(kind);
+  if (!b) return;
+  noteUse('economy/facility-workers', `kind:${b.facilityKind}`);
+  const w = b.workers[slot];
+  if (w) noteUse('economy/facility-workers', `worker:${w.id}`);
+}
 
 export const kindLabel = (kind: string): string => KINDS.get(kind)?.label ?? kind.replace(/_/g, ' ');
 export const rolesFor = (kind: string): number => Math.max(1, KINDS.get(kind)?.workers.length ?? 1);
@@ -160,6 +173,7 @@ export function placeFacilities(world: FabricWorld, layout: WorldLayout, seed: n
   const extraOnRoad = new Map<string, number>();
   for (const gen of world.facilities ?? []) {
     const row = catalogRow(gen.id, gen.kind);
+    if (row) noteUse('economy/facilities', row.id);
     const exact = generatedRoad(layout.routes, gen.routeId);
     const touching = layout.routes.filter((r) => r.id !== exact?.id && gen.townId && (r.from === gen.townId || r.to === gen.townId))
       .sort((a, b) => a.id.localeCompare(b.id));
@@ -270,7 +284,7 @@ export function updateFacilityStaffing(state: SimState): void {
     s.crew.length = roles;
     let newcomer: string | undefined;
     for (let i = 0; i < roles; i++) {
-      if (fitToWork(state, place, s.crew[i] ?? null, ableFlame)) continue;
+      if (fitToWork(state, place, s.crew[i] ?? null, ableFlame)) { noteWorker(place.kind, i); continue; }
       const pid = pickWorker(state, place, restaffFlame, taken);
       if (!pid) continue;
       if (s.crew[i]) taken.delete(s.crew[i]!);
@@ -345,6 +359,7 @@ export function workShift(state: SimState, facilityId: string, nameOf: (townId: 
   if (shiftWorkedToday(state)) return { ok: false, line: 'You have already done a day\'s work. Rest, and come back after dawn.' };
   const block = KINDS.get(place.kind);
   const worker = block?.workers[0];
+  if (block) noteUse('economy/facility-workers', `shift:${block.facilityKind}`);
   const hours = worker?.shiftHours ?? 8;
   const route = state.economyRoutes?.find((r) => r.id === place.routeId);
   const shares = route?.receiveShare ?? Object.fromEntries(place.townIds.map((t) => [t, 1 / place.townIds.length]));
@@ -363,7 +378,7 @@ export function workShift(state: SimState, facilityId: string, nameOf: (townId: 
     const itemId = block?.shiftItems?.[out.resourceId];
     if (itemId) items[itemId] = (items[itemId] ?? 0) + Math.max(1, Math.round(qty * playerShare));
   }
-  if (block?.shiftCoin) items.coin = (items.coin ?? 0) + block.shiftCoin;
+  if (block?.shiftCoin) { items.coin = (items.coin ?? 0) + block.shiftCoin; noteUse('economy/economy-resources', 'coin'); }
   for (const [itemId, n] of Object.entries(items)) addItem(state, itemId, n);
   let repaired = false;
   if (route && block?.shiftRoadRepair && route.condition < 1) {
@@ -387,6 +402,35 @@ export function workShift(state: SimState, facilityId: string, nameOf: (townId: 
   const sent = towns && place.outputs.length ? ` The rest goes to ${towns}.` : '';
   const line = `You work a shift at ${place.name}${got ? `: ${got} in your satchel.` : '.'}${sent}${road}${company}${feel}`;
   return { ok: true, line, items, stock, sparkDelta, hours };
+}
+
+/**
+ * The player's share for a day's help at a facility's work spot (sim/tasks contribute): the kind's
+ * facility-workers row decides it — shiftItems (playerShare of the full shift) in the satchel, a
+ * waystation's shiftCoin and its road mending (shiftRoadRepair). Once a day; the goods to the towns
+ * are the task's own payout, so nothing is counted twice. Returns the line to add, or null.
+ */
+export function shiftPay(state: SimState, facilityId: string): string | null {
+  const place = facilityById(state, facilityId);
+  const block = place ? KINDS.get(place.kind) : undefined;
+  if (!place || !block || shiftWorkedToday(state)) return null;
+  noteUse('economy/facility-workers', `shift:${block.facilityKind}`);
+  const items: Record<string, number> = {};
+  for (const out of place.outputs) {
+    const itemId = block.shiftItems?.[out.resourceId];
+    if (!itemId) continue;
+    noteUse('economy/economy-resources', out.resourceId);
+    items[itemId] = (items[itemId] ?? 0) + Math.max(1, Math.round(out.qtyPerDawn * place.staffedMul * FACILITY_WORKERS.shift.playerShare));
+  }
+  if (block.shiftCoin) { items.coin = (items.coin ?? 0) + block.shiftCoin; noteUse('economy/economy-resources', 'coin'); }
+  for (const [id, n] of Object.entries(items)) addItem(state, id, n);
+  const route = state.economyRoutes?.find((r) => r.id === place.routeId);
+  const mended = !!route && !!block.shiftRoadRepair && route.condition < 1;
+  if (route && mended) route.condition = Math.min(1, route.condition + block.shiftRoadRepair!);
+  state.flags[SHIFT_DAY] = state.day;
+  state.flags.facilityShiftId = place.id;
+  const got = Object.entries(items).map(([id, n]) => `${n} ${itemName(id)}`).join(', ');
+  return `${got ? `Your share of the shift: ${got}.` : ''}${mended ? ' The road is a little better kept.' : ''}`.trim() || null;
 }
 
 /** What you hear at dawn when a facility near you stopped or started again (through its people). */

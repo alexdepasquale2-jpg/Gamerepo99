@@ -15,10 +15,11 @@ import buildingsJson from '../../data/items/buildings.json';
 import { jobOf } from '../goods/jobs';
 import { biomeAt } from '../map/terrain';
 import { deriveRng } from '../rng';
-import { civicOf, fitsZone, zoneFor, zoneName, ZONES, type TownCivic } from '../civic/zoning';
+import { civicOf, fitsZone, townKind, zoneFor, zoneName, ZONES, type TownCivic } from '../civic/zoning';
 import { tierNeeded, unlockedIn } from '../civic/tiers';
 import type { SimState } from '../types/runtime';
-import { noteUse } from '../data-use-world';
+import { noteUse as noteWorldUse } from '../data-use-world';
+import { noteUse } from '../data-use-civic';
 
 export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Record<string, number>; labor: number; w: number; h: number; slots?: number };
 const T = buildingsJson as unknown as { workshopMul: number; buildings: BuildingDef[] };
@@ -150,6 +151,7 @@ export function stakePlan(
   if (!def || (!opts.founding && claimBlocked(state, townId, kind))) return null;
   const plot = findPlot(state, townId, def.w, def.h, kind);
   const zone = zoneFor(kind);
+  if (plot) { noteUse('civic/zones', `zone:${zone}`); noteUse('civic/zones', `layout:${townKind(state, townId)}`); }
   if (!plot) {
     if (opts.founding) return null;
     const c = civicOf(state, townId);
@@ -165,7 +167,15 @@ export function stakePlan(
     : { id: planId, ownerId, townId, kind, claimId, stage: 'gathering', have: {}, laborDone: 0, startDay: day, stalledDays: 0, ...(opts.council ? { council: true } : {}) };
   b.claims.push(claim);
   b.plans.push(plan);
+  if (opts.built) noteStanding(kind);
   return { plan, claim };
+}
+
+/** A building of `kind` now stands: its civic row (zones civicBuildings) and the site kind it houses, if any. */
+function noteStanding(kind: string): void {
+  if (ZONES.civicBuildings.some((c) => c.id === kind)) noteUse('civic/zones', `building:${kind}`);
+  // Granary, barracks and town hall are both a building and a site kind (sites.json): standing is their use.
+  if (kind === 'granary' || kind === 'barracks' || kind === 'townhall') noteUse('civic/sites', kind);
 }
 
 /** What zone a kind needs, in words (for lines). */
@@ -211,7 +221,8 @@ export function tickBuildPlans(state: SimState): void {
         plan.doneDay = state.day;
         const claim = b.claims.find((c) => c.id === plan.claimId);
         if (claim) claim.status = 'built';
-        noteUse('buildings', plan.kind);
+        noteWorldUse('buildings', plan.kind);
+        noteStanding(plan.kind);
       }
     }
   }

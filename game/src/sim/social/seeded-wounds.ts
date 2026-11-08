@@ -5,6 +5,8 @@
  * apathy, a warm pious one to grief, a biting one to disillusionment. Derived from the seed, so a fresh
  * boot and a backfilled old save give the same person the same wound. Pure.
  */
+import woundWeightsJson from '../../data/world/history/woundWeights.json';
+import { noteUse } from '../data-use-civic';
 import { generatePersonDraft } from '../gen/society/people';
 import { deriveRng } from '../rng';
 import type { PersonState } from '../types/runtime';
@@ -22,6 +24,8 @@ const LEAN: Record<string, (v: Required<VoiceVector>) => number> = {
 };
 /** Every wound stays possible for every voice. */
 const FLOOR = 0.15;
+/** The world's own lean across wounds (world/history/woundWeights.json), times each voice's lean. */
+const WORLD = new Map(woundWeightsJson.woundWeights.map((w) => [w.woundId, w.weight]));
 
 const GEN_ID = /^gen_p_(\d+)_(\d+)$/;
 
@@ -36,11 +40,11 @@ export function generatedVector(personId: string): VoiceVector | undefined {
 export function seededWoundId(seed: number, personId: string, vector: VoiceVector | undefined, woundIds: string[]): string | undefined {
   if (!woundIds.length) return undefined;
   const v: Required<VoiceVector> = { warmth: 0.5, bite: 0.5, piety: 0.5, secrecy: 0.5, weariness: 0.5, ...vector };
-  const weights = woundIds.map((id) => FLOOR + Math.max(0, LEAN[id]?.(v) ?? 0));
+  const weights = woundIds.map((id) => (FLOOR + Math.max(0, LEAN[id]?.(v) ?? 0)) * (WORLD.get(id) ?? 1));
   let r = deriveRng(seed, personId, 'wound').next() * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < woundIds.length; i++) {
     r -= weights[i]!;
-    if (r <= 0) return woundIds[i];
+    if (r <= 0) { noteUse('world/history/woundWeights', woundIds[i]!); return woundIds[i]; }
   }
   return woundIds[woundIds.length - 1];
 }

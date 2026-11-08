@@ -10,7 +10,7 @@
  * Pure and deterministic.
  */
 import { BUILDING_BY_ID } from '../economy/build-plans';
-import { facilityById, facilityOutput } from '../economy/facilities';
+import { facilityById, facilityOutput, shiftPay } from '../economy/facilities';
 import { addStock } from '../economy/food-stock';
 import { noteRoadNews, ROADS, routeById } from '../economy/roads';
 import { civicIfAny, siteById, SITE_KIND_BY_ID } from '../civic/sites';
@@ -140,7 +140,9 @@ export function contribute(state: SimState, taskId: string, effort = 1, opts: Co
   h.rev++;
   const turn = `${t.id}|${h.byTask[t.id]}`;
   const said = freed ?? pickLine(state, lead ? TASKS.done : TASKS.doneNobody, turn, vars);
-  const line = share ? `${said} ${share}` : said;
+  // A facility's crew shares the day's shift with you (facility-workers.json).
+  const shift = t.source.type === 'facility' ? shiftPay(state, t.source.ref) : null;
+  const line = [said, shift, share].filter(Boolean).join(' ');
   const thanks = lead ? { personId: lead, line: pickLine(state, TASKS.thanks, `${turn}|thanks`, vars) } : undefined;
   // Spark hooks (personal-cost, spark-recovery) still key on the old work_alongside kind: real help counts as it.
   noteActToday(state, 'carry_burden', 'work_alongside');

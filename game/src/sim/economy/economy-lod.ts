@@ -7,7 +7,8 @@
 import type { DataTables } from '../load-data';
 import { pushJuice } from '../packets';
 import { facilityStaffMul, updateFacilityStaffing } from './facilities';
-import { roleFoodItem, roleStock } from './town-roles';
+import { roleFoodItem, roleStock, townRole } from './town-roles';
+import { noteUse } from '../data-use-civic';
 import { supplyTown } from './village-economy';
 import { addStock, drainLegacyFood, foodCover, foodHave, foodStarving, isFoodRes, spoilFood } from './food-stock';
 import type { SimState } from '../types/runtime';
@@ -66,6 +67,8 @@ function seedMissingStock(state: SimState, town: TownEconomyState, data: DataTab
   // Authored rows win; a generated district town falls back to its role's stock (home towns have none).
   const authored = data.dawnStock.seedStockByTown[town.id];
   const seed = authored ?? roleStock(state.seed, town.id) ?? {};
+  if (authored) noteUse('economy/dawn-stock', `town:${town.id}`);
+  else { const role = townRole(state.seed, town.id); if (role) { noteUse('economy/dawn-stock', `base:${role.kind}`); noteUse('economy/dawn-stock', `land:${role.land}`); if (roleFoodItem(state.seed, town.id) !== 'grain') noteUse('economy/dawn-stock', `landFood:${role.land}`); } }
   for (const [rid, qty] of Object.entries(seed)) {
     // A role seed's food goes straight to the ledger as the land's food (fish by the water), not town.stock.
     if (!authored && isFoodRes(rid)) { if (qty > 0) supplyTown(state, town.id, roleFoodItem(state.seed, town.id), qty); continue; }
@@ -123,6 +126,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       for (const fid of route.facilityIds) {
         const fac = facilitiesById.get(fid);
         if (!fac) continue;
+        noteUse('economy/facilities', fac.id);
         for (const out of fac.outputs) {
           produced.set(out.resourceId, (produced.get(out.resourceId) ?? 0) + out.qtyPerDawn * fac.staffedMul * facilityStaffMul(state, fac.id, fac.kind));
         }

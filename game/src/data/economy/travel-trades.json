@@ -49,7 +49,7 @@
       "routeIds": [
         "route_ashford_lowmere"
       ],
-      "requiresPersonBurning": "tom_briggs",
+      "requiresPersonBurning": "leon_march",
       "prism": "caravan.ferry",
       "tells": [
         "named_by_kin",
@@ -251,19 +251,19 @@
   ],
   "fastRouteUnlocks": [
     {
-      "routeId": "route_ashford_lowmere",
+      "routeId": "road_ashford_lowmere",
       "id": "unlock_strand_bond",
       "when": {
         "minBondWithAny": [
-          "tom_briggs",
-          "priya_sen"
+          "leon_march",
+          "clara_whitby"
         ],
         "minBond": 4
       },
       "daysMul": 0.75
     },
     {
-      "routeId": "route_ashford_city_glare",
+      "routeId": "road_ashford_city_reach",
       "id": "unlock_mira_letter",
       "when": {
         "minBondWithAny": [
