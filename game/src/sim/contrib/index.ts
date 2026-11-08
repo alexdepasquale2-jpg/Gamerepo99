@@ -31,3 +31,4 @@ import './land';
 import './craft';
 import './civic-zoning';
 import './clock';
+import './district-polity';

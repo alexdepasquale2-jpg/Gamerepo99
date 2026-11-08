@@ -1,0 +1,75 @@
+{
+  "_doc": "Districts as polities (sim/civic/district-relations). Per neighbouring district pair: trust and feud meters, peace / pact / war. The rules follow economy/polity.ts at district scale: feud grows from despair, rival doctrine styles and the wound a land carries, and is soothed by trust; trust grows from leaders' letters and a pact. Units are per dawn unless named otherwise.",
+  "tuning": {
+    "startFeud": [0, 30],
+    "rivalStartFeud": 15,
+    "letterEvery": [6, 12],
+    "letterTrust": 6,
+    "grievanceFeudEase": 4,
+    "pactTrustPerDay": 0.3,
+    "trustDrift": 0.08,
+    "trustDriftPerTrust": 0.006,
+    "feudDecay": 0.7,
+    "trustSoothe": 0.6,
+    "rivalStyleFeud": 0.5,
+    "despairFeud": 1.5,
+    "despairCalm": 0.35,
+    "despairFeudMul": 1.0,
+    "pactTrust": 30,
+    "pactFeud": 25,
+    "breakFeud": 50,
+    "breakTrust": 10,
+    "grievanceAt": 40,
+    "warFeud": 70,
+    "warCooldown": 60,
+    "warMin": 8,
+    "warSpread": 8,
+    "truceFeud": 20,
+    "truceTrust": 0,
+    "pactRelief": 0.001,
+    "warDespairPerDay": 0.004,
+    "warLoseDespair": 0.05,
+    "levyShare": 0.12,
+    "levyMax": 6,
+    "levyDespair": 0.03,
+    "levyFallChance": 0.15,
+    "warFoodPerDay": 2,
+    "warFoodLineEvery": 5,
+    "homePeople": 60,
+    "broker": {
+      "peace": {
+        "spark": 12,
+        "base": 0.35,
+        "perTrust": 0.01,
+        "feudAfter": 20,
+        "trustAfter": 10,
+        "failTrust": 2
+      },
+      "pact": {
+        "spark": 8,
+        "minTrust": 15,
+        "base": 0.3,
+        "perTrust": 0.012,
+        "trustAfter": 10,
+        "failTrust": 2
+      }
+    },
+    "inboxKeepPerSender": 1,
+    "linesPerDawn": 2
+  },
+  "rivalStyles": [
+    ["compact", "quota"],
+    ["creed", "tithe"],
+    ["pact", "quiet"],
+    ["creed", "quota"],
+    ["tithe", "compact"]
+  ],
+  "woundFeud": {
+    "grief": 0.1,
+    "apathy": 0.0,
+    "fear": 0.35,
+    "exhaustion": 0.1,
+    "disillusionment": 0.25,
+    "shame_wound": 0.2
+  }
+}
