@@ -36,6 +36,9 @@ async function sceneText(page: Page): Promise<string> {
       }
     };
     walk(window.__hearth!.scene.children.list);
+    // The noticeboard is a kit side sheet (DOM) since batch 2 A01.
+    const board = document.querySelector('#hf-board[open]') as HTMLElement | null;
+    if (board) out.push(board.innerText);
     return out.join('\n');
   });
 }

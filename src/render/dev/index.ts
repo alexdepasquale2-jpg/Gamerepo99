@@ -4,3 +4,4 @@
  */
 export {};
 import './interactions';
+import './ui-kit';

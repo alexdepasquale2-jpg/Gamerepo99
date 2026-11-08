@@ -5,6 +5,8 @@ import type { LayoutRoute, SettlementKind } from '../../sim/map/world-layout';
 import Phaser from 'phaser';
 import { TILE_PX } from '../../sim/map/constants';
 import { tileFootWorld } from '../depth-sort';
+import { phaserText } from '../../ui/kit/tokens';
+import { drawPhaserPanel } from '../../ui/kit/phaser-panel';
 
 type Town = { id: string; q: number; r: number; name: string; size: number; kind?: SettlementKind };
 type Pt = { x: number; y: number };
@@ -15,10 +17,10 @@ export type MapFacility = Pt & { kind: string; name: string; idle: boolean };
 export type MapFeed = { player: () => Pt; caravans: () => Pt[]; despair: () => Record<string, number>; economy?: () => MapEconomyFeed; facilities?: () => MapFacility[] };
 
 const FACILITY_COLOR: Record<string, number> = { mill: 0xe8d27a, lumber_camp: 0x9a6a3a, mine: 0xa0a0b0, waystation: 0xd98a5a };
-export type WorldMap = { toggle: () => void; isOpen: () => boolean; update: (time: number) => void };
+export type WorldMap = { toggle: () => void; isOpen: () => boolean; update: (time: number) => void; /** Step the minimap aside (a side sheet is open there). */ setMiniHidden: (hidden: boolean) => void };
 
 const D = 1_000_200;
-const font = { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 };
+const font = { ...phaserText('body'), fontSize: '10px' };
 
 /** 0 despair -> warm gold, 1 -> ashen grey-blue. */
 export function despairColor(d: number): number {
@@ -47,7 +49,8 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
     const s = Math.min(w / bw, h / bh);
     const tx = (p: Pt): Pt => ({ x: ox + (p.x - bx) * s + (w - bw * s) / 2, y: oy + (p.y - by) * s + (h - bh * s) / 2 });
     g.clear();
-    g.fillStyle(0x2a3a24, 0.92).fillRect(ox, oy, w, h).lineStyle(2, 0xa8743e).strokeRect(ox, oy, w, h);
+    // Kit panel frame; the land inside keeps its own map colours.
+    drawPhaserPanel(g, ox - 2, oy - 2, w + 4, h + 4, { alpha: 0.94, lineWidth: big ? 2 : 1 });
     // Draw only the bounded world rectangle, not a stretched strip.
     const cell = big ? 5 : 3;
     const left = ox + (w - bw * s) / 2, top = oy + (h - bh * s) / 2;
@@ -108,11 +111,12 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
   const big = scene.add.graphics().setScrollFactor(0).setDepth(D + 5).setVisible(false);
   const labels = scene.add.container(0, 0).setScrollFactor(0).setDepth(D + 6).setVisible(false);
   let last = -1e9;
+  let miniHidden = false;
 
   const drawBig = (): void => {
     const tx = draw(big, 30, 30, W - 60, H - 60, true);
     labels.removeAll(true);
-    labels.add(scene.add.text(W / 2, 36, 'The Known World  (M to close)', { ...font, fontSize: '13px', color: '#f2b84b' }).setOrigin(0.5, 0));
+    labels.add(scene.add.text(W / 2, 36, 'The Known World  (M to close)', phaserText('heading')).setOrigin(0.5, 0));
     const desp = feed.despair();
     for (const t of towns) {
       const p = tx(pos.get(t.id)!);
@@ -130,8 +134,13 @@ export function createWorldMap(scene: Phaser.Scene, towns: Town[], routes: Layou
     toggle() {
       big.setVisible(!big.visible);
       labels.setVisible(big.visible);
-      mini.setVisible(!big.visible);
+      mini.setVisible(!big.visible && !miniHidden);
       if (big.visible) drawBig();
+    },
+    setMiniHidden(hidden) {
+      if (hidden === miniHidden) return;
+      miniHidden = hidden;
+      mini.setVisible(!big.visible && !hidden);
     },
     isOpen: () => big.visible,
     update(time) {

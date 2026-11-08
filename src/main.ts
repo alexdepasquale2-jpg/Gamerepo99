@@ -1,23 +1,22 @@
 import Phaser from 'phaser';
 import { BootScene } from './render/boot-scene';
 import { OverworldScene } from './render/overworld-scene';
-import { createHud } from './ui/hud';
-import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
-import { SUCCESSION_GATE_KEY } from './render/spark-fx/session-fx';
+import { SUCCESSION_GATE_KEY, SUCCESSION_READY_EVENT } from './render/spark-fx/session-fx';
 import { createHoardEndingScreen } from './ui/hoard-ending-screen';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
 import { createDevMenu } from './ui/dev-menu';
 import { setTerrainMode } from './sim/map/terrain';
+import { ensureKitStyle, installOverlayKeys, uiLayer, watchSession } from './ui/kit';
 
 // Tiles come from the refined map ladder; ?terrain=noise falls back to per-tile noise.
 if (new URLSearchParams(location.search).get('terrain') === 'noise') setTerrainMode('noise');
 
-const hud = createHud();
-hud.setStatus('booting overworld');
-
-const methodMenu = createMethodMenu();
+// The UI kit: one stylesheet, one canvas-aligned DOM layer, one key listener for the overlay stack.
+ensureKitStyle();
+const layer = uiLayer();
+installOverlayKeys();
 
 const width = 640;
 const height = 360;
@@ -27,6 +26,34 @@ let game: Phaser.Game | null = null;
 function stop(): void {
   game?.destroy(true);
   game = null;
+  layer.track(null);
+}
+
+/**
+ * The end screens (succession, hoard ending) for one session. Event-driven: they refresh after every
+ * mutating session call, and the succession screen again when the burnout has played (the scene's
+ * SUCCESSION_READY_EVENT), so the player sees the coal go out before the screen opens.
+ */
+let ends: { session: PlaySession; off: () => void; els: HTMLElement[] } | undefined;
+function attachEndScreens(session: PlaySession, g: Phaser.Game): void {
+  if (ends) {
+    ends.off();
+    for (const el of ends.els) el.remove();
+  }
+  const succession = createSuccessionScreen(session);
+  const hoard = createHoardEndingScreen(session);
+  const gateOpen = (): boolean => {
+    const gate = g.registry.get(SUCCESSION_GATE_KEY) as (() => boolean) | undefined;
+    return !gate || gate();
+  };
+  const refresh = (): void => {
+    if (!session.successionOffer() || gateOpen()) succession.refresh();
+    hoard.refresh();
+  };
+  const unwatch = watchSession(session, refresh);
+  g.events.on(SUCCESSION_READY_EVENT, refresh);
+  ends = { session, els: [succession.el, hoard.el], off: () => { unwatch(); g.events.off(SUCCESSION_READY_EVENT, refresh); } };
+  refresh();
 }
 
 // Title menu first; the game boots when the player starts or loads a world.
@@ -34,7 +61,7 @@ runGameFlow({
   stop,
   start(session, autosave) {
     stop();
-    game = new Phaser.Game({
+    const g = new Phaser.Game({
       type: Phaser.AUTO,
       parent: 'game',
       width,
@@ -49,15 +76,16 @@ runGameFlow({
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
       callbacks: {
-        preBoot: (g) => {
-          g.registry.set("playSession", session);
-          g.registry.set('methodMenu', methodMenu);
-          g.registry.set('hud', hud);
-          g.registry.set('autosave', autosave);
+        preBoot: (pg) => {
+          pg.registry.set('playSession', session);
+          pg.registry.set('autosave', autosave);
         },
       },
     });
-    hud.setStatus('overworld');
+    game = g;
+    // The DOM layer follows the canvas once Phaser has made it.
+    g.events.once(Phaser.Core.Events.READY, () => layer.track(g.canvas));
+    attachEndScreens(session, g);
   },
   setPaused(paused) {
     if (!game) return;
@@ -67,29 +95,5 @@ runGameFlow({
     }
   },
 });
-
-// Succession overlay: polls the running session and shows the locked screen when open.
-let succession: { session: PlaySession; screen: ReturnType<typeof createSuccessionScreen> } | undefined;
-setInterval(() => {
-  const session = game?.registry.get('playSession') as PlaySession | undefined;
-  if (!session) return;
-  if (succession?.session !== session) succession = { session, screen: createSuccessionScreen(session) };
-  // The overworld holds the overlay until the burnout (dying coal) has played on screen.
-  const gate = game?.registry.get(SUCCESSION_GATE_KEY) as (() => boolean) | undefined;
-  if (gate && !gate()) return;
-  succession.screen.refresh();
-}, 250);
-
-// Hoard ending: a hoarder's legitimate end, polled the same way.
-let hoardEnding: { session: PlaySession; screen: ReturnType<typeof createHoardEndingScreen> } | undefined;
-setInterval(() => {
-  const session = game?.registry.get('playSession') as PlaySession | undefined;
-  if (!session) return;
-  if (hoardEnding?.session !== session) {
-    hoardEnding?.screen.el.remove();
-    hoardEnding = { session, screen: createHoardEndingScreen(session) };
-  }
-  hoardEnding.screen.refresh();
-}, 250);
 
 createDevMenu();

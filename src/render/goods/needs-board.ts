@@ -5,9 +5,9 @@ import type { WorldLayout } from '../../sim/map/world-layout';
 import { boardPages } from '../../sim/board-pages';
 import { TILE_PX } from '../../sim/map/constants';
 import { tileFootWorld } from '../depth-sort';
+import { createSheet, kitButton, kitEl } from '../../ui/kit/sheet';
 type Pt = { x: number; y: number };
 export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, layout: WorldLayout, names: Map<string, string>, getPlayer: () => Pt) {
-  const panel = scene.add.container(0, 0).setScrollFactor(0).setDepth(1_000_400).setVisible(false);
   const font = { fontFamily: 'monospace', fontSize: '12px', color: '#efdfb9', wordWrap: { width: 400 } };
   const spots = layout.settlements.map((t) => {
     const p = tileFootWorld(t.q - 3.5, t.r + 3.2);
@@ -22,8 +22,11 @@ export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, lay
     scene.add.text(p.x, p.y + 5, 'Needs', { ...font, fontSize: '10px', stroke: '#1b1612', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(p.y + 1);
     return { id: t.id, p };
   });
-  const close = () => panel.setVisible(false);
-  /** One registered page at a time (sim/board-pages); the tab steps to the next page. */
+  // The board reads as a kit side sheet: tabs for every page, the world still in view.
+  const sheet = createSheet({ id: 'hf-board', title: 'Noticeboard' });
+  scene.events.once('shutdown', () => sheet.destroy());
+  const close = () => sheet.close();
+  /** One registered page at a time (sim/board-pages); the tabs jump between pages. */
   const open = (id: string, page = 0): void => {
     const s = session.getState(); if (!s) return;
     const pages = boardPages();
@@ -31,28 +34,23 @@ export function createNeedsBoards(scene: Phaser.Scene, session: PlaySession, lay
     const at = ((page % pages.length) + pages.length) % pages.length;
     const def = pages[at]!;
     const content = def.render(s, id, (t) => names.get(t) ?? t);
-    panel.removeAll(true); panel.setVisible(true);
-    const PW = 600, PH = 340;
-    const x = scene.scale.width / 2 - PW / 2, y = scene.scale.height / 2 - PH / 2;
-    panel.add(scene.add.rectangle(x, y, PW, PH, 0x292017, 0.98).setOrigin(0).setStrokeStyle(3, 0xa57b49));
-    panel.add(scene.add.text(x + 20, y + 15, `${names.get(id) ?? id} · Noticeboard · ${def.title}`, { ...font, fontSize: '14px', color: '#f2b84b' }));
-    const small = { ...font, fontSize: '10px', lineSpacing: 2 };
+    sheet.setTitle(`${names.get(id) ?? id} · Noticeboard · ${def.title}`);
+    sheet.body.replaceChildren();
     if (content.columns) {
-      const [left, right] = content.columns;
-      panel.add(scene.add.text(x + 16, y + 40, left.join('\n'), { ...small, wordWrap: { width: PW / 2 - 26 } }));
-      panel.add(scene.add.text(x + PW / 2 + 4, y + 40, right.join('\n'), { ...small, wordWrap: { width: PW / 2 - 26 } }));
+      const cols = kitEl('div', 'hf-cols');
+      for (const col of content.columns) cols.append(kitEl('pre', 'hf-pre', col.join('\n')));
+      sheet.body.append(cols);
     }
-    if (content.lines?.length) panel.add(scene.add.text(x + 16, y + 40, content.lines.join('\n'), { ...small, fontSize: '11px', lineSpacing: 3, wordWrap: { width: PW - 32 } }));
-    if (pages.length > 1) {
-      const next = pages[(at + 1) % pages.length]!;
-      const tab = scene.add.text(x + 16, y + PH - 32, `${next.title} ▸`, { ...font, fontSize: '11px', backgroundColor: '#65482c', padding: { x: 6, y: 4 } }).setInteractive({ useHandCursor: true });
-      tab.on('pointerdown', () => open(id, at + 1)); panel.add(tab);
-    }
-    const b = scene.add.text(x + PW - 100, y + PH - 32, 'Close [Esc]', { ...font, backgroundColor: '#65482c', padding: { x: 6, y: 5 } }).setInteractive({ useHandCursor: true });
-    b.on('pointerdown', close); panel.add(b);
+    if (content.lines?.length) sheet.body.append(kitEl('pre', 'hf-pre', content.lines.join('\n')));
+    const tabs = sheet.el.querySelector('.hf-tabs') ?? kitEl('div', 'hf-tabs');
+    tabs.replaceChildren(...pages.map((p, i) => kitButton(p.title, () => open(id, i), { on: i === at, id: `board-${p.id}` })));
+    if (!tabs.isConnected) sheet.head.after(tabs);
+    (tabs as HTMLElement).hidden = pages.length < 2;
+    sheet.body.scrollTop = 0;
+    sheet.open();
   };
   return {
-    close, isOpen: () => panel.visible,
+    close, isOpen: () => sheet.isOpen(),
     /** Each town's board (foot, world px), for the focus resolver. */
     spots: () => spots,
     interact(p: Pt) { const spot = spots.find((s) => Math.hypot(s.p.x - p.x, s.p.y - p.y) < 50); if (!spot) return false; open(spot.id); return true; },

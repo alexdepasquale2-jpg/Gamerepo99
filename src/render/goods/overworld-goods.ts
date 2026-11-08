@@ -34,6 +34,8 @@ import { chestCandidate, goodsCandidates, groundCandidate, presentGoodsVerb, typ
 import type { FocusCandidate } from '../interact/focus';
 import type { ActOutcome } from '../../sim/play-session/action-providers';
 import type { Target, TargetKind } from '../../sim/play-session/targets';
+import { getHud } from '../../ui/kit/hud';
+import { overlays } from '../../ui/kit/overlay-stack';
 
 type Pt = { x: number; y: number };
 export type OverworldGoods = {
@@ -57,6 +59,8 @@ export type OverworldGoods = {
   /** Redraw the satchel/hotbar after the inventory changed outside it. */
   refreshInventory: () => void;
   letters: () => void;
+  /** Open a wagon's trade sheet directly (dev/e2e); the first wagon when no id is given. */
+  openTrade: (caravanId?: string) => boolean;
   /** Placed facilities on the roads (dev/e2e). */
   facilities: FacilitiesLayer;
   closeOverlays: () => void;
@@ -130,8 +134,9 @@ export function attachOverworldGoods(
   const chests = createStashChests(scene, st, layout.settlements, (siteId, at) => tapTarget(chestCandidate(siteId, at)));
   const plots = createPlotMarkers(scene, st);
   const memories = new Map<string, Phaser.GameObjects.Text>();
-  // Unread-reply marker under the control hint; hidden when nothing is waiting in the L panel.
-  const badge = scene.add.text(12, 62, '', { fontFamily: 'Georgia, serif', fontSize: '12px', color: '#ffd877', stroke: '#1b1612', strokeThickness: 3 }).setScrollFactor(0).setDepth(1_000_000).setVisible(false);
+  // Unread replies: a small chip on the screen edge (kit HUD); tapping it opens the letters sheet.
+  const hud = getHud();
+  hud.onLetters(() => mail.open());
   const trader = createCaravanTrade(scene, st, () => inv.refresh(), (tid) => world.settlements?.find((x) => x.id === tid)?.name ?? tid);
   const living = createLivingWorld(scene, seed, layout.settlements, layout.routes, st, despair, trader.stoppedId, nav);
   const meta = new Map((world.settlements ?? []).map((s) => [s.id, s]));
@@ -205,11 +210,13 @@ export function attachOverworldGoods(
     townName: (tid) => meta.get(tid)?.name ?? tid,
   };
   let lastUnread = st() ? unreadReplies(st()!) : 0;
-  scene.events.once('shutdown', () => { delete document.body.dataset.hfLocalOverlay; });
+  // The minimap sits where a side sheet opens; it steps aside while one is open (also while paused).
+  const offSheets = overlays.subscribe(() => map.setMiniHidden(overlays.count('sheet') > 0));
+  scene.events.once('shutdown', () => { offSheets(); hud.setLetters(0); hud.onLetters(null); hud.setPhase(null); });
   showGround();
   const api: OverworldGoods = {
     update(time, dt, player) {
-      document.body.dataset.hfLocalOverlay = String(inv.isOpen() || map.isOpen() || trader.isOpen() || mail.isOpen() || boards.isOpen());
+      hud.setPhase(life.phase());
       nodes.update(player, time);
       plots.update(player);
       facilities.update(player, time);
@@ -218,7 +225,7 @@ export function attachOverworldGoods(
       const cur = st(), unread = cur ? unreadReplies(cur) : 0;
       if (unread > lastUnread) playSfx('letter');
       lastUnread = unread;
-      badge.setVisible(unread > 0 && !mail.isOpen()).setText(`✉ ${unread} unread ${unread === 1 ? 'reply' : 'replies'} · L`);
+      hud.setLetters(unread);
       for (const townId of Object.keys(st()?.hearthKeepsakes ?? {})) if (!memories.has(townId)) {
         const p = hearthOf(townId, { x: 0, y: 0 });
         memories.set(townId, scene.add.text(p.x + 20, p.y - 24, '◆', { color: '#f2b84b', fontSize: '16px', stroke: '#503c25', strokeThickness: 2 }).setDepth(p.y + 1));
@@ -277,6 +284,11 @@ export function attachOverworldGoods(
     refreshInventory: () => inv.refresh(),
     letters: () => mail.open(),
     openBoard: (townId, page) => boards.openAt(townId, page),
+    openTrade(caravanId) {
+      const id = caravanId ?? st()?.caravans?.[0]?.id;
+      if (!id) return false;
+      trader.open(id); return true;
+    },
     facilities,
     closeOverlays: () => { trader.close(); boards.close(); inv.close(); mail.close(); if (map.isOpen()) map.toggle(); },
     toggleInventory: () => inv.toggle(),

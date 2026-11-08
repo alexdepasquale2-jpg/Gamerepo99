@@ -5,7 +5,7 @@
 import Phaser from 'phaser';
 import type { PlaySession } from '../sim';
 import { coinOf, type JourneyResult } from '../sim/travel/journey';
-import type { MenuHandle } from '../ui/menus/dom';
+import type { MenuHandle } from '../ui/kit/menu';
 import { openRoadMenu } from '../ui/menus/road-menu';
 import { playSfx } from './sfx';
 import { tileFootWorld } from './depth-sort';

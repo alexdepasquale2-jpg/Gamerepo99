@@ -9,7 +9,10 @@ import { openWorldMenu, rollWorldSeed } from './menus/world-menu';
 import { playableArchetypes, rollArchetype } from '../sim/inhabitant';
 import { loadData } from '../sim/load-data';
 import { openWorldFileMenu } from './menus/world-file-menu';
-import type { MenuHandle } from './menus/dom';
+import type { MenuHandle } from './kit/menu';
+import { getHud } from './kit/hud';
+import { overlays } from './kit/overlay-stack';
+import { watchSession } from './kit/session-events';
 
 export type GameHost = {
   /** Boot (or reboot) the Phaser game around this session. */
@@ -23,14 +26,15 @@ export function runGameFlow(host: GameHost): void {
   let session: PlaySession | null = null;
   let menu: MenuHandle | null = null;
   const open = (m: MenuHandle) => ((menu = m), m);
-  const status = document.createElement('div');
-  status.id = 'hf-status';
-  status.style.cssText = 'position:fixed;top:6px;left:8px;z-index:5;font:13px Georgia,serif;color:#f4e6c8;text-shadow:0 1px 2px #000;pointer-events:none';
-  document.body.appendChild(status);
+  // Day and phase sit at top-centre, muted (kit HUD); `#hf-status` keeps its text and data-* for e2e.
+  const hud = getHud();
+  const status = hud.status;
+  let unwatch: (() => void) | undefined;
 
   function refreshStatus(): void {
     const snap = session?.snapshot();
-    status.textContent = snap ? `Day ${snap.day}` : '';
+    hud.setDay(snap ? snap.day : null);
+    if (!snap) hud.setPhase(null);
     status.dataset.day = String(snap?.day ?? '');
     status.dataset.fingerprint = snap?.fingerprint ?? '';
     status.dataset.spark = String(snap?.spark ?? '');
@@ -39,6 +43,9 @@ export function runGameFlow(host: GameHost): void {
 
   function begin(s: PlaySession): void {
     session = s;
+    unwatch?.();
+    unwatch = watchSession(s, refreshStatus);
+    hud.setMenuButton(true);
     host.start(s, () => {
       refreshStatus();
       const blob = s.saveBlob();
@@ -87,6 +94,9 @@ export function runGameFlow(host: GameHost): void {
   function title(): void {
     host.stop();
     session = null;
+    unwatch?.();
+    unwatch = undefined;
+    hud.setMenuButton(false);
     refreshStatus();
     const latest = () => slots.list()[0];
     open(
@@ -107,13 +117,12 @@ export function runGameFlow(host: GameHost): void {
     open(openSaveMenu('load', slots, { current: () => null, onLoad: loadInto, onBack: back }));
   }
 
+  /** The pause menu and the menus under it carry the stack's pause flag; the game pauses while any is open. */
   function pause(): void {
-    if (!session || menu?.el.isConnected) return;
-    host.setPaused(true);
-    const resume = () => host.setPaused(false);
+    if (!session || overlays.count('menu', 'modal') > 0) return;
     open(
       openPauseMenu({
-        onResume: resume,
+        onResume: () => undefined,
         onSave: () =>
           open(
             openSaveMenu('save', slots, {
@@ -139,20 +148,22 @@ export function runGameFlow(host: GameHost): void {
     );
   }
 
+  // Esc with nothing open (and nothing in the scene claiming it: ring, room, map) opens the pause menu.
+  // Open menus and sheets take Esc first, in the overlay stack's capture listener.
   window.addEventListener('keydown', (e) => {
-    if (document.body.dataset.hfLocalOverlay === 'true') return;
-    if (e.key === 'Escape' && session && !document.querySelector('.hf-menu')) pause();
+    if (e.key === 'Escape' && session && !overlays.top() && !overlays.escapeClaimed()) pause();
   });
-  // Touch: a small always-on menu button (phones have no Esc key).
-  const menuBtn = document.createElement('button');
-  menuBtn.textContent = '☰';
-  menuBtn.setAttribute('aria-label', 'Menu');
-  menuBtn.style.cssText =
-    'position:fixed;left:8px;bottom:8px;z-index:20;font:18px monospace;padding:8px 12px;color:#f2e9e4;background:#2a2420;border:1px solid #5a4a3a;border-radius:6px';
-  menuBtn.addEventListener('click', () => {
-    if (session && !document.querySelector('.hf-menu')) pause();
+  // Touch: a small menu button in the HUD layer (phones have no Esc key); it hides while a menu is open.
+  hud.setMenuButton(false, () => {
+    if (session && overlays.count('menu', 'modal') === 0) pause();
   });
-  document.body.appendChild(menuBtn);
-  setInterval(() => (menuBtn.style.display = session && !document.querySelector('.hf-menu') ? '' : 'none'), 300);
+  // The stack's pause flag drives the scenes: paused while any open entry asks for it.
+  let paused = false;
+  overlays.subscribe(() => {
+    const p = overlays.pausing();
+    if (p === paused) return;
+    paused = p;
+    host.setPaused(p);
+  });
   title();
 }
