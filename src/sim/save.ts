@@ -1,7 +1,7 @@
 import type { HoardState } from './hoard/state';
 import type { LegacyState, ProtagonistImprint } from './legacy/types';
 import type { UnspokenState } from './social/unspoken-types';
-import { dataForSeed, type DataTables } from './load-data';
+import { dataForSeed, loadData, type DataTables } from './load-data';
 import type { SimState } from './types/runtime';
 import type { TravelSimState } from './travel/travel';
 import { tickCaravans } from './caravans';
@@ -75,7 +75,7 @@ export function saveState(state: SimState): SaveBlob {
 }
 
 /** The one load path: blob (+ static data) -> SimState with derived parts rebuilt. */
-export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marrow'): SimState {
+export function loadState(blob: SaveBlob, data: DataTables = loadData(), archetypeId = 'marrow'): SimState {
   let state: TravelSimState;
   // The save's own world: its social web follows its seed, whatever world `data` came from.
   data = dataForSeed(data, blob.seed);

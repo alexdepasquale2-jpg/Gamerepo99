@@ -1,10 +1,13 @@
 # PLAN
 
 ## Status
-Runtime wiring fix: hearth rest now runs the full dawn pipeline (economy/caravans, doctrines, letters, unspoken, hoard, legacy, patrons); economy and dynamic dialogue enabled. Play generates 60 procedural residents to match the baked social web. Loaded-state juice forwarding restored. Build verified; tests/playthrough deliberately not rerun at Alex's request. This does not close the neglect/balance blockers or sign the M5 gate.
-M5 on main (PRs #2,#4,#5,#8 + gap fixes #9–#14), 458 tests. M7 bots (#7) + perf (#6) + M6 plan (#3) merged.
-M6 A (surfacing #17) + B (menus #16), mobile touch (#18), polish (#19), leader fix (#15) merged; build hosted.
-Next: Alex signs `docs/qa/M5_GATE.md`; decide neglect→despair rule and balance numbers; then M6 surfacing (step 7).
+_Updated 2026-11-08._
+- **Archetypes** from the vision merged (#28). **Shared seams** merged (#29): action providers, board pages, dawn lines, ring paging (8 + More…), `PeopleLayer.sync()`, `arriveAt`, `__hearth.dev` hooks.
+- **Testing consolidated** + juice unsilenced (#31): env-driven `playwright.config.ts`, `tests/e2e/support/game.ts`, `npm run check` / `test:e2e` / `check:all`, `tests/README.md`.
+- **Batch 1 (16 units) merged** (#32–#47): burnout & refusal on screen, inner state surfaced, power page, the past spoken, births/newcomers, missing verbs, patron deals, hoarder path, roads, land edits, facilities, new world each run, kin strain, world-file migrations, authored moments, happenings. Every non-locked node in both tech trees is now Live.
+- **Main test run** (after batch): validate, tsc, build pass; 4 unit + 5 e2e failures found. Fixed on `claude/jolly-faraday-n9ngk8`: loadState default data (caravan-market), power-page dawn-line scoping, letters-scale golden recapture (non-42 social webs), stamp-raster split (`layout-bbox.ts`), burnout spec world step, camera guard in `surface-layer.ts` during world import. Still to re-check: `hoarder-path`, `inner-state` e2e.
+- **Next batch queued** (newly unlocked): full tree B10–B12, A8–A12, C8, C9, C14, D2, D7, E3, F6, F11, F15, F17, F20, F21, G5–G9, H8, H9, I4, I8, J3, J7, J12, K8; Foundation A12, A13, B9, C7, E5, J7. Not started.
+- Older open items: Alex signs `docs/qa/M5_GATE.md`; neglect→despair rule and balance numbers.
 
 ## Next 5 steps (one per session, gate: `npm run validate && npm test && npm run build`)
 
