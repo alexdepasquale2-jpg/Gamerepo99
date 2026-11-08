@@ -23,6 +23,7 @@ export function useItem(state: SimState, itemId: string, hearthTownId?: string):
     touched[hearthTownId] = state.day;
     return 'You place the keepsake beside the fire. Neighbours stop to remember.';
   }
+  if (item.use?.examine) return `${item.name}: ${item.use.examine} (Drag it to someone to give it, or onto the ground to drop it.)`;
   return `${item.name} is used through work, gifts, trade or deliveries.`;
 }
 

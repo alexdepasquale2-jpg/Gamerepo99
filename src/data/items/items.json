@@ -56,7 +56,10 @@
       "tags": [
         "fuel",
         "build"
-      ]
+      ],
+      "use": {
+        "examine": "Dry, split and heavy. It will feed a hearth or frame a wall; hand it to someone building."
+      }
     },
     {
       "id": "timber",
@@ -67,7 +70,10 @@
       "economyResourceId": "timber",
       "tags": [
         "build"
-      ]
+      ],
+      "use": {
+        "examine": "Sawn timber, straight enough for a beam. Builders are always short of it."
+      }
     },
     {
       "id": "stone",
@@ -78,7 +84,10 @@
       "economyResourceId": "timber",
       "tags": [
         "build"
-      ]
+      ],
+      "use": {
+        "examine": "A good fitting stone. It wants a wall, a footing or a builder."
+      }
     },
     {
       "id": "ore",
@@ -90,7 +99,10 @@
       "tags": [
         "mineral",
         "craft"
-      ]
+      ],
+      "use": {
+        "examine": "Heavy with iron. A smith would know what to do with it."
+      }
     },
     {
       "id": "herbs",
@@ -101,7 +113,10 @@
       "tags": [
         "healing",
         "comfort"
-      ]
+      ],
+      "use": {
+        "spark": 5
+      }
     },
     {
       "id": "wool",
@@ -113,7 +128,10 @@
       "tags": [
         "warmth",
         "trade"
-      ]
+      ],
+      "use": {
+        "examine": "Greasy, warm and a little itchy. Weavers pay for it."
+      }
     },
     {
       "id": "cloth",
@@ -125,7 +143,10 @@
       "tags": [
         "warmth",
         "trade"
-      ]
+      ],
+      "use": {
+        "examine": "Plain woven cloth. It would warm someone, or sell well."
+      }
     },
     {
       "id": "tools",
@@ -136,7 +157,10 @@
       "tags": [
         "craft",
         "work"
-      ]
+      ],
+      "use": {
+        "examine": "Worn handles, sharp edges. Hand these to someone who works for a living."
+      }
     },
     {
       "id": "keepsake",
@@ -174,7 +198,10 @@
       "price": 1,
       "tags": [
         "coin"
-      ]
+      ],
+      "use": {
+        "examine": "A few coins. They are spent in trade, not gifted."
+      }
     },
     {
       "id": "grain",
@@ -185,7 +212,10 @@
       "tags": [
         "food",
         "raw"
-      ]
+      ],
+      "use": {
+        "examine": "Raw grain. It needs a mill before it is bread."
+      }
     },
     {
       "id": "flour",
@@ -196,7 +226,10 @@
       "tags": [
         "food",
         "raw"
-      ]
+      ],
+      "use": {
+        "examine": "Fine flour. A baker could do something with it."
+      }
     },
     {
       "id": "flax",
@@ -207,7 +240,10 @@
       "tags": [
         "raw",
         "trade"
-      ]
+      ],
+      "use": {
+        "examine": "Pale flax, ready for the spinner."
+      }
     },
     {
       "id": "clay",
@@ -218,7 +254,10 @@
       "tags": [
         "raw",
         "build"
-      ]
+      ],
+      "use": {
+        "examine": "Cool, wet clay. Potters and builders both want it."
+      }
     },
     {
       "id": "rope",
@@ -229,7 +268,10 @@
       "tags": [
         "craft",
         "work"
-      ]
+      ],
+      "use": {
+        "examine": "Tight-laid rope. Carters and builders use it."
+      }
     },
     {
       "id": "nails",
@@ -240,7 +282,10 @@
       "tags": [
         "craft",
         "build"
-      ]
+      ],
+      "use": {
+        "examine": "A handful of nails. Small things, and always short."
+      }
     },
     {
       "id": "pots",
@@ -251,7 +296,10 @@
       "tags": [
         "craft",
         "comfort"
-      ]
+      ],
+      "use": {
+        "examine": "A stack of fired pots. Somebody's kitchen is missing these."
+      }
     }
   ],
   "startingInventory": {
