@@ -20,6 +20,7 @@ const ROOT = `
 :root{${cssVars()}}
 @media (pointer:coarse){:root{--hf-tap:var(--hf-tap-coarse)}}
 body[data-pad=on]{--hf-pad-reserve-bottom:${PAD_RESERVE_BOTTOM_PX}px}
+@media (orientation:portrait){body[data-pad=on]{--hf-pad-reserve-bottom:256px}}
 @media (orientation:landscape) and (max-height:540px){body[data-pad=on]{--hf-pad-reserve-bottom:${Math.round(PAD_RESERVE_BOTTOM_PX * 0.6)}px}}
 #hf-ui-layer{--hf-pad-overlap:max(0px,calc(var(--hf-pad-reserve-bottom) - var(--hf-below)))}
 @keyframes hf-rise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}

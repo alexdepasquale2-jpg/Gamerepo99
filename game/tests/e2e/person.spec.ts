@@ -14,7 +14,8 @@ test('ring verbs on a person draw a reaction line', async ({ page }) => {
   const ring = await dev<{ chips: { id: string }[] }>(page, 'openRing', `person:${who.id}`);
   const ids = ring.chips.map((c) => c.id);
   expect(ids).toContain('family:speak');
-  expect(ids).toContain('family:help');
+  // Helping is done in the world now (hold-to-work, carrying), not picked from the ring.
+  for (const gone of ['work_alongside', 'favor_do', 'show_up', 'carry_goods']) expect(ids.some((i) => i.startsWith(`${gone}@`))).toBe(false);
   await expect(page.locator('.ix-ring')).toBeVisible();
 
   const sparkBefore = await hearth(page, (h) => h.session.getState().player.spark as number);

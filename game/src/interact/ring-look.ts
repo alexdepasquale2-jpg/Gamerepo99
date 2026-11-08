@@ -44,6 +44,8 @@ const CSS = `
 #ix-layer .ix-chip sup{left:auto;right:-4px;top:-6px;display:grid;place-items:center;min-width:1.5em;height:1.5em;padding:0 .2em;box-sizing:border-box;border-radius:999px;
   background:#0B0A0F;border:1px solid rgba(122,112,96,.8);color:#A89068;font:600 .6em/1 var(--hf-font-mono,monospace)}
 @media (pointer:coarse){#ix-layer .ix-chip sup{display:none}}
+/* A narrow phone: compact chips so three fit a row without burying the world. */
+@media (max-width:560px){#ix-layer .ix-chip{min-width:0;padding:2px 10px 2px 3px;gap:4px;font-size:min(var(--ix-fs),14px)}}
 #ix-layer .ix-head{min-height:max(28px,var(--hf-tap,28px));padding:2px 12px;border-radius:999px;background:rgba(11,10,15,.6);border:1px solid rgba(224,184,106,.45);font:600 var(--ix-fs)/1.1 var(--hf-font-ui,system-ui,sans-serif)}
 #ix-layer .ix-head:focus-visible{outline:2px solid #5EC8C8;outline-offset:2px}
 #ix-layer .ix-tip{padding:4px 10px;border-radius:8px;background:rgba(28,22,18,.96);border-color:rgba(184,152,96,.4);box-shadow:0 6px 18px rgba(11,10,15,.5);font-family:var(--hf-font-ui,system-ui,sans-serif)}

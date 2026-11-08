@@ -34,9 +34,10 @@ body[data-pad=on]{overscroll-behavior:none;touch-action:none}
 .hf-pad__face--y{right:calc(var(--pad-gap) + var(--pad-face) * 1.0 + var(--pad-sr));bottom:calc(var(--pad-gap) + var(--pad-face) * 1.95 + var(--pad-sb))}
 .hf-pad__sys{top:calc(6px + var(--pad-st));height:28px;min-width:64px;padding:0 10px;border-radius:14px;flex-direction:row;gap:5px}
 .hf-pad__sys b{font-size:1.1em}
-.hf-pad__sys--select{left:calc(50% - 70px)}
-.hf-pad__sys--start{left:calc(50% + 6px)}
-.hf-pad__sh{height:30px;width:calc(var(--pad-face) * 1.3);border-radius:10px 10px 6px 6px;flex-direction:row;gap:4px;bottom:calc(var(--pad-gap) * 1.6 + var(--pad-d) + var(--pad-sb))}
+/* Top-right, just under the minimap: clear of the day chip (top centre) and the spark bar (top left). */
+.hf-pad__sys--select{right:calc(84px + var(--pad-sr));top:calc(var(--hf-minimap-bottom,82px) + var(--pad-st))}
+.hf-pad__sys--start{right:calc(10px + var(--pad-sr));top:calc(var(--hf-minimap-bottom,82px) + var(--pad-st))}
+.hf-pad__sh{height:30px;width:calc(var(--pad-face) * 1.3);border-radius:10px 10px 6px 6px;flex-direction:row;gap:4px;bottom:calc(max(var(--pad-gap) * 1.6 + var(--pad-d), var(--pad-gap) * 1.5 + var(--pad-face) * 3.1) + var(--pad-sb))}
 .hf-pad__sh--l{left:calc(var(--pad-gap) + var(--pad-sl))}
 .hf-pad__sh--r{right:calc(var(--pad-gap) + var(--pad-sr))}
 .hf-pad__badge{position:absolute;top:-6px;right:-6px;min-width:16px;padding:0 4px;border-radius:999px;background:var(--hf-glow,#f2c46d);color:var(--hf-void,#120e0a);font:bold 11px/16px system-ui,sans-serif;font-style:normal}

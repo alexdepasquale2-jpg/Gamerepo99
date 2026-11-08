@@ -1,37 +1,33 @@
-// A wild prop (tree, rock …) out past the town: its ring offers props.json verbs and one changes spark or the satchel.
+// A wild prop (tree, rock …) out past the town: what it offers is a physical verb (it gives an item), and
+// standing still by it sits the player down for a little spark instead of a "rest" chip.
 import { dev, bootToPlay, expect, hearth, settle, test } from './support';
 
 const WOODY_OR_STONY = /^prop:(tree|rock|boulder|log|stump)@(\d+),(\d+)$/;
 
-test('a tree or rock gives what its verb says', async ({ page }) => {
+test('a tree or rock gives what its verb says, and lingering by it warms', async ({ page }) => {
   await bootToPlay(page);
-  // Find one: nearThing walks (teleports) toward the nearest prop, then look around there for a tree or rock.
   await dev(page, 'nearThing', 'prop');
   await settle(page);
   const near = await dev<{ key: string; kind: string }[]>(page, 'things', 2000);
   const prop = near.map((t) => t.key.match(WOODY_OR_STONY)).find(Boolean);
   expect(prop, 'a tree or rock within sight of the first prop').toBeTruthy();
   const [key, , q, r] = prop!;
-  await dev(page, 'teleport', Number(q), Number(r) + 1); // stand just below it, as nearThing does
+  await dev(page, 'teleport', Number(q), Number(r) + 1);
   await settle(page);
 
-  const ring = await dev<{ chips: { id: string; label: string }[] }>(page, 'openRing', key);
-  expect(ring.chips.length).toBeGreaterThan(0);
-  expect(ring.chips.every((c) => c.id.startsWith('prop.'))).toBe(true);
+  // Its verbs: only prop verbs, and none of the old spark-only rests.
+  const id = key.slice('prop:'.length);
+  const verbs = await hearth(page, (h, i: string) => h.session.listVerbs({ kind: 'prop', id: i }).map((v: { id: string }) => v.id), id);
+  expect(verbs.length).toBeGreaterThan(0);
+  expect(verbs.every((v) => v.startsWith('prop.'))).toBe(true);
+  expect(verbs.some((v) => /shade|\.sit|climb|rings/.test(v))).toBe(false);
 
-  const before = await hearth(page, (h) => ({ spark: h.session.getState().player.spark, inv: { ...h.session.getState().inventory } }));
-  const chip = page.locator(`.ix-chip[data-id="${ring.chips[0].id}"]`);
-  await expect(chip).toBeVisible();
-  await chip.click();
+  const before = await hearth(page, (h) => ({ ...h.session.getState().inventory }));
+  const out = await dev<{ ok: boolean }>(page, 'act', key, verbs[0]);
+  expect(out.ok).toBe(true);
+  await expect.poll(() => hearth(page, (h, b: typeof before) => JSON.stringify(h.session.getState().inventory) !== JSON.stringify(b), before)).toBe(true);
 
-  // Either warmth or an item: every tree/rock verb does one of the two.
-  await expect
-    .poll(() => hearth(page, (h, b: typeof before) => {
-      const st = h.session.getState();
-      return st.player.spark !== b.spark || JSON.stringify(st.inventory) !== JSON.stringify(b.inv);
-    }, before))
-    .toBe(true);
-  // And once a day: the same verb on the same prop type is spent now.
-  const again = await dev<{ chips: { id: string }[] } | null>(page, 'openRing', key);
-  expect((again?.chips ?? []).map((c) => c.id)).not.toContain(ring.chips[0].id);
+  // Lingering: sit a while by shade and spark rises (under the daily prop cap).
+  const sat = await dev<{ gain: number; spark: number }>(page, 'linger', 'shade', 30);
+  expect(sat.gain).toBeGreaterThan(0);
 });

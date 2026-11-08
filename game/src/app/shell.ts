@@ -10,6 +10,7 @@ import { attachWorld, preloadWorldAssets, createWorldAssets } from '../world';
 import { attachActors } from '../actors';
 import { attachVoice } from '../voice';
 import { attachUi, trackCanvas } from '../ui';
+import { pickGameSize, setGameSize } from '../ui/kit/layer';
 import { attachPanels } from '../panels';
 import { attachInteract } from '../interact';
 import '../sim/contrib';
@@ -129,11 +130,13 @@ export function createApp(): AppHooks {
   const hooks: AppHooks = {
     start(session, autosave) {
       game?.destroy(true);
+      const size = pickGameSize(window.innerWidth, window.innerHeight);
+      setGameSize(size.w, size.h);
       const g = new Phaser.Game({
         type: Phaser.AUTO,
         parent: 'game',
-        width: WIDTH,
-        height: HEIGHT,
+        width: size.w,
+        height: size.h,
         backgroundColor: '#0b0d12',
         pixelArt: true,
         antialias: false,
@@ -150,6 +153,16 @@ export function createApp(): AppHooks {
         },
       });
       g.events.once(Phaser.Core.Events.READY, () => trackCanvas(g.canvas));
+      // Rotating a phone flips between the landscape and portrait sizes; cameras follow the scale manager.
+      const onResize = (): void => {
+        const next = pickGameSize(window.innerWidth, window.innerHeight);
+        if (next.w === g.scale.gameSize.width && next.h === g.scale.gameSize.height) return;
+        setGameSize(next.w, next.h);
+        g.scale.setGameSize(next.w, next.h);
+        for (const sc of g.scene.getScenes(true)) sc.cameras.main.setSize(next.w, next.h);
+      };
+      window.addEventListener('resize', onResize);
+      g.events.once(Phaser.Core.Events.DESTROY, () => window.removeEventListener('resize', onResize));
       game = g;
     },
     stop() {

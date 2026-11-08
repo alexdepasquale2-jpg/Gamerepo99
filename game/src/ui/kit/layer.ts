@@ -6,8 +6,17 @@
  */
 import { PAD_RESERVE_BOTTOM_PX, SIZES, Z } from './tokens';
 
-export const GAME_W = 640;
-export const GAME_H = 360;
+// The game's logical size. Landscape screens play at 640x360; a portrait phone plays a taller, narrower
+// world (360 wide) so the view fills the screen behind the on-screen pad instead of letterboxing.
+// Live bindings: importers always read the current size (app/shell sets it at boot and on rotation).
+export let GAME_W = 640;
+export let GAME_H = 360;
+export function setGameSize(w: number, h: number): void { GAME_W = w; GAME_H = h; }
+/** The logical size for a viewport: 640x360 when landscape, 360 x (taller) when portrait. */
+export function pickGameSize(viewW: number, viewH: number): { w: number; h: number } {
+  if (viewW >= viewH * 0.9) return { w: 640, h: 360 };
+  return { w: 360, h: Math.round(Math.min(800, Math.max(480, (360 * viewH) / Math.max(1, viewW)))) };
+}
 
 export type Rect = { left: number; top: number; width: number; height: number };
 export type SheetDock = 'side' | 'below';
@@ -41,6 +50,12 @@ export function sheetBox(view: { width: number; height: number }, canvas: Rect, 
       width: Math.max(0, view.width - gutterCss * 2),
       height: Math.max(0, below - gutterCss * 2),
     };
+  }
+  // A portrait game (taller than wide) has no band to dock in: the sheet rises over the lower part of the
+  // world as a bottom sheet, above the pad's reserve.
+  if (canvas.height > canvas.width * 1.15) {
+    const top = Math.round(canvas.height * 0.26);
+    return { dock: 'below', left: gutterCss, top, width: Math.max(0, canvas.width - gutterCss * 2), height: Math.max(0, canvas.height - top - reserveBelow - gutterCss - Math.max(SIZES.hotbarReserve * u, 74)) };
   }
   const gutter = SIZES.gutter * u;
   const floor = Math.min(SIZES.sheetMinCss, canvas.width * 0.6);
