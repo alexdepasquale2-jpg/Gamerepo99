@@ -46,7 +46,7 @@ export function attachUi(ctx: GameContext): UiApi {
   const letters = (): void => ctx.panels.letters.open();
 
   const hud = createHud({ onLetters: letters, onMenu: pause });
-  const touch = createTouchBar({
+  const touch = createTouchBar(ctx, {
     act: () => ctx.interact.open(),
     brood,
     satchel: () => ctx.panels.satchel.toggle(),
