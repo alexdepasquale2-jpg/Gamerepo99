@@ -49,6 +49,15 @@ const nearby =
 
 const tint: Entry = (p) => ({ kind: 'tint', personId: str(p.personId), tell: 'none', cue: 'reignite' });
 
+/** A townsperson in `townKey`'s town says the line (payload text first, else a fallback). */
+const inTown =
+  (cue: string, fb: string, tell: Tell, townKey: string, text?: (p: P) => string | undefined): Entry =>
+  (p, ctx) => {
+    const townId = str(p[townKey]);
+    const personId = ctx.nearbyPersonId?.(townId);
+    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb) } : null;
+  };
+
 /** Every juice id that surfaces. */
 export const SURFACED: Record<string, Entry> = {
   'person.reaction': own('reaction', 'unspoken', 'ember', (p) => str(p.personId), (p) => str(p.line)),
@@ -57,6 +66,7 @@ export const SURFACED: Record<string, Entry> = {
   'moment.beat': own('moment', 'unspoken', 'ember', (p) => str(p.personId), (p) => str(p.line)),
   'letter.deliver': own('letter', 'letter', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
   'rumor.spread': own('rumor', 'rumor', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
+  'history.told': own('history', 'unspoken', 'none', (p) => str(p.personId), (p) => str(p.line)),
   'doctrine.voice': nearby('doctrine', 'doctrine_voice', 'none'),
   'doctrine.exposed': nearby('doctrine', 'doctrine_exposed', 'none'),
   'doctrine.suppressed': nearby('doctrine', 'doctrine_suppressed', 'none'),
@@ -67,15 +77,29 @@ export const SURFACED: Record<string, Entry> = {
   'stash.theft': nearby('notoriety', 'stash_theft', 'glance'),
   'person.reignite': tint,
   'site.kindle': tint,
+  // Unsilenced: the world's quieter news, always through someone nearby.
+  'packet.deliver': inTown('rumor', 'packet_deliver', 'none', 'toTownId'),
+  'status.lose': nearby('notoriety', 'status_lose', 'glance'),
+  'route.break': nearby('notoriety', 'route_break', 'none'),
+  'stock.deliver': inTown('letter', 'stock_deliver', 'none', 'townId'),
+  'caravan.arrive': inTown('letter', 'caravan_arrive', 'none', 'townId'),
+  'caravan.trade': inTown('letter', 'caravan_trade', 'none', 'townId'),
+  'caravan.depart': inTown('letter', 'caravan_depart', 'none', 'townId'),
+  'letter.reply': inTown('letter', 'letter_reply', 'none', 'toTownId'),
+  'succession.carried': own('reignite', 'succession_carried', 'ember', (p) => str(p.heirPersonId)),
+  'succession.rested': nearby('reaction', 'succession_rested', 'none'),
+  'legend.heard': own('rumor', 'legend_heard', 'none', (p) => str(p.personId), (p) => (Array.isArray(p.lines) ? str(p.lines[0]) : undefined)),
+  'legend.act': own('reaction', 'legend_act', 'none', (p) => str(p.personId)),
+  'grave.found': inTown('reaction', 'grave_found', 'none', 'townId', (p) => str(p.line)),
 };
 
 /** Deliberately not surfaced here (sound/VFX in Task C, or world-level LOD). Economy LOD ids stay silent pending sign-off. */
 export const SILENT: readonly string[] = [
-  'packet.emit', 'packet.deliver', 'mark.applied', 'status.gain', 'status.lose', 'spark.spend',
-  'route.break', 'route.travel_step', 'encounter.spawn', 'stock.deliver', 'stock.starve',
-  'caravan.arrive', 'caravan.trade', 'caravan.depart', 'letter.reply',
+  // Sender-side or VFX-only: the delivery/arrival side surfaces instead.
+  'packet.emit', 'spark.spend', 'route.travel_step', 'stock.starve',
+  // Surfaced by their own systems' work (inner state, roads, patrons, stash).
+  'mark.applied', 'status.gain', 'encounter.spawn',
   'stash.guard_left', 'patron.deal', 'patron.fulfilled', 'patron.broken', 'patron.betrayed',
-  'succession.carried', 'succession.rested', 'legend.heard', 'legend.act', 'grave.found',
 ];
 
 export function presentJuice(id: string, payload: unknown, ctx: PresentCtx = {}): Presentation | null {

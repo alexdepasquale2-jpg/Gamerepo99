@@ -12,6 +12,19 @@
     "doctrine_collapse": ["Nobody's saying it anymore. Listen.", "It went quiet. Strange quiet."],
     "notoriety_rise": ["People are talking about the one with the full purse.", "There's a name going round."],
     "notoriety_attractor": ["Strangers on the road. Don't look long.", "Somebody's come asking after coin."],
-    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."]
+    "stash_theft": ["Did you see? Somebody's been in the cellar.", "A door left open. That's all I know."],
+    "packet_deliver": ["Word came from over the hill. Someone there's changed.", "News from the next town. Good news, I think."],
+    "status_lose": ["They don't hush for you like they did.", "Folk have stopped waiting on your word."],
+    "route_break": ["The road's gone bad. Carts won't chance it.", "Nobody's come up that road in days."],
+    "stock_deliver": ["The wagon left sacks at the store. We'll eat.", "Supplies came in. The shelves look less sorry."],
+    "caravan_arrive": ["Wagons in the square! Go and see.", "The traders are here. Mind your purse."],
+    "caravan_trade": ["They bought what we had spare. Fair enough price.", "Some coin changed hands at the wagons."],
+    "caravan_depart": ["The wagons are rolling out.", "Traders gone. Quiet again."],
+    "letter_reply": ["A reply came back, folded twice.", "Someone wrote back. Fancy that."],
+    "succession_carried": ["I'll carry it. I don't know how yet, but I'll carry it.", "You kept me warm. Now it's my turn."],
+    "succession_rested": ["They say the fire went out. We'll remember it anyway.", "Someone used to come round. Kind, mostly."],
+    "legend_heard": ["There's an old name people say here.", "Someone like you came through, long ago."],
+    "legend_act": ["That one's strange. Acts like they've done this before.", "Saw the old stranger at it again."],
+    "grave_found": ["There's a new stone on the hill.", "Someone's buried up by the wall. Flowers on it."]
   }
 }
