@@ -20,7 +20,11 @@ export type DoctrineMeters = {
   legitimacy: number;
 };
 
-export type DoctrineState = DoctrineMeters & { id: string; townId: string; collapsed?: boolean; streaks?: Record<string, number> };
+export type DoctrineState = DoctrineMeters & {
+  id: string; townId: string; collapsed?: boolean; streaks?: Record<string, number>;
+  /** Set on the doctrine a swap displaced: the winner that took its town will not chase it back (no ping-pong). */
+  truceWith?: string;
+};
 
 const GAP_MIN = 0.25;
 const EXPOSURE_MIN = 0.4;
@@ -93,7 +97,7 @@ function challengerSwaps(state: SimState, all: Record<string, DoctrineState>, id
     for (const b of ids.map((i) => all[i]!)) {
       if (a === b || a.collapsed || b.collapsed || a.townId === b.townId || !linked(state, a.townId, b.townId)) continue;
       const streaks = (a.streaks ??= {});
-      if (!(b.legitimacy > a.legitimacy + r.margin)) {
+      if (a.truceWith === b.id || !(b.legitimacy > a.legitimacy + r.margin)) {
         delete streaks[b.id];
         continue;
       }
@@ -107,6 +111,7 @@ function challengerSwaps(state: SimState, all: Record<string, DoctrineState>, id
         [a.townId, b.townId] = [b.townId, a.townId];
         a.streaks = {};
         b.streaks = {};
+        a.truceWith = b.id;
         pushJuice(state, 'doctrine.swap', { incumbentId: a.id, challengerId: b.id, townId: b.townId });
       }
     }

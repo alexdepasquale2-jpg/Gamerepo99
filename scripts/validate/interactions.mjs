@@ -323,6 +323,18 @@ export function validateInteractions(data, ctx) {
     req(iids.has(need), `missing catalog interaction ${need}`);
   }
 
+  // Deed chips (deeds.json): each is a catalog interaction hosted by a real method.
+  const deedIds = new Set();
+  for (const d of doc.deeds || []) {
+    req(!!d.id && !deedIds.has(d.id), `deed dup/missing id ${d?.id}`);
+    deedIds.add(d.id);
+    req(iids.has(d.id), `deed ${d.id}: not a catalog interaction`);
+    req(typeof d.label === 'string' && d.label.length > 0, `deed ${d.id}: label`);
+    req(!methods || methods.has(d.hostMethod), `deed ${d.id}: unknown hostMethod ${d.hostMethod}`);
+    if (d.minTrust !== undefined) req(typeof d.minTrust === 'number' && d.minTrust >= 0 && d.minTrust <= 1, `deed ${d.id}: minTrust 0..1`);
+    for (const l of d.lines || []) req(typeof l === 'string' && l.length > 0, `deed ${d.id}: empty line`);
+  }
+
   // Choice set refs
   for (const cs of doc.choiceSets || []) {
     for (const opt of cs.options || []) {

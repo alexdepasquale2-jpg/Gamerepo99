@@ -10,6 +10,11 @@ export function setTileEdit(state: { tileEdits?: TileEdits }, q: number, r: numb
   ((state.tileEdits ??= {})[chunkKey(q, r)] ??= {})[`${q},${r}`] = biomeId;
 }
 
+/** The edited biome id of one tile, if the land there was changed. */
+export function editAt(edits: TileEdits | undefined, q: number, r: number): string | undefined {
+  return edits?.[chunkKey(q, r)]?.[`${q},${r}`];
+}
+
 export function chunkEdits(edits: TileEdits | undefined, cx: number, cy: number): Record<string, string> | undefined {
   return edits?.[`${cx},${cy}`];
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags.",
+  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags. Gates: oncePerDay (per person, resets by day number), minTrust, requiresTheirGoods (holding their cargo or a loan). lines: reaction templates ({name}); failLine: shown when the interaction's assertFailIfMarksAny trips; lend: favor_ask hands you one of their work goods tagged itemTagsAny, to return later.",
   "deeds": [
     {
       "id": "favor_do",
@@ -55,6 +55,56 @@
       "label": "Introduce to someone you met",
       "hostMethod": "inspire",
       "requiresOtherPerson": true
+    },
+    {
+      "id": "favor_ask",
+      "label": "Ask a favor",
+      "hostMethod": "inspire",
+      "oncePerDay": true,
+      "minTrust": 0.25,
+      "lend": {
+        "itemTagsAny": [
+          "work",
+          "craft",
+          "build",
+          "warmth",
+          "trade"
+        ]
+      },
+      "lines": [
+        "{name} brightens. \"Me? Of course I can.\"",
+        "{name} straightens up. \"Glad someone asked.\"",
+        "{name} nods slowly. \"It's good to be needed.\""
+      ]
+    },
+    {
+      "id": "show_up",
+      "label": "Show up",
+      "hostMethod": "inspire",
+      "oncePerDay": true,
+      "lines": [
+        "{name} notices you came. Neither of you says much.",
+        "{name} makes room for you without a word.",
+        "{name} glances over. \"You're here again.\""
+      ]
+    },
+    {
+      "id": "talk_empty_cheer",
+      "label": "Cheer up (empty words)",
+      "hostMethod": "lie",
+      "oncePerDay": true,
+      "lines": [
+        "{name} smiles, but it doesn't reach the eyes.",
+        "{name} says \"Sure,\" and looks away.",
+        "{name} nods along. Nothing changes."
+      ],
+      "failLine": "{name} hears how hollow it is and turns away."
+    },
+    {
+      "id": "return_item",
+      "label": "Return what's theirs",
+      "hostMethod": "carry_burden",
+      "requiresTheirGoods": true
     }
   ]
 }

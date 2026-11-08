@@ -4,6 +4,7 @@ import { OverworldScene } from './render/overworld-scene';
 import { createHud } from './ui/hud';
 import { createMethodMenu } from './ui/method-menu';
 import { createSuccessionScreen } from './ui/succession-screen';
+import { SUCCESSION_GATE_KEY } from './render/spark-fx/session-fx';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
 import { createDevMenu } from './ui/dev-menu';
@@ -72,6 +73,9 @@ setInterval(() => {
   const session = game?.registry.get('playSession') as PlaySession | undefined;
   if (!session) return;
   if (succession?.session !== session) succession = { session, screen: createSuccessionScreen(session) };
+  // The overworld holds the overlay until the burnout (dying coal) has played on screen.
+  const gate = game?.registry.get(SUCCESSION_GATE_KEY) as (() => boolean) | undefined;
+  if (gate && !gate()) return;
   succession.screen.refresh();
 }, 250);
 
