@@ -182,6 +182,8 @@ registerBoardPage({
     if (shut.length) left.push(`Not yet: ${shut.join(', ')}.`);
     const last = c?.news.filter((n) => n.kind !== 'tier' && n.kind !== 'petition').slice(-1)[0];
     if (last) left.push(`Last word from the council (day ${last.day}): ${newsLine(state, townId, last)}`);
+    // The stakes out on the lots (world/civic-marks) carry these colours.
+    left.push('Stakes mark each lot: gold for farmland, brown for workshops, red for the market, blue for common ground, green for houses.');
     // Right: each zone and where its lots lie, with what stands on them.
     const lots = lotsOf(state, townId);
     const claims = claimsIn(state, townId);

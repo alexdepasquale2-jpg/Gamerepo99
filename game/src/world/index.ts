@@ -16,6 +16,7 @@ import { createChunkLayer } from './chunk-layer';
 import { createSettlements } from './settlements';
 import { inTownBox } from './town-spots';
 import { createWorldThings } from './things';
+import { civicMarksOf, createCivicMarks } from './civic-marks';
 import { buildRoom, roomOccupant, type Room } from './interior';
 import { occupantOf } from '../sim/map/interiors';
 import { counterThing } from './things/stalls';
@@ -64,6 +65,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
   const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits, ctx.seed);
   const towns = createSettlements(scene, ctx.layout.settlements);
   const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear, roadPoint: nav.roadPoint });
+  // Town stores, tier pennants, zone stakes, war and pact marks (world/civic-marks).
+  const civic = createCivicMarks(scene, towns.spots);
   const clock = createDayClock(0.3);
   const fx = createLightFx(scene);
   const townOf = (p: Pt): string | null => {
@@ -73,7 +76,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
   const tone = createTownTone(session, new Map(towns.spots.map((s) => [s.town.id, { x: s.centre.x, y: s.centre.y - 40 }])), () => st()?.player.townId);
 
   const tileOf = (p: Pt) => nav.tileAt(p.x, p.y);
-  const setOutdoorsVisible = (on: boolean) => { chunks.setVisible(on); towns.setVisible(on); things.setVisible(on); };
+  const setOutdoorsVisible = (on: boolean) => { chunks.setVisible(on); towns.setVisible(on); things.setVisible(on); civic.setVisible(on); };
 
   const refresh: WorldApi['refresh'] = (what = 'all') => {
     const all = what === 'all';
@@ -83,6 +86,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     if (all || what === 'plots') things.plots.refresh();
     if (all || what === 'edits') chunks.refreshEdits(edits());
     if (all) { things.facilities.refresh(); things.graves.refresh(); things.work.refresh(); towns.refresh(st(), session.townDespair()); }
+    if (all) civic.refresh(st());
   };
 
   let lastKey = '';
@@ -230,11 +234,13 @@ export function attachWorld(ctx: GameContext): WorldApi {
     tone.destroy();
     room?.destroy();
     things.destroy();
+    civic.destroy();
     towns.destroy();
     chunks.destroy();
     fx?.destroy();
     offLinger();
   });
   setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf });
+  civicMarksOf.set(ctx, civic);
   return api;
 }

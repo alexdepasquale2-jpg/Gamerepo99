@@ -11,9 +11,9 @@ import { BUILDING_BY_ID, type Claim } from '../../sim/economy/build-plans';
 import { claimRect } from '../../sim/economy/borders';
 import { townEconomyView } from '../../sim/economy/economy-view';
 import { TILE_PX } from '../../sim/map/constants';
-import { ART_SCALE, strHash } from '../art/px';
+import { ART_SCALE } from '../art/px';
 import { thingTex } from '../art/thing-art';
-import { buildingTex } from '../art/building-art';
+import { civicTex, paintCivicTextures } from '../art/civic-art';
 import { DECAL_DEPTH, type Pt } from '../depth';
 import { drawSiteMarks, drawWorking, lookSig, plotSiteLook, type SiteLook } from './site-marks';
 
@@ -39,6 +39,7 @@ export type PlotsLayer = {
 export function createPlots(scene: Phaser.Scene, getState: () => SimState | undefined): PlotsLayer {
   const views = new Map<string, View>();
   let visible = true;
+  paintCivicTextures(scene);
 
   const dataOf = (s: SimState, c: Claim): PlotData => {
     const plan = c.status === 'claimed' ? townEconomyView(s, c.townId).plans.find((p) => p.id === c.planId) : undefined;
@@ -64,7 +65,8 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
     objs.push(g);
     if (d.status === 'built') {
       g.fillStyle(0x6a5a40, 0.35).fillRect(x + 4, y + 4, w - 8, h - 8);
-      const house = img(front.x, front.y - 6, buildingTex('cottage', strHash(c.id)));
+      // Each kind stands as itself (civic-art): the barn, the mill, the forge, the chapel, the hall ...
+      const house = img(front.x, front.y - 6, civicTex(c.kind));
       const look = d.site;
       if (look && look.status === 'working') objs.push(...drawWorking(scene, house));
       else if (look && look.status === 'idle') house.setTint(0x8a8a8a);
