@@ -17,3 +17,6 @@ import './happenings';
 import './objects';
 import './thing-verbs';
 import './item-verbs';
+import './lifecycle';
+import './legends';
+import './graves';

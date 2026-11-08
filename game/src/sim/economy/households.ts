@@ -34,7 +34,8 @@ export const KIN = {
 };
 export const GIFTS = ['healer', 'maker', 'speaker', 'seer'];
 
-export type Household = { id: string; townId: string; adults: [string, string]; surname: string; generation: number; formed: number; kids: string[] };
+/** `adults` is the couple; one is left after a death (sim/economy/mortality), none once both are gone. */
+export type Household = { id: string; townId: string; adults: string[]; surname: string; generation: number; formed: number; kids: string[] };
 export type Child = { id: string; householdId: string; townId: string; given: string; surname: string; sex: 'm' | 'f'; gift?: string; parents: [string, string]; born: number; status: 'child' | 'adult'; personId?: string; grown?: number };
 export type Lineage = { surname: string; founders: string[]; founded: number; generation: number };
 export type KinState = { households: Household[]; children: Child[]; lineages: Record<string, Lineage>; next: number };
@@ -121,7 +122,7 @@ export function tickHouseholds(state: SimState): void {
 
   // 2. Births, then growing up.
   for (const h of [...k.households].sort((a, z) => a.id.localeCompare(z.id))) {
-    if (h.kids.length >= KIN.maxKids || state.day - h.formed < KIN.settleDays || !h.adults.every((a) => state.people[a])) continue;
+    if (h.kids.length >= KIN.maxKids || state.day - h.formed < KIN.settleDays || h.adults.length < 2 || !h.adults.every((a) => state.people[a])) continue;
     const sec = security(state, h);
     if (sec < KIN.birthSecurity) continue;
     const rng = deriveRng(state.seed, 'birth', state.day, h.id);
@@ -132,7 +133,7 @@ export function tickHouseholds(state: SimState): void {
     rng.next(); // the old coin-flip for sex: kept so gifts roll the same; sex is now the grown person's own
     const used = new Set(k.children.filter((c) => c.householdId === h.id).map((c) => c.given));
     k.children.push({
-      id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: h.adults,
+      id, householdId: h.id, townId: h.townId, surname: h.surname, born: state.day, status: 'child', parents: [h.adults[0]!, h.adults[1]!],
       given: pick(NAMES.given, used, deriveRng(state.seed, 'given', id).int(0, NAMES.given.length)),
       sex: sexOf(state, grownIdOf(id)), gift: gifted ? GIFTS[rng.int(0, GIFTS.length)] : undefined,
     });

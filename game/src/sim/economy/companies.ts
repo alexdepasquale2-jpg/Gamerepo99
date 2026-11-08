@@ -95,7 +95,7 @@ export function tickCompanies(state: SimState): void {
     // Hire one idle or same-trade villager per dawn while there is room and money for a week of wages.
     if (1 + c.workers.length >= def.slots! || c.coin < COMPANY.wage * COMPANY.hireBufferDays * (c.workers.length + 1)) continue;
     const pick = [...(residents.get(c.townId) ?? [])].sort().find((id) =>
-      !companyOf(state, id) && !builders.has(id) && (!hasRecipes(id) || def.jobs.includes(jobOf(state, id).id)));
+      !companyOf(state, id) && !builders.has(id) && !state.people[id]?.tags?.includes('retired') && (!hasRecipes(id) || def.jobs.includes(jobOf(state, id).id)));
     if (pick) c.workers.push(pick);
   }
 }
