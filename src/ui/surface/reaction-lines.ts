@@ -64,6 +64,7 @@ export const SURFACED: Record<string, Entry> = {
   'refusal.coal_flicker': own('refusal', 'unspoken', 'none', (p) => str(p.personId), (p) => str(p.line)),
   'letter.deliver': own('letter', 'letter', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
   'rumor.spread': own('rumor', 'rumor', 'none', (p) => str(p.toPersonId), (p) => str(p.body)),
+  'history.told': own('history', 'unspoken', 'none', (p) => str(p.personId), (p) => str(p.line)),
   'doctrine.voice': nearby('doctrine', 'doctrine_voice', 'none'),
   'doctrine.exposed': nearby('doctrine', 'doctrine_exposed', 'none'),
   'doctrine.suppressed': nearby('doctrine', 'doctrine_suppressed', 'none'),

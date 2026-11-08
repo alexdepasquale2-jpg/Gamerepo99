@@ -156,4 +156,8 @@ export type SimState = {
   legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
+  /** The world's generated history beats, carried into play (rebuilt from the seed on boot/load). */
+  history?: import('../gen/world-types').HistoryEvent[];
+  /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
+  historyTold?: Record<string, string[]>;
 };
