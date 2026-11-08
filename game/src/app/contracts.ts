@@ -207,6 +207,11 @@ export interface PanelsApi {
   dragging(): string | null;
   closeAll(): void;
   anyOpen(): boolean;
+  /**
+   * The shop sheet for a stall, counter, keeper, pedlar or wagon (sim/goods/shop ShopRef); `current()` is
+   * the open shop as `kind:id`; `nav` drives the open sheet (moveFocus/activate/back/settle) for a gamepad.
+   */
+  shop: { open(ref: import('../sim/goods/shop').ShopRef): void; current(): string | null; nav: import('../panels/shop').ShopNav };
 }
 
 export interface InteractApi {

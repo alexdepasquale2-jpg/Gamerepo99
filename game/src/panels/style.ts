@@ -45,3 +45,73 @@ export function ensurePanelStyles(): void {
   style.textContent = CSS;
   document.head.append(style);
 }
+
+// ==== SHOP SHEET (panels/shop.ts; owned by the shop unit — keep this block whole when restyling) ====
+// Kit tokens only (var(--hf-*)) and the kit's shared classes (.hf-rows, .hf-tabs, .hf-btn), so a restyle
+// carries over. Two columns side by side; a narrow sheet (container < 440px, or docked under a phone's
+// canvas) shows one at a time behind Buy / Sell tabs, with 44px touch targets.
+function shopCss(): string {
+  return `
+.hf-shop{container-type:inline-size;display:flex;flex-direction:column;gap:6px;min-height:100%}
+.hf-shop__sub{margin:0}
+.hf-shop__tabs{display:none;padding:0}
+.hf-shop__cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.hf-shop__col{min-width:0}
+.hf-shop__head{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:2px}
+.hf-shop__purse{text-transform:none;letter-spacing:0;color:var(--hf-text-primary)}
+.hf-shop .hf-shop__rows{display:flex;flex-direction:column;gap:3px}
+.hf-shop__row{border:1px solid var(--hf-line-quiet);border-radius:4px;background:var(--hf-surface-raised)}
+.hf-shop__row.is-picked{border-color:var(--hf-line)}
+.hf-shop__row.is-focus{border-color:var(--hf-accent);box-shadow:0 0 0 1px var(--hf-accent) inset}
+.hf-shop__row.is-refused{opacity:.55}
+.hf-shop__pick{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px;width:100%;min-height:36px;padding:3px 6px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.hf-shop__pick[disabled]{cursor:default}
+.hf-shop__pick:focus-visible{outline:2px solid var(--hf-spark-outline);outline-offset:-2px}
+.hf-shop__name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hf-shop__price{padding:0 6px;border:1px solid var(--hf-line-quiet);border-radius:999px;font:var(--hf-fs-label,12px) var(--hf-font-mono);color:var(--hf-text-primary)}
+.hf-shop__price.is-none{color:var(--hf-text-muted)}
+.hf-shop__col[data-side=theirs] .hf-shop__price.is-cheap,.hf-shop__col[data-side=yours] .hf-shop__price.is-dear{border-color:var(--hf-mark-grown);color:var(--hf-mark-grown)}
+.hf-shop__col[data-side=theirs] .hf-shop__price.is-dear,.hf-shop__col[data-side=yours] .hf-shop__price.is-cheap{border-color:var(--hf-wound);background:var(--hf-wound)}
+.hf-shop__count{color:var(--hf-text-muted);min-width:2.2em}
+.hf-shop__step{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:0 6px 4px}
+.hf-shop__stepbtn{min-width:32px;padding:0}
+.hf-shop__qty{flex:1;text-align:right;color:var(--hf-accent)}
+.hf-shop__foot{position:sticky;bottom:-8px;margin:auto -12px -8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;background:var(--hf-surface);border-top:1px solid var(--hf-line)}
+.hf-shop__basket{margin:0;padding:0;list-style:none;max-height:7.5em;overflow:auto}
+.hf-shop__line{display:flex;justify-content:space-between;gap:8px}
+.hf-shop__line.is-sell .hf-num{color:var(--hf-mark-grown)}
+.hf-shop__sum{display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--hf-text-muted)}
+.hf-shop__net{color:var(--hf-text-primary);font-weight:bold}
+.hf-shop__net.is-in{color:var(--hf-mark-grown)}
+.hf-shop__net.is-out{color:var(--hf-accent)}
+.hf-shop__why{margin:0;color:var(--hf-glow)}
+.hf-shop__acts{display:flex;gap:8px}
+.hf-shop__clear{flex:none}
+.hf-shop__settle{flex:1;min-height:40px;font-size:1.1em;border-color:var(--hf-accent);color:var(--hf-accent)}
+.hf-shop__settle[disabled]{border-color:var(--hf-line-quiet)}
+.hf-shop__msg{margin:0}
+@container (max-width: 440px){
+  .hf-shop__tabs{display:flex}
+  .hf-shop__tab{flex:1;min-height:44px}
+  .hf-shop__cols{grid-template-columns:1fr}
+  .hf-shop[data-col=theirs] .hf-shop__col[data-side=yours],.hf-shop[data-col=yours] .hf-shop__col[data-side=theirs]{display:none}
+}
+#hf-ui-layer[data-dock=below] .hf-shop__tabs{display:flex}
+#hf-ui-layer[data-dock=below] .hf-shop__tab{flex:1;min-height:44px}
+#hf-ui-layer[data-dock=below] .hf-shop__cols{grid-template-columns:1fr}
+#hf-ui-layer[data-dock=below] .hf-shop[data-col=theirs] .hf-shop__col[data-side=yours],#hf-ui-layer[data-dock=below] .hf-shop[data-col=yours] .hf-shop__col[data-side=theirs]{display:none}
+#hf-ui-layer[data-dock=below] .hf-shop__pick{min-height:44px}
+#hf-ui-layer[data-dock=below] .hf-shop__stepbtn,#hf-ui-layer[data-dock=below] .hf-shop .hf-btn{min-height:44px;min-width:44px}
+`;
+}
+let shopInjected = false;
+/** Called by the shop sheet as it renders, so this block stays separate from the panels sheet above. */
+export function ensureShopStyles(): void {
+  if (shopInjected || typeof document === 'undefined') return;
+  shopInjected = true;
+  const style = document.createElement('style');
+  style.id = 'hf-shop-style';
+  style.textContent = shopCss();
+  document.head.append(style);
+}
+// ==== END SHOP SHEET ====

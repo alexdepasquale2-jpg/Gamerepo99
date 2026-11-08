@@ -18,6 +18,7 @@ import { inTownBox } from './town-spots';
 import { createWorldThings } from './things';
 import { buildRoom, roomOccupant, type Room } from './interior';
 import { occupantOf } from '../sim/map/interiors';
+import { counterThing } from './things/stalls';
 import { adoptLegacyBuildingFlags } from '../sim/map/building-ids';
 import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
@@ -173,6 +174,8 @@ export function attachWorld(ctx: GameContext): WorldApi {
         out = Math.hypot(e.x - near.x, e.y - near.y) <= radius
           ? [{ key: `door:${EXIT_DOOR}`, kind: 'door', id: EXIT_DOOR, x: e.x, y: e.y, reach: room.exitReach, label: 'Door', target: { kind: 'door', id: EXIT_DOOR } }]
           : [];
+        const counter = counterThing({ buildingId: room.building.id, kind: room.building.kind, seat: room.seats[0] }, keeperSeen.get(room.building.id), near, radius);
+        if (counter) out.push(counter);
       } else out = things.things(near, radius, facing);
       return out.sort((a, b) => Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y));
     },

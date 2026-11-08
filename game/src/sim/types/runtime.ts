@@ -201,4 +201,6 @@ export type SimState = {
   visitors?: import('../visitors').VisitorsState;
   /** What townsfolk last said of their leader, and each compact's promises kept or broken (see sim/promise-tally). */
   legitimacyVoices?: import('../promise-tally').LegitimacyVoices;
+  /** Shop keepers' tills (and a pedlar's bought-in pack), by purse key (see sim/goods/shop; created lazily). */
+  shops?: Record<string, import('../goods/shop').ShopPurse>;
 };
