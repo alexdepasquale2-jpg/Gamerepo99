@@ -220,6 +220,18 @@ describe('doctrine rules from data (challenger, relapse, city shock)', () => {
     expect(s.bus?.lastIds).toContain('doctrine.swap');
   });
 
+  it('the winner of a swap does not chase the loser back (no ping-pong)', () => {
+    const s = boot();
+    const { d, inc, chal } = linkedPair(s);
+    Object.assign(d[inc]!, { ...calm, perceivedDelivery: 0.2, control: 0 });
+    Object.assign(d[chal]!, { ...calm, perceivedDelivery: 0.9, control: 0 });
+    const [ti, tc] = [d[inc]!.townId, d[chal]!.townId];
+    for (let i = 0; i < 12; i++) tickDoctrines(s);
+    expect(d[inc]!.townId).toBe(tc);
+    expect(d[chal]!.townId).toBe(ti);
+    expect(s.bus?.lastIds?.filter((e) => e === 'doctrine.swap')).toHaveLength(1);
+  });
+
   it('a broken streak resets; high control suppresses and adds exposure', () => {
     const s = boot();
     const { d, inc, chal } = linkedPair(s);
