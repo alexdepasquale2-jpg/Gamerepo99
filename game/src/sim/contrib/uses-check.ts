@@ -154,7 +154,7 @@ export function checkUses(): UsesReport {
   for (const p of PROPS) {
     p.verbs.forEach((v) => thingVerb(`prop ${p.type}.${v.id}`, v));
     // Resting by a prop is a use too (its linger tag), just not a verb. Props lost their rest verbs to lingering,
-    // so one use is enough; a prop marked scenery (a sign, a farmstead whose work is a task) needs none.
+    // so one use is enough; a prop marked scenery needs none (none is, now: the sign, farmstead and build site have verbs).
     const uses = p.verbs.length + (p.linger ? 1 : 0);
     if (uses < 1 && !p.scenery) errors.push(`prop ${p.type}: no uses (a verb or a linger tag), and not marked scenery`);
     if (new Set(p.verbs.map((v) => v.id)).size !== p.verbs.length) errors.push(`prop ${p.type}: duplicate verb ids`);

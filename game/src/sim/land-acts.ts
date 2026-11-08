@@ -9,6 +9,7 @@ import table from '../data/world/land-acts.json';
 import { addItem, hasItem, itemName, removeItem } from './goods/inventory';
 import { consumeInstance } from './goods/instances';
 import { setTileEdit } from './map/tile-edits';
+import { noteUse } from './data-use-world';
 import type { TerrainAccess } from './map/terrain-access';
 import type { SimState } from './types/runtime';
 
@@ -139,6 +140,8 @@ export function workLand(state: SimState, view: LandView, actId: string, q: numb
   const short = shortfall(state, act);
   if (short) return { ok: false, line: short };
   const w = work(state);
+  const tool = toolAtHand(state, act.tools);
+  if (tool) noteUse('items.use', tool);
   for (const [id, n] of Object.entries(act.cost)) {
     removeItem(state, id, n);
     for (let k = 0; k < n; k++) consumeInstance(state, id);
@@ -146,6 +149,7 @@ export function workLand(state: SimState, view: LandView, actId: string, q: numb
   for (const [id, n] of Object.entries(act.yield ?? {})) addItem(state, id, n);
   w.used += act.labour;
   setTileEdit(state, q, r, act.becomes);
+  noteUse('land-acts', act.id);
   const town = nearestTown(towns, q, r);
   w.log.push({ act: act.id, q, r, day: state.day, ...(town ? { townId: town.id, townName: town.name ?? prettyTown(town.id) } : {}) });
   if (w.log.length > LAND_RULES.logCap) w.log.splice(0, w.log.length - LAND_RULES.logCap);

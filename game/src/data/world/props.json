@@ -28,7 +28,9 @@
     { "type": "stump", "name": "Stump", "linger": "seat", "verbs": [
       { "id": "roots", "label": "Dig out the dry roots", "short": "Dig out roots", "effect": { "gain": { "wood": 1 }, "done": "The old roots come up dry enough to burn." } }
     ] },
-    { "type": "sign", "name": "Sign", "scenery": true, "verbs": [] },
+    { "type": "sign", "name": "Sign", "verbs": [
+      { "id": "read", "label": "Read the weathered sign", "short": "Read the sign", "effect": { "spark": 1, "done": "Half the letters are gone, but someone has cut the next town's name in fresh." } }
+    ] },
     { "type": "hay", "name": "Haystack", "linger": "seat", "verbs": [
       { "id": "grain", "label": "Shake out the loose grain", "short": "Shake out grain", "effect": { "gain": { "grain": 1 }, "done": "A little grain the threshers missed falls into your hand." } }
     ] },
@@ -47,8 +49,12 @@
     { "type": "field", "name": "Field", "verbs": [
       { "id": "glean", "label": "Glean the field edge", "short": "Glean the edge", "effect": { "gain": { "grain": 1 }, "done": "You glean what the harvest left behind." } }
     ] },
-    { "type": "farmstead", "name": "Farmstead", "scenery": true, "verbs": [] },
-    { "type": "build_site", "name": "Build site", "scenery": true, "verbs": [] },
+    { "type": "farmstead", "name": "Farmstead", "verbs": [
+      { "id": "water", "label": "Ask for a drink at the door", "short": "Ask for water", "effect": { "spark": 2, "done": "A cup of well water, handed out with a question about the road." } }
+    ] },
+    { "type": "build_site", "name": "Build site", "verbs": [
+      { "id": "frame", "label": "Help raise a rail of the frame", "short": "Raise a rail", "needs": { "timber": 1 }, "effect": { "spark": 5, "despair": -0.01, "done": "You and a stranger heave a rail into place. Word of it will get back to town." } }
+    ] },
     { "type": "campfire", "name": "Campfire", "linger": "fire", "verbs": [
       { "id": "roast", "label": "Roast a fish on the embers", "short": "Roast a fish", "needs": { "fish": 1 }, "effect": { "spark": 10, "done": "The fish crisps on a stick. Best meal in days." } }
     ] },

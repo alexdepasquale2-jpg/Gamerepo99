@@ -7,6 +7,7 @@
  *   room(), enterRoom(id), leaveRoom(), setPhase(p), despair(), chunks(), facilities(), plots(), graves()
  *   chunkStats()      chunk build times in ms (ground paint and whole build: avg, max, last)
  *   artGallery(on?)   lay every manifest frame from the credited packs out beside the player (false clears it)
+ *   dataUse()         data rows proven used this run (sim/data-use-world); findProp(type, state?) nearest wild prop
  */
 import type Phaser from 'phaser';
 import type { GameContext, Thing } from '../app/contracts';
@@ -19,6 +20,9 @@ import type { TownToneDriver } from './town-tone';
 import type { Settlements } from './settlements';
 import { tileFoot, type Pt } from './depth';
 import { loadManifestArt, manifestFrame } from './assets';
+import { usedIds } from '../sim/data-use-world';
+import { createStampRasterSource } from '../sim/map/stamp-raster';
+import { CHUNK_SIZE } from '../sim/map/constants';
 
 export type WorldInternals = {
   terrain: TerrainAccess;
@@ -111,4 +115,26 @@ registerDevHook('artGallery', (ctx) => async (on = true) => {
   });
   galleries.set(ctx, imgs);
   return keys;
+});
+
+/** Data rows proven used in this run (sim/data-use-world): `file:id`, for the browser coverage pass. */
+registerDevHook('dataUse', () => () => usedIds());
+
+/**
+ * findProp(type, state?, maxRing?): the nearest wild prop of a type (and state, e.g. a field's crop) in
+ * the chunks round the player, read from the same stamp source the scene draws: { q, r, state } or null.
+ */
+const sources = new WeakMap<GameContext, ReturnType<typeof createStampRasterSource>>();
+registerDevHook('findProp', (ctx) => (type: string, state?: string, maxRing = 14) => {
+  const world = ctx.session.getWorld();
+  if (!world) return null;
+  const src = sources.get(ctx) ?? sources.set(ctx, createStampRasterSource(world, ctx.seed, () => ctx.session.getState()?.tileEdits)).get(ctx)!;
+  const at = ctx.world.tileOf(ctx.actors.player.pos());
+  const cx0 = Math.floor(at.q / CHUNK_SIZE), cy0 = Math.floor(at.r / CHUNK_SIZE);
+  for (let ring = 0; ring <= maxRing; ring++) for (let dy = -ring; dy <= ring; dy++) for (let dx = -ring; dx <= ring; dx++) {
+    if (Math.max(Math.abs(dx), Math.abs(dy)) !== ring) continue;
+    const hit = src.getChunk({ cx: cx0 + dx, cy: cy0 + dy }).props.find((p) => p.type === type && (!state || p.state === state));
+    if (hit) return { q: hit.position.x, r: hit.position.y, state: hit.state };
+  }
+  return null;
 });

@@ -12,6 +12,7 @@ import manifest from '../data/art/overworld-assets.json';
 import { paintPropTextures } from './art/prop-art';
 import { paintThingTextures } from './art/thing-art';
 import { paintBuildingTextures } from './art/building-art';
+import { paintCropTextures } from './art/crop-art';
 
 export const HERO_TEX = 'hero-ansimuz';
 export const NPC_TEX = 'ansimuz-npc';
@@ -105,6 +106,7 @@ export function createWorldAssets(scene: Phaser.Scene): void {
   paintPropTextures(scene);
   paintThingTextures(scene);
   paintBuildingTextures(scene);
+  paintCropTextures(scene);
 }
 
 /*

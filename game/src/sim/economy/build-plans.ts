@@ -18,6 +18,7 @@ import { deriveRng } from '../rng';
 import { civicOf, fitsZone, zoneFor, zoneName, ZONES, type TownCivic } from '../civic/zoning';
 import { tierNeeded, unlockedIn } from '../civic/tiers';
 import type { SimState } from '../types/runtime';
+import { noteUse } from '../data-use-world';
 
 export type BuildingDef = { id: string; name: string; jobs: string[]; cost: Record<string, number>; labor: number; w: number; h: number; slots?: number };
 const T = buildingsJson as unknown as { workshopMul: number; buildings: BuildingDef[] };
@@ -210,6 +211,7 @@ export function tickBuildPlans(state: SimState): void {
         plan.doneDay = state.day;
         const claim = b.claims.find((c) => c.id === plan.claimId);
         if (claim) claim.status = 'built';
+        noteUse('buildings', plan.kind);
       }
     }
   }

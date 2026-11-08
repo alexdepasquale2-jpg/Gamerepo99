@@ -19,12 +19,13 @@ import { deliverToTown } from './goods/deed-goods';
 import { ITEMS, ITEM_BY_ID, addItem } from './goods/inventory';
 import { dropItem } from './goods/item-use';
 import { pushJuice } from './packets';
+import { noteUse } from './data-use-world';
 import { residentOf } from './contrib/use-effects';
 import type { ActOutcome } from './play-session/action-providers';
 import { parseTargetKey, type Target } from './play-session/targets';
 import type { SimState } from './types/runtime';
 
-export type LoadRow = { itemId: string; name: string; qty: number; speed: number; shape: string; resource?: string };
+export type LoadRow = { itemId: string; name: string; qty: number; speed: number; shape: string; resource?: string; offcutOf?: string };
 type CarryFile = { loads: LoadRow[]; facilityPiles: Record<string, string[]>; townPiles: string[]; thanks: { trust: number; tipFromPlan: boolean; keepDays: number } };
 const FILE = carryJson as CarryFile;
 export const CARRY = FILE;
@@ -72,7 +73,11 @@ function facilityPile(state: SimState, facId: string, itemId: string): PileView 
   const row = loadRow(itemId);
   const res = row && resOf(row);
   if (!place || !row || !res || !(FILE.facilityPiles[place.kind] ?? []).includes(itemId)) return null;
-  const made = Math.round(facilityOutput(state, place).find((o) => o.resourceId === res)?.qty ?? 0);
+  const out = facilityOutput(state, place);
+  const own = out.find((o) => o.resourceId === res)?.qty;
+  // Generated lumber camps saw only timber; their firewood is the offcuts (carry.json offcutOf).
+  const offcut = own === undefined && row.offcutOf ? Math.ceil((out.find((o) => o.resourceId === row.offcutOf)?.qty ?? 0) / 2) : 0;
+  const made = Math.round(own ?? offcut);
   const key = facilityPileKey(facId, itemId);
   const t = cs(state).taken[key];
   const takenToday = t && t.day === state.day ? t.n : 0;
@@ -150,6 +155,10 @@ export function pickUp(state: SimState, key: string): ActOutcome {
   if (!p) return { ok: false, line: 'There is nothing here to lift.' };
   if (p.load <= 0) return { ok: false, line: `The ${p.name} are all gone.` };
   takeFrom(state, p, p.load);
+  // Proof each load and each pile source is really lifted (game/scripts/coverage-world.mts).
+  noteUse('carry', p.itemId);
+  if (p.source === 'facility') noteUse('carry.facilityPiles', `${facilityById(state, p.ref)?.kind}.${p.itemId}`);
+  else if (p.source === 'town') noteUse('carry.townPiles', p.itemId);
   state.player.carrying = { itemId: p.itemId, qty: p.load, from: key, ...(p.townId ? { fromTown: p.townId } : {}) };
   pushJuice(state, 'carry.lift', { itemId: p.itemId, qty: p.load, from: key });
   return { ok: true, line: `You heave up ${p.load} ${p.name}. Heavy going.` };

@@ -26,6 +26,7 @@ import { encodeUnspokenForState } from '../social/unspoken';
 import type { SimState } from '../types/runtime';
 import { faunaKindOf, heldItemOf, isGrave, isShrine, nodeData, tileData, townOfTarget } from './target-data';
 import { applyBundle, bundleRefusal, firstName, markUsed, residentOf, usedToday, type Bundle } from './use-effects';
+import { noteUse } from '../data-use-world';
 
 export type VerbTarget = 'self' | 'person' | 'hearth' | 'tile' | 'node' | 'shrine' | 'grave' | 'plot' | 'wagon' | 'board' | 'chest' | 'fauna';
 export type ItemEffect = Bundle & {
@@ -230,6 +231,9 @@ export function actItemVerb(state: SimState, actionId: string, t: Target, eventL
   const hasBundle = Object.keys(bundle).length > 0;
   const res = hasBundle ? applyBundle(state, bundle, ctx) : undefined;
   if (onceKey) markUsed(state, onceKey);
+  // Proof the item's verb really runs (kept tools like a net count as used here).
+  noteUse('items.use', itemId);
+  noteUse('items.verbs', `${itemId}.${row.id}`);
   const line = [path?.line, res?.line].filter(Boolean).join(' ') || `You use the ${itemName(itemId).toLowerCase()}.`;
   const interacted = (state.bus?.lastIds ?? []).slice(before).includes('person.reaction');
   if (!interacted) {
