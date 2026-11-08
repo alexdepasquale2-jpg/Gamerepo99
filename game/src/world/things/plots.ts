@@ -1,7 +1,8 @@
 /**
  * Building plots (sim/economy/build-plans claims): a claimed plot is staked and roped out; while goods are
  * gathered a timber pile grows on it, then the frame rises with the building work, and a small bar on the
- * front stake fills with the plan's progress. A finished plot shows its building. Things: `plot:<claimId>`.
+ * front stake fills with the plan's progress. A finished plot shows its building, and once it trades, its
+ * staffing (site-marks: lit and smoking at work, dim when idle, a wanted notice, a pip per hand). Things: `plot:<claimId>`.
  */
 import type Phaser from 'phaser';
 import type { Thing } from '../../app/contracts';
@@ -14,6 +15,7 @@ import { ART_SCALE, strHash } from '../art/px';
 import { thingTex } from '../art/thing-art';
 import { buildingTex } from '../art/building-art';
 import { DECAL_DEPTH, type Pt } from '../depth';
+import { drawSiteMarks, drawWorking, lookSig, plotSiteLook, type SiteLook } from './site-marks';
 
 const REACH = 56;
 
@@ -21,6 +23,8 @@ const REACH = 56;
 export type PlotData = {
   claimId: string; planId: string; townId: string; ownerId: string; kind: string;
   status: 'claimed' | 'built'; progress: number; stage?: 'gathering' | 'building'; missing: { itemId: string; qty: number }[];
+  /** The civic site on this plot, once built: how it is staffed. */
+  site?: SiteLook;
 };
 type View = { data: PlotData; front: Pt; label: string; objs: Phaser.GameObjects.GameObject[]; sig: string };
 
@@ -41,6 +45,7 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
     return {
       claimId: c.id, planId: c.planId, townId: c.townId, ownerId: c.ownerId, kind: c.kind, status: c.status,
       progress: c.status === 'built' ? 1 : plan?.progress ?? 0, ...(plan ? { stage: plan.stage } : {}), missing: plan?.missing ?? [],
+      ...(() => { const look = c.status === 'built' ? plotSiteLook(s, c.planId) : undefined; return look ? { site: look } : {}; })(),
     };
   };
 
@@ -59,7 +64,11 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
     objs.push(g);
     if (d.status === 'built') {
       g.fillStyle(0x6a5a40, 0.35).fillRect(x + 4, y + 4, w - 8, h - 8);
-      img(front.x, front.y - 6, buildingTex('cottage', strHash(c.id)));
+      const house = img(front.x, front.y - 6, buildingTex('cottage', strHash(c.id)));
+      const look = d.site;
+      if (look && look.status === 'working') objs.push(...drawWorking(scene, house));
+      else if (look && look.status === 'idle') house.setTint(0x8a8a8a);
+      if (look && (look.status === 'working' || look.status === 'idle')) objs.push(...drawSiteMarks(scene, look, front.x + w / 2 - 34, front.y - 4));
     } else {
       g.fillStyle(0x7a5a34, 0.25).fillRect(x + 2, y + 2, w - 4, h - 4);
       g.lineStyle(2, 0xd8c08a, 0.85).strokeRect(x + 2, y + 2, w - 4, h - 4);
@@ -92,7 +101,7 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
     if (!s) return;
     for (const c of claims) {
       const d = dataOf(s, c);
-      const sig = `${d.status}:${Math.round(d.progress * 20)}:${d.stage ?? ''}`;
+      const sig = `${d.status}:${Math.round(d.progress * 20)}:${d.stage ?? ''}:${lookSig(d.site)}`;
       const cur = views.get(c.id);
       if (cur && cur.sig === sig) { cur.data = d; continue; }
       cur?.objs.forEach((o) => o.destroy());
