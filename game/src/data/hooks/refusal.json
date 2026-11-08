@@ -46,7 +46,7 @@
           "Put it down. Small ones get bread, not that."
         ]
       },
-      "lineVoiceFrom": "archetypeId",
+      "lineVoiceFrom": "voice",
       "effects": [
         {
           "id": "fx_refuse_coal_flicker",
@@ -94,7 +94,7 @@
           "Not the child. Soften the eyes. Gaze elsewhere."
         ]
       },
-      "lineVoiceFrom": "archetypeId",
+      "lineVoiceFrom": "voice",
       "effects": [
         {
           "id": "fx_gaze_avert",
@@ -136,7 +136,7 @@
           "I will not burn a ledger to win a soul. Find another cut."
         ]
       },
-      "lineVoiceFrom": "archetypeId",
+      "lineVoiceFrom": "voice",
       "effects": [],
       "tells": []
     },
@@ -159,7 +159,7 @@
           "Grief already has them by the collar. I won't pull too."
         ]
       },
-      "lineVoiceFrom": "archetypeId",
+      "lineVoiceFrom": "voice",
       "effects": [
         {
           "id": "fx_refuse_coal_flicker",

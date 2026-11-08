@@ -15,7 +15,7 @@ const T = TILE_PX;
 export const ROOM_Q0 = 12500, ROOM_R0 = 9375;
 const WALL_ROWS = 2;
 const ACCENTS = ['#b5524a', '#4f7a8a', '#7a8f4a'];
-const FLOOR: Record<string, [string, string]> = { house: ['#b88d5a', '#a87f50'], shop: ['#c9a56e', '#b8955f'], inn: ['#9c6f45', '#8d633e'] };
+const FLOOR: Record<string, [string, string]> = { house: ['#b88d5a', '#a87f50'], shop: ['#c9a56e', '#b8955f'], inn: ['#9c6f45', '#8d633e'], office: ['#8a7a62', '#7d6e58'] };
 
 export type Room = {
   building: Building;
@@ -124,8 +124,9 @@ export function buildRoom(scene: Phaser.Scene, b: Building, lanternLit: boolean)
       case 'window': r(0, 0, pw, 40, dark); r(3, 3, pw - 6, 34, '#9ec7d8'); r(3, 3, pw - 6, 12, '#cfe3ec'); r(pw / 2 - 1, 3, 2, 34, dark); r(3, 19, pw - 6, 2, dark); r(-2, 38, pw + 4, 4, light); break;
       case 'sign': {
         r(pw / 2 - 22, 0, 2, 8, '#4a3a2c'); r(pw / 2 + 20, 0, 2, 8, '#4a3a2c'); r(pw / 2 - 28, 8, 56, 20, wood); r(pw / 2 - 26, 10, 52, 16, light);
-        // A painted emblem instead of words: a loaf (shop), a mug (inn), a roof (house).
+        // A painted emblem instead of words: a loaf (shop), a mug (inn), a roof (house), an open book and quill (office).
         if (plan.kind === 'inn') { r(pw / 2 - 5, 12, 9, 11, '#e9d4a2'); r(pw / 2 + 4, 15, 3, 5, '#8d6240'); }
+        else if (plan.kind === 'office') { r(pw / 2 - 10, 15, 9, 8, '#f0e4c8'); r(pw / 2 + 1, 15, 9, 8, '#e6d6b4'); r(pw / 2 - 1, 14, 2, 10, '#654936'); r(pw / 2 + 6, 10, 2, 9, '#2a1f17'); }
         else if (plan.kind === 'shop') { r(pw / 2 - 9, 15, 18, 7, '#c8963e'); r(pw / 2 - 7, 14, 14, 2, '#e0b060'); }
         else { r(pw / 2 - 8, 17, 16, 6, pal.wall); r(pw / 2 - 10, 13, 20, 4, pal.roof); }
         break;

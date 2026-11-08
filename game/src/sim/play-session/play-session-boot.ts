@@ -7,7 +7,8 @@ import { isBurnedOut } from '../succession';
 import type { PlaySnapshot } from './play-session-types';
 import { deriveRng } from '../rng';
 import { generatedVector, seedWounds, woundIdsOf, type VoiceVector } from '../social/seeded-wounds';
-import type { PersonState, SimState } from '../types/runtime';
+import type { InhabitantParts, PersonState, SimState } from '../types/runtime';
+import { resolveStartTown } from '../start-rules';
 import { createCompatRuntime, type CompatRuntime, type InteractionTables } from '../interaction';
 
 /** Default trust for people seeded into the interaction compat runtime (no trust in PersonState yet). */
@@ -132,13 +133,27 @@ export function peopleFromWorld(world: FabricWorld, data: DataTables, seed = 0):
   return out;
 }
 
-/** Prefer authored town when it sits on a generated route; else first routed settlement. */
-export function pickTownId(playerTown: string | undefined, world: FabricWorld): string {
+/**
+ * Where the run starts. With a start rule (parts.startRule) and the world's seed, the rule picks among
+ * the routed settlements (sim/start-rules: den near hills, the largest town's ledger office, warm rock,
+ * the mill row). Otherwise: the authored town when it sits on a generated route, else the first routed one.
+ */
+export function pickTownId(
+  playerTown: string | undefined,
+  world: FabricWorld,
+  rule?: InhabitantParts['startRule'],
+  seed?: number,
+): string {
   const routes = world.routes ?? [];
   const endpoints = new Set<string>();
   for (const r of routes) {
     endpoints.add(r.fromId);
     endpoints.add(r.toId);
+  }
+  if (rule && seed !== undefined) {
+    const routed = (world.settlements ?? []).map((s) => s.id).filter((id) => endpoints.has(id));
+    const picked = resolveStartTown(rule, world, seed, routed.length ? routed : (world.settlements ?? []).map((s) => s.id));
+    if (picked) return picked;
   }
   if (playerTown && endpoints.has(playerTown)) return playerTown;
   if (playerTown && (world.settlements ?? []).some((s) => s.id === playerTown)) {

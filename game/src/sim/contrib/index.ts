@@ -22,3 +22,4 @@ import './workshops';
 import './lifecycle';
 import './legends';
 import './graves';
+import './body-acts';

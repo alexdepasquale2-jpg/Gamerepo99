@@ -5,6 +5,7 @@ import type { DataTables } from './load-data';
 import type { Rng } from './rng';
 import type { Effect } from './types/data';
 import type { PersonState, SimState } from './types/runtime';
+import { sparkProfileOf } from './inhabitant';
 import {
   findRefusal,
   pickRefusalLine,
@@ -85,10 +86,7 @@ export function actMuls(state: SimState, methodId: string): { powerMul: number; 
 
 function emberMul(state: MethodSimState, method: MethodRow): number {
   if (method.family !== 'kind') return 1;
-  const arch = state.data.archetypes.find((a) => a.id === state.player.archetypeId);
-  const profile = (state.data.traits.sparkProfiles as Array<Record<string, unknown>>).find(
-    (p) => arch && p.id === arch.sparkProfileId,
-  );
+  const profile = sparkProfileOf(state.player, state.data);
   const below = Number(profile?.emberZoneBelow ?? 20);
   const kindMul = Number(profile?.emberKindCostMul ?? 1.25);
   return state.player.spark < below ? kindMul : 1;
@@ -190,7 +188,7 @@ export function refuseMethod(
   const refusal = findRefusal(s, method, ctx);
   if (!refusal) return undefined;
   for (const effect of refusal.effects ?? []) applyEffect(s, effect, ctx);
-  return { line: pickRefusalLine(refusal, s.player.archetypeId, s.rng), tells: refusal.tells ?? [] };
+  return { line: pickRefusalLine(refusal, s.player, s.rng), tells: refusal.tells ?? [] };
 }
 
 /** Roll methodId's markWeights against personId (wound-matrix gated, witness weighted). Does not grant. */
@@ -214,7 +212,7 @@ export function commitMethod(state: SimState, personId: string, methodId: string
   const refusal = findRefusal(s, method, ctx);
   if (refusal) {
     for (const effect of refusal.effects ?? []) applyEffect(s, effect, ctx);
-    const line = pickRefusalLine(refusal, s.player.archetypeId, s.rng);
+    const line = pickRefusalLine(refusal, s.player, s.rng);
     pushJuice(s, 'refusal.coal_flicker', { personId, methodId, line });
     pushJuice(s, 'spark.spend', { amount: 1, reason: 'refusal' });
     return { kind: 'refused', line, tells: refusal.tells ?? [] };

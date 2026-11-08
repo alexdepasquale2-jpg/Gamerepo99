@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "spec": "How each interior kind can be entered. A body gets in through the first entrance whose tags it is allowed (embodiment.allowedApproachTags) and none of which it is blocked from (embodiment.blockedTileTags). A body with no allowedApproachTags may use any entrance it is not blocked from. lineKey: a surface-fallbacks.json key said as you come in that way ({body} is the body's name). refuseKey: said when no entrance lets this body in and the body has no blockedLine of its own for it.",
+  "kinds": {
+    "house": [
+      { "id": "front_door", "tags": ["door_front"] },
+      { "id": "vent", "tags": ["vent"], "lineKey": "entry.vent" }
+    ],
+    "shop": [
+      { "id": "front_door", "tags": ["door_front"] },
+      { "id": "vent", "tags": ["vent"], "lineKey": "entry.vent" }
+    ],
+    "inn": [
+      { "id": "front_door", "tags": ["door_front"] },
+      { "id": "yard", "tags": ["yard"], "lineKey": "entry.yard" }
+    ],
+    "office": [
+      { "id": "clerk_door", "tags": ["door_front", "civic"], "lineKey": "entry.office" }
+    ]
+  },
+  "refuseKey": { "office": "entry.refused.office" },
+  "fallback": [{ "id": "front_door", "tags": ["door_front"] }]
+}

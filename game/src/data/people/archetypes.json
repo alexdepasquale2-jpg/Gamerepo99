@@ -71,6 +71,12 @@
         "legacy_rumor_packet"
       ],
       "startingTownId": "ashford",
+      "startRule": {
+        "tag": "den_near_hills",
+        "greeterTagsAny": [
+          "child"
+        ]
+      },
       "defaultProofId": "proof_ogre_toy",
       "burnoutVignette": "Marrow sits in the den. The coal goes dark. The hill goes quiet.",
       "tint": "#b8c49a"
@@ -83,10 +89,10 @@
         "human",
         "clerk"
       ],
-      "blurb": "Ink outlived the world's wanting. Secrets are tools \u2014 and debts.",
+      "blurb": "Ink outlived the world's wanting. Secrets are tools — and debts.",
       "m2Playable": true,
       "generatorWeight": 12,
-      "embodimentTraitId": "body_human_standard",
+      "embodimentTraitId": "body_human_clerk",
       "perceptionTraitId": "perc_civic_clerk",
       "methodModifierId": "mods_ivy",
       "sparkProfileId": "spark_clerk_ink",
@@ -103,6 +109,14 @@
         "legacy_rumor_packet"
       ],
       "startingTownId": "ashford",
+      "startRule": {
+        "tag": "ledger_office",
+        "greeterTagsAny": [
+          "leader",
+          "civic_voice",
+          "doctrine_voice"
+        ]
+      },
       "defaultProofId": "proof_slate",
       "burnoutVignette": "Ivy closes the book mid-sentence. No one opens the next page."
     },
@@ -134,6 +148,9 @@
         "legacy_rumor_packet"
       ],
       "startingTownId": "ashford",
+      "startRule": {
+        "tag": "warm_rock"
+      },
       "defaultProofId": "proof_sketch",
       "burnoutVignette": "Three small statues where the Brood used to bask. The eyes do not move.",
       "tint": "#9fd4b0",
@@ -167,6 +184,15 @@
         "legacy_rumor_packet"
       ],
       "startingTownId": "ashford",
+      "startRule": {
+        "tag": "mill_row",
+        "greeterJobsAny": [
+          "miller",
+          "baker",
+          "farmer",
+          "weaver"
+        ]
+      },
       "defaultProofId": "proof_warm_loaf",
       "burnoutVignette": "Bren sits on the mill step with two cups. Nobody comes to drink the second.",
       "tint": "#e0c8a8"
