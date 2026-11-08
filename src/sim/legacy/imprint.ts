@@ -33,6 +33,9 @@ export function buildImprint(state: SimState): ProtagonistImprint {
     marksLeft,
     legendSeed: `${state.seed}:${state.day}:${slug(displayName)}`,
     homeTownId: state.player.townId,
+    ...(arch ? { archetypeId: arch.id } : {}),
+    // recordEnd pushes to lineage after the imprint is built, so this life is lineage.length + 1.
+    generation: lg.lineage.length + 1,
   };
   if (detectEnding(state) === 'ash_hoard') {
     imprint.flags = ['hoard_legacy'];
