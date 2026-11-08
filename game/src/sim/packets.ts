@@ -122,19 +122,24 @@ export function tickPackets(state: SimState): string[] {
       continue;
     }
     delivered.push(p.id);
-    pushJuice(state, 'packet.deliver', {
-      packetId: p.id,
-      kind: p.kind,
-      fromTownId: p.fromTownId,
-      toTownId: p.toTownId,
-    });
-    const proofs = (state.deliveredProofs ??= []);
-    proofs.push({ packetId: p.id, kind: p.kind, toTownId: p.toTownId, day: state.day });
-    if (proofs.length > PROOFS_KEPT) proofs.splice(0, proofs.length - PROOFS_KEPT);
-    landPacket(state, p);
+    deliverPacket(state, p);
   }
   state.packets = next;
   return delivered;
+}
+
+/** A packet arrives: its juice, the delivered-proofs record, and what it does to the town (landPacket). */
+export function deliverPacket(state: SimState, p: PacketState): void {
+  pushJuice(state, 'packet.deliver', {
+    packetId: p.id,
+    kind: p.kind,
+    fromTownId: p.fromTownId,
+    toTownId: p.toTownId,
+  });
+  const proofs = (state.deliveredProofs ??= []);
+  proofs.push({ packetId: p.id, kind: p.kind, toTownId: p.toTownId, day: state.day });
+  if (proofs.length > PROOFS_KEPT) proofs.splice(0, proofs.length - PROOFS_KEPT);
+  landPacket(state, p);
 }
 
 /** How many delivered packets the save keeps (newest last). */
@@ -146,7 +151,7 @@ const LAND = { proofFlame: 4, proofTrust: 0.03, proofDespair: -0.01, relapseFlam
  * A proof (someone rekindled) lifts one struggling person there and eases the town a little; a relapse
  * (someone hollowed) dims one burning person and weighs on the town. The person is picked by packet id.
  */
-function landPacket(state: SimState, p: PacketState): void {
+export function landPacket(state: SimState, p: PacketState): void {
   if (!p.toTownId) return;
   const burnAt = (state.data as DataTables | undefined)?.reigniteThreshold ?? 35;
   const proof = p.kind !== 'relapse_pressure';

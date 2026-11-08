@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "note": "How a rumour reads when it reaches another town: a frame around what came to pass. {town} is where it happened, {teller} who started it, {line} the outcome's own words.",
+  "titles": ["Word from {town}", "Talk out of {town}", "What they say in {town}"],
+  "frames": [
+    "They're saying in {town} that it went like this: \"{line}\"",
+    "Word came over from {town}, the way {teller} tells it: \"{line}\"",
+    "Somebody up from {town} had it at the pump: \"{line}\""
+  ],
+  "outcomes": {
+    "stash_theft": "Somebody's been at a cellar that wasn't theirs. A door left open, and a hoard lighter by morning.",
+    "legacy_memory": "The one who kept the fire for us is gone, but folk still bank the coals the way they were shown.",
+    "patron_deal": "Someone shook hands with a patron. Everyone saw, and nobody's sure what it cost.",
+    "patron_kept": "A patron's bargain got paid in full. Fewer whispers about it than you'd think.",
+    "patron_break": "A patron's bargain went unpaid, and the patron is saying a name, not kindly."
+  },
+  "fallback": "Something changed there, and folk can't stop turning it over.",
+  "kinLabel": "someone's kin"
+}

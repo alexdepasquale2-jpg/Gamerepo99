@@ -10,6 +10,7 @@ import {
 } from '../fabric/world-dump';
 import type { CompatRuntime } from '../interaction';
 import { activeDistrict, arrivalTown, catchUp, freezeBlob, noteLeft, realmOf, refId, settleFresh, summarize, trunkRoads, withCarried, worldFor } from '../realm';
+import { deliverInbox, parkLeaving } from '../realm-away';
 import { CHRONICLE_TAG } from '../chronicle';
 import { loadData, type DataTables } from '../load-data';
 import { exportWorld } from '../legacy/world-file';
@@ -236,7 +237,9 @@ function createPlayModeSession(defaults: {
       const realm = realmOf(cur);
       const from = realm.active;
       if (from.col === to.col && from.row === to.row) return cur.player.townId ?? null;
-      // Leave: the district folds (whole if recent, a summary always); the player's parts travel on.
+      // Leave: mail and news for this district wait in its inbox; the district folds (whole if recent, a
+      // summary always); the player's parts travel on.
+      parkLeaving(cur, refId(from));
       noteLeft(realm, refId(from), summarize(cur), { day: cur.day, blob: freezeBlob(saveState(cur), cur) });
       realm.active = to;
       const carried = saveState(cur);
@@ -253,13 +256,17 @@ function createPlayModeSession(defaults: {
         const known = realm.summaries[toId];
         if (known) {
           for (const t of Object.values(next.towns ?? {}) as { despair: number }[]) t.despair = known.despair;
-          catchUp(next, cur.day - known.day);
+          // The away-tick (sim/realm-away) already drifted the summary up to lastTick.
+          catchUp(next, cur.day - (known.lastTick ?? known.day));
         } else settleFresh(next, to);
       }
       delete realmOf(next).frozen[toId];
       adopt(next);
       const arrive = arrivalTown(world!, to, next.player.homeTownId);
       if (arrive) next.player.townId = arrive;
+      // What waited for this district lands now: after adopt, so replies plan real roads (economy routes
+      // are bound there) and the arrival's juice reaches the presentation.
+      deliverInbox(next, toId);
       eventLog.push({ type: 'travel', methodId: `district:${toId}` });
       return next.player.townId ?? null;
     },
