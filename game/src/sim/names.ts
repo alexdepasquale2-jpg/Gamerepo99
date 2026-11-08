@@ -64,3 +64,9 @@ function named(full: string, family: string): string {
   if (HOME.family.includes(family)) noteUse('people/names', `family.${family}`);
   return full;
 }
+
+/** What folk call someone: the given name, keeping a title that is part of it ("Old Tom Briggs" -> "Old Tom"). */
+export function firstNameOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts[0] === 'Old' && parts.length > 2 ? `${parts[0]} ${parts[1]}` : parts[0] ?? name;
+}

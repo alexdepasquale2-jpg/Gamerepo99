@@ -141,6 +141,20 @@ for (const seed of SEEDS) {
   }
 }
 
+// Many more worlds, briefly: each world draws its own history beats, so walk up to every soul in each
+// and ask about the old days (the chip names the story, the bubble tells it) until nobody has one left.
+for (let seed = 100; seed < 140; seed++) {
+  const session = createPlaySession({ mode: 'play', seed, archetypeId: 'marrow' }) as PlaySession;
+  session.start({ seed, archetypeId: 'marrow' });
+  for (const p of session.listPeople()) {
+    for (let k = 0; k < 4; k++) {
+      const ask = session.listVerbs({ kind: 'person', id: p.id }).find((v) => v.id.startsWith('ask_past@'));
+      if (!ask) break;
+      session.act(ask.id, { kind: 'person', id: p.id });
+    }
+  }
+}
+
 const used = usedIds();
 let missing = 0;
 const lines: string[] = [];

@@ -4,7 +4,7 @@
   "elderAge": 50,
   "oldAge": 50,
   "childAge": 14,
-  "askLabel": "Ask about the old days",
+  "askLabel": "Ask about {gist}",
   "askTrustDelta": 0.02,
   "dawnChance": 0.35,
   "openers": {

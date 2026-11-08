@@ -3,6 +3,7 @@
  * on their road and walking on as the day passes. They are people like any other: named, focusable,
  * tappable (Things of kind 'person'), with a head for bubbles. Only those inside the camera have bodies.
  */
+import { firstNameOf } from '../sim/names';
 import type { GameContext, Pt, Thing } from '../app/contracts';
 import { TILE_PX } from '../sim/map/constants';
 import type { LayoutRoute } from '../sim/map/world-layout';
@@ -65,7 +66,7 @@ export function createRoadFolk(ctx: GameContext): RoadFolk {
       if (!w) {
         const person = st!.people[v.id];
         const name = person?.name ?? v.id;
-        w = { id: v.id, name, first: name.split(' ')[0]!, pl: villagerLook({ id: v.id, tags: person?.tags, age: person?.age }, 'village', ctx.seed), x: at.p.x, y: at.p.y, to: at.p, dx: at.dx };
+        w = { id: v.id, name, first: firstNameOf(name), pl: villagerLook({ id: v.id, tags: person?.tags, age: person?.age }, 'village', ctx.seed), x: at.p.x, y: at.p.y, to: at.p, dx: at.dx };
         walkers.set(v.id, w);
       }
       // A big jump (a new day, a load) is a teleport, not a walk.

@@ -9,6 +9,7 @@ import { addItem, ITEMS } from '../src/sim/goods/inventory';
 import { sendPlayerLetter } from '../src/sim/letters-scale';
 import { roomGreeting } from '../src/sim/map/interiors';
 import { beginVisit } from '../src/sim/caravan-visit';
+import { listPiles } from '../src/sim/carry';
 import { lingerLine, lingerSpent, lingerTagOf } from '../src/sim/linger';
 import type { PlaySession } from '../src/sim/play-session/play-session-types';
 import type { Target } from '../src/sim/play-session/targets';
@@ -80,7 +81,8 @@ function dayOfPlay(d: Driver, day: number, opts: Opts): void {
   // One person you keep carrying (trade_fair, return_item: the carry_burden deeds) day after day: they come
   // to lean on you, and may be the one chosen to carry on after you (inherited dependence).
   const fav = folk[0];
-  if (fav) for (let k = 0; k < 3; k++) for (const v of ['trade_fair', 'return_item', 'talk_gentle']) d.act(`${v}@${fav}`, { kind: 'person', id: fav });
+  // (Every third day you carry no one: an inherited dependence clings at dusk.)
+  if (fav && day % 3 !== 2) for (let k = 0; k < 3; k++) for (const v of ['trade_fair', 'return_item', 'talk_gentle']) d.act(`${v}@${fav}`, { kind: 'person', id: fav });
   // Visitors in town (pilgrims, pedlars, the tax man...): ask, pay, refuse, help, whatever they offer,
   // with coin and food in the satchel on even days and none on odd ones (they answer both).
   if (day % 2 === 0) { addItem(st, 'coin', 30); addItem(st, 'bread', 2); }
@@ -97,7 +99,8 @@ function dayOfPlay(d: Driver, day: number, opts: Opts): void {
   }
   // Sit a while at a prop of each kind, before anything else spends the day's rest (the scene says
   // lingerLine as you sit, world/linger.ts).
-  for (const k of LINGER) {
+  // A different prop first each day: the day's rest is shared, so the first sit gets the full line.
+  for (const k of [...LINGER.slice(day % LINGER.length), ...LINGER.slice(0, day % LINGER.length)]) {
     const key = `prop:${k}@${day},${here.length}`;
     const tag = lingerTagOf(k);
     // The scene speaks a line as you sit down, then again while the rest gives spark.
@@ -105,6 +108,9 @@ function dayOfPlay(d: Driver, day: number, opts: Opts): void {
     s.linger(key, 70);
   }
   // The town's things: the board and hearth, beasts, patches, props; each with a different item in hand.
+  // Carry a load of another town's stock here (a favour when this town is short of it).
+  const far = listPiles(st).find((p) => p.source === 'town' && p.townId !== here && p.have > 0);
+  if (far && !s.carrying() && s.pickUp(far.key).ok) s.putDown(`hearth:${here}`);
   const items = ITEMS.items.map((i) => i.id);
   const things = thingsOf(d, here, day);
   things.forEach((t, i) => {

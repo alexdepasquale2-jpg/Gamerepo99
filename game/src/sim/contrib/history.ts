@@ -1,11 +1,11 @@
 /**
- * The past, spoken: "Ask about the old days" in the ring of anyone with a beat left to tell, and now
+ * The past, spoken: "Ask about <the story they would tell next>" in the ring of anyone with a beat left to tell, and now
  * and then an old story overheard at dawn. The retelling surfaces as the teller's bubble (history.told).
  * Asking costs no spark; being listened to warms them a touch (askTrustDelta, gentler than a gentle talk).
  */
 import { registerDawnLines } from '../dawn-lines';
 import { firstTrust } from '../embodiment';
-import { VOICE, dawnHistoryLine, hasUntoldBeat, tellNextBeat } from '../history-voice';
+import { VOICE, dawnHistoryLine, gistOf, tellNextBeat, untoldBeats } from '../history-voice';
 import { pushJuice } from '../packets';
 import { registerActionProvider } from '../play-session/action-providers';
 
@@ -14,8 +14,11 @@ const PREFIX = `${ASK_PAST}@`;
 
 registerActionProvider({
   id: 'history',
-  list: (state, personId) =>
-    hasUntoldBeat(state, personId) ? [{ id: PREFIX + personId, label: VOICE.askLabel, short: 'Ask of old days', family: 'ask' }] : [],
+  list: (state, personId) => {
+    // The chip's tip names the story they would tell next ("Ask about the week the mill burned").
+    const next = untoldBeats(state, personId)[0];
+    return next ? [{ id: PREFIX + personId, label: VOICE.askLabel.replace('{gist}', gistOf(next)), short: 'Ask of old days', family: 'ask' }] : [];
+  },
   act: (state, actionId, eventLog, rt) => {
     if (!actionId.startsWith(PREFIX)) return false;
     const personId = actionId.slice(PREFIX.length);

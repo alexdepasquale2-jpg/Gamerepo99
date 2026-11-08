@@ -4,6 +4,7 @@
  * VFX-only ids (reignite, kindle, burnout, spark spend) are handled in juice.ts, not here.
  */
 
+import { firstNameOf } from '../sim/names';
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
 import { jobOf } from '../sim/goods/jobs';
 import type { SimState } from '../sim/types/runtime';
@@ -266,7 +267,7 @@ export const SILENT: readonly string[] = [
   'packet.emit', 'route.travel_step', 'stock.starve', 'hoard.ending_open',
 ];
 
-const given = (name: string | undefined): string | undefined => name?.split(' ')[0] || undefined;
+const given = (name: string | undefined): string | undefined => (name ? firstNameOf(name) : undefined) || undefined;
 
 /**
  * Who the speaker is, for the fallback grammar: given name, town, job, one of their household by name.

@@ -2,6 +2,7 @@
  * The people inside the room the player is in: whoever the schedule puts in that building, seated where
  * the world's room says (WorldApi.room().seats), drawn with their outdoor look, named, and actable.
  */
+import { firstNameOf } from '../sim/names';
 import { roomGreeting } from '../sim/map/interiors';
 import type Phaser from 'phaser';
 import type { GameContext, Pt, Thing } from '../app/contracts';
@@ -64,10 +65,10 @@ export function createRoomFolk(ctx: GameContext, people: PeopleCtl): RoomFolk {
       const r2 = radius * radius;
       return seated
         .filter((s) => (s.at.x - near.x) ** 2 + (s.at.y - near.y) ** 2 <= r2)
-        .map((s) => ({ key: `person:${s.id}`, kind: 'person' as const, id: s.id, x: s.at.x, y: s.at.y, label: s.name.split(' ')[0] ?? s.name, target: { kind: 'person' as const, id: s.id } }));
+        .map((s) => ({ key: `person:${s.id}`, kind: 'person' as const, id: s.id, x: s.at.x, y: s.at.y, label: firstNameOf(s.name), target: { kind: 'person' as const, id: s.id } }));
     },
     update(names) {
-      for (const s of seated) names.put(`room:${s.id}`, s.at.x, s.at.y - s.sprite.displayHeight - 2, { text: s.name.split(' ')[0] ?? s.name, alpha: 1 });
+      for (const s of seated) names.put(`room:${s.id}`, s.at.x, s.at.y - s.sprite.displayHeight - 2, { text: firstNameOf(s.name), alpha: 1 });
     },
     destroy() {
       offs.forEach((off) => off());
