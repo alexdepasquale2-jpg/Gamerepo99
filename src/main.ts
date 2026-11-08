@@ -7,6 +7,7 @@ import { createSuccessionScreen } from './ui/succession-screen';
 import { SUCCESSION_GATE_KEY } from './render/spark-fx/session-fx';
 import type { PlaySession } from './sim';
 import { runGameFlow } from './ui/game-flow';
+import { createDevMenu } from './ui/dev-menu';
 import { setTerrainMode } from './sim/map/terrain';
 
 // Tiles come from the refined map ladder; ?terrain=noise falls back to per-tile noise.
@@ -77,3 +78,5 @@ setInterval(() => {
   if (gate && !gate()) return;
   succession.screen.refresh();
 }, 250);
+
+createDevMenu();

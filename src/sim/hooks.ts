@@ -37,6 +37,16 @@ function matchClause(
       const need = Array.isArray(expected) ? (expected as string[]) : [];
       return need.every((t) => tags.includes(t));
     }
+    case 'interactionKindsTodayNotContains': {
+      const done = (state.flags.interactionKindsToday as string[] | undefined) ?? [];
+      return (Array.isArray(expected) ? (expected as string[]) : []).every((k) => !done.includes(k));
+    }
+    case 'interactionKindsYesterdayContains': {
+      const done = (state.flags.interactionKindsYesterday as string[] | undefined) ?? [];
+      return (Array.isArray(expected) ? (expected as string[]) : []).every((k) => done.includes(k));
+    }
+    case 'targetWoundId':
+      return ctx.targetWoundId === expected;
     case 'targetHasTag':
       return (ctx.targetTags ?? []).includes(String(expected));
     case 'targetAgeLt':

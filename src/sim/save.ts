@@ -8,6 +8,7 @@ import { tickCaravans } from './caravans';
 import { doctrineSupplyHook } from './doctrine-tick';
 import { createEventBus } from './event-bus';
 import { generateWorld } from './fabric/fabric-bake';
+import { carryHistory } from './history-voice';
 import { createRng } from './rng';
 import { loadBiomeTerrainMuls, loadEncounterTables, loadSizeTravelMuls, toTravelRoutes } from './travel/travel';
 import { installPlayReactions } from './play-session/play-session-act';
@@ -45,7 +46,7 @@ const TOP_KEYS = ['seed', 'unspoken', 'hoard', 'legacy', 'patronDeals'];
 /** Derived / static / non-serializable: rebuilt by loadState, never saved. */
 const TRANSIENT_KEYS = [
   'data', 'bus', 'rng', 'reactionLineSelector', 'economyHooks', 'kinEdges',
-  'routes', 'encounterTables', 'biomeTerrainMuls', 'sizeTravelMuls',
+  'routes', 'encounterTables', 'biomeTerrainMuls', 'sizeTravelMuls', 'history',
 ];
 
 const clone = <T>(v: T): T => (v === undefined ? v : (JSON.parse(JSON.stringify(v)) as T));
@@ -89,6 +90,7 @@ export function loadState(blob: SaveBlob, data: DataTables, archetypeId = 'marro
       encounterTables: loadEncounterTables(),
       biomeTerrainMuls: loadBiomeTerrainMuls(),
       sizeTravelMuls: loadSizeTravelMuls(),
+      history: carryHistory(world.history),
     };
     if (blob.version === 2) {
       for (const g of state.groundItems ?? []) Object.assign(g, rescalePoint(world.settlements ?? [], blob.seed, g.x, g.y));

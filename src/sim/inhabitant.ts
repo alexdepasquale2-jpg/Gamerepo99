@@ -1,7 +1,8 @@
 /** Assemble runtime inhabitants from archetype + trait tables. Pure: no Phaser/DOM. */
 
 import type { DataTables } from './load-data';
-import type { EmbodimentState, Inhabitant } from './types/runtime';
+import type { ArchetypeDef } from './types/data';
+import type { BodyState, EmbodimentState, Inhabitant } from './types/runtime';
 
 type TraitRow = { id: string } & Record<string, unknown>;
 
@@ -23,7 +24,21 @@ function embodimentFromTrait(trait: TraitRow): EmbodimentState {
     moveTicksPerTile:
       typeof trait.moveTicksPerTile === 'number' ? trait.moveTicksPerTile : undefined,
     mode: typeof trait.mode === 'string' ? trait.mode : undefined,
+    walkSpeedMul: typeof trait.walkSpeedMul === 'number' ? trait.walkSpeedMul : undefined,
+    spriteScale: typeof trait.spriteScale === 'number' ? trait.spriteScale : undefined,
+    blockedLine: typeof trait.blockedLine === 'string' ? trait.blockedLine : undefined,
+    bodyNames: Array.isArray(trait.bodyNames) ? [...(trait.bodyNames as string[])] : undefined,
   };
+}
+
+/** Multi-body inhabitants get one body per slot, all travelling with the player at the start. */
+function bodiesFor(emb: EmbodimentState): BodyState[] | undefined {
+  if (emb.mode !== 'multi' || emb.bodySlots < 2) return undefined;
+  return Array.from({ length: emb.bodySlots }, (_, i) => ({
+    id: `body_${i}`,
+    name: emb.bodyNames?.[i] ?? `Sibling ${i + 1}`,
+    at: 'with_you',
+  }));
 }
 
 function collectHookIds(
@@ -72,6 +87,8 @@ export function assembleInhabitant(data: DataTables, archetypeId: string): Inhab
   const sparkMax =
     typeof sparkProfile.sparkMax === 'number' ? sparkProfile.sparkMax : undefined;
 
+  const embodiment = embodimentFromTrait(embodimentTrait);
+  const bodies = bodiesFor(embodiment);
   return {
     id: `inh-${archetypeId}`,
     archetypeId: arch.id,
@@ -84,10 +101,12 @@ export function assembleInhabitant(data: DataTables, archetypeId: string): Inhab
       sparkProfile.recoveryHookIds,
     ),
     statusTraits: [],
-    embodiment: embodimentFromTrait(embodimentTrait),
+    embodiment,
     perception: { ...perceptionTrait },
     methodMods: { ...methodModsTrait },
     townId: arch.startingTownId,
+    homeTownId: typeof sparkProfile.homeTownId === 'string' ? sparkProfile.homeTownId : undefined,
+    ...(bodies ? { bodies, activeBodyId: bodies[0]!.id } : {}),
   };
 }
 
@@ -98,4 +117,21 @@ export function canEnterTile(inh: Inhabitant, tileTags: string[]): boolean {
     if (blocked.includes(tag)) return false;
   }
   return true;
+}
+
+/** Archetypes a player can pick at the start of a run. */
+export function playableArchetypes(data: Pick<DataTables, 'archetypes'>): ArchetypeDef[] {
+  return data.archetypes.filter((a) => a.m2Playable);
+}
+
+/** Roll an archetype by generatorWeight. `r01` is a number in [0, 1) (e.g. Math.random()). */
+export function rollArchetype(list: ArchetypeDef[], r01: number): ArchetypeDef {
+  if (!list.length) throw new Error('no archetypes to roll');
+  const total = list.reduce((n, a) => n + Math.max(0, a.generatorWeight ?? 1), 0);
+  let pick = Math.min(Math.max(r01, 0), 0.999999) * total;
+  for (const a of list) {
+    pick -= Math.max(0, a.generatorWeight ?? 1);
+    if (pick < 0) return a;
+  }
+  return list[list.length - 1]!;
 }

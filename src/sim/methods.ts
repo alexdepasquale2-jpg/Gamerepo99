@@ -59,6 +59,30 @@ function methodMod(player: SimState['player'], methodId: string) {
   };
 }
 
+/**
+ * Live-play multipliers for one act through methodId: the inhabitant's method modifiers, any status
+ * trait modifiers (e.g. inherited dependence), and the ember-zone surcharge on kind methods.
+ * powerMul scales how much the act moves the person's flame; strainMul scales the spark it costs.
+ */
+export function actMuls(state: SimState, methodId: string): { powerMul: number; strainMul: number } {
+  const s = requireMethodState(state);
+  const own = methodMod(s.player, methodId);
+  let powerMul = own.powerMul;
+  let strainMul = own.sparkCostMul;
+  const statusRows = ((s.data.traits as { statusTraits?: unknown[] }).statusTraits ?? []) as Array<{
+    id: string;
+    methodModifiers?: Record<string, { powerMul?: number; sparkCostMul?: number }>;
+  }>;
+  for (const id of s.player.statusTraits) {
+    const row = statusRows.find((t) => t.id === id)?.methodModifiers?.[methodId];
+    powerMul *= row?.powerMul ?? 1;
+    strainMul *= row?.sparkCostMul ?? 1;
+  }
+  const method = (s.data.methods as MethodRow[]).find((m) => m.id === methodId);
+  if (method) strainMul *= emberMul(s, method);
+  return { powerMul, strainMul };
+}
+
 function emberMul(state: MethodSimState, method: MethodRow): number {
   if (method.family !== 'kind') return 1;
   const arch = state.data.archetypes.find((a) => a.id === state.player.archetypeId);
@@ -96,6 +120,7 @@ function buildCtx(state: MethodSimState, person: PersonState, method: MethodRow,
     targetId: person.id,
     targetTags: person.tags ?? [],
     targetAge: person.age,
+    targetWoundId: person.woundId,
     playerTraitTags: [...state.player.statusTraits, ...methodMod(state.player, method.id).tags],
   };
 }

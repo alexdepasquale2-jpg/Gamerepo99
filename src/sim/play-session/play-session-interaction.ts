@@ -8,12 +8,13 @@
  *  marks     legacy method markWeights roll folded into runtime marks; new stacks → mark.applied
  *            + cross-town packet.emit
  *  sync out  runtime flame01/trust/marks/spark → person + player
- *  juice     person.reaction, person.reignite, site.kindle
+ *  juice     person.wound (method vs wound chemistry), person.reaction, person.reignite, site.kindle
  */
 
 import { recordActBond } from '../legacy/bonds';
 import type { DataTables } from '../load-data';
-import { refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
+import { actMuls, refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
+import { noteActToday } from '../embodiment';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
 import { encodeUnspokenForState } from '../social/unspoken';
@@ -27,7 +28,7 @@ import type { PersonState, SimState } from '../types/runtime';
 import type { PlayLastResolve } from './play-session-types';
 
 type PlayEvent = { type: string; methodId?: string };
-type MethodRow = { id: string; family?: string };
+type MethodRow = { id: string; family?: string; effectiveness?: Record<string, number> };
 
 export type InteractionActExtras = {
   tickN: number;
@@ -90,7 +91,8 @@ export function actInteraction(
     return;
   }
 
-  const res = resolveInteraction(rt, interactionId, personId);
+  // The inhabitant's body and habits bend every act: method modifiers, status traits, ember zone.
+  const res = resolveInteraction(rt, interactionId, personId, actMuls(s, methodId));
   // Compat: burn the draw legacy commitMethod spent on flame fuzz so seeded mark rolls stay identical.
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
@@ -105,6 +107,18 @@ export function actInteraction(
   person.flame = Math.round(ip.flame01 * FLAME_SCALE);
   person.trust = ip.trust;
   person.marks = marksList(ip.marks);
+
+  // Personal costs that bite when an act lands (e.g. ink integrity after a lie), then today's record for dusk/dawn hooks.
+  runHooks(s, 'on_method_resolve', { data, rng: s.rng, methodId, targetId: personId, targetWoundId: person.woundId });
+  noteActToday(s, methodId, rt.catalog.get(interactionId)?.kind);
+
+  // Wound x method chemistry: how this method sits against their wound (data: methods.json effectiveness).
+  const actDef = rt.catalog.get(interactionId);
+  const methodRow = ((data.methods ?? []) as MethodRow[]).find((m) => m.id === methodId);
+  const woundMul = person.woundId ? methodRow?.effectiveness?.[person.woundId] : undefined;
+  if (typeof woundMul === 'number' && woundMul !== 1 && !actDef?.stashAct && !actDef?.patronAccept && !actDef?.patronFulfil) {
+    pushJuice(s, 'person.wound', { personId, methodId, interactionId, woundId: person.woundId, woundMul });
+  }
 
   for (const { markId, stacks } of person.marks) {
     if (stacks <= (marksBefore[markId] ?? 0)) continue;
@@ -141,7 +155,7 @@ export function actInteraction(
     const traitsBefore = [...s.player.statusTraits];
     runHooks(s, 'on_interaction', { data, rng: s.rng, targetId: personId });
     for (const id of s.player.statusTraits) {
-      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, interactionId });
+      if (!traitsBefore.includes(id)) pushJuice(s, 'status.gain', { traitId: id, personId, townId: person.townId, interactionId });
     }
   }
   // A site kindles when its keeper reignites / burns past threshold, or when a helping hand warms them there.

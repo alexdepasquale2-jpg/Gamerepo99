@@ -18,3 +18,21 @@ describe('ford look', () => {
     }
   });
 });
+
+import { FERRY_BIOME, FERRY_DECK, ferryPlanks } from '../../src/render/painters/ferry-paint';
+describe('ferry look', () => {
+  it('is its own biome id, not water or ford', () => {
+    expect(FERRY_BIOME).toBe('ferry');
+    expect(FERRY_BIOME).not.toBe(FORD_BIOME);
+    expect(FERRY_DECK).not.toBe(BIOME_COLOR.water);
+    expect(FERRY_DECK).not.toBe(FORD_SHALLOW);
+  });
+  it('plank seams are deterministic and inside the tile', () => {
+    expect(ferryPlanks(10, 20)).toEqual(ferryPlanks(10, 20));
+    for (let q = 0; q < 12; q++) for (const p of ferryPlanks(q, 5)) {
+      expect(p.x).toBeGreaterThanOrEqual(0);
+      expect(p.x + p.w).toBeLessThanOrEqual(32);
+      expect(p.y + p.h).toBeLessThanOrEqual(32);
+    }
+  });
+});

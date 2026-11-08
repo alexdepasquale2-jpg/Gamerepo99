@@ -39,6 +39,29 @@ export function residences(townBuildingList: Building[], townPeopleIds: string[]
   return out;
 }
 
+/**
+ * Keep a town's homes current without reshuffling anyone already housed: whoever left the town (or the
+ * world) frees their building, and newcomers (a child come of age, an arrival) take a free one in id
+ * order. People with no free building stay outdoors, as extra villagers always have. Mutates `homes`.
+ * Returns the ids newly housed.
+ */
+export function houseNewcomers(homes: Map<string, Building>, townBuildingList: Building[], townPeopleIds: string[]): string[] {
+  const here = new Set(townPeopleIds);
+  const mine = new Set(townBuildingList.map((b) => b.id));
+  for (const [id, b] of [...homes]) if (mine.has(b.id) && !here.has(id)) homes.delete(id);
+  const taken = new Set([...homes.values()].map((b) => b.id));
+  const free = townBuildingList.filter((b) => !taken.has(b.id));
+  const housed: string[] = [];
+  for (const id of [...townPeopleIds].sort()) {
+    if (!free.length) break;
+    const cur = homes.get(id);
+    if (cur && mine.has(cur.id)) continue; // already housed here (a home in another town means they moved)
+    homes.set(id, free.shift()!);
+    housed.push(id);
+  }
+  return housed;
+}
+
 /** The building this person should be inside right now, or null (outdoors / no building). */
 export function scheduledBuilding(personId: string, homes: Map<string, Building>, day01: number): Building | null {
   const b = homes.get(personId);

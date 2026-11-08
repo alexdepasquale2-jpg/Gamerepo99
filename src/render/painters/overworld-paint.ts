@@ -1,5 +1,6 @@
 import { paintSettlement } from './settlement-art';
 import { FORD_BIOME, paintFordTile } from './ford-paint';
+import { FERRY_BIOME, paintFerryTile } from './ferry-paint';
 import { BIOME_COLOR, type Biome } from '../../sim/map/terrain';
 /** Render-side painters for continuous overworld chunks. Presentation only. */
 
@@ -253,6 +254,7 @@ export function paintProp(
   prop: FacilityRenderView,
 ): Phaser.GameObjects.GameObject[] {
   const foot = tileFootWorld(prop.position.x, prop.position.y);
+  if (paintWildProp(host, prop, foot)) return [];
   const assetKey = PROP_ASSET[prop.type] ?? `facility.${prop.type}.${prop.state || 'idle'}`;
   const entry = lookupAsset(assetKey);
   const shadow = addSoftShadow(host, container, foot.x, foot.y, prop.type === 'field' ? 0.7 : 1.0);
@@ -287,6 +289,137 @@ export function paintProp(
   container?.add(wall);
   container?.add(roof);
   return [...made, wall, roof];
+}
+
+/** Wilderness dressing (features.json): trees, undergrowth, fences, rocks, reeds, build sites. */
+function paintWildProp(host: PaintHost, prop: FacilityRenderView, foot: { x: number; y: number }): boolean {
+  const { x, y } = foot;
+  switch (prop.type) {
+    case 'tree': paintTree(host, null, prop.position.x, prop.position.y, Number(prop.state) || 0); return true;
+    case 'bush': case 'rock': case 'log': case 'stump': case 'sign': case 'hay': case 'flowers':
+      paintScatterOne(host, null, x, y, prop.type); return true;
+    case 'boulder': {
+      addSoftShadow(host, null, x, y, 1.4);
+      const base = host.add.ellipse(x, y - 9, 30, 20, 0x6a6a72); applySpriteSort(base);
+      const top = host.add.ellipse(x - 3, y - 14, 18, 10, 0x8e8e96); top.setDepth(y + 0.1);
+      return true;
+    }
+    case 'reeds': {
+      for (let i = 0; i < 4; i++) {
+        const blade = host.add.rectangle(x - 6 + i * 4, y - 7 - (i % 2) * 3, 2, 12 + (i % 2) * 5, i % 2 ? 0x7a8a3a : 0x5d6e2c);
+        applySpriteSort(blade);
+      }
+      return true;
+    }
+    case 'fence_h': case 'fence_v': {
+      const H = FEEL.worldScale.fencePostH, R = FEEL.worldScale.fenceRailH;
+      const post = host.add.rectangle(x, y - H / 2, 4, H, 0x6b4423); applySpriteSort(post);
+      const rail = prop.type === 'fence_h'
+        ? host.add.rectangle(x + TILE_PX / 2, y - H * 0.65, TILE_PX, R, 0x8b5a2b)
+        : host.add.rectangle(x, y - H * 0.65 - TILE_PX / 2, R + 1, TILE_PX, 0x8b5a2b);
+      rail.setDepth(y + 0.1);
+      return true;
+    }
+    case 'build_site': {
+      // Unfinished frame: corner posts, one beam, a stone footing waiting for work.
+      addSoftShadow(host, null, x, y, 1.6);
+      const footing = host.add.rectangle(x, y - 3, 40, 8, 0x8a8478); applySpriteSort(footing);
+      for (const dx of [-17, 17]) { const p = host.add.rectangle(x + dx, y - 20, 4, 32, 0x9a6a3a); p.setDepth(y + 0.05); }
+      const beam = host.add.rectangle(x, y - 35, 40, 4, 0x9a6a3a); beam.setDepth(y + 0.06);
+      const brace = host.add.rectangle(x - 6, y - 20, 3, 30, 0x7a5230); brace.setAngle(35); brace.setDepth(y + 0.04);
+      return true;
+    }
+    case 'campfire': {
+      const stones = host.add.ellipse(x, y - 3, 20, 9, 0x5a5550); applySpriteSort(stones);
+      const flame = host.add.ellipse(x, y - 9, 9, 14, 0xf2a03a); flame.setDepth(y + 0.1);
+      const core = host.add.ellipse(x, y - 7, 5, 8, 0xffe08a); core.setDepth(y + 0.11);
+      const tw = tweensOf(host)?.add({ targets: [flame, core], scaleY: 1.35, alpha: 0.75, duration: 180 + (prop.position.x % 5) * 30, yoyo: true, repeat: -1 });
+      if (tw) flame.once('destroy', () => tw.remove());
+      return true;
+    }
+    case 'tent': {
+      addSoftShadow(host, null, x, y, 1.3);
+      const tent = host.add.triangle(x, y - 12, 0, 24, 15, 0, 30, 24, 0xb89a6a); applySpriteSort(tent);
+      const door = host.add.triangle(x, y - 6, 0, 12, 5, 0, 10, 12, 0x5a4630); door.setDepth(y + 0.1);
+      return true;
+    }
+    case 'ruin_wall': {
+      const hgt = 10 + (prop.position.y % 3) * 6;
+      const w = host.add.rectangle(x, y - hgt / 2, 26, hgt, 0x8a8478); applySpriteSort(w);
+      const cap = host.add.rectangle(x, y - hgt, 26, 3, 0xa8a294); cap.setDepth(y + 0.1);
+      return true;
+    }
+    case 'shrine': {
+      addSoftShadow(host, null, x, y, 0.9);
+      const base = host.add.rectangle(x, y - 4, 16, 8, 0x77736a); applySpriteSort(base);
+      const stone = host.add.rectangle(x, y - 18, 10, 22, 0x9c978a); stone.setDepth(y + 0.1);
+      const glow = host.add.ellipse(x, y - 24, 6, 6, 0xf2d27a); glow.setDepth(y + 0.12);
+      const tw = tweensOf(host)?.add({ targets: glow, alpha: 0.35, duration: 1200, yoyo: true, repeat: -1 });
+      if (tw) glow.once('destroy', () => tw.remove());
+      return true;
+    }
+    case 'cart': {
+      addSoftShadow(host, null, x, y, 1.4);
+      const bed = host.add.rectangle(x, y - 14, 34, 12, 0x8b5a2b); applySpriteSort(bed);
+      for (const dx of [-11, 11]) { const wheel = host.add.circle(x + dx, y - 6, 6, 0x4a3420); wheel.setDepth(y + 0.1); }
+      const load = host.add.rectangle(x - 3, y - 23, 20, 8, 0xc9a35a); load.setDepth(y + 0.05);
+      return true;
+    }
+    case 'critter': {
+      // Drawn from shapes: the fauna sheet holds clusters of tiny critters per cell, not one animal.
+      const body = critterShape(host, prop.state);
+      body.setPosition(x, y);
+      body.setDepth(y);
+      // Wander: drift to a nearby point and back, pausing, forever (removed with the chunk).
+      const seedish = (prop.position.x * 31 + prop.position.y * 17) % 97;
+      const fly = prop.state === 'bird';
+      const tw = tweensOf(host)?.add({
+        targets: body, x: x + ((seedish % 7) - 3) * (fly ? 18 : 10), y: y + ((seedish % 5) - 2) * (fly ? 14 : 8),
+        duration: (fly ? 900 : 2200) + seedish * 20, delay: seedish * 40, hold: 600 + seedish * 15, repeatDelay: 800,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut', onUpdate: () => body.setDepth(body.y),
+      });
+      if (tw) body.once('destroy', () => tw.remove());
+      return true;
+    }
+    default: return false;
+  }
+}
+
+/** A small animal (origin at its feet) built from shapes, as one container. */
+function critterShape(host: PaintHost, kind: string): Phaser.GameObjects.Container {
+  const parts: Phaser.GameObjects.GameObject[] = [];
+  const add = <T extends Phaser.GameObjects.GameObject>(o: T): T => { parts.push(o); return o; };
+  add(host.add.ellipse(0, -1, kind === 'deer' ? 22 : kind === 'bird' ? 6 : 12, 5, 0x000000, 0.18));
+  if (kind === 'deer') {
+    for (const lx of [-7, -3, 4, 8]) add(host.add.rectangle(lx, -5, 2, 9, 0x6b4a2e));
+    add(host.add.ellipse(0, -12, 22, 10, 0x9a6a3a));
+    add(host.add.rectangle(9, -18, 4, 9, 0x9a6a3a));
+    add(host.add.ellipse(12, -23, 8, 6, 0x9a6a3a));
+    add(host.add.rectangle(11, -28, 1, 5, 0x5a3d22)); add(host.add.rectangle(14, -28, 1, 5, 0x5a3d22));
+    add(host.add.ellipse(-11, -14, 4, 4, 0xf0e6d0));
+  } else if (kind === 'fox') {
+    add(host.add.ellipse(-9, -6, 10, 5, 0xc0602a)); add(host.add.ellipse(-13, -6, 3, 3, 0xf0e6d0));
+    add(host.add.rectangle(-3, -2, 2, 4, 0x3a2418)); add(host.add.rectangle(4, -2, 2, 4, 0x3a2418));
+    add(host.add.ellipse(0, -7, 14, 7, 0xc8662c));
+    add(host.add.ellipse(7, -10, 7, 6, 0xc8662c)); add(host.add.ellipse(9, -9, 3, 2, 0xf0e6d0));
+    add(host.add.triangle(5, -14, 0, 4, 2, 0, 4, 4, 0x8a3e1a));
+  } else if (kind === 'bird') {
+    add(host.add.ellipse(0, -10, 7, 5, 0x5a4a3a));
+    const wing = add(host.add.triangle(0, -12, 0, 3, 4, 0, 8, 3, 0x3e3328));
+    const flap = tweensOf(host)?.add({ targets: wing, scaleY: -1, duration: 140, yoyo: true, repeat: -1 });
+    if (flap) wing.once('destroy', () => flap.remove());
+    add(host.add.rectangle(4, -10, 2, 1, 0xe0a030));
+  } else {
+    add(host.add.ellipse(0, -5, 11, 8, 0xb0a28a)); add(host.add.ellipse(-5, -5, 3, 3, 0xf4efe4));
+    add(host.add.ellipse(5, -8, 6, 5, 0xb0a28a));
+    add(host.add.rectangle(4, -13, 2, 6, 0xa08f76)); add(host.add.rectangle(7, -13, 2, 6, 0xa08f76));
+  }
+  const c = host.add.container(0, 0, parts);
+  return c;
+}
+
+function tweensOf(host: PaintHost): Phaser.Tweens.TweenManager | undefined {
+  return (host as PaintHost & { tweens?: Phaser.Tweens.TweenManager }).tweens;
 }
 
 /** @deprecated Prefer bakeCliffStrip — kept for API compat / tests. */
@@ -776,6 +909,11 @@ export function paintChunkContents(
   terrain.setDepth(0.3);
   for (const tile of chunk.tiles) {
     if (tile.biomeId === FORD_BIOME) { paintFordTile(terrain, tile.q, tile.r); continue; }
+    if (tile.biomeId === FERRY_BIOME) { paintFerryTile(terrain, tile.q, tile.r); continue; }
+    if (tile.biomeId === 'stream') {
+      terrain.fillStyle(BIOME_COLOR.water, 0.9).fillRect(tile.q * TILE_PX + 2, tile.r * TILE_PX + 2, TILE_PX - 4, TILE_PX - 4);
+      continue;
+    }
     const color = BIOME_COLOR[tile.biomeId as Biome];
     if (!color) continue;
     terrain.fillStyle(color, tile.biomeId === 'water' ? 0.94 : 0.36);

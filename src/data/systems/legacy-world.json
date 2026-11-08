@@ -48,5 +48,31 @@
     "They say {legacyName} never really left; the warmth did not."
   ],
   "graveLines": ["A stone for {legacyName}. Someone keeps it swept."],
-  "inspectLines": ["{legacyName} used to stop by. You can tell who remembers."]
+  "inspectLines": ["{legacyName} used to stop by. You can tell who remembers."],
+  "arrival": {
+    "heard": "{count} you don't know {verb} spoken of in {town}: {names}.",
+    "counts": ["A name", "Two names", "Three names", "Four names", "Five names", "Six names"],
+    "countMany": "{n} names",
+    "verbOne": "is",
+    "verbMany": "are",
+    "somewhere": "the roads between towns",
+    "none": "Nothing came across but the land itself. No one here speaks of strangers.",
+    "legend": "{name}{who}. {deeds}",
+    "who": " ({archetype})",
+    "lineage": ", {ordinal} of their line",
+    "ordinals": ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"],
+    "ordinalMany": "{n}{suffix}",
+    "deeds": "They {deeds}.",
+    "noDeeds": "No one agrees on what they did, only that they were here.",
+    "grave": "{name}: a stone in {town}, laid on day {day}. Someone keeps it swept.",
+    "rekindled": "rekindled {person}",
+    "closeTo": "stayed close to {person}",
+    "methodDeeds": {
+      "carry_burden": "carried other people's burdens",
+      "inspire": "made people believe again",
+      "challenge": "dared the stuck to move",
+      "shame": "shamed people into moving",
+      "lie": "told kind lies to keep hope going"
+    }
+  }
 }

@@ -7,6 +7,7 @@ import { loadInteractionTables } from '../../../src/sim/interaction/load-interac
 import { actMethod } from '../../../src/sim/play-session/play-session-act';
 import { resolveInteraction } from '../../../src/sim/interaction/interactions';
 import { bootPlayState } from '../../../src/sim/play-session/play-session-state';
+import { actMuls } from '../../../src/sim/methods';
 
 const tables = loadInteractionTables();
 
@@ -28,13 +29,13 @@ describe('actMethod compat flag', () => {
     const flameBefore = state.people[personId]!.flame;
     const sparkBefore = state.player.spark;
     const expected = createCompatRuntime(tables, { ...rt.people.get(personId)!, spark: sparkBefore });
-    const exp = resolveInteraction(expected, 'talk_gentle', personId);
+    const exp = resolveInteraction(expected, 'talk_gentle', personId, actMuls(state, 'inspire'));
     const log: { type: string; methodId?: string }[] = [];
 
     actMethod(state, `inspire@${personId}`, log, undefined, { interactionCompat: rt });
 
     expect(state.player.spark).toBe(exp.spark);
-    expect(state.player.spark).toBe(sparkBefore - 1); // strain 1, gain 1, gentle tag -1 → net -1
+    expect(state.player.spark).toBeCloseTo(sparkBefore - 1.05, 9); // strain 1 x Marrow inspire 1.05, gain 1, gentle tag -1
     expect(state.people[personId]!.flame).toBe(flameBefore + 3);
     expect(state.people[personId]!.trust).toBeCloseTo(exp.trust, 9);
     expect(log).toContainEqual({ type: 'interaction', methodId: 'talk_gentle' });

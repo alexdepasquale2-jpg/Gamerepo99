@@ -70,6 +70,7 @@ export function createInventoryUi(scene: Phaser.Scene, getState: () => SimState 
     else if (stack.item.icon === 'letter') c.add(scene.add.rectangle(cx, cy, 14, 9, col).setStrokeStyle(1, 0x6a5a40));
     else if (stack.item.icon === 'wood') c.add(scene.add.rectangle(cx, cy, 16, 6, col).setStrokeStyle(1, 0x3a2414).setAngle(-20));
     else if (stack.item.icon === 'stone') c.add(scene.add.ellipse(cx, cy, 14, 10, col));
+    else if (stack.item.icon === 'wool') c.add(scene.add.ellipse(cx, cy, 14, 10, col).setStrokeStyle(1, 0x8a8472));
     else if (stack.item.icon === 'herb') c.add(scene.add.triangle(cx, cy, 0, 10, 5, 0, 10, 10, col));
     else c.add(scene.add.rectangle(cx, cy, 12, 12, col).setStrokeStyle(1, 0x1b1612));
     c.add(scene.add.text(x + SLOT - 4, y + SLOT - 3, String(stack.qty), font).setOrigin(1, 1));

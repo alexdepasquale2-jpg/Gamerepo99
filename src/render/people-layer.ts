@@ -9,6 +9,7 @@ import { heroWalkAnim } from './painters/overworld-paint';
 import type { Navigator } from '../sim/map/nav';
 import type { Building } from '../sim/map/interiors';
 import { DOOR_ARRIVE_PX, DOOR_GIVE_UP_MS, scheduledBuilding } from '../sim/map/residency';
+import { strongestMarkTell } from './mark-tells';
 
 type Settlement = { id: string; q: number; r: number };
 
@@ -19,6 +20,9 @@ const tileArgs = (nav: Navigator, pt: { x: number; y: number }): [number, number
 
 export const pretty = (id: string): string =>
   id.split(/[_-]/).filter(Boolean).map((w) => w[0]!.toUpperCase() + w.slice(1)).join(' ');
+
+/** What a villager is called to their face: their given name, else the first word of their id. */
+export const firstName = (p: { id: string; name?: string }): string => p.name?.split(' ')[0] || pretty(p.id).split(' ')[0]!;
 
 export function hash(s: string): number {
   let h = 2166136261;
@@ -38,6 +42,8 @@ export type Person = {
   sprite: Phaser.GameObjects.Sprite;
   shadow?: Phaser.GameObjects.Image;
   label: Phaser.GameObjects.Text;
+  /** Tiny glyph by the name for their strongest mark (absent when unmarked). */
+  tell?: Phaser.GameObjects.Text;
   home: { x: number; y: number };
   target: { x: number; y: number };
   nextPick: number;
@@ -69,6 +75,10 @@ export type PeopleLayer = {
   settle: () => void;
   /** Ids of the villagers actually inside this building right now. */
   insideOf: (buildingId: string) => string[];
+  /** Add bodies for people who joined since the layer was built (births, arrivals); remove the gone. */
+  sync: () => void;
+  /** QA: the mark tell drawn on a person ({ markId, glyph, visible }) or null. */
+  markTell: (id: string) => { markId: string; glyph: string; visible: boolean } | null;
 };
 
 export function createPeopleLayer(
@@ -83,9 +93,10 @@ export function createPeopleLayer(
   const byId = new Map<string, Person>();
   const idx = new Map<string, number>();
   const hasFrame = scene.textures.exists(HERO_TEX) && scene.textures.get(HERO_TEX).has('7');
-  for (const p of session.listPeople()) {
+  const addPerson = (p: { id: string; name?: string; townId?: string }): void => {
+    if (byId.has(p.id)) return;
     const town = settlements.find((s) => s.id === p.townId) ?? settlements[hash(p.id) % settlements.length];
-    if (!town) continue;
+    if (!town) return;
     const n = idx.get(town.id) ?? 0;
     idx.set(town.id, n + 1);
     const foot = tileFootWorld(town.q, town.r);
@@ -101,7 +112,7 @@ export function createPeopleLayer(
     sprite.setTint(TINTS[h % TINTS.length]!);
     sprite.setInteractive({ useHandCursor: true, hitArea: new Phaser.Geom.Rectangle(-4, -6, 24, 24), hitAreaCallback: Phaser.Geom.Rectangle.Contains });
     const label = scene.add
-      .text(0, 0, pretty(p.id).split(' ')[0]!, { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
+      .text(0, 0, firstName(p), { fontFamily: 'Georgia, serif', fontSize: '10px', color: '#f4e6c8', stroke: '#1b1612', strokeThickness: 3 })
       .setOrigin(0.5, 1)
       .setDepth(998_000)
       .setAlpha(0);
@@ -109,7 +120,43 @@ export function createPeopleLayer(
     sprite.on('pointerdown', () => onTap(person));
     people.push(person);
     byId.set(p.id, person);
-  }
+  };
+  for (const p of session.listPeople()) addPerson(p);
+
+  // Marks are readable at a glance: the strongest one rides beside the name, always (outdoors) on.
+  const tellMark = new Map<string, string>();
+  const refreshTell = (person: Person, marks: { markId: string; stacks: number }[] | undefined): void => {
+    const t = strongestMarkTell(marks);
+    if (!t) {
+      person.tell?.destroy();
+      person.tell = undefined;
+      tellMark.delete(person.id);
+      return;
+    }
+    if (!person.tell) {
+      person.tell = scene.add
+        .text(0, 0, '', { fontFamily: 'Georgia, serif', fontSize: '10px', color: t.color, stroke: '#1b1612', strokeThickness: 3 })
+        .setOrigin(0, 1)
+        .setDepth(998_000);
+      person.tell.setVisible(!person.inside);
+    }
+    person.tell.setText(t.glyph).setColor(t.color);
+    tellMark.set(person.id, t.markId);
+  };
+  const refreshTells = (onlyId?: string): void => {
+    for (const v of session.listPeople()) {
+      if (onlyId && v.id !== onlyId) continue;
+      const person = byId.get(v.id);
+      if (person) refreshTell(person, v.marks);
+    }
+  };
+  refreshTells();
+  const offMarks = session.onJuice((jid, payload) => {
+    if (jid !== 'mark.applied') return;
+    const pid = (payload as { personId?: unknown } | undefined)?.personId;
+    if (typeof pid === 'string') refreshTells(pid);
+  });
+  scene.events.once('shutdown', offMarks);
 
   const prompt = scene.add
     .text(0, 0, '…', { fontFamily: 'Georgia, serif', fontSize: '16px', color: '#f2b84b', stroke: '#1b1612', strokeThickness: 3 })
@@ -127,6 +174,7 @@ export function createPeopleLayer(
     p.sprite.setVisible(!hidden);
     p.shadow?.setVisible(!hidden);
     p.label.setVisible(!hidden);
+    p.tell?.setVisible(!hidden);
     if (p.sprite.input) p.sprite.input.enabled = !hidden;
   };
   const goIn = (p: Person, b: Building): void => {
@@ -158,6 +206,30 @@ export function createPeopleLayer(
     people,
     byId,
     headOf,
+    sync() {
+      // People born or arrived since the layer was built get a body; anyone gone loses theirs.
+      const now = session.listPeople();
+      for (const p of now) addPerson(p);
+      const alive = new Set(now.map((p) => p.id));
+      for (let i = people.length - 1; i >= 0; i--) {
+        const p = people[i]!;
+        if (alive.has(p.id)) continue;
+        p.sprite.destroy();
+        p.shadow?.destroy();
+        p.label.destroy();
+        p.tell?.destroy();
+        tellMark.delete(p.id);
+        people.splice(i, 1);
+        byId.delete(p.id);
+      }
+      // Marks shift overnight (fading hope, relapse); redraw every tell.
+      refreshTells();
+    },
+    markTell(id) {
+      const p = byId.get(id);
+      const markId = tellMark.get(id);
+      return p?.tell && markId ? { markId, glyph: p.tell.text, visible: p.tell.visible } : null;
+    },
     freeze: (id) => (frozen = id),
     setSchedule: (fn) => (schedule = fn),
     setResidency(c, h) {
@@ -253,6 +325,8 @@ export function createPeopleLayer(
         const dist = Phaser.Math.Distance.Between(player.x, player.y, s.x, s.y);
         const want = dist < LABEL_NEAR && promptFor !== p ? 1 : 0;
         p.label.setPosition(s.x, s.y - 34).setAlpha(p.label.alpha + (want - p.label.alpha) * 0.15);
+        // Beside the name when it shows, just off the head when it doesn't.
+        p.tell?.setPosition(s.x + 3 + (p.label.width / 2) * p.label.alpha, s.y - 33).setDepth(998_000);
       }
       if (promptFor) {
         const h = headOf(promptFor.id);

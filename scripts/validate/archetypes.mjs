@@ -31,7 +31,7 @@ export function validateArchetypes(data, ctx) {
       }
     }
   }
-  req(m2.length === 3, `M2 needs exactly 3 playable archetypes (have ${m2.length})`);
+  req(m2.length >= 3, `M2 needs at least 3 playable archetypes (have ${m2.length})`);
   for (const id of data['player.json']?.m2ArchetypeIds || []) {
     req(archetypes.has(id), `player.m2ArchetypeIds unknown ${id}`);
     const a = data['archetypes.json'].archetypes.find((x) => x.id === id);

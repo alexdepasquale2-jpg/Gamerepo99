@@ -4,6 +4,9 @@ import { AUTO_SLOT, createSaveSlots } from './save-slots';
 import { openPauseMenu } from './menus/pause-menu';
 import { openSaveMenu } from './menus/save-menu';
 import { openTitleMenu } from './menus/title-menu';
+import { openInhabitantMenu } from './menus/inhabitant-menu';
+import { playableArchetypes, rollArchetype } from '../sim/inhabitant';
+import { loadData } from '../sim/load-data';
 import { openWorldFileMenu } from './menus/world-file-menu';
 import type { MenuHandle } from './menus/dom';
 
@@ -42,15 +45,28 @@ export function runGameFlow(host: GameHost): void {
     refreshStatus();
   }
 
-  function newGame(): void {
-    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId: 'marrow' }) as PlaySession;
-    s.start({ seed: 42, archetypeId: 'marrow' });
+  function newGame(archetypeId: string): void {
+    const s = createPlaySession({ mode: 'play', seed: 42, archetypeId }) as PlaySession;
+    s.start({ seed: 42, archetypeId });
     begin(s);
   }
 
+  function pickInhabitant(): void {
+    const list = playableArchetypes(loadData());
+    open(
+      openInhabitantMenu(list, {
+        onPick: (id) => (menu?.close(), newGame(id)),
+        onRoll: () => (menu?.close(), newGame(rollArchetype(list, Math.random()).id)),
+        onBack: () => (menu?.close(), title()),
+      }),
+    );
+  }
+
   function loadInto(blob: Parameters<PlaySession['loadBlob']>[0]): void {
-    const s = createPlaySession({ mode: 'play', seed: blob.seed, archetypeId: 'marrow' }) as PlaySession;
-    s.start({ seed: blob.seed, archetypeId: 'marrow' });
+    // The saved inhabitant comes back as itself; the archetype here only shapes the throwaway boot.
+    const archetypeId = (blob.sim as { player?: { archetypeId?: string } } | undefined)?.player?.archetypeId ?? 'marrow';
+    const s = createPlaySession({ mode: 'play', seed: blob.seed, archetypeId }) as PlaySession;
+    s.start({ seed: blob.seed, archetypeId });
     s.loadBlob(blob);
     begin(s);
   }
@@ -62,7 +78,7 @@ export function runGameFlow(host: GameHost): void {
     const latest = () => slots.list()[0];
     open(
       openTitleMenu(slots, {
-        onNew: () => (menu?.close(), newGame()),
+        onNew: () => (menu?.close(), pickInhabitant()),
         onContinue: () => {
           const m = latest();
           const r = m ? slots.read(m.slot) : null;

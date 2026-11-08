@@ -9,6 +9,8 @@ export function townNeeds(state: SimState, townId: string) {
     resource: r,
     missing: Math.ceil(ITEMS.deeds.shortageBelow - (stock[r] ?? 0)),
     items: ITEMS.items.filter((i) => i.economyResourceId === r).map((i) => i.name),
+    /** Roadside traders deal in this good, so a wagon can carry it there. */
+    tradeable: ITEMS.items.some((i) => i.economyResourceId === r && ITEMS.market.goods.includes(i.id)),
   }));
   return { shortages, struggling: people.filter((p) => p.flame < 50).slice(0, 3), contact: people[0] };
 }

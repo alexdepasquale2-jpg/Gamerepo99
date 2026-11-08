@@ -23,7 +23,7 @@ import { applySpriteSort, tileFootWorld } from './depth-sort';
 import { walkDelta } from './walk-delta';
 import { HERO_TEX, SHADOW_TEX } from './sheet-frames';
 import { heroWalkAnim } from './painters/overworld-paint';
-import { createPeopleLayer, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
+import { createPeopleLayer, firstName, pretty, tintOf, type PeopleLayer, type Person } from './people-layer';
 import { InteriorRoom, type InteriorEnterData } from './interior-room';
 import { allBuildings, nearestDoor, type Building, type InteriorKind } from '../sim/map/interiors';
 import { deedLabel } from '../sim/play-session/play-session-act';
@@ -34,6 +34,13 @@ import { attachSessionFx } from './spark-fx/session-fx';
 import { isSuccessionOpen } from '../sim/succession';
 import { lanternLit, lightLantern } from '../sim/goods/item-use';
 import { attachOverworldGoods, type OverworldGoods } from './goods/overworld-goods';
+import { getWalkMul, setWalkMul } from '../dev/dev-flags';
+import { attachInhabitantBody, bodyLook, type InhabitantBody } from './inhabitant-body';
+import { blockedDoorLine, canEnterBuilding, walkSpeedMul } from '../sim/embodiment';
+import { collectDawnLines } from '../sim/dawn-lines';
+import { kinStrainOf } from '../sim/social/kin-strain';
+import { featuresIn } from '../sim/map/ladder/features';
+import { labourLeft, workLandHere, type LandTown } from '../sim/land-acts';
 
 const CHUNK_MARGIN = 1;
 const VERB: Record<string, string> = {
@@ -70,11 +77,17 @@ export class OverworldScene extends Phaser.Scene {
   private resting = false;
   private moving = false;
   private goods!: OverworldGoods;
+  private body!: InhabitantBody;
   private buildings: Building[] = [];
   private doorPrompt!: Phaser.GameObjects.Text;
   private inside: Building | null = null;
   private entering = false;
   private room!: InteriorRoom;
+  /** Last walking direction (tiles), so X works the ground in front of you. */
+  private facing = { dx: 0, dy: 1 };
+  private landTowns: LandTown[] = [];
+  /** Drawn ground + prop types per tile of chunks the player tried to work (built on demand, dropped on edit). */
+  private drawnCache = new Map<string, Map<string, { ground?: string; props: string[] }>>();
 
   constructor() {
     super('overworld');
@@ -87,11 +100,28 @@ export class OverworldScene extends Phaser.Scene {
     if (!world) throw new Error('overworld requires booted world');
     this.layout = layoutWorld(world, seed);
     this.source = createStampRasterSource(world, seed, () => this.session.getState()?.tileEdits);
-    this.terrain = createTerrainAccess(this.layout, seed);
+    this.terrain = createTerrainAccess(this.layout, seed, undefined, () => this.session.getState()?.tileEdits);
+    this.landTowns = this.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: world.settlements?.find((s) => s.id === t.id)?.name }));
     this.nav = createNavigator(this.terrain);
 
     this.layer = createChunkLayer(this, this.source, this.layout.settlements.map((t) => ({ ...t, name: world.settlements?.find((s) => s.id === t.id)?.name })));
     this.spawnPlayer();
+    this.body = attachInhabitantBody({
+      scene: this,
+      session: this.session,
+      player: () => this.player,
+      townSpot: (townId, slot) => {
+        const t = this.layout.settlements.find((x) => x.id === townId);
+        if (!t) return null;
+        const f = tileFootWorld(t.q + 2 + slot, t.r + 2);
+        return { x: f.x, y: f.y };
+      },
+      moveTo: (townId) => this.arriveAt(townId),
+      say: (text) => this.say(text),
+    });
+    if (this.session.getState()?.player.bodies?.length) {
+      this.time.delayedCall(8000, () => this.say('B: leave a sibling in this town, call them back, or become one elsewhere.'));
+    }
     this.ring = createActionRing(this);
     this.people = createPeopleLayer(
       this,
@@ -104,7 +134,7 @@ export class OverworldScene extends Phaser.Scene {
     this.buildings = allBuildings(this.layout.settlements);
     this.life = createWorldLife(this, this.layout.settlements);
     this.room = new InteriorRoom(this, {
-      residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: pretty(id).split(' ')[0]!, tint: tintOf(id) })),
+      residents: (buildingId) => this.people.insideOf(buildingId).map((id) => ({ id, name: this.nameOf(id), tint: tintOf(id) })),
       lanternLit: (id) => !!this.session.getState() && lanternLit(this.session.getState()!, id),
       phase: () => this.life.phase(),
       onClosed: (buildingId) => this.onRoomClosed(buildingId),
@@ -136,6 +166,65 @@ export class OverworldScene extends Phaser.Scene {
         this.session.tick();
       },
       // Interiors: enter(spec?) teleports to a door and walks in (instant, for screenshots/e2e).
+      // Dev menu hooks (src/ui/dev-menu.ts).
+      dev: {
+        where: () => {
+          const q = Math.floor(this.player.x / TILE_PX), r = Math.floor(this.player.y / TILE_PX);
+          return { q, r, biome: this.terrain.biome(q, r), tile: this.terrain.edit(q, r), passable: this.terrain.passable(q, r), objects: this.children.list.length, fps: Math.round(this.game.loop.actualFps), day: this.session.snapshot().day };
+        },
+        teleport: (q: number, r: number) => {
+          const at = this.nav.snap(Math.round(q), Math.round(r), 12) ?? { q: Math.round(q), r: Math.round(r) };
+          const f = tileFootWorld(at.q, at.r);
+          this.player.setPosition(f.x, f.y);
+          this.syncChunks(true);
+        },
+        towns: () => this.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r + 2 })),
+        /** Nearest feature of a kind ('farm', 'outcrop', 'stream') or spot type ('camp', 'ruin', ...) within ~400 tiles. */
+        nearest: (what: string) => {
+          const q = Math.floor(this.player.x / TILE_PX), r = Math.floor(this.player.y / TILE_PX), R = 400;
+          let best: { q: number; r: number } | null = null, bd = Infinity;
+          for (const f of featuresIn(this.session.getSeed(), this.layout.settlements, q - R, r - R, q + R, r + R)) {
+            const pts = f.kind === 'stream' ? (f.kind === what ? f.cells : [])
+              : f.kind === 'farm' ? (what === 'farm' ? [f.house] : [])
+              : f.kind === 'outcrop' ? (what === 'outcrop' ? [f.center] : [])
+              : f.type === what ? [f.center] : [];
+            for (const p of pts) { const d = Math.hypot(p.q - q, p.r - r); if (d > 6 && d < bd) { bd = d; best = { q: p.q, r: p.r + 2 }; } }
+          }
+          return best;
+        },
+        speed: { get: getWalkMul, set: setWalkMul },
+        dawn: () => this.session.tick(),
+        /** A real rest at a hearth: fade, dusk + dawn, dawn lines; resolves when the lines start. */
+        rest: () => new Promise<string[]>((done) => this.rest(done)),
+        /** Ring chips on offer for a person (all pages): [{ id, label }]. */
+        chips: (personId: string) => this.chipsFor(personId).map((c) => ({ id: c.id, label: c.label })),
+        /** Open the ring on a person as if E was pressed beside them (walks you there first). */
+        ring: (personId: string) => {
+          const p = this.people.byId.get(personId);
+          if (!p) return false;
+          this.player.setPosition(p.sprite.x + 20, p.sprite.y);
+          this.openRing(p);
+          return this.ring.isOpen();
+        },
+        /** Open a town's noticeboard at a page index or page id. */
+        board: (townId: string, page?: number | string) => this.goods.openBoard(townId, page),
+        /** Put the player at a town (as arriving there). */
+        arriveAt: (townId: string) => this.arriveAt(townId),
+        /** Ground at a tile: current biome, the player's edit there (if any), whether it can be walked. */
+        tile: (q: number, r: number) => ({ biome: this.terrain.biome(q, r), edit: this.terrain.edit(q, r) ?? null, passable: this.terrain.passable(q, r) }),
+        /** Work the land in reach (as pressing X), optionally facing (dx, dy) first. */
+        work: (dx?: number, dy?: number) => { if (dx !== undefined || dy !== undefined) this.facing = { dx: dx ?? 0, dy: dy ?? 0 }; return this.workLand(); },
+        /** Last line shown by say(). */
+        lastSay: () => this.hint.text,
+        /** A person's 0..1 kin strain across the gap (city kin of a villager, or the reverse). */
+        kinStrain: (personId: string) => { const st = this.session.getState(); return st ? kinStrainOf(st, personId) : 0; },
+        give: (itemId: string, n: number) => {
+          const st = this.session.getState();
+          if (!st) return;
+          if (itemId === 'coin') st.player.coin = (st.player.coin ?? 0) + n;
+          else st.inventory = { ...(st.inventory ?? {}), [itemId]: (st.inventory?.[itemId] ?? 0) + n };
+        },
+      },
       interior: {
         residents: (buildingId: string) => this.people.insideOf(buildingId),
         /** Jump the day clock and re-settle who is indoors (instant; for screenshots/e2e). */
@@ -145,6 +234,8 @@ export class OverworldScene extends Phaser.Scene {
         buildings: () => this.buildings.map((b) => ({ id: b.id, townId: b.townId, kind: b.kind, door: { ...b.door } })),
         enter: (spec?: string | { buildingId?: string; townId?: string; kind?: InteriorKind }) => this.debugEnterInterior(spec),
         exit: () => this.room.leave(true),
+        standBesideResident: () => this.room.debugStandBesideResident(),
+        ringChips: () => (this.ring.isOpen() ? this.ringFor : null),
         state: () => this.room.state(),
       },
     };
@@ -153,7 +244,7 @@ export class OverworldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
 
     this.hint = this.add
-      .text(8, 28, 'Walk: WASD · E: talk/gather/enter doors/rest · I: satchel · F: use · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
+      .text(8, 28, 'Walk: WASD · E: talk/gather/enter doors/rest · I: satchel · F: use · X: work the land · L: letters · M: map', { fontFamily: 'Georgia, serif', fontSize: '11px', color: '#c8b898', stroke: '#1b1612', strokeThickness: 3 })
       .setScrollFactor(0)
       .setDepth(1_000_000);
     this.time.delayedCall(7000, () => this.tweens.add({ targets: this.hint, alpha: 0, duration: 800 }));
@@ -180,10 +271,17 @@ export class OverworldScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-I', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-TAB', () => this.goods.toggleInventory());
     this.input.keyboard?.on('keydown-M', () => this.goods.toggleMap());
-    this.input.keyboard?.on('keydown-F', () => { const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true); });
+    this.input.keyboard?.on('keydown-F', () => {
+      // Stone or timber in hand beside ground it can mend: F works the land with it.
+      const held = this.goods.selectedItem();
+      if (held && this.workLand(held)) return;
+      const line = this.goods.useSelected(this.room.active); if (line) this.say(line); this.syncSparkFromSession(true);
+    });
+    this.input.keyboard?.on('keydown-X', () => this.workLand());
     this.input.keyboard?.on('keydown-G', () => { const st = this.session.getState(); if (!this.room.active || !st) return; this.say(lightLantern(st, this.room.state()!.buildingId)); this.room.paintLantern(); });
     this.input.keyboard?.on('keydown-L', () => this.goods.letters());
     this.input.keyboard?.on('keydown-N', () => this.say(toggleSfxMute() ? 'Sound off.' : 'Sound on.'));
+    this.input.keyboard?.on('keydown-B', () => { if (!this.resting && !this.room.active) this.body.openMenu(); });
     // Any press that lands on the world (not a person/chip) closes the ring and does not start a walk.
     this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: unknown[]) => {
       if (over.length > 0 || this.resting) this.uiTap = true;
@@ -222,7 +320,7 @@ export class OverworldScene extends Phaser.Scene {
         dx,
         dy,
         delta,
-        FEEL.overworld.walkTilesPerSec,
+        FEEL.overworld.walkTilesPerSec * getWalkMul() * this.bodyWalkMul(),
         TILE_PX,
       );
       // Substeps prevent tunnelling during a slow frame; slide along banks.
@@ -238,6 +336,7 @@ export class OverworldScene extends Phaser.Scene {
         this.playerShadow.setDepth(this.player.y - 0.5);
       }
       this.playHeroWalk(dx, dy);
+      this.facing = { dx, dy };
     } else if (this.player.anims?.currentAnim?.key?.startsWith('hero-walk')) {
       this.player.play('hero-idle-down', true);
     }
@@ -288,6 +387,7 @@ export class OverworldScene extends Phaser.Scene {
 
   private tickLife(delta: number): void {
     const t = this.time.now;
+    this.body.update();
     this.people.update(t, delta, this.player);
     this.goods.update(t, delta, this.player);
     this.life.update(t, delta, this.player, this.moving);
@@ -304,14 +404,18 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
+  /** A villager's given name as it shows over their head. */
+  private nameOf(id: string): string {
+    return firstName({ id, name: this.session.getState()?.people[id]?.name });
+  }
+
   private chipsFor(id: string): Chip[] {
     return this.session
       .listActions()
       .filter((a) => a.id.endsWith('@' + id))
-      .slice(0, 14)
       .map((a) => {
         const m = a.id.slice(0, a.id.indexOf('@'));
-        return { id: a.id, label: deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
+        return { id: a.id, label: a.label ?? deedLabel(m) ?? VERB[m] ?? pretty(m), savage: a.family === 'savage' };
       });
   }
 
@@ -368,11 +472,59 @@ export class OverworldScene extends Phaser.Scene {
     if (this.goods.meetCaravan(this.player)) return;
     const p = this.people.nearest(this.player);
     const door = this.doorTarget(p);
-    if (door) return this.enterBuilding(door);
+    if (door) {
+      const me = this.session.getState()?.player;
+      // Some bodies don't fit every door (an ogre and a cottage): the body's traits decide, not its name.
+      if (me && !canEnterBuilding(me, door.kind)) return this.say(blockedDoorLine(me));
+      return this.enterBuilding(door);
+    }
     if (p) return this.openRing(p);
     const got = this.goods.gatherNear(this.player);
     if (got) return this.say(got);
     if (this.life.nearestHearth(this.player)) this.rest();
+  }
+
+  /**
+   * X (or F with stone/timber selected): lay stones, clear brush or mend the path in reach (sim/land-acts).
+   * With `itemId`, only acts that use that item; returns false when there was nothing for it to do.
+   */
+  private workLand(itemId?: string): boolean {
+    const st = this.session.getState();
+    if (!st || this.resting || this.room.active || this.goods.overlayOpen() || this.ring.isOpen()) return false;
+    const at = this.nav.tileAt(this.player.x, this.player.y);
+    const view = { ...this.terrain, drawn: (q: number, r: number) => this.drawnAt(q, r) };
+    const res = workLandHere(st, view, at, this.facing, this.landTowns, itemId);
+    // F with an item only takes over when the work happens; otherwise the item is used as usual.
+    if (!res || (itemId && !res.ok)) return false;
+    if (res.ok && res.q !== undefined && res.r !== undefined) {
+      const cx = Math.floor(res.q / CHUNK_SIZE), cy = Math.floor(res.r / CHUNK_SIZE);
+      this.drawnCache.delete(`${cx},${cy}`);
+      this.layer.invalidate([{ cx, cy }]);
+      this.syncChunks(true);
+      this.goods.refreshInventory();
+      this.tweens.add({ targets: this.player, y: this.player.y - 3, duration: 90, yoyo: true, repeat: 1 });
+      const left = labourLeft(st);
+      this.say(left > 0 ? res.line : `${res.line} Your back is done for today.`);
+    } else this.say(res.line);
+    return true;
+  }
+
+  private drawnAt(q: number, r: number): { ground?: string; props: string[] } {
+    const cx = Math.floor(q / CHUNK_SIZE), cy = Math.floor(r / CHUNK_SIZE), key = `${cx},${cy}`;
+    let tiles = this.drawnCache.get(key);
+    if (!tiles) {
+      tiles = new Map();
+      const chunk = this.source.getChunk({ cx, cy });
+      for (const t of chunk.tiles) tiles.set(`${t.q},${t.r}`, { ground: t.biomeId, props: [] });
+      for (const p of chunk.props) {
+        const k = `${p.position.x},${p.position.y}`;
+        const cell = tiles.get(k) ?? { props: [] };
+        cell.props.push(p.type);
+        tiles.set(k, cell);
+      }
+      this.drawnCache.set(key, tiles);
+    }
+    return tiles.get(`${q},${r}`) ?? { props: [] };
   }
 
   /** Door in reach, unless a villager you could talk to is standing closer. */
@@ -470,6 +622,7 @@ export class OverworldScene extends Phaser.Scene {
     const off = this.session.onJuice((jid) => {
       juiced++;
       if (jid === 'person.reignite' || jid === 'site.kindle') reignited = true;
+      if (jid === 'moment.beat') reignited = true; // an authored moment landing gets the warm burst too
     });
     this.session.act(c.id);
     this.goods.onAct();
@@ -484,7 +637,7 @@ export class OverworldScene extends Phaser.Scene {
     this.syncSparkFromSession(true);
     this.tweens.add({ targets: sprite, y: sprite.y - 5, duration: 110, yoyo: true });
     if (juiced === 0) {
-      const who = pretty(id).split(' ')[0];
+      const who = this.nameOf(id);
       const line =
         r?.kind === 'refused'
           ? `${who} turns away.`
@@ -501,7 +654,7 @@ export class OverworldScene extends Phaser.Scene {
     }
   }
 
-  private rest(): void {
+  private rest(onLines?: (lines: string[]) => void): void {
     this.resting = true;
     this.closeRing();
     const cam = this.cameras.main;
@@ -509,8 +662,10 @@ export class OverworldScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.session.tick();
       this.life.dawn();
-      this.people.settle();
+      // Children come of age and newcomers arrive: give them a body, a free house if there is one, then place everyone.
+      this.people.sync();
       this.goods.onDawn();
+      this.people.settle();
       (this.registry.get('autosave') as (() => void) | undefined)?.();
       this.syncSparkFromSession(false);
       this.time.delayedCall(350, () => {
@@ -519,6 +674,11 @@ export class OverworldScene extends Phaser.Scene {
           this.resting = false;
           playSfx('dawn');
           this.say(`Dawn. Day ${this.session.snapshot().day}.`);
+          // Everything systems want you to hear on waking (sim/dawn-lines), one after another.
+          const st = this.session.getState();
+          const lines = st ? collectDawnLines(st) : [];
+          lines.forEach((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
+          onLines?.(lines);
         });
       });
     });
@@ -550,10 +710,33 @@ export class OverworldScene extends Phaser.Scene {
     }
     const frame = this.textures.exists(HERO_TEX) && this.textures.get(HERO_TEX).has('7') ? '7' : undefined;
     this.player = this.add.sprite(foot.x, foot.y, HERO_TEX, frame);
-    this.player.setScale(FEEL.worldScale.artScale);
+    // Size and tint come from the inhabitant's body traits (an ogre looms, a basilisk sibling is small).
+    const look = bodyLook(this.session);
+    this.player.setScale(FEEL.worldScale.artScale * look.scale);
+    if (look.tint !== undefined) this.player.setTint(look.tint);
+    this.playerShadow?.setScale(FEEL.worldScale.artScale * 0.7 * look.scale, FEEL.worldScale.artScale * 0.5 * look.scale);
     applySpriteSort(this.player);
     if (this.anims.exists('hero-idle-down')) this.player.play('hero-idle-down');
     this.followPlayer();
+  }
+
+  private bodyWalkMul(): number {
+    const me = this.session.getState()?.player;
+    return me ? walkSpeedMul(me) : 1;
+  }
+
+  /** Put the player at a town's hearth side (brood switching, road travel, tests). */
+  arriveAt(townId: string): void {
+    const t = this.layout.settlements.find((x) => x.id === townId);
+    if (!t) return;
+    const st = this.session.getState();
+    if (st) st.player.townId = townId;
+    const foot = tileFootWorld(t.q, t.r + 1);
+    this.player.setPosition(foot.x, foot.y);
+    applySpriteSort(this.player);
+    this.playerShadow?.setPosition(foot.x, foot.y - 2).setDepth(foot.y - 0.5);
+    this.cameras.main.centerOn(foot.x, foot.y);
+    this.syncChunks(true);
   }
 
   private followPlayer(): void {
@@ -562,6 +745,13 @@ export class OverworldScene extends Phaser.Scene {
     cam.startFollow(this.player, true, FEEL.overworld.camLerp, FEEL.overworld.camLerp);
     cam.setDeadzone(FEEL.overworld.camDeadzoneX, FEEL.overworld.camDeadzoneY);
     cam.setZoom(FEEL.worldScale.camZoom);
+  }
+
+  /** Rebuild the chunks around the player (after the land itself changed, e.g. a tile edit). */
+  refreshChunks(): void {
+    this.drawnCache.clear();
+    this.layer.invalidate();
+    this.syncChunks(true);
   }
 
   private syncChunks(force: boolean): void {

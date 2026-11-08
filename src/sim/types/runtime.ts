@@ -21,7 +21,18 @@ export type EmbodimentState = {
   footprint?: unknown;
   moveTicksPerTile?: number;
   mode?: string;
+  /** Overworld walk speed multiplier (1 = human pace). */
+  walkSpeedMul?: number;
+  /** Overworld sprite scale relative to a human body. */
+  spriteScale?: number;
+  /** Said when a door's entrance is blocked for this body. */
+  blockedLine?: string;
+  /** Names for each body when mode is multi (bodySlots of them). */
+  bodyNames?: string[];
 };
+
+/** One body of a multi-body inhabitant. `at` is 'with_you' (moves with the player) or the town it waits in. */
+export type BodyState = { id: string; name: string; at: string };
 
 export type Inhabitant = {
   id: string;
@@ -38,6 +49,12 @@ export type Inhabitant = {
   townId?: string;
   x?: number;
   y?: number;
+  /** Where this inhabitant's home hearth is (spark profile home town, else the start town). */
+  homeTownId?: string;
+  /** Multi-body inhabitants only: every body and where it is. */
+  bodies?: BodyState[];
+  /** Multi-body inhabitants only: the body the player controls. */
+  activeBodyId?: string;
 };
 
 export type PersonState = {
@@ -119,6 +136,8 @@ export type SimState = {
   hearthKeepsakes?: Record<string, { day: number; by: string }>;
   /** Per-chunk tile edits ("cx,cy" -> "q,r" -> biomeId); generated tiles are never saved. */
   tileEdits?: import('../map/tile-edits').TileEdits;
+  /** Land the player worked (sim/land-acts): today's labour and a short log for townsfolk to notice. */
+  landWork?: import('../land-acts').LandWork;
   /** Resource node charges: nodeId -> { charges, regrowIn } (positions are re-derived from seed). */
   worldNodes?: Record<string, { charges: number; regrowIn: number }>;
   /** Cargo the player carries for a person: delivered to someone in another town. */
@@ -137,4 +156,8 @@ export type SimState = {
   legacy?: LegacyState;
   /** M5 Task B: patron deals by deal id (saveable). */
   patronDeals?: Record<string, import('../patrons/types').PatronDeal>;
+  /** The world's generated history beats, carried into play (rebuilt from the seed on boot/load). */
+  history?: import('../gen/world-types').HistoryEvent[];
+  /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
+  historyTold?: Record<string, string[]>;
 };

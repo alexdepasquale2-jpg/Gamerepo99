@@ -1,5 +1,5 @@
 /** World file export/import (M5 versioned files). Pure helpers first; DOM below. */
-import { importWorld } from '../../sim/legacy';
+import { importWorld, type Arrival } from '../../sim/legacy';
 import type { PlaySession } from '../../sim';
 import { openMenu, type MenuHandle } from './dom';
 
@@ -17,17 +17,22 @@ export function exportWorldFile(session: PlaySession): ExportedFile | null {
 export function importWorldText(
   session: PlaySession,
   text: string,
-): { ok: true; legends: string[] } | { ok: false; error: string } {
+): { ok: true; legends: string[]; arrival: Arrival } | { ok: false; error: string } {
   let raw: unknown;
   try {
     raw = JSON.parse(text);
   } catch {
     return { ok: false, error: 'That file is not a readable world file.' };
   }
-  const r = importWorld(raw);
+  let r: ReturnType<typeof importWorld>;
+  try {
+    r = importWorld(raw);
+  } catch {
+    return { ok: false, error: 'That world file could not be read; nothing was imported.' };
+  }
   if ('error' in r) return { ok: false, error: r.error };
   session.adoptState(r.state);
-  return { ok: true, legends: r.legends };
+  return { ok: true, legends: r.legends, arrival: r.arrival };
 }
 
 function download(f: ExportedFile): void {
@@ -38,6 +43,25 @@ function download(f: ExportedFile): void {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/** "What came across": the names an imported world carries, shown before the game resumes. */
+export function openArrivalMenu(arrival: Arrival, onDone: () => void): MenuHandle {
+  const done = () => (handle.close(), onDone());
+  const handle = openMenu('What came across', [{ id: 'walk-on', label: 'Walk on', hint: 'Step into the world the file carried', onPick: done }], {
+    id: 'hf-world-arrival',
+    onEscape: done,
+  });
+  const panel = handle.el.querySelector('.hf-panel')!;
+  const list = document.createElement('ul');
+  list.className = 'hf-arrival';
+  for (const line of arrival.lines) {
+    const li = document.createElement('li');
+    li.textContent = line;
+    list.appendChild(li);
+  }
+  panel.insertBefore(list, panel.querySelector('.hf-item'));
+  return handle;
 }
 
 export function openWorldFileMenu(session: PlaySession, io: { onImported: () => void; onBack: () => void }): MenuHandle {
@@ -52,7 +76,9 @@ export function openWorldFileMenu(session: PlaySession, io: { onImported: () => 
     const res = importWorldText(session, await file.text());
     if (res.ok) {
       handle.close();
-      io.onImported();
+      // A world that carried no one needs no ceremony; otherwise say who came across before walking on.
+      if (res.arrival.names.length) openArrivalMenu(res.arrival, io.onImported);
+      else io.onImported();
     } else handle.setNote(res.error);
     input.value = '';
   });

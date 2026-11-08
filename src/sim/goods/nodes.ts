@@ -3,12 +3,12 @@
 import nodesJson from '../../data/world/resource-nodes.json';
 import { deriveRng } from '../rng';
 import { biomeAt } from '../map/terrain';
-import { WORLD_SCALE } from '../map/constants';
+import { featuresIn, FEATURES } from '../map/ladder/features';
 import { pointOnRoad, type MapPoint } from '../map/world-layout';
 import type { SimState } from '../types/runtime';
 import { addItem, itemName } from './inventory';
 
-type Yield = { itemId: string; min: number; max: number };
+type Yield = { itemId: string; min: number; max: number; chance?: number };
 export type NodeKind = { id: string; name: string; yields: Yield[]; charges: number; regrowDawns: number; weight: number; nearTown: number };
 type NodesTable = {
   kinds: NodeKind[];
@@ -25,7 +25,7 @@ function pickKind(seed: number, q: number, r: number, roll: number): string {
     case 'water': return 'fishing_spot';
     case 'forest': return roll < 0.85 ? 'tree' : 'herb_patch';
     case 'hills': return roll < 0.4 ? 'ore_vein' : 'rock';
-    default: return roll < 0.6 ? 'berry_bush' : 'herb_patch';
+    default: return roll < 0.4 ? 'berry_bush' : roll < 0.7 ? 'sheep_flock' : 'herb_patch';
   }
 }
 
@@ -57,17 +57,48 @@ export function placeNodes(seed: number, settlements: Place[], routes: { from: s
       out.push({ id: `${rt.from}>${rt.to}#${i}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
     }
   }
-  // Jittered regional cells fill the wilderness too, not just settlement rings.
-  if (settlements.length) {
-    const q0 = Math.min(...settlements.map((s) => s.q)) - 30, q1 = Math.max(...settlements.map((s) => s.q)) + 30;
-    const r0 = Math.min(...settlements.map((s) => s.r)) - 30, r1 = Math.max(...settlements.map((s) => s.r)) + 30;
-    // Cell grows with the world so the node count (one sprite each, scanned per frame) stays as before.
-    const C = Math.round(9 * WORLD_SCALE);
-    for (let x = Math.floor(q0 / C); x <= Math.ceil(q1 / C); x++) for (let y = Math.floor(r0 / C); y <= Math.ceil(r1 / C); y++) {
-      const rng = deriveRng(seed, 'biome-nodes', x, y);
-      const q = x * C + rng.int(1, C - 1), r = y * C + rng.int(1, C - 1);
-      if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
-      out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
+  return out;
+}
+
+const WILD_CELL = 9;
+/**
+ * Wild nodes are never placed up front. The wilderness is only a seeded probability
+ * (one per 9-tile cell, kind by biome); a node collapses into a real one when something
+ * looks at its tile rect [q0,q1) x [r0,r1). Same cell -> same id, so saved charges
+ * (state.worldNodes) still find it.
+ */
+export function wildNodesIn(seed: number, settlements: Place[], q0: number, r0: number, q1: number, r1: number): WorldNode[] {
+  const out: WorldNode[] = [];
+  if (!settlements.length) return out;
+  const bq0 = Math.min(...settlements.map((s) => s.q)) - 30, bq1 = Math.max(...settlements.map((s) => s.q)) + 30;
+  const br0 = Math.min(...settlements.map((s) => s.r)) - 30, br1 = Math.max(...settlements.map((s) => s.r)) + 30;
+  const C = WILD_CELL;
+  const xa = Math.max(Math.floor(bq0 / C), Math.floor(q0 / C)), xb = Math.min(Math.ceil(bq1 / C), Math.floor((q1 - 1) / C));
+  const ya = Math.max(Math.floor(br0 / C), Math.floor(r0 / C)), yb = Math.min(Math.ceil(br1 / C), Math.floor((r1 - 1) / C));
+  for (let x = xa; x <= xb; x++) for (let y = ya; y <= yb; y++) {
+    const rng = deriveRng(seed, 'biome-nodes', x, y);
+    const q = x * C + rng.int(1, 8), r = y * C + rng.int(1, 8);
+    if (q < q0 || q >= q1 || r < r0 || r >= r1) continue;
+    if (settlements.some((s) => Math.hypot(s.q - q, s.r - r) < 10)) continue;
+    out.push({ id: `wild#${x},${y}`, kindId: pickKind(seed, q, r, rng.next()), q, r });
+  }
+  // Features carry their own resources: ore at outcrops, fish along streams, sheep on farms.
+  // Clip to the same world box as the cell nodes: nothing collapses where the world is never drawn.
+  const fq0 = Math.max(q0, bq0), fr0 = Math.max(r0, br0), fq1 = Math.min(q1, bq1), fr1 = Math.min(r1, br1);
+  if (fq0 >= fq1 || fr0 >= fr1) return out;
+  const inside = (p: { q: number; r: number }) => p.q >= fq0 && p.q < fq1 && p.r >= fr0 && p.r < fr1;
+  for (const f of featuresIn(seed, settlements, fq0, fr0, fq1, fr1)) {
+    if (f.kind === 'outcrop') {
+      const p = { q: f.center.q + 1, r: f.center.r + 2 };
+      if (inside(p)) out.push({ id: `${f.id}#ore`, kindId: f.hills ? 'ore_vein' : 'rock', ...p });
+    } else if (f.kind === 'stream') {
+      f.cells.forEach((c, i) => { const p = { q: c.q + 1, r: c.r }; if (i % FEATURES.stream.fishEvery === 10 && inside(p)) out.push({ id: `${f.id}#fish${i}`, kindId: 'fishing_spot', ...p }); });
+    } else if (f.kind === 'spot') {
+      const kindId = ({ thicket: 'berry_bush', pond: 'fishing_spot', ruin: 'herb_patch', clearing: 'tree', flowers: 'herb_patch', shrine: 'herb_patch' } as Record<string, string>)[f.type];
+      const p = { q: f.center.q + 1, r: f.center.r + 1 };
+      if (kindId && inside(p)) out.push({ id: `${f.id}#${f.type}`, kindId, ...p });
+    } else {
+      f.sheep.forEach((p, i) => { if (inside(p)) out.push({ id: `${f.id}#sheep${i}`, kindId: 'sheep_flock', ...p }); });
     }
   }
   return out;
@@ -89,7 +120,9 @@ export function gatherNode(state: SimState, n: WorldNode): string | null {
   const rng = deriveRng(state.seed, 'gather', n.id, state.day, cur.charges);
   const got: string[] = [];
   for (const y of k.yields) {
+    if (y.chance !== undefined && rng.next() >= y.chance) continue;
     const q = rng.int(y.min, y.max + 1);
+    if (q <= 0) continue;
     addItem(state, y.itemId, q);
     got.push(`+${q} ${itemName(y.itemId)}`);
   }

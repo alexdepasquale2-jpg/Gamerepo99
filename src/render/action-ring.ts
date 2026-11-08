@@ -16,20 +16,35 @@ const SAVAGE = 0xc8664a;
 const DEPTH = 1_000_500;
 const W = 88;
 const H = 24;
+/** Chips per page; past this a "More…" chip pages through the rest. */
+export const RING_PAGE = 8;
+const MORE_ID = '@more';
 
 export function createActionRing(scene: Phaser.Scene): ActionRing {
   let objs: Phaser.GameObjects.GameObject[] = [];
   let current: Chip[] = [];
   let cb: ((c: Chip) => void) | null = null;
   let isOpen = false;
+  let pageIndex = 0;
 
   const api: ActionRing = {
-    open(anchor, chips, pick) {
+    open(anchor, all, pick) {
       api.close();
-      if (!chips.length) return;
+      if (!all.length) return;
+      // Page long chip lists: show RING_PAGE at a time, the last slot steps to the next page.
+      const page = pageOf(all, pageIndex);
+      const chips = page.chips;
       isOpen = true;
       current = chips;
-      cb = pick;
+      cb = (c) => {
+        if (c.id === MORE_ID) {
+          pageIndex = page.next;
+          api.open(anchor, all, pick);
+          return;
+        }
+        pageIndex = 0;
+        pick(c);
+      };
       const per = 3;
       const rows = Math.ceil(chips.length / per);
       chips.forEach((c, i) => {
@@ -58,6 +73,7 @@ export function createActionRing(scene: Phaser.Scene): ActionRing {
       });
     },
     close() {
+      if (!isOpen) pageIndex = 0;
       for (const o of objs) o.destroy();
       objs = [];
       isOpen = false;
@@ -72,4 +88,14 @@ export function createActionRing(scene: Phaser.Scene): ActionRing {
     },
   };
   return api;
+}
+
+/** The chips for one page of a long list, plus a "More…" chip when there are other pages. */
+export function pageOf(all: Chip[], index: number): { chips: Chip[]; next: number } {
+  if (all.length <= RING_PAGE) return { chips: all, next: 0 };
+  const per = RING_PAGE - 1;
+  const pages = Math.ceil(all.length / per);
+  const i = ((index % pages) + pages) % pages;
+  const chips = all.slice(i * per, i * per + per);
+  return { chips: [...chips, { id: MORE_ID, label: `More… ${i + 1}/${pages}`, savage: false }], next: (i + 1) % pages };
 }

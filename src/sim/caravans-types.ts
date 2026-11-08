@@ -45,6 +45,8 @@ export type CaravanMobile = {
   /** Fractional travel already applied before the next dawn. */
   travelCredit?: number;
   coin?: number;
+  /** Goods the player sold aboard that are not the wagon's own cargo (resourceId -> units); unloaded at the next town. */
+  hold?: Record<string, number>;
   /** Set while halted at a town; phaseLeft counts game days remaining in the phase. */
   phase?: CaravanPhase;
   phaseLeft?: number;
