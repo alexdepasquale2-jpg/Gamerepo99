@@ -22,6 +22,8 @@ export type ReactionPickCtx = {
   seed: number;
   state: MethodSimState;
   features: { bakedDynamismLines: boolean };
+  /** This person's 0..1 kin strain across the gap; omitted = derived from state (social/kin-strain). */
+  kinStrain?: number;
 };
 export type ReactionLineResult = {
   lineId: string;
