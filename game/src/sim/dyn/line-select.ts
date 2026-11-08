@@ -8,6 +8,7 @@ import {
   type ReactionPickCtx,
 } from '../method-reactions';
 import { buildStateVector, type PersonStateVector } from './person-vector';
+import { genericVoiceLine, placeBias, placeOf } from './generic-voice';
 import { createRng } from '../rng';
 import { kinStrainOf, STRAINED } from '../social/kin-strain';
 import type { SimState } from '../types/runtime';
@@ -49,6 +50,8 @@ function memoryTags(ctx: ReactionPickCtx): Set<string> {
   for (const m of person?.marks ?? []) tags.add(`mark:${m.markId}`);
   if (person?.woundId) tags.add(`wound:${person.woundId}`);
   if (kinStrainFor(ctx) >= STRAINED) tags.add('kin:strain');
+  const place = placeOf(ctx.state, ctx.personId);
+  if (place) tags.add(`place:${place}`);
   return tags;
 }
 
@@ -116,23 +119,6 @@ function methodCandidates(data: DataTables, personId: string, methodId: string):
   });
 }
 
-/**
- * People without their own fragments (generated villagers) still voice the drift when strained: a
- * generic voice's kin_strain line for this method. Each person keeps one generic voice across methods.
- */
-function genericKinStrainLine(data: DataTables, ctx: ReactionPickCtx): ReactionLineResult | null {
-  const methodTag = `method:${ctx.methodId}`;
-  const voiceOf = (f: Frag): string | undefined => (f.tags ?? []).find((t) => t.startsWith('generic:'));
-  const pool = (data.lineFragments.fragments ?? []).filter(
-    (f) => isKinStrainFrag(f) && (f.tags ?? []).includes(methodTag) && isAloneSlot(f) && !!voiceOf(f) && !!f.text,
-  );
-  if (!pool.length) return null;
-  const voices = [...new Set(pool.map((f) => voiceOf(f)!))].sort();
-  const voice = voices[hashStr(`${ctx.seed}:${ctx.personId}:voice`) % voices.length]!;
-  const picked = pool.filter((f) => voiceOf(f) === voice).sort((a, b) => a.id.localeCompare(b.id))[0]!;
-  return { lineId: picked.id, text: picked.text, source: 'blend' };
-}
-
 function pickWeighted(frags: Frag[], scores: number[], seed: number, personId: string, methodId: string): Frag {
   const rng = createRng((seed ^ hashStr(`${personId}:${methodId}`)) >>> 0);
   let r = rng.next() * scores.reduce((a, b) => a + b, 0);
@@ -166,15 +152,18 @@ function trustOf(ctx: ReactionPickCtx): number {
 export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
   const data = ctx.state.data;
   const cands = methodCandidates(data, ctx.personId, ctx.methodId);
+  const constraints = (data.voiceConstraints.constraints ?? []) as Constraint[];
+  // People without their own fragments (generated villagers) speak in a generic voice (C8, D7).
+  if (!cands.length) {
+    const memory = memoryTags(ctx);
+    const generic = genericVoiceLine(ctx, { memory, strained: memory.has('kin:strain'), constraints });
+    if (generic) return generic;
+  }
   if (!ctx.features.bakedDynamismLines) return fixedFromCandidates(cands, ctx);
 
   const memory = memoryTags(ctx);
   const strained = memory.has('kin:strain');
-  if (!cands.length && strained) {
-    const generic = genericKinStrainLine(data, ctx);
-    if (generic) return generic;
-  }
-  const constraints = (data.voiceConstraints.constraints ?? []) as Constraint[];
+  const place = placeOf(ctx.state, ctx.personId);
   // Kin-strain lines need kin strain (their requiresAny: kin:strain): unstrained people never say them.
   const allowed = strained ? cands : cands.filter((f) => !isKinStrainFrag(f));
   const pool = allowed.filter((f) => !violatesConstraints(f, memory, constraints));
@@ -237,6 +226,8 @@ export function pickFabricReactionLine(ctx: ReactionPickCtx): ReactionLineResult
       scores[i] = Math.max(0.01, scores[i]! * 0.12);
     }
     if (isKinStrainFrag(pickPool[i]!)) scores[i] = scores[i]! + (influence['axis:kin_strain'] ?? 0) * 4;
+    // D7: city, town and village people speak differently (place:<kind> tagged lines).
+    scores[i] = placeBias(pickPool[i]!, place, scores[i]!);
   }
   const picked = pickWeighted(pickPool, scores, ctx.seed, ctx.personId, ctx.methodId);
   return { lineId: picked.id, text: picked.text, source: 'blend' };

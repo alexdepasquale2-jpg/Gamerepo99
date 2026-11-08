@@ -1,0 +1,202 @@
+{
+  "fragments": [
+    {
+      "id": "frag_gen_opener_city_1",
+      "text": "Look,",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_city_2",
+      "text": "Quickly, then.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_city_3",
+      "text": "Mind the hour.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_city_4",
+      "text": "Between us,",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_city_5",
+      "text": "Fine.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_city_6",
+      "text": "Spare me the speech.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:city"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_1",
+      "text": "Right.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_2",
+      "text": "Listen,",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_3",
+      "text": "Honestly,",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_4",
+      "text": "Go on, then.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_5",
+      "text": "Ah, you.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_town_6",
+      "text": "Well,",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:town"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_1",
+      "text": "Well now.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_2",
+      "text": "Ach.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_3",
+      "text": "Hm. Aye.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_4",
+      "text": "Bless you.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_5",
+      "text": "Here, love.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    },
+    {
+      "id": "frag_gen_opener_village_6",
+      "text": "Easy, easy.",
+      "tags": [
+        "generic_piece",
+        "slot:opener",
+        "place:village"
+      ],
+      "weight": 1,
+      "slot": "opener"
+    }
+  ]
+}
