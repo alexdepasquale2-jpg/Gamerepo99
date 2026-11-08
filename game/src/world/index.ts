@@ -1,36 +1,209 @@
 /**
- * WORLD area (stub). Owner: the world agent. Replace everything in src/world/ — keep the three exports.
- * See game/README.md "world".
+ * WORLD area: terrain chunks streamed around the player, settlements and buildings, props, every
+ * interactable world Thing, interiors, the day light and each town's despair palette, and asset loading.
+ * Other areas reach it only through WorldApi (app/contracts.ts). See game/README.md.
  */
-import type Phaser from 'phaser';
-import type { GameContext, WorldApi } from '../app/contracts';
-import { TILE_PX } from '../sim/map/constants';
+import Phaser from 'phaser';
+import type { GameContext, Thing, WorldApi } from '../app/contracts';
+import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import { createTerrainAccess } from '../sim/map/terrain-access';
 import { createNavigator } from '../sim/map/nav';
+import { buildRoads, createStampRasterSource } from '../sim/map/stamp-raster';
+import { lanternLit } from '../sim/goods/item-use';
+import { EXIT_DOOR } from '../sim/contrib/objects';
+import { tileFoot, type Pt } from './depth';
+import { createChunkLayer } from './chunk-layer';
+import { createSettlements } from './settlements';
+import { inTownBox } from './town-spots';
+import { createWorldThings } from './things';
+import { buildRoom, type Room } from './interior';
+import { createDayClock, lightAt, nightAt } from './day';
+import { createLightFx } from './light-fx';
+import { createTownTone } from './town-tone';
+import { setWorldInternals } from './dev';
 
-export function preloadWorldAssets(_scene: Phaser.Scene): void {}
-export function createWorldAssets(_scene: Phaser.Scene): void {}
+export { preloadWorldAssets, createWorldAssets } from './assets';
+
+const POLL_S = 1;
+const LIGHT_RANGE = TILE_PX * 30;
 
 export function attachWorld(ctx: GameContext): WorldApi {
-  const terrain = createTerrainAccess(ctx.layout, ctx.seed, undefined, () => ctx.session.getState()?.tileEdits);
-  const nav = createNavigator(terrain);
-  let phase = 0.3;
-  const foot = (t: { q: number; r: number }) => ({ x: t.q * TILE_PX + TILE_PX / 2, y: t.r * TILE_PX + TILE_PX });
-  const tileOf = (p: { x: number; y: number }) => ({ q: Math.floor(p.x / TILE_PX), r: Math.floor(p.y / TILE_PX) });
-  return {
-    nav,
-    foot,
-    tileOf,
-    passable: (p) => { const t = tileOf(p); return terrain.passable(t.q, t.r); },
-    spawnPoint: (townId) => { const s = ctx.layout.settlements.find((x) => x.id === townId) ?? ctx.layout.settlements[0]!; return foot({ q: s.q, r: s.r + 2 }); },
-    townAt: () => null,
-    things: () => [],
-    refresh: () => {},
-    phase: () => phase,
-    setPhase: (p) => { phase = p; },
-    room: () => null,
-    enterRoom: () => false,
-    leaveRoom: () => {},
-    update: () => {},
+  const scene = ctx.scene;
+  const session = ctx.session;
+  const st = () => session.getState();
+  const world = session.getWorld();
+  if (!world) throw new Error('world area needs a started session');
+  const names = new Map((world.settlements ?? []).map((s) => [s.id, s.name]));
+  const nameOf = (id: string) => names.get(id) ?? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const edits = () => st()?.tileEdits;
+  const roads = buildRoads(ctx.layout);
+  const terrain = createTerrainAccess(ctx.layout, ctx.seed, roads, edits);
+  const source = createStampRasterSource(world, ctx.seed, edits);
+
+  // Ground id of a tile just outside a chunk, so chunk borders and road ribbons carry across.
+  const around = (q: number, r: number): string => {
+    const e = terrain.edit(q, r);
+    if (e) return e;
+    if (roads.has(`${q},${r}`)) return terrain.isBridge(q, r) ? 'road_bridge' : 'road';
+    if (terrain.isDeck(q, r)) return 'bridge_deck';
+    if (terrain.isFord(q, r)) return 'ford';
+    if (terrain.isFerry(q, r)) return 'ferry';
+    return terrain.biome(q, r);
   };
+
+  let room: Room | null = null;
+  let returnTo: Pt | null = null;
+  // The navigator walks the room's floor while inside (it sits on the tile grid far from the map).
+  const passableTile = (q: number, r: number): boolean => (room?.inside(q, r) ? room.walkable(q, r) : terrain.passable(q, r));
+  const nav = createNavigator({ passable: passableTile, stepCost: (q, r) => (room?.inside(q, r) ? 1 : terrain.stepCost(q, r)) });
+
+  const chunks = createChunkLayer(scene, source, around, (q, r) => terrain.natural(q, r), edits);
+  const towns = createSettlements(scene, ctx.layout.settlements);
+  const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn });
+  const clock = createDayClock(0.3);
+  const fx = createLightFx(scene);
+  const townOf = (p: Pt): string | null => {
+    if (room) return room.building.townId;
+    return ctx.layout.settlements.find((t) => inTownBox(t, p))?.id ?? null;
+  };
+  const tone = createTownTone(session, new Map(towns.spots.map((s) => [s.town.id, { x: s.centre.x, y: s.centre.y - 40 }])), () => st()?.player.townId);
+
+  const tileOf = (p: Pt) => nav.tileAt(p.x, p.y);
+  const setOutdoorsVisible = (on: boolean) => { chunks.setVisible(on); towns.setVisible(on); things.setVisible(on); };
+
+  const refresh: WorldApi['refresh'] = (what = 'all') => {
+    const all = what === 'all';
+    if (all || what === 'nodes') things.nodes.refresh();
+    if (all || what === 'chests') things.chests.refresh();
+    if (all || what === 'ground') things.ground.refresh();
+    if (all || what === 'plots') things.plots.refresh();
+    if (all || what === 'edits') chunks.refreshEdits(edits());
+    if (all) { things.facilities.refresh(); things.graves.refresh(); towns.refresh(st(), session.townDespair()); }
+  };
+
+  let lastKey = '';
+  let pending = false;
+  const syncChunks = (p: Pt, force = false): void => {
+    const t = tileOf(p);
+    const key = `${Math.floor(t.q / CHUNK_SIZE)},${Math.floor(t.r / CHUNK_SIZE)}`;
+    if (!force && !pending && key === lastKey) return;
+    lastKey = key;
+    pending = chunks.sync(t.q, t.r, force);
+  };
+
+  const leaveRoom = (): void => {
+    if (!room) return;
+    const left = room.building;
+    room.destroy();
+    room = null;
+    scene.cameras.main.removeBounds();
+    setOutdoorsVisible(true);
+    const back = returnTo ?? left.door;
+    returnTo = null;
+    const t = tileOf(back);
+    const at = passableTile(t.q, t.r) ? null : nav.snap(t.q, t.r, 4);
+    const out = at ? tileFoot(at.q, at.r) : back;
+    ctx.actors?.player.setPos(out);
+    syncChunks(out, true);
+    scene.cameras.main.centerOn(out.x, out.y);
+    scene.cameras.main.fadeIn(200, 20, 16, 12);
+    ctx.events.emit('room-leave', { buildingId: left.id });
+  };
+
+  const enterRoom = (buildingId: string): boolean => {
+    if (room) return false;
+    const b = towns.spots.flatMap((s) => s.buildings).find((x) => x.id === buildingId);
+    if (!b) return false;
+    const s = st();
+    room = buildRoom(scene, b, !!s && lanternLit(s, b.id));
+    returnTo = { x: b.door.x, y: b.door.y + 12 };
+    setOutdoorsVisible(false);
+    ctx.actors?.player.stop();
+    ctx.actors?.player.setPos(room.spawn);
+    // Bounds at least the viewport, centred on the room: the following camera holds still inside.
+    const cam = scene.cameras.main;
+    const vw = cam.width / cam.zoom, vh = cam.height / cam.zoom;
+    const bw = Math.max(vw, room.rect.w), bh = Math.max(vh, room.rect.h);
+    cam.setBounds(room.rect.x + room.rect.w / 2 - bw / 2, room.rect.y + room.rect.h / 2 - bh / 2, bw, bh);
+    cam.centerOn(room.centre.x, room.centre.y);
+    cam.fadeIn(220, 20, 16, 12);
+    ctx.events.emit('room-enter', { buildingId });
+    return true;
+  };
+
+  const api: WorldApi = {
+    nav,
+    foot: (t) => tileFoot(t.q, t.r),
+    tileOf,
+    passable: (p) => { const t = tileOf(p); return passableTile(t.q, t.r); },
+    spawnPoint(townId) {
+      const s = towns.byId.get(townId) ?? towns.spots[0];
+      if (!s) return { x: TILE_PX / 2, y: TILE_PX };
+      const t = tileOf(s.spawn), at = nav.snap(t.q, t.r, 8);
+      return at && (at.q !== t.q || at.r !== t.r) ? tileFoot(at.q, at.r) : s.spawn;
+    },
+    townAt: townOf,
+    things(near, radius, facing) {
+      let out: Thing[];
+      if (room) {
+        const e = room.exit;
+        out = Math.hypot(e.x - near.x, e.y - near.y) <= radius
+          ? [{ key: `door:${EXIT_DOOR}`, kind: 'door', id: EXIT_DOOR, x: e.x, y: e.y, reach: room.exitReach, label: 'Door', target: { kind: 'door', id: EXIT_DOOR } }]
+          : [];
+      } else out = things.things(near, radius, facing);
+      return out.sort((a, b) => Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y));
+    },
+    refresh,
+    phase: () => clock.phase(),
+    setPhase: (p) => clock.set(p),
+    room: () => (room ? { buildingId: room.building.id, townId: room.building.townId, kind: room.building.kind, seats: room.seats.map((p) => ({ ...p })), exit: { ...room.exit } } : null),
+    enterRoom,
+    leaveRoom,
+    update(dt, player) {
+      const time = scene.time.now;
+      clock.advance(dt);
+      tone.update(dt);
+      poll += dt;
+      if (poll > POLL_S) { poll = 0; refresh('all'); }
+      const phase = clock.phase(), night = nightAt(phase), day = lightAt(phase);
+      if (room) {
+        room.update(time);
+        if (poll === 0) { const s = st(); room.setLantern(!!s && lanternLit(s, room.building.id)); }
+        const d = tone.despair()[room.building.townId] ?? 0;
+        const soft: [number, number, number] = [0.55 + day[0] * 0.45, 0.55 + day[1] * 0.45, 0.55 + day[2] * 0.45];
+        fx?.apply({ day: soft, night: night * 0.5, towns: [{ ...room.centre, despair: d, warm: 0 }], lights: [], townR: [4000, 10] });
+        return;
+      }
+      syncChunks(player);
+      things.nodes.update(player);
+      things.facilities.update(time);
+      towns.update(time, player, night);
+      const lights = towns.spots
+        .filter((s) => Math.hypot(s.hearth.x - player.x, s.hearth.y - player.y) < LIGHT_RANGE)
+        .map((s) => ({ x: s.hearth.x, y: s.hearth.y - 8, radius: 170 }));
+      fx?.apply({ day, night, towns: tone.tones(), lights, townR: [320, 260] });
+    },
+  };
+  let poll = 0;
+
+  // First draw: everything from the session, chunks around the start town.
+  refresh('all');
+  const start = api.spawnPoint(session.snapshot().townId);
+  syncChunks(start, true);
+  const offs = [
+    ctx.events.on('act', () => refresh('all')),
+    ctx.events.on('dawn', () => refresh('all')),
+    ctx.events.on('state-replaced', () => { leaveRoom(); tone.snap(); chunks.invalidate(); lastKey = ''; refresh('all'); }),
+  ];
+  scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+    for (const off of offs) off();
+    tone.destroy();
+    room?.destroy();
+    things.destroy();
+    towns.destroy();
+    chunks.destroy();
+    fx?.destroy();
+  });
+  setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf });
+  return api;
 }

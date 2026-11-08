@@ -84,8 +84,11 @@ export interface WorldApi {
   /** Day clock 0..1 (0 dawn, 0.5 noon, 0.75 dusk). */
   phase(): number;
   setPhase(p01: number): void;
-  /** Interiors: the room the player is in, or null outdoors. */
-  room(): { buildingId: string; townId: string; kind: string } | null;
+  /**
+   * Interiors: the room the player is in, or null outdoors. `seats` are where residents stand (foot, world
+   * px; the actors area places them), `exit` is the exit mat (the `door:exit` Thing).
+   */
+  room(): { buildingId: string; townId: string; kind: string; seats: Pt[]; exit: Pt } | null;
   enterRoom(buildingId: string): boolean;
   leaveRoom(): void;
   update(dt: number, player: Pt): void;
