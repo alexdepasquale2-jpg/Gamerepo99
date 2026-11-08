@@ -23,6 +23,10 @@ import { adoptLegacyBuildingFlags } from '../sim/map/building-ids';
 import { createDayClock, lightAt, nightAt } from './day';
 import { createLightFx } from './light-fx';
 import { createTownTone } from './town-tone';
+import { createSeasonFx } from './season-fx';
+import { createRoadWear } from './road-wear';
+import { createWarSigns } from './war-signs';
+import { censusWorld } from './visual-census';
 import { setWorldInternals } from './dev';
 import { attachLinger } from './linger';
 
@@ -66,6 +70,9 @@ export function attachWorld(ctx: GameContext): WorldApi {
   const things = createWorldThings({ scene, getState: st, seed: ctx.seed, layout: ctx.layout, towns: towns.spots, nameOf, terrain, drawn: chunks.drawn, propsNear: chunks.propsNear, roadPoint: nav.roadPoint });
   const clock = createDayClock(0.3);
   const fx = createLightFx(scene);
+  const seasons = createSeasonFx(scene, () => st()?.day ?? 1, ctx.seed);
+  const roadWear = createRoadWear({ scene, getState: st, layout: ctx.layout, terrain, roadPoint: nav.roadPoint });
+  const war = createWarSigns(scene, st, towns.spots);
   const townOf = (p: Pt): string | null => {
     if (room) return room.building.townId;
     return ctx.layout.settlements.find((t) => inTownBox(t, p))?.id ?? null;
@@ -82,7 +89,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     if (all || what === 'ground') things.ground.refresh();
     if (all || what === 'plots') things.plots.refresh();
     if (all || what === 'edits') chunks.refreshEdits(edits());
-    if (all) { things.facilities.refresh(); things.graves.refresh(); things.work.refresh(); towns.refresh(st(), session.townDespair()); }
+    if (all) { things.facilities.refresh(); things.graves.refresh(); things.work.refresh(); things.stores.refresh(); towns.refresh(st(), session.townDespair()); }
   };
 
   let lastKey = '';
@@ -186,13 +193,18 @@ export function attachWorld(ctx: GameContext): WorldApi {
     room: () => (room ? { buildingId: room.building.id, townId: room.building.townId, kind: room.building.kind, seats: room.seats.map((p) => ({ ...p })), exit: { ...room.exit } } : null),
     enterRoom,
     leaveRoom,
+    storesAt: (townId) => things.stores.at(townId),
     update(dt, player) {
       const time = scene.time.now;
       clock.advance(dt);
       tone.update(dt);
       poll += dt;
-      if (poll > POLL_S) { poll = 0; adoptOnce(); refresh('all'); }
-      const phase = clock.phase(), night = nightAt(phase), day = lightAt(phase);
+      if (poll > POLL_S) { poll = 0; adoptOnce(); refresh('all'); if (!room) censusWorld(scene.cameras.main, things, tone.tones()); }
+      const phase = clock.phase(), night = nightAt(phase), sky = lightAt(phase);
+      // The season tints daylight (winter pale, summer warm) and turns the greenery (light-fx uSeason).
+      const sl = seasons.look();
+      const day: [number, number, number] = [sky[0] * sl.light[0], sky[1] * sl.light[1], sky[2] * sl.light[2]];
+      seasons.update(scene.cameras.main, !!room);
       if (room) {
         room.update(time);
         if (poll === 0) { const s = st(); room.setLantern(!!s && lanternLit(s, room.building.id)); }
@@ -204,12 +216,15 @@ export function attachWorld(ctx: GameContext): WorldApi {
       syncChunks(player);
       things.nodes.update(player);
       things.facilities.update(time);
-      things.work.update();
+      things.work.update(phase);
+      things.stores.update(time / 1000);
+      roadWear.update(scene.cameras.main, true);
+      war.update(time / 1000, scene.cameras.main);
       towns.update(time, player, night);
       const lights = towns.spots
         .filter((s) => Math.hypot(s.hearth.x - player.x, s.hearth.y - player.y) < LIGHT_RANGE)
         .map((s) => ({ x: s.hearth.x, y: s.hearth.y - 8, radius: 170 }));
-      fx?.apply({ day, night, towns: tone.tones(), lights, townR: [320, 260] });
+      fx?.apply({ day, night, towns: tone.tones(), lights, townR: [320, 260], season: sl.season });
     },
   };
   let poll = 0;
@@ -233,8 +248,11 @@ export function attachWorld(ctx: GameContext): WorldApi {
     towns.destroy();
     chunks.destroy();
     fx?.destroy();
+    seasons.destroy();
+    roadWear.destroy();
+    war.destroy();
     offLinger();
   });
-  setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf });
+  setWorldInternals(ctx, { terrain, chunks, things, tone, towns, syncChunks, nameOf, seasons, roadWear, war });
   return api;
 }

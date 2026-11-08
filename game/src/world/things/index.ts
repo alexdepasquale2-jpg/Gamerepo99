@@ -30,6 +30,7 @@ import { createGraves, type GravesLayer } from './graves';
 import { stallThings } from './stalls';
 import { createPiles } from './piles';
 import { createWorkSpots, type WorkSpotsLayer } from './work-spots';
+import { createStores, type StoresLayer } from './stores';
 import type { MapPoint } from '../../sim/map/world-layout';
 
 /** What a `tile:<q>,<r>` Thing carries: the faced workable tile and everything sim/land-acts needs to work it. */
@@ -52,6 +53,8 @@ export type WorldThings = {
   nodes: NodesLayer; facilities: FacilitiesLayer; chests: ChestsLayer; ground: GroundLayer; plots: PlotsLayer; graves: GravesLayer;
   /** Where people are at work today (sim/tasks): hold E there to help. */
   work: WorkSpotsLayer;
+  /** The towns' granary, storehouse and yard heaps (civic/town-stores), and crows over spoiled food. */
+  stores: StoresLayer;
   things(near: Pt, radius: number, facing?: { dx: number; dy: number }): Thing[];
   /** The tile Thing in front of a point (null when nothing there can be worked). */
   tileThing(at: Pt, facing: { dx: number; dy: number }): Thing | null;
@@ -83,6 +86,7 @@ export function createWorldThings(o: {
   const graves = createGraves(scene, getState, (townId, n) => byTown.get(townId)?.grave(n));
   const piles = createPiles(scene, getState, o.towns); // heavy goods to carry (sim/carry)
   const work = createWorkSpots({ scene, getState, layout: o.layout, towns: o.towns, ...(o.roadPoint ? { roadPoint: o.roadPoint } : {}) });
+  const stores = createStores({ scene, getState, towns: o.towns, terrain: o.terrain, drawn: o.drawn });
   const landTowns: LandTown[] = o.layout.settlements.map((t) => ({ id: t.id, q: t.q, r: t.r, name: o.nameOf(t.id) }));
   const view: LandView = { ...o.terrain, drawn: o.drawn };
 
@@ -159,9 +163,9 @@ export function createWorldThings(o: {
     return null;
   };
 
-  const all = [nodes, facilities, chests, ground, plots, graves, piles, work];
+  const all = [nodes, facilities, chests, ground, plots, graves, piles, work, stores];
   return {
-    nodes, facilities, chests, ground, plots, graves, work,
+    nodes, facilities, chests, ground, plots, graves, work, stores,
     things(near, radius, facing) {
       const out = [...fixtures(near, radius), ...nodes.things(near, radius), ...facilities.things(near, radius), ...chests.things(near, radius), ...ground.things(near, radius), ...plots.things(near, radius), ...graves.things(near, radius), ...work.things(near, radius), ...wild(near, radius), ...stallThings(o.towns, near, radius), ...piles.things(near, radius)];
       if (facing) { const t = tileThing(near, facing); if (t) out.push(t); }

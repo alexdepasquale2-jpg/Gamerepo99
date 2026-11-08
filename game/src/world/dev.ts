@@ -17,6 +17,9 @@ import type { ChunkLayer } from './chunk-layer';
 import type { WorldThings } from './things';
 import type { TownToneDriver } from './town-tone';
 import type { Settlements } from './settlements';
+import type { SeasonFx } from './season-fx';
+import type { RoadWear } from './road-wear';
+import type { WarSigns } from './war-signs';
 import { tileFoot, type Pt } from './depth';
 import { loadManifestArt, manifestFrame } from './assets';
 
@@ -28,6 +31,9 @@ export type WorldInternals = {
   towns: Settlements;
   syncChunks: (p: Pt, force?: boolean) => void;
   nameOf: (townId: string) => string;
+  seasons?: SeasonFx;
+  roadWear?: RoadWear;
+  war?: WarSigns;
 };
 const internals = new WeakMap<GameContext, WorldInternals>();
 export const setWorldInternals = (ctx: GameContext, w: WorldInternals): void => void internals.set(ctx, w);
@@ -112,3 +118,16 @@ registerDevHook('artGallery', (ctx) => async (on = true) => {
   galleries.set(ctx, imgs);
   return keys;
 });
+
+/** The season and weather the world is painting today (sim/season). */
+registerDevHook('season', (ctx) => () => internals.get(ctx)?.seasons?.state() ?? null);
+
+/** The towns' store heaps drawn now (world/things/stores): where, how full, lean, crows. */
+registerDevHook('storeHeaps', (ctx) => () => internals.get(ctx)?.things.stores.list() ?? []);
+
+/** Worn and broken road tiles drawn in view now (world/road-wear). */
+registerDevHook('roadWear', (ctx) => () => internals.get(ctx)?.roadWear?.list() ?? []);
+/** War signs drawn now (world/war-signs): which towns fly the banner and why. */
+registerDevHook('warSigns', (ctx) => () => internals.get(ctx)?.war?.list() ?? []);
+/** Where each broken road's barrier stands (world/road-wear). */
+registerDevHook('roadBreaks', (ctx) => () => internals.get(ctx)?.roadWear?.breakPoints() ?? []);
