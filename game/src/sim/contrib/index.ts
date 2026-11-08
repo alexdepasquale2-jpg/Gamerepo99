@@ -30,3 +30,4 @@ import '../realm-away';
 import './land';
 import './craft';
 import './civic-zoning';
+import './clock';

@@ -13,6 +13,7 @@ import { attachUi, trackCanvas } from '../ui';
 import { attachPanels } from '../panels';
 import { attachInteract } from '../interact';
 import '../sim/contrib';
+import { waitDays } from '../sim/contrib/clock';
 
 export const WIDTH = 640;
 export const HEIGHT = 360;
@@ -53,7 +54,12 @@ class WorldScene extends Phaser.Scene {
     ctx.panels = attachPanels(ctx);
     ctx.interact = attachInteract(ctx);
     const offGlue = attachGlue(ctx);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, offGlue);
+    // A wait at the hearth (contrib/clock) is a longer rest: the same fade, the days on the clock.
+    const offWait = ctx.events.on('act', (e) => {
+      const days = waitDays(e.actionId);
+      if (days && e.outcome?.ok) void this.rest(days);
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { offGlue(); offWait(); });
     installDevHooks(ctx);
     const town = session.snapshot().townId;
     ctx.actors.player.setPos(ctx.world.spawnPoint(town));
@@ -77,8 +83,11 @@ class WorldScene extends Phaser.Scene {
     ctx.events.emit('arrive', { townId });
   }
 
-  /** Rest until dawn. The sim runs dusk + dawn in session.tick(); people speak the morning. */
-  private rest(): Promise<void> {
+  /**
+   * Rest until dawn, or wait `days` (one evening, then the clock: whole dawns, or the LOD stretch for a
+   * long one). The sim runs it in session.wait(); people speak the morning.
+   */
+  private rest(days = 1): Promise<void> {
     const ctx = this.ctx;
     if (this.resting) return Promise.resolve();
     this.resting = true;
@@ -88,7 +97,8 @@ class WorldScene extends Phaser.Scene {
     return new Promise((done) => {
       cam.fadeOut(700, 0, 0, 0);
       cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-        ctx.session.tick();
+        if (days > 1) ctx.session.wait(days);
+        else ctx.session.tick();
         const st = ctx.session.getState();
         const lines = st ? collectDawnLines(st) : [];
         ctx.world.setPhase(0.02);
