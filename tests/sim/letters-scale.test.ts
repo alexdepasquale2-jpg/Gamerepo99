@@ -67,5 +67,6 @@ describe('letters dawn output unchanged by lazy graph build (M7 perf)', () => {
     return h;
   }
   it('empty backlog', () => expect(fingerprint(false)).toBe(903839695));
-  it('queued backlog', () => expect(fingerprint(true)).toBe(895593652));
+  // Recaptured when non-42 worlds got their own social web (seed 11 letters now route over seed 11's web).
+  it('queued backlog', () => expect(fingerprint(true)).toBe(3744898476));
 });

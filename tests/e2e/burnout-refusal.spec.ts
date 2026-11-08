@@ -13,6 +13,8 @@ async function boot(page: Page): Promise<string[]> {
   await page.locator('[data-id=new]').click();
   const arch = page.locator('[data-id=arch-marrow]');
   if (await arch.count()) await arch.click();
+  const world = page.locator('[data-id=world-known]');
+  if (await world.count()) await world.click(); // the world you know (seed 42)
   await expect(page.locator('#game canvas')).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => !!(window as any).__hearth, null, { timeout: 20_000 });
   await page.waitForTimeout(800);

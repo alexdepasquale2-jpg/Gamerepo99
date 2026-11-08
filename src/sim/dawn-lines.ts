@@ -15,9 +15,14 @@ export function registerDawnLines(id: string, fn: DawnLineSource): void {
   sources.set(id, fn);
 }
 
+/** This dawn's lines grouped by contributor id (each source runs once). */
+export function collectDawnLinesBySource(state: SimState): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const [id, fn] of sources) out[id] = fn(state).filter((l) => !!l);
+  return out;
+}
+
 /** Every line contributed for this dawn, in registration order. */
 export function collectDawnLines(state: SimState): string[] {
-  const out: string[] = [];
-  for (const fn of sources.values()) out.push(...fn(state).filter((l) => !!l));
-  return out;
+  return Object.values(collectDawnLinesBySource(state)).flat();
 }

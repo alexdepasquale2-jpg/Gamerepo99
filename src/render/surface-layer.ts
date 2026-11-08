@@ -49,7 +49,9 @@ export function attachSurface(
       const pool = folk.filter((id) => id !== excludeId);
       const pick = pool.length ? pool : folk;
       if (!pick.length) return [...townOf.keys()][0];
-      const mid = scene.cameras.main.midPoint;
+      // The scene may be mid-restart (a world file was just imported): no camera, so take the first.
+      const mid = scene.cameras?.main?.midPoint;
+      if (!mid) return pick[0];
       let best = pick[0]!;
       let bd = Infinity;
       for (const id of pick) {

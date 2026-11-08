@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createPlaySession } from '../../src/sim';
 import type { PlaySession } from '../../src/sim/play-session/play-session';
 import { boardPages } from '../../src/sim/board-pages';
-import { collectDawnLines } from '../../src/sim/dawn-lines';
+import { collectDawnLinesBySource } from '../../src/sim/dawn-lines';
 import {
   compactLines, deliveryHearsay, landLines, legitimacyPhrase, powerNews, powerPage, townLabel, type PowerHeard,
 } from '../../src/sim/contrib/power-page';
@@ -148,10 +148,12 @@ describe('power page: live play', () => {
     const s = session();
     const st = s.getState()!;
     const heardLines: string[] = [];
+    const powerLines: string[] = [];
     for (let i = 0; i < 60; i++) {
       s.tick();
-      const got = collectDawnLines(st);
-      heardLines.push(...got.filter((l) => !l.includes(', waiting in ')));
+      const bySource = collectDawnLinesBySource(st);
+      powerLines.push(...(bySource['power-news'] ?? []));
+      heardLines.push(...Object.values(bySource).flat().filter((l) => !l.includes(', waiting in ')));
       for (const t of Object.keys(st.towns ?? {})) {
         const c = page.render(st, t, (id) => id).columns!;
         expect(rows(c[0])).toBeLessThanOrEqual(21);
@@ -165,6 +167,7 @@ describe('power page: live play', () => {
     expect(powerPage(st, st.player.townId!).columns[0].join('\n')).toContain('Word from the road');
     // The claim-jump in the Reach (seed 42) is settled and told at dawn through a named person.
     expect(heardLines.some((l) => /^[A-Z][a-z]+ [A-Z][a-z]+ says the neighbours handed .* plot in The Reach to /.test(l))).toBe(true);
-    expect(new Set(heardLines).size).toBe(heardLines.length);
+    // Power news is told once (other systems, such as retold stories or a recurring happening, may repeat).
+    expect(new Set(powerLines).size).toBe(powerLines.length);
   });
 });
