@@ -77,6 +77,8 @@ export class OverworldScene extends Phaser.Scene {
   private bus = createEventBus();
   private ringFor: string | null = null;
   private resting = false;
+  /** Dawn lines still waiting to be said; a new rest drops the last morning's leftovers. */
+  private dawnSays: Phaser.Time.TimerEvent[] = [];
   private moving = false;
   private goods!: OverworldGoods;
   private body!: InhabitantBody;
@@ -684,6 +686,8 @@ export class OverworldScene extends Phaser.Scene {
 
   private rest(onLines?: (lines: string[]) => void): void {
     this.resting = true;
+    for (const t of this.dawnSays) t.remove();
+    this.dawnSays = [];
     this.closeRing();
     const cam = this.cameras.main;
     cam.fadeOut(700, 8, 8, 20);
@@ -705,7 +709,7 @@ export class OverworldScene extends Phaser.Scene {
           // Everything systems want you to hear on waking (sim/dawn-lines), one after another.
           const st = this.session.getState();
           const lines = st ? collectDawnLines(st) : [];
-          lines.forEach((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
+          this.dawnSays = lines.map((line, i) => this.time.delayedCall(2600 * (i + 1), () => this.say(line)));
           onLines?.(lines);
         });
       });

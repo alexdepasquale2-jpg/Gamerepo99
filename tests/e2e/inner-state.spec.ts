@@ -143,7 +143,8 @@ test.describe('inner state through people', () => {
     await page.evaluate(() => {
       const st = window.__hearth!.session.getState();
       st.player.statusTraits.push('inherited_dependence');
-      st.player.spark = 60;
+      // Low enough that the night's recovery (~+25) stays under the 80 that lets dependence go.
+      st.player.spark = 40;
     });
     const held = await page.evaluate(() => window.__hearth!.dev.rest());
     expect(held.some((l) => / lean on people | reach for a hand/.test(l))).toBe(true);
@@ -154,7 +155,9 @@ test.describe('inner state through people', () => {
     const resolved = await page.evaluate(() => window.__hearth!.dev.rest());
     expect(resolved.some((l) => /stand on your own|steadied overnight/.test(l))).toBe(true);
     await page.waitForTimeout(2800);
-    expect(await page.evaluate(() => (window as unknown as { __hearth: { dev: { lastSay(): string } } }).__hearth.dev.lastSay())).toMatch(/Dawn|own|steadied/);
+    // The say strip shows this morning: the Dawn line or one of this dawn's lines (never yesterday's leftovers).
+    const said = await page.evaluate(() => (window as unknown as { __hearth: { dev: { lastSay(): string } } }).__hearth.dev.lastSay());
+    expect(/^Dawn\./.test(said) || resolved.includes(said), said).toBe(true);
     await page.screenshot({ path: `${OUT}/dependence-dawn.png` });
     expect(errors).toEqual([]);
   });
