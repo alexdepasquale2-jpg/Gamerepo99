@@ -22,6 +22,50 @@
     "ores": "assets/sprites/sheet-ores.png",
     "caravans": "assets/sprites/sheet-caravans.png"
   },
+  "artSheets": {
+    "lpc-terrain": {
+      "path": "assets/vendor/lpc-terrain-atlas.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "LPC Tile Atlas, Liberated Pixel Cup contributors, CC-BY-SA 3.0"
+    },
+    "lpc-base-out": {
+      "path": "assets/vendor/lpc-base-out-atlas.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "LPC Base Out atlas, Liberated Pixel Cup contributors, CC-BY-SA 3.0"
+    },
+    "pebonius-pastoral": {
+      "path": "assets/vendor/pebonius-pastoral-overworld-db32.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "pastoral overworld, pebonius, CC0"
+    },
+    "davidcrybao-animals": {
+      "path": "assets/vendor/davidcrybao-animals-all-sheet.png",
+      "frameW": 16,
+      "frameH": 16,
+      "credit": "16x16 animals sheet, davidcrybao, CC0"
+    },
+    "gaymoo-critters": {
+      "path": "assets/vendor/gaymoo-50-monochrome-critters-32.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "50 monochrome 32x32 critters, gaymoo, CC0 (irregular grid: entries use rect)"
+    },
+    "privateer-pig": {
+      "path": "assets/vendor/natural-privateer-pig-look-32.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "Pig_Look sprite sheet, Natural_Privateer, CC0"
+    },
+    "sheet-caravans": {
+      "path": "assets/sprites/sheet-caravans.png",
+      "frameW": 32,
+      "frameH": 32,
+      "credit": "Prism procedural, CC0 (baked)"
+    }
+  },
   "dataIds": {
     "biomes": [
       "river_margin",
@@ -142,45 +186,45 @@
     },
     "biome.peat_fen": {
       "key": "biome.peat_fen",
-      "sheet": "sheet-biomes",
-      "frame": 8,
+      "sheet": "lpc-terrain",
+      "frame": 868,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Imported pastoral-overworld db32; kit-biomes frame TBD",
+      "status": "ready",
+      "notes": "LPC terrain dark peat mud fill (tile 868)",
       "despairHint": "brown peat, dead reed",
       "aliveHint": "wet moss, alive reed beds"
     },
     "biome.chalk_downs": {
       "key": "biome.chalk_downs",
-      "sheet": "sheet-biomes",
-      "frame": 10,
+      "sheet": "pebonius-pastoral",
+      "frame": 3,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Pastoral pale grass / chalk soil",
+      "status": "ready",
+      "notes": "pastoral short pale turf (tile 3)",
       "despairHint": "bleached chalk, sparse scrub",
       "aliveHint": "short green turf, wildflowers"
     },
     "biome.brine_marsh": {
       "key": "biome.brine_marsh",
-      "sheet": "sheet-biomes",
-      "frame": 12,
+      "sheet": "lpc-terrain",
+      "frame": 802,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Pastoral wet + Tiny Town water tiles",
+      "status": "ready",
+      "notes": "LPC terrain dark wet grass with sedge sprigs (tile 802)",
       "despairHint": "salt crust, grey flats",
       "aliveHint": "tidal green, shimmering pools"
     },
     "biome.slag_verge": {
       "key": "biome.slag_verge",
-      "sheet": "sheet-biomes",
-      "frame": 14,
+      "sheet": "lpc-terrain",
+      "frame": 1011,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Imported Kenney caves/dungeons rock + slag props",
+      "status": "ready",
+      "notes": "LPC terrain blue-grey cinder gravel (tile 1011)",
       "despairHint": "ash slag, cold cinder",
       "aliveHint": "warm cinder, sparse green reclaim"
     },
@@ -321,94 +365,106 @@
     },
     "ore.ore_iron": {
       "key": "ore.ore_iron",
-      "sheet": "sheet-ores",
-      "frame": 0,
+      "sheet": "lpc-terrain",
+      "frame": 826,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Imported Kenney Roguelike Caves & Dungeons \u2014 frame bake TBD"
+      "status": "ready",
+      "notes": "LPC terrain dark iron-grey boulder (tile 826)"
     },
     "ore.ore_copper": {
       "key": "ore.ore_copper",
-      "sheet": "sheet-ores",
-      "frame": 1,
+      "sheet": "lpc-terrain",
+      "frame": 693,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Caves pack ore tint / DCSS supplemental copper"
+      "status": "ready",
+      "notes": "LPC terrain warm brown copper-coloured rocks (tile 693)"
     },
     "ore.ore_slag_tin": {
       "key": "ore.ore_slag_tin",
-      "sheet": "sheet-ores",
-      "frame": 2,
+      "sheet": "lpc-terrain",
+      "frame": 829,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Slag/tin from caves rock + ash tint"
+      "status": "ready",
+      "notes": "LPC terrain scatter of dark cinder pebbles (tile 829)"
     },
     "crop.crop_wheat": {
       "key": "crop.crop_wheat",
-      "sheet": "sheet-crops",
-      "frame": 0,
+      "sheet": "lpc-terrain",
+      "frame": 929,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Imported josehzz FarmingCrops16x16 \u2014 wheat stages",
+      "status": "ready",
+      "notes": "LPC terrain golden wheat field (tile 929)",
       "despairHint": "wilted stalks",
       "aliveHint": "golden heads"
     },
     "crop.crop_barley": {
       "key": "crop.crop_barley",
-      "sheet": "sheet-crops",
-      "frame": 1,
+      "sheet": "lpc-terrain",
+      "frame": 841,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "josehzz rice/corn stand-in until barley row mapped",
+      "status": "ready",
+      "notes": "LPC terrain young green grain stalks (tile 841)",
       "despairHint": "grey chaff",
       "aliveHint": "ripe barley"
     },
     "crop.crop_root": {
       "key": "crop.crop_root",
-      "sheet": "sheet-crops",
-      "frame": 2,
+      "sheet": "lpc-terrain",
+      "frame": 969,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "josehzz potato/cassava",
+      "status": "ready",
+      "notes": "LPC terrain potato plant with tubers (tile 969)",
       "despairHint": "shrivelled tops",
       "aliveHint": "leafy root mash"
     },
     "crop.crop_reed": {
       "key": "crop.crop_reed",
-      "sheet": "sheet-crops",
-      "frame": 3,
+      "sheet": "lpc-terrain",
+      "frame": 954,
+      "rect": [
+        832,
+        928,
+        32,
+        64
+      ],
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "No reed in josehzz \u2014 pastoral wet prop / Tiny Town reed until dedicated",
+      "status": "ready",
+      "notes": "LPC terrain bulrush clump, two tiles tall (954 + 986)",
       "despairHint": "broken stems",
       "aliveHint": "tall green reed"
     },
     "crop.crop_flax": {
       "key": "crop.crop_flax",
-      "sheet": "sheet-crops",
-      "frame": 4,
+      "sheet": "lpc-terrain",
+      "frame": 842,
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "No flax in josehzz \u2014 sunflower/blue flower stand-in",
+      "status": "ready",
+      "notes": "LPC terrain upright green fibre stalks (tile 842); no blue flax bloom in the packs",
       "despairHint": "dry fibre",
       "aliveHint": "blue flax bloom"
     },
     "cargo.food_grain": {
       "key": "cargo.food_grain",
-      "sheet": "josehzz-farming-crops",
-      "frame": 0,
+      "sheet": "lpc-base-out",
+      "frame": 683,
+      "rect": [
+        352,
+        648,
+        64,
+        88
+      ],
       "variant": "palette",
       "heading": "none",
-      "status": "stub",
-      "notes": "Resource pile; field art uses crop.* keys"
+      "status": "ready",
+      "notes": "LPC base hay and grain heap (683-684, 715-716)"
     },
     "cargo.timber": {
       "key": "cargo.timber",
@@ -421,27 +477,30 @@
     },
     "cargo.wool": {
       "key": "cargo.wool",
-      "sheet": "vendor-jetrel-items",
-      "frame": 0,
+      "sheet": "lpc-base-out",
+      "frame": 399,
       "variant": "palette",
       "heading": "none",
-      "status": "stub"
+      "status": "ready",
+      "notes": "LPC base pale lumpy bale read as fleece (tile 399); no wool sprite in the packs"
     },
     "cargo.fuel_cord": {
       "key": "cargo.fuel_cord",
-      "sheet": "vendor-jetrel-items",
-      "frame": 1,
+      "sheet": "lpc-terrain",
+      "frame": 599,
       "variant": "palette",
       "heading": "none",
-      "status": "stub"
+      "status": "ready",
+      "notes": "LPC terrain sawn stump with rings, cut fuel wood (tile 599)"
     },
     "cargo.coin": {
       "key": "cargo.coin",
-      "sheet": "vendor-jetrel-items",
-      "frame": 2,
+      "sheet": "lpc-base-out",
+      "frame": 383,
       "variant": "palette",
       "heading": "none",
-      "status": "stub"
+      "status": "ready",
+      "notes": "LPC base purse sign (tile 383)"
     },
     "caravan.carter": {
       "key": "caravan.carter",
@@ -454,12 +513,22 @@
     },
     "caravan.caravaner": {
       "key": "caravan.caravaner",
-      "sheet": "kenney-tiny-town",
-      "frame": 57,
+      "sheet": "sheet-caravans",
+      "frame": 8,
+      "frames": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
       "variant": "palette",
       "heading": "8",
-      "status": "stub",
-      "notes": "multi-cart wagon stub"
+      "status": "ready",
+      "notes": "Prism pack mule, 8-way N..NW (sheet-caravans row 1); same beast as caravan.mount until a multi-cart sheet exists"
     },
     "caravan.guild": {
       "key": "caravan.guild",
@@ -581,75 +650,92 @@
     },
     "fauna.rabbit": {
       "key": "fauna.rabbit",
-      "sheet": "sheet-fauna",
-      "frame": 0,
+      "sheet": "davidcrybao-animals",
+      "frame": 57,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "Imported gaymoo 50 monochrome 32\u00d732; recolor for warmth"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao white rabbit, facing out (16px frame 57)"
     },
     "fauna.deer": {
       "key": "fauna.deer",
-      "sheet": "sheet-fauna",
-      "frame": 1,
+      "sheet": "davidcrybao-animals",
+      "frame": 2,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "Imported AndHeGames more-creatures-32"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao deer, side view (16px frame 2)"
     },
     "fauna.bird": {
       "key": "fauna.bird",
-      "sheet": "sheet-fauna",
-      "frame": 2,
+      "sheet": "davidcrybao-animals",
+      "frame": 89,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "Imported davidcrybao all-sheet"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao small bird (16px frame 89)"
     },
     "fauna.pig": {
       "key": "fauna.pig",
-      "sheet": "sheet-fauna",
-      "frame": 3,
+      "sheet": "privateer-pig",
+      "frame": 0,
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "Imported Pig_Look 32\u00d732 anim sheet"
+      "heading": "none",
+      "status": "ready",
+      "notes": "Natural_Privateer pig, 32px, frames 0-8 snuffle cycle"
     },
     "fauna.fox": {
       "key": "fauna.fox",
-      "sheet": "sheet-fauna",
-      "frame": 4,
+      "sheet": "gaymoo-critters",
+      "frame": 33,
+      "rect": [
+        110,
+        143,
+        30,
+        34
+      ],
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "AndHeGames / gaymoo recolor"
+      "heading": "none",
+      "status": "ready",
+      "notes": "gaymoo fox-like critter with brush tail (rect; irregular grid)"
     },
     "fauna.fish": {
       "key": "fauna.fish",
-      "sheet": "sheet-fauna",
-      "frame": 5,
+      "sheet": "davidcrybao-animals",
+      "frame": 40,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "davidcrybao water critters"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao fish (16px frame 40)"
     },
     "fauna.heron": {
       "key": "fauna.heron",
-      "sheet": "sheet-fauna",
-      "frame": 6,
+      "sheet": "davidcrybao-animals",
+      "frame": 87,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "davidcrybao tall wader stand-in; dedicated heron TBD"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao tall white wading bird (16px frame 87)"
     },
     "fauna.rat": {
       "key": "fauna.rat",
-      "sheet": "sheet-fauna",
-      "frame": 7,
+      "sheet": "davidcrybao-animals",
+      "frame": 9,
       "variant": "palette",
-      "heading": "4",
-      "status": "stub",
-      "notes": "gaymoo / sardonic grey-roguelike rat"
+      "heading": "none",
+      "status": "ready",
+      "notes": "davidcrybao rat, side view (16px frame 9)"
     }
   }
 }
