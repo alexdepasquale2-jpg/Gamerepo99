@@ -5,11 +5,10 @@
  * Lines are the fallbacks in data/dialogue/surface-fallbacks.json (food_starve, food_short, food_eased).
  */
 import { prettyTownId } from '../map/districts';
-import fallbacks from '../../data/dialogue/surface-fallbacks.json';
 import { registerDawnLines } from '../dawn-lines';
 import { registerDawnTick } from '../dawn-ticks';
 import { FOOD_RES, foodCover, foodShortToday, isShortOf } from '../economy/food-stock';
-import { deriveRng } from '../rng';
+import { asClause, fallbackLine } from '../fallback-lines';
 import type { SimState } from '../types/runtime';
 
 type Word = 'starve' | 'short' | 'ok';
@@ -19,7 +18,6 @@ type FoodWord = { day: number; now: Record<string, Word>; say: Record<string, Ke
 
 /** While a town stays short, it is said again after this many dawns. */
 const SHORT_REPEAT_DAYS = 3;
-const LINES = (fallbacks as { lines: Record<string, string[]> }).lines;
 const DEFAULT: Record<string, string> = {
   food_starve: 'the larders are bare, and folk went to bed hungry.',
   food_short: "there's only {days} of food left in the stores.",
@@ -53,10 +51,10 @@ function speaker(state: SimState, townId: string, word: Word): string | undefine
   return folk[0]?.[1].name;
 }
 
+/** The word as a clause ("the larders are bare..."), from the key's grammar seeded per save, day and town. */
 function line(state: SimState, key: string, townId: string, slots: Record<string, string>): string {
-  const pool = LINES[key]?.length ? LINES[key]! : [DEFAULT[key]!];
-  const text = pool[deriveRng(state.seed, key, state.day, townId).int(0, pool.length)]!;
-  return text.replace(/\{(\w+)\}/g, (_, k: string) => slots[k] ?? '');
+  const text = fallbackLine(key, `${state.seed}|${state.day}|${townId}`, slots);
+  return text ? asClause(text) : DEFAULT[key]!.replace(/\{(\w+)\}/g, (_, k: string) => slots[k] ?? '');
 }
 
 /** This dawn's food news, for where you stand and then your home town. */

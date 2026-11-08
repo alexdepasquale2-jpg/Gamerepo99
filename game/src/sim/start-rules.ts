@@ -17,10 +17,10 @@
  * data/dialogue/surface-fallbacks.json under start.<tag> and start.<tag>.self). Pure and deterministic.
  */
 import townsJson from '../data/world/towns.json';
-import fallbackJson from '../data/dialogue/surface-fallbacks.json';
 import type { FabricWorld } from './gen/world';
 import { jobOf } from './goods/jobs';
-import { districtOfTown } from './map/districts';
+import { districtOfTown, prettyTownId } from './map/districts';
+import { fallbackLine } from './fallback-lines';
 import { placeSettlements, settlementKind, type SettlementKind } from './map/world-layout';
 import { biomeAt, type Biome } from './map/terrain';
 import { pushJuice } from './packets';
@@ -112,16 +112,7 @@ export function resolveStartTown(rule: StartRule | undefined, world: FabricWorld
 
 // ---------- the first spoken moment ----------
 
-const LINES = (fallbackJson as { lines: Record<string, string[]> }).lines;
 const FLAG = 'startMoment';
-
-function pick(key: string, salt: string): string | undefined {
-  const pool = LINES[key];
-  if (!pool?.length) return undefined;
-  let h = 0;
-  for (const c of salt) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return pool[h % pool.length];
-}
 
 /** Who greets this body: someone in its town the rule prefers (by tag, then by trade), else the first by id. */
 function greeter(state: SimState, rule: StartRule): string | undefined {
@@ -138,11 +129,12 @@ export function maybeFirstMoment(state: SimState): void {
   state.flags[FLAG] = state.day;
   const salt = `${state.seed}:${state.player.townId}`;
   const who = greeter(state, rule);
-  const said = pick(`start.${rule.tag}`, salt);
-  if (who && said) {
-    const name = (state.people[who]?.name ?? '').split(' ')[0] ?? '';
-    pushJuice(state, 'moment.beat', { personId: who, line: said.replace(/\{name\}/g, name), momentId: `start.${rule.tag}` });
-  }
-  const self = pick(`start.${rule.tag}.self`, salt);
+  // The greeter's name and town fill any {name}/{town} a start grammar (or a shared rule it uses) asks for.
+  const name = who ? (state.people[who]?.name ?? '').split(' ')[0] : undefined;
+  const slots = { name: name || undefined, town: prettyTownId(state.player.townId) };
+  const said = fallbackLine(`start.${rule.tag}`, salt, slots);
+  if (who && said) pushJuice(state, 'moment.beat', { personId: who, line: said, momentId: `start.${rule.tag}` });
+  // The inhabitant's own thought: the town, never the greeter's name.
+  const self = fallbackLine(`start.${rule.tag}.self`, salt, { town: slots.town });
   if (self) pushJuice(state, 'moment.beat', { personId: 'player', line: self, momentId: `start.${rule.tag}.self` });
 }
