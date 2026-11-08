@@ -13,3 +13,4 @@ import './power-page';
 import './facilities';
 import './patrons';
 import './stash';
+import './happenings';

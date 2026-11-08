@@ -164,4 +164,6 @@ export type SimState = {
   history?: import('../gen/world-types').HistoryEvent[];
   /** Beat ids each person has already retold to you (personId -> beat ids; saveable). */
   historyTold?: Record<string, string[]>;
+  /** Happenings in force and recently begun (see sim/happenings; saveable). */
+  happenings?: import('../happenings').HappeningsState;
 };

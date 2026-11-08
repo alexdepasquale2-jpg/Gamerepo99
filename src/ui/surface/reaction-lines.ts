@@ -66,11 +66,11 @@ const own =
   };
 
 const nearby =
-  (cue: string, fb: string, tell: Tell): Entry =>
+  (cue: string, fb: string, tell: Tell, text?: (p: P) => string | undefined): Entry =>
   (p, ctx) => {
     const townId = str(p.townId);
     const personId = str(p.personId) ?? ctx.nearbyPersonId?.(townId);
-    return personId ? { kind: 'line', personId, townId, tell, cue, line: pickFallback(fb, personId + fb) } : null;
+    return personId ? { kind: 'line', personId, townId, tell, cue, line: text?.(p) ?? pickFallback(fb, personId + fb) } : null;
   };
 
 /** A town-level line carried by someone in the crowd, not the person the act was about. */
@@ -163,6 +163,7 @@ export const SURFACED: Record<string, Entry> = {
   'stash.stored': own('stash', 'stash_stored', 'none', (p) => str(p.personId)),
   'stash.guard_hired': own('stash', 'stash_guard_hired', 'none', (p) => str(p.personId)),
   'stash.withdrawn': own('stash', 'stash_withdrawn', 'none', (p) => str(p.personId)),
+  'happening.start': nearby('happening', 'happening', 'glance', (p) => str(p.line)),
   'person.reignite': tint,
   'site.kindle': tint,
   // Unsilenced: the world's quieter news, always through someone nearby.

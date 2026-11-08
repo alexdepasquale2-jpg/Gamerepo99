@@ -205,7 +205,8 @@ function asKinPatterns(raw: unknown): KinPattern[] {
   return out;
 }
 
-function pickWeighted<T extends { weight: number }>(rng: Rng, items: T[]): T | undefined {
+/** Weighted pick (negative weights count as 0; all-zero falls back to uniform). */
+export function pickWeighted<T extends { weight: number }>(rng: Rng, items: T[]): T | undefined {
   if (items.length === 0) return undefined;
   const total = items.reduce((n, it) => n + Math.max(0, it.weight), 0);
   if (total <= 0) return items[rng.int(0, items.length)];
