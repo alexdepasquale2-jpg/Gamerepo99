@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-06-interaction-model.md",
+  "bond": {
+    "edge": "player-person",
+    "apply": "bond[player–person] += interaction.bondDelta",
+    "introduceAlso": "bond[player–other] += introduce.otherBondDelta; kin.strain += introduce.kinStrain"
+  },
+  "promise": {
+    "states": ["pending", "kept", "broken"],
+    "make": "create promise[id] status=pending",
+    "keep": "status=kept; emit keptPromise touchScore event",
+    "break": "status=broken; emit brokenPromise touchScore event",
+    "idFromGenerated": "promise_{personId}_{seq}"
+  },
+  "presence": {
+    "path": "presence[person].daysShown",
+    "apply": "daysShown += presenceDelta",
+    "thresholdBonus": "if daysShown >= minPresence and no harm ripple since first show_up, apply presenceThresholdBonus.touch"
+  },
+  "ripples": {
+    "afterResolve": true,
+    "reuseSystemRipples": "systems/ripples.json",
+    "help": {
+      "kinFlame01": 0.02,
+      "kinNeighborsMax": 2,
+      "crossTownChanceRef": "ripples.crossTown.onGenuineGrowthChance",
+      "crossTownPacket": "letter_or_rumor"
+    },
+    "harm": {
+      "path": "hollowness_or_resentment",
+      "relapsePressureOnLinks": true
+    },
+    "cling": {
+      "whenMarksAny": ["dependence"],
+      "sparkDrainRef": "ripples.cling.sparkDrain",
+      "note": "courage bleed — not a spend action"
+    },
+    "town": {
+      "fairTradeOrWorkDespair": -0.01,
+      "breakPromiseCivicDoctrineExposure": 0.02
+    },
+    "assertionsGate": true
+  },
+  "determinism": "same seed + same interaction sequence => same vector; session rng only"
+}

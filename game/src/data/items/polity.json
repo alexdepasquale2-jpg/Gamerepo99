@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "spec": "Light polity layer, planned by towns only (no player verbs yet). techs: a town researches the cheapest available tech once it holds the buildings (needs.buildings = count of finished claims by kind) and prerequisite techs; knowledge accrues from workshops and gifted villagers. mul = production multiplier per trade. creeds: a town that finishes a chapel founds one, chosen from the seed. See PLAN.md, Economy sim phase 8.",
+  "techs": [
+    { "id": "field_rotation", "name": "Field rotation", "cost": 30, "needs": { "buildings": { "farm": 1 } }, "mul": { "farmer": 1.2 } },
+    { "id": "water_wheel", "name": "Water wheel", "cost": 40, "needs": { "buildings": { "mill": 1 } }, "mul": { "miller": 1.25 } },
+    { "id": "bellows", "name": "Bellows", "cost": 40, "needs": { "buildings": { "smithy": 1 } }, "mul": { "smith": 1.25 } },
+    { "id": "loom_frames", "name": "Loom frames", "cost": 30, "needs": { "buildings": { "weavery": 1 } }, "mul": { "weaver": 1.2 } },
+    { "id": "kilns", "name": "Kilns", "cost": 30, "needs": { "buildings": { "pottery": 1 } }, "mul": { "potter": 1.2 } },
+    { "id": "long_saws", "name": "Long saws", "cost": 35, "needs": { "buildings": { "sawmill": 1 } }, "mul": { "woodcutter": 1.2 } },
+    { "id": "masonry", "name": "Masonry", "cost": 25, "needs": { "buildings": { "house": 1 } }, "mul": { "mason": 1.2 } },
+    { "id": "deep_shafts", "name": "Deep shafts", "cost": 50, "needs": { "techs": ["masonry"], "buildings": { "smithy": 1 } }, "mul": { "miner": 1.25 } }
+  ],
+  "creeds": [
+    { "id": "hearth", "name": "The Hearth Way", "birthMul": 1.25 },
+    { "id": "harvest", "name": "The Open Hand", "jobMul": { "farmer": 1.1, "fisher": 1.1 } },
+    { "id": "wayfarers", "name": "The Wayfarers", "safeRoads": true },
+    { "id": "stillness", "name": "The Still Water", "feudDecay": 2 }
+  ]
+}

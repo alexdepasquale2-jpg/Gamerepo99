@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "spec": "Deed chips: catalog interactions playable directly from the overworld action ring. Data only; each routes through resolveInteraction and encodes unspoken weights via catalog tags. Gates: oncePerDay (per person, resets by day number), minTrust, requiresTheirGoods (holding their cargo or a loan). lines: reaction templates ({name}); failLine: shown when the interaction's assertFailIfMarksAny trips; lend: favor_ask hands you one of their work goods tagged itemTagsAny, to return later. Families: the ring groups verbs into these (at most 6 chips per level); a deed names its family, or joins the family whose catalog choiceSet lists it (talk_choices → Speak). short: the chip text (≤16 chars) when label is longer; label stays the tip and the dev.chips label.",
+  "families": [
+    {
+      "id": "speak",
+      "label": "Speak",
+      "choiceSetId": "talk_choices"
+    },
+    {
+      "id": "help",
+      "label": "Help"
+    },
+    {
+      "id": "give",
+      "label": "Give"
+    },
+    {
+      "id": "promise",
+      "label": "Promise"
+    },
+    {
+      "id": "ask",
+      "label": "Ask"
+    },
+    {
+      "id": "deal",
+      "label": "Deal",
+      "aliases": [
+        "hoard",
+        "patron"
+      ]
+    },
+    {
+      "id": "use",
+      "label": "Use",
+      "aliases": [
+        "item"
+      ]
+    },
+    {
+      "id": "work",
+      "label": "Work",
+      "aliases": [
+        "tend",
+        "land",
+        "gather"
+      ]
+    }
+  ],
+  "deeds": [
+    {
+      "id": "talk_gentle",
+      "label": "Speak gently",
+      "short": "Speak gently",
+      "hostMethod": "inspire",
+      "family": "speak"
+    },
+    {
+      "id": "talk_hard",
+      "label": "Speak hard",
+      "short": "Speak hard",
+      "hostMethod": "challenge",
+      "family": "speak"
+    },
+    {
+      "id": "talk_hard_shame",
+      "label": "Shame them",
+      "short": "Shame them",
+      "hostMethod": "shame",
+      "savage": true,
+      "family": "speak"
+    },
+    {
+      "id": "favor_do",
+      "label": "Do a favor",
+      "short": "Do a favor",
+      "hostMethod": "carry_burden",
+      "family": "help"
+    },
+    {
+      "id": "work_alongside",
+      "label": "Work alongside (mend, harvest)",
+      "short": "Work alongside",
+      "hostMethod": "carry_burden",
+      "family": "help"
+    },
+    {
+      "id": "gift_give",
+      "label": "Give a gift",
+      "short": "Give a gift",
+      "hostMethod": "inspire",
+      "family": "give"
+    },
+    {
+      "id": "trade_fair",
+      "label": "Trade fairly",
+      "short": "Trade fairly",
+      "hostMethod": "carry_burden",
+      "family": "give"
+    },
+    {
+      "id": "carry_goods",
+      "label": "Carry goods for them",
+      "short": "Carry goods",
+      "hostMethod": "carry_burden",
+      "family": "help"
+    },
+    {
+      "id": "promise_make",
+      "label": "Make a promise",
+      "short": "Make a promise",
+      "hostMethod": "inspire",
+      "family": "promise"
+    },
+    {
+      "id": "promise_keep",
+      "label": "Keep your promise",
+      "short": "Keep promise",
+      "hostMethod": "inspire",
+      "requiresPendingPromise": true,
+      "family": "promise"
+    },
+    {
+      "id": "promise_break",
+      "label": "Break your promise",
+      "short": "Break promise",
+      "hostMethod": "lie",
+      "requiresPendingPromise": true,
+      "savage": true,
+      "family": "promise"
+    },
+    {
+      "id": "stand_up",
+      "label": "Stand up for them",
+      "short": "Defend them",
+      "hostMethod": "challenge",
+      "family": "help"
+    },
+    {
+      "id": "introduce",
+      "label": "Introduce to someone you met",
+      "short": "Introduce",
+      "hostMethod": "inspire",
+      "requiresOtherPerson": true,
+      "family": "speak"
+    },
+    {
+      "id": "favor_ask",
+      "label": "Ask a favor",
+      "short": "Ask a favor",
+      "hostMethod": "inspire",
+      "oncePerDay": true,
+      "minTrust": 0.25,
+      "lend": {
+        "itemTagsAny": [
+          "work",
+          "craft",
+          "build",
+          "warmth",
+          "trade"
+        ]
+      },
+      "lines": [
+        "{name} brightens. \"Me? Of course I can.\"",
+        "{name} straightens up. \"Glad someone asked.\"",
+        "{name} nods slowly. \"It's good to be needed.\""
+      ],
+      "family": "ask"
+    },
+    {
+      "id": "show_up",
+      "label": "Show up",
+      "short": "Show up",
+      "hostMethod": "inspire",
+      "oncePerDay": true,
+      "lines": [
+        "{name} notices you came. Neither of you says much.",
+        "{name} makes room for you without a word.",
+        "{name} glances over. \"You're here again.\""
+      ],
+      "family": "help"
+    },
+    {
+      "id": "talk_empty_cheer",
+      "label": "Cheer up (empty words)",
+      "short": "Cheer them up",
+      "hostMethod": "lie",
+      "oncePerDay": true,
+      "lines": [
+        "{name} smiles, but it doesn't reach the eyes.",
+        "{name} says \"Sure,\" and looks away.",
+        "{name} nods along. Nothing changes."
+      ],
+      "failLine": "{name} hears how hollow it is and turns away.",
+      "family": "speak"
+    },
+    {
+      "id": "return_item",
+      "label": "Return what's theirs",
+      "short": "Return theirs",
+      "hostMethod": "carry_burden",
+      "requiresTheirGoods": true,
+      "family": "give"
+    }
+  ],
+  "familiesNote": "Ring families in order. speak..deal hold people's verbs (history: ask; stash and patrons: deal through aliases; the held item's person verbs: give). use = the held item's verbs on a thing; work = a thing's own verbs (gather, tend, land acts, animals). Every verb has label (full) and short (chip, <=16)."
+}

@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "id": "enc_ashford_strand",
+      "entries": [
+        {
+          "id": "enc_carter_grain",
+          "weight": 40,
+          "blurb": "A cart of grain waits on the heath.",
+          "effects": [
+            {
+              "target": "town.stock.food_grain",
+              "op": "add",
+              "value": 1,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "encounter.spawn.carter",
+          "tags": [],
+          "heard": "You came past the grain cart? Someone left it for whoever walks by. That was kind."
+        },
+        {
+          "id": "enc_tired_logger",
+          "weight": 30,
+          "blurb": "A logger sits on a stump, not rising.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -1
+            }
+          ],
+          "workHook": "cost_road_labor",
+          "prism": "encounter.spawn.worker",
+          "tags": [],
+          "heard": "The logger on the stump? He sat down after his brother left and hasn’t stood since."
+        },
+        {
+          "id": "enc_kin_letter",
+          "weight": 20,
+          "blurb": "A runner with a damp letter.",
+          "effects": [
+            {
+              "target": "link.packet",
+              "op": "emit_packet",
+              "value": 1
+            }
+          ],
+          "prism": "encounter.spawn.runner",
+          "tags": [],
+          "heard": "A runner came through with a wet letter. Said you passed him on the road."
+        },
+        {
+          "id": "enc_quiet_road",
+          "weight": 49,
+          "blurb": "Only wind in the ash leaves.",
+          "effects": [],
+          "prism": "biome.ambience.wood",
+          "quiet": true,
+          "tags": [
+            "quiet"
+          ]
+        },
+        {
+          "id": "enc_road_thief_ashford_strand",
+          "weight": 0,
+          "attractorId": "att_thief",
+          "blurb": "A figure keeps pace behind you, eyeing your purse.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -2
+            }
+          ],
+          "prism": "encounter.spawn.thief",
+          "tags": [
+            "notoriety"
+          ],
+          "heard": "Somebody followed you in. People talk about what you carry."
+        }
+      ]
+    },
+    {
+      "id": "enc_glare_road",
+      "entries": [
+        {
+          "id": "enc_ore_wagon",
+          "weight": 35,
+          "blurb": "City-bound ore; village dust in its wake.",
+          "effects": [
+            {
+              "target": "doctrine.realDelivery",
+              "op": "add",
+              "value": -0.02,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "route.caravan",
+          "tags": [],
+          "heard": "Ore wagons again. They take the stone and leave us the dust."
+        },
+        {
+          "id": "enc_propaganda_handbill",
+          "weight": 25,
+          "blurb": "A handbill promises prosperity no day back home has matched.",
+          "effects": [
+            {
+              "target": "doctrine.propaganda",
+              "op": "add",
+              "value": 0.05,
+              "doctrineId": "doctrine_reach_progress"
+            }
+          ],
+          "prism": "encounter.spawn.handbill",
+          "tags": [],
+          "heard": "Did you see the handbills? ‘Prosperity.’ Nobody here has seen any."
+        },
+        {
+          "id": "enc_broken_axle",
+          "weight": 20,
+          "blurb": "A caravan axle cracked — supply thins.",
+          "effects": [
+            {
+              "target": "route.condition",
+              "op": "add",
+              "value": -0.15,
+              "routeId": "route_ashford_city_glare"
+            }
+          ],
+          "prism": "route.break",
+          "tags": [
+            "break"
+          ],
+          "heard": "A caravan broke an axle out there. That’ll be thin stores for a week."
+        },
+        {
+          "id": "enc_empty_glare",
+          "weight": 44,
+          "blurb": "White road. No one to meet.",
+          "effects": [
+            {
+              "target": "town.despair",
+              "op": "add",
+              "value": 0.02,
+              "townId": "ashford"
+            }
+          ],
+          "prism": "biome.ambience.glare",
+          "quiet": true,
+          "tags": [
+            "quiet"
+          ]
+        },
+        {
+          "id": "enc_road_thief_glare_road",
+          "weight": 0,
+          "attractorId": "att_thief",
+          "blurb": "A figure keeps pace behind you, eyeing your purse.",
+          "effects": [
+            {
+              "target": "player.spark",
+              "op": "add",
+              "value": -2
+            }
+          ],
+          "prism": "encounter.spawn.thief",
+          "tags": [
+            "notoriety"
+          ],
+          "heard": "Somebody followed you in. People talk about what you carry."
+        }
+      ]
+    }
+  ],
+  "spec": "docs/superpowers/specs/2026-11-06-road-content-design.md"
+}

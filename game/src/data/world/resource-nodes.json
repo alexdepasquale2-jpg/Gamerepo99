@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "spec": "Gatherable world nodes. Placed by seeded worldgen around settlements and along the wilderness between them; deplete on gather and regrow over dawns. verbs = each kind's uses beside Gather (sim/contrib/thing-verbs.ts): {id, label, short, needs? (items held, spent), oncePerDay?, effect: tend (charges back), charge (charges spent), gain, town, spark, thanks, despair, done}.",
+  "kinds": [
+    { "id": "tree", "name": "Tree", "yields": [{"itemId":"wood","min":1,"max":3},{"itemId":"timber","min":1,"max":1,"chance":0.3}], "charges": 3, "regrowDawns": 2, "weight": 5, "nearTown": 0.4, "verbs": [
+      {"id":"plant","label":"Plant a sapling","short":"Plant a sapling","oncePerDay":true,"effect":{"tend":1,"spark":1,"done":"You press a sapling into the ground beside it."}}
+    ] },
+    { "id": "rock", "name": "Rock", "yields": [{"itemId":"stone","min":1,"max":2}], "charges": 3, "regrowDawns": 3, "weight": 3, "nearTown": 0.3, "verbs": [
+      {"id":"clay","label":"Dig for clay at its foot","short":"Dig for clay","effect":{"charge":1,"gain":{"clay":1},"done":"Under the stone the ground is clay. You dig out a lump."}}
+    ] },
+    { "id": "berry_bush", "name": "Berry bush", "yields": [{"itemId":"berries","min":1,"max":3}], "charges": 2, "regrowDawns": 1, "weight": 3, "nearTown": 0.7, "verbs": [
+      {"id":"tend","label":"Tend the bush","short":"Tend the bush","oncePerDay":true,"effect":{"tend":1,"spark":1,"done":"You clear the dead canes. It will fruit again soon."}}
+    ] },
+    { "id": "herb_patch", "name": "Herb patch", "yields": [{"itemId":"herbs","min":1,"max":2}], "charges": 2, "regrowDawns": 2, "weight": 2, "nearTown": 0.2, "verbs": [
+      {"id":"tend","label":"Weed the patch","short":"Weed the patch","oncePerDay":true,"effect":{"tend":1,"spark":1,"done":"You pull the weeds round the herbs."}}
+    ] },
+    { "id": "fishing_spot", "name": "Fishing spot", "yields": [{"itemId":"fish","min":1,"max":2}], "charges": 3, "regrowDawns": 1, "weight": 1, "nearTown": 0.5, "verbs": [
+      {"id":"share","label":"Share the fishing spot","short":"Share the spot","effect":{"charge":1,"town":{"fish":1},"thanks":["food","kin"],"done":"You show {name} where they bite. Fish for the town tonight."}}
+    ] },
+    { "id": "sheep_flock", "name": "Sheep", "yields": [{"itemId":"wool","min":1,"max":2}], "charges": 2, "regrowDawns": 3, "weight": 2, "nearTown": 0.5, "verbs": [
+      {"id":"stray","label":"Return a stray sheep","short":"Return a stray","oncePerDay":true,"effect":{"tend":1,"thanks":["kin"],"despair":-0.01,"done":"You bring a stray back to the flock. {name} waves from the fold."}}
+    ] },
+    { "id": "ore_vein", "name": "Ore vein", "yields": [{"itemId":"ore","min":1,"max":2}], "charges": 2, "regrowDawns": 4, "weight": 1, "nearTown": 0.1, "verbs": [
+      {"id":"shore","label":"Shore up the seam with timber","short":"Shore up seam","needs":{"timber":1},"effect":{"tend":2,"done":"You prop the seam with timber. It will give again."}}
+    ] }
+  ],
+  "placement": {"perTown":10,"townRadiusTiles":[4,11],"perRoadSegment":8,"roadJitterTiles":6}
+}

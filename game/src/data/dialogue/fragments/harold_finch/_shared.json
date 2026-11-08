@@ -1,0 +1,79 @@
+{
+  "fragments": [
+    {
+      "id": "frag_harold_finch_mark_dependence_alone_migration_verbatim",
+      "text": "If you're not here at dawn I stay horizontal.",
+      "tags": [
+        "person:harold_finch",
+        "mark:dependence",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_harold_finch_mark_hollowness_alone_migration_verbatim",
+      "text": "I'm up. Don't celebrate.",
+      "tags": [
+        "person:harold_finch",
+        "mark:hollowness",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_harold_finch_mark_genuine_growth_alone_migration_verbatim",
+      "text": "Mill whistle. I'm answering it.",
+      "tags": [
+        "person:harold_finch",
+        "mark:genuine_growth",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_harold_finch_mark_resentment_alone_migration_verbatim",
+      "text": "You dragged me. My knees kept the receipt.",
+      "tags": [
+        "person:harold_finch",
+        "mark:resentment",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_harold_finch_mark_fragile_hope_alone_migration_verbatim",
+      "text": "One shift. Then we see.",
+      "tags": [
+        "person:harold_finch",
+        "mark:fragile_hope",
+        "slot:alone",
+        "authored_anchor",
+        "migration_verbatim",
+        "reaction:mark"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    }
+  ]
+}

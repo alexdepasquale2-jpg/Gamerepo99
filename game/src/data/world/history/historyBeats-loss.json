@@ -1,0 +1,135 @@
+{
+  "historyBeats": [
+    {
+      "id": "hb_loss_mill_fire",
+      "kind": "loss",
+      "summary": "The mill smoked for a week; bread learned a new taste.",
+      "preconditions": [
+        {
+          "tag": "mill_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.despair",
+          "value": 0.08
+        },
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "mill_fire"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_mill"
+      ],
+      "authoredSeed": false,
+      "townId": null,
+      "arc": "mill_compact"
+    },
+    {
+      "id": "hb_loss_ferry_rope",
+      "kind": "loss",
+      "summary": "A rope gave out mid-crossing; the river kept the rest.",
+      "preconditions": [
+        {
+          "tag": "ferry_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ferry_loss"
+        },
+        {
+          "op": "add",
+          "target": "person.tag",
+          "value": "storm_guilt"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_ferry"
+      ],
+      "authoredSeed": false,
+      "townId": null,
+      "arc": "strand_water"
+    },
+    {
+      "id": "hb_loss_quiet_birth",
+      "kind": "loss",
+      "summary": "The last one did not cry; the cloths stayed folded wrong.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "quiet_birth"
+        }
+      ],
+      "chainsFrom": [],
+      "authoredSeed": false,
+      "townId": null
+    },
+    {
+      "id": "ashford_seed_bakery_cold",
+      "kind": "loss",
+      "summary": "Marta banked the oven and called it practicality.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "bakery_cold"
+        },
+        {
+          "op": "add",
+          "target": "anchor.marta",
+          "value": "apathy"
+        }
+      ],
+      "chainsFrom": [
+        "hb_loss_mill_fire"
+      ],
+      "authoredSeed": true,
+      "townId": "ashford"
+    },
+    {
+      "id": "hb_loss_ladder_slip",
+      "kind": "loss",
+      "summary": "The peat ladder slipped; two kin never climbed back.",
+      "preconditions": [
+        {
+          "tag": "ladder_founded"
+        }
+      ],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "ladder_loss"
+        }
+      ],
+      "chainsFrom": [
+        "hb_founding_ladder"
+      ],
+      "arc": "peat_rise"
+    },
+    {
+      "id": "hb_loss_quota_cart",
+      "kind": "loss",
+      "summary": "A quota cart tipped on the spur; the glare took the cargo and the story.",
+      "preconditions": [],
+      "effects": [
+        {
+          "op": "add",
+          "target": "town.historyTags",
+          "value": "quota_loss"
+        }
+      ],
+      "chainsFrom": [],
+      "arc": "spur_extract"
+    }
+  ]
+}

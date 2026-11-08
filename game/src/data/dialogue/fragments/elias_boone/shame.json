@@ -1,0 +1,375 @@
+{
+  "fragments": [
+    {
+      "id": "frag_elias_boone_shame_alone",
+      "text": "Shame him if you want. I already keep the empty stool warm.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_opener",
+      "text": "Say it to the forge. Louder.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:opener",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "opener",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_middle",
+      "text": "I hear you. He doesn't.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:middle",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "middle",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_closer",
+      "text": "Leave the stool alone.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:closer",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief"
+      ],
+      "weight": 1.0,
+      "slot": "closer",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_shame",
+      "text": "That word fits the missing better than me.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "axis:mark_shame"
+      ],
+      "weight": 0.9,
+      "slot": "alone",
+      "authored_anchor": true,
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound",
+        "mark:hollowness"
+      ]
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_verbatim_mirror",
+      "text": "Shame me for mourning and I'll forge you a quieter mouth.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "authored_anchor",
+        "fallback_mirror",
+        "migration_verbatim"
+      ],
+      "weight": 1.0,
+      "slot": "alone",
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_shame_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. That word already lives in my mouth.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_shame",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:shame",
+        "wound:shame_wound"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_hollowness_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. There's a hole where the answer was.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_hollowness",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:hollowness"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_resentment_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. Keep talking. I'm filing this.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_resentment",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:resentment"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_grief_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. Grief isn't done with me yet.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_grief",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "wound:grief",
+        "mark:grief"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_doctrine_follower_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. The notice says so. I keep the notice.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:doctrine_follower",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:follower"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_doctrine_skeptic_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. I'll need better ink than their oath.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:doctrine_skeptic",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "doctrine:skeptic"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_trust_low_boost",
+      "text": "Shame him if you want. I already keep the empty stool warm. You get the door. Not the soft room.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:trust_low",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_spark_high_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. I've got heat left—use it carefully.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:spark_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_notoriety_high_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. Your name arrived before you. Speak softer.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:notoriety_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "notoriety:high"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_mark_dependence_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. Lean once. Then find your own feet.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:mark_dependence",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "mark:dependence"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_spark_low_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. I'm running on ash. Don't ask for fireworks.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:spark_low",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "spark:low"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_kin_strain_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. Family makes every word heavier.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:kin_strain",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "kin:strain"
+      ],
+      "authored_anchor": true
+    },
+    {
+      "id": "frag_elias_boone_shame_alone_trust_high_boost2",
+      "text": "Shame him if you want. I already keep the empty stool warm. Stay. I'll say the true version.",
+      "tags": [
+        "person:elias_boone",
+        "method:shame",
+        "slot:alone",
+        "axis:trust_high",
+        "dict:forge",
+        "shape:slow",
+        "shape:grief",
+        "authored_anchor",
+        "authored_anchor"
+      ],
+      "weight": 0.85,
+      "slot": "alone",
+      "requiresAny": [
+        "trust:high"
+      ],
+      "authored_anchor": true
+    }
+  ]
+}

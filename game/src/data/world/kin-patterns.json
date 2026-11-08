@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-11-05-fabric-variety-fix.md",
+  "patterns": [
+    {
+      "id": "village_clan",
+      "weight": 2,
+      "description": "Dense kin among early ids; few pen_pals",
+      "treeAttach": "random_earlier",
+      "kindBag": [
+        "kin",
+        "kin",
+        "kin",
+        "friend"
+      ],
+      "extraChordMul": 0.3,
+      "chordKinds": [
+        "kin",
+        "friend"
+      ]
+    },
+    {
+      "id": "road_friends",
+      "weight": 2,
+      "description": "Friend-heavy spanning links",
+      "treeAttach": "previous",
+      "kindBag": [
+        "friend",
+        "friend",
+        "kin",
+        "pen_pal"
+      ],
+      "extraChordMul": 0.6,
+      "chordKinds": [
+        "friend",
+        "pen_pal"
+      ]
+    },
+    {
+      "id": "diaspora_penpal",
+      "weight": 2,
+      "description": "Long thin pen_pal chords across the set",
+      "treeAttach": "random_earlier",
+      "kindBag": [
+        "pen_pal",
+        "friend",
+        "kin"
+      ],
+      "extraChordMul": 0.8,
+      "chordKinds": [
+        "pen_pal",
+        "pen_pal",
+        "friend"
+      ]
+    },
+    {
+      "id": "hub_and_spokes",
+      "weight": 2,
+      "description": "Index 0 is hub; others attach to hub",
+      "treeAttach": "hub",
+      "kindBag": [
+        "kin",
+        "friend",
+        "pen_pal"
+      ],
+      "extraChordMul": 0.4,
+      "chordKinds": [
+        "friend",
+        "pen_pal"
+      ]
+    }
+  ]
+}
