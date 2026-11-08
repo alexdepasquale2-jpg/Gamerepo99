@@ -1,5 +1,6 @@
 /** Cross-town packet emit/deliver along Fabric kin edges. Pure; no Phaser/DOM. */
 
+import { noteUse } from './data-use-people';
 import { chronicleJuice } from './chronicle';
 import type { DataTables } from './load-data';
 import type { PacketState, PersonState, SimState } from './types/runtime';
@@ -101,6 +102,7 @@ export function maybeEmitCrossTownPacket(state: SimState, personId: string, mark
     toTownId: hit.other.townId,
   };
   s.packets.push(packet);
+  noteUse('systems/ripples', 'crossTown');
   pushJuice(s, 'packet.emit', {
     packetId: packet.id,
     fromPersonId: personId,

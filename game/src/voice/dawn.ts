@@ -21,6 +21,8 @@ export function cleanDawnLine(line: string): string {
  * about them, so a neighbour who isn't named carries it; the nearest few take turns.
  */
 export function carryDawnLine(line: string, people: People, turn: number): Beat {
+  // A line in the second person ("You woke by your own hearth...") is how you feel it: your own bubble.
+  if (/^Your?\b/.test(line)) return { personId: 'player', line, tone: 'plain' };
   const town = people.playerTown();
   const named = new Set<string>();
   let opener: { id: string; len: number } | undefined;

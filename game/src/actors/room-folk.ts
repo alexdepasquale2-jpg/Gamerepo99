@@ -2,6 +2,7 @@
  * The people inside the room the player is in: whoever the schedule puts in that building, seated where
  * the world's room says (WorldApi.room().seats), drawn with their outdoor look, named, and actable.
  */
+import { roomGreeting } from '../sim/map/interiors';
 import type Phaser from 'phaser';
 import type { GameContext, Pt, Thing } from '../app/contracts';
 import type { NameLayer } from './name-layer';
@@ -19,6 +20,7 @@ export type RoomFolk = {
 
 export function createRoomFolk(ctx: GameContext, people: PeopleCtl): RoomFolk {
   let seated: Seated[] = [];
+  const visits = new Map<string, number>();
 
   const clear = (): void => {
     for (const s of seated) s.sprite.destroy();
@@ -39,6 +41,11 @@ export function createRoomFolk(ctx: GameContext, people: PeopleCtl): RoomFolk {
       if (look.tint !== 0xffffff) sprite.setTint(look.tint);
       return [{ id, name: names.get(id) ?? id, at: { ...at }, sprite }];
     });
+    // Whoever is in greets you in the town's mood (data/dialogue/interior-lines.json); an empty room is yours to remark on.
+    const visit = visits.get(buildingId) ?? 0;
+    visits.set(buildingId, visit + 1);
+    const hi = roomGreeting(room.kind, ctx.session.townDespair()[room.townId] ?? 0, visit, seated.map((s) => s.id));
+    if (hi) ctx.voice.say(hi.personId, hi.line);
   };
 
   const offs = [

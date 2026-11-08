@@ -4,6 +4,7 @@
  * that is not an unspoken outcome (a theft, a patron's bargain), framed as talk out of the teller's town.
  * Pure, deterministic (deriveRng keyed by outcome, teller and day).
  */
+import { trackedTable } from './data-use-people';
 import comeToPass from '../data/dialogue/fragments/unspoken/come-to-pass.json';
 import table from '../data/dialogue/rumours.json';
 import { happeningTownName } from './happenings';
@@ -11,7 +12,7 @@ import { deriveRng } from './rng';
 import type { SimState } from './types/runtime';
 
 type Table = { titles: string[]; frames: string[]; outcomes: Record<string, string>; fallback: string; kinLabel: string };
-const T = table as Table;
+const T = trackedTable('dialogue/rumours', table as Table, ['outcomes']);
 const FRAGMENTS = (comeToPass as { fragments: { text: string; tags: string[] }[] }).fragments;
 
 const fill = (text: string, slots: Record<string, string>): string => text.replace(/\{(\w+)\}/g, (m, k: string) => slots[k] ?? m);

@@ -5,6 +5,7 @@
  * (SimState.historyTold). Lines are assembled from baked fragments (data/dialogue/history-voice.json)
  * and the beat tables, never generated at runtime. Pure: no Phaser/DOM.
  */
+import { trackedTable } from './data-use-people';
 import voiceJson from '../data/dialogue/history-voice.json';
 import { loadHistoryTables, type HistoryBeat } from './gen/load/load-history';
 import type { HistoryEvent } from './gen/world-types';
@@ -23,13 +24,16 @@ export type HistoryVoice = {
   askTrustDelta: number;
   dawnChance: number;
   openers: { witness: Record<Era, string[]>; hearsay: Record<Era, string[]> };
-  codas: { otherWitness: string[]; kind: Record<string, string[]>; fallback: string[] };
+  /** fallback: words for a beat of a kind with no codas of its own (every authored kind has some today). */
+  codas: { otherWitness: string[]; kind: Record<string, string[]>; fallback?: string[] };
   dawn: string[];
   gists: Record<string, string>;
-  kindGists: Record<string, string>;
+  /** A gist for a beat of this kind with no gist of its own (every authored beat has one today). */
+  kindGists?: Record<string, string>;
 };
 
-export const VOICE = voiceJson as unknown as HistoryVoice;
+// By-key reads of the gist / opener / coda groups count as use (sim/data-use-people).
+export const VOICE = trackedTable('dialogue/history-voice', voiceJson as unknown as HistoryVoice, ['openers', 'codas', 'gists', 'kindGists']);
 
 let beats: Map<string, HistoryBeat> | null = null;
 /** Authored beat row (kind, summary, townId) behind a generated history event. */
@@ -154,7 +158,7 @@ export function buildRetelling(inp: RetellInput): string {
     coda = pick(rng, voice.codas.otherWitness)?.replace('{name}', shortName(inp.people[other]!));
   } else {
     const own = kind ? voice.codas.kind[kind] ?? chronicleCodas(kind) : undefined;
-    coda = pick(rng, own?.length ? own : voice.codas.fallback);
+    coda = pick(rng, own?.length ? own : voice.codas.fallback ?? []);
   }
   return [opener, summary, coda].filter((s) => !!s).join(' ');
 }
@@ -162,7 +166,7 @@ export function buildRetelling(inp: RetellInput): string {
 /** Short noun phrase for a beat ("the week the mill burned"). */
 export function gistOf(beat: HistoryEvent, voice: HistoryVoice = VOICE): string {
   const kind = beatKind(beat);
-  return beat.gist ?? voice.gists[beat.id] ?? (kind ? voice.kindGists[kind] : undefined) ?? 'the old days';
+  return beat.gist ?? voice.gists[beat.id] ?? (kind ? voice.kindGists?.[kind] : undefined) ?? 'the old days';
 }
 
 /** The person tells their next untold beat; it is marked told. Null when they have nothing left to tell. */

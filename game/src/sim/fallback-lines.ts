@@ -6,7 +6,10 @@
  * (state.seed, day, town or person id), so the same state always says the same thing.
  */
 import fallbackJson from '../data/dialogue/surface-fallbacks.json';
+import { noteUse } from './data-use-people';
 import { expandGrammar, isGrammar, type GrammarRules, type LinePool } from './grammar';
+
+const noteRule = (r: string): void => noteUse('dialogue/surface-fallbacks', `rules.${r}`);
 
 type FallbackFile = { talk: Record<string, LinePool>; rules: GrammarRules };
 const FILE = fallbackJson as unknown as FallbackFile;
@@ -21,7 +24,9 @@ export function fallbackLine(key: string | undefined, seed: string, slots: Recor
   if (!pool) return '';
   // A plain list reads as a grammar with one rule-free frame per line, so both kinds skip the same way.
   const g = isGrammar(pool) ? pool : { frames: pool };
-  return expandGrammar(g, FILE.rules, { slots, tags }, `${key}|${seed}`);
+  const line = expandGrammar(g, FILE.rules, { slots, tags }, `${key}|${seed}`, noteRule);
+  if (line) noteUse('dialogue/surface-fallbacks', `talk.${key}`);
+  return line;
 }
 
 /**

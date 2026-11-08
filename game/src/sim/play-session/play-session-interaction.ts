@@ -11,12 +11,15 @@
  *  juice     person.wound (method vs wound chemistry), person.reaction, person.reignite, site.kindle
  */
 
+import { giveProofs, proofFor, showProof } from '../proofs';
+import { applyRipples } from '../ripples';
 import { recordActBond } from '../legacy/bonds';
 import type { DataTables } from '../load-data';
 import { actMuls, refuseMethod, rollMethodMark, selectReactionLine, type MethodSimState } from '../methods';
 import { noteActToday } from '../embodiment';
 import { maybeEmitCrossTownPacket, pushJuice } from '../packets';
 import { resolveInteraction, type CompatRuntime } from '../interaction';
+import { noteUse } from '../data-use-people';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { applyDoctrineAct } from '../doctrine-tick';
 import { fireNotorietyEvent } from '../hoard/events';
@@ -108,7 +111,13 @@ export function actInteraction(
   const muls = actMuls(s, methodId);
   // A happening in the person's town can blunt a method for the day (e.g. the market ghost and inspire).
   muls.powerMul *= happeningMethodMul(s, person.townId, methodId);
+  // A proof in your hands that answers their wound makes a kind word land harder (sim/proofs).
+  const proof = proofFor(s, personId, methodId);
+  if (proof) muls.powerMul *= proof.inspireBonusMul ?? 1;
   const res = resolveInteraction(rt, interactionId, personId, muls);
+  noteUse('systems/interactions/catalog', interactionId);
+  if (data.peopleById?.[personId]) noteUse('people/people', personId);
+  noteUse('systems/methods', methodId);
   // Compat: burn the draw legacy commitMethod spent on flame fuzz so seeded mark rolls stay identical.
   s.rng.next();
   const rolled = rollMethodMark(s, personId, methodId);
@@ -134,11 +143,16 @@ export function actInteraction(
   const woundMul = person.woundId ? methodRow?.effectiveness?.[person.woundId] : undefined;
   if (typeof woundMul === 'number' && woundMul !== 1 && !actDef?.stashAct && !actDef?.patronAccept && !actDef?.patronFulfil) {
     pushJuice(s, 'person.wound', { personId, methodId, interactionId, woundId: person.woundId, woundMul });
+    noteUse('systems/wounds', person.woundId);
   }
 
   for (const { markId, stacks } of person.marks) {
     if (stacks <= (marksBefore[markId] ?? 0)) continue;
-    pushJuice(s, 'mark.applied', { personId, markId, interactionId });
+    // Their own words for the mark when they have them (reaction:mark fragments), else the shared fallback.
+    const own = markLine(s, personId, markId);
+    pushJuice(s, 'mark.applied', { personId, markId, interactionId, ...(own ? { line: own.text } : {}) });
+    if (own) noteUse('dialogue/fragments', own.id);
+    noteUse('systems/marks', markId);
     maybeEmitCrossTownPacket(s, personId, markId);
     // Seeing someone grow for real feeds your own spark (hooks: on_witness_genuine_growth).
     if (markId === 'genuine_growth') runHooks(s, 'on_witness_genuine_growth', { data, rng: s.rng, targetId: personId });
@@ -154,7 +168,12 @@ export function actInteraction(
   pushJuice(s, 'person.reaction', { personId, methodId, interactionId, line: args.line ?? reaction.text, source: args.line ? 'deed' : reaction.source });
 
   if (res.reignited) pushJuice(s, 'person.reignite', { personId, interactionId });
+  if (proof) showProof(s, personId, proof);
+  if (res.reignited) giveProofs(s, personId);
+  // What the act does to their kin (help warms them, harm chills them, a clinging one bleeds your spark).
+  applyRipples(s, personId, interactionId, rt.catalog.get(interactionId)?.ripple);
   encodeUnspokenForState(s, interactionId, personId, { tags: rt.catalog.get(interactionId)?.tags, reignited: res.reignited });
+  showedUp(s, personId);
   const def0 = rt.catalog.get(interactionId);
   if (def0?.coinGain) {
     s.player.coin = (s.player.coin ?? 0) + def0.coinGain;
@@ -183,6 +202,8 @@ export function actInteraction(
     pushJuice(s, 'site.kindle', { personId, siteId: person.siteId, interactionId });
   }
 
+  // Who you met before this one: introduce reaches for them even after a few words with this person.
+  if (s.flags.lastTouchedPersonId !== personId) s.flags.prevTouchedPersonId = s.flags.lastTouchedPersonId;
   s.flags.lastTouchedPersonId = personId;
   const townFx = (rt.catalog.get(interactionId) as { town?: { despair?: number } } | undefined)?.town;
   const tState = person.townId ? s.towns?.[person.townId] : undefined;
@@ -204,4 +225,27 @@ export function actInteraction(
   });
   eventLog.push({ type: 'interaction', methodId: interactionId });
   return 'resolved';
+}
+
+/** A person's authored line for a mark landing on them (fragments tagged person:<id> + mark:<id> + reaction:mark). */
+function markLine(state: SimState, personId: string, markId: string): { id: string; text: string } | undefined {
+  const frags = (state.data as DataTables).lineFragments?.fragments ?? [];
+  const f = frags.find((x) => {
+    const t = x.tags ?? [];
+    return t.includes('reaction:mark') && t.includes(`person:${personId}`) && t.includes(`mark:${markId}`);
+  });
+  return f?.text ? { id: f.id, text: f.text } : undefined;
+}
+
+
+/**
+ * Coming back to someone the day after you last saw them is presence, whatever you say: the first act on
+ * them that day leaves unspoken_show_presence (encoded as the old show_up interaction, which also lets
+ * unspoken things come to pass, per tuning comeToPassAlsoOnInteractionIds).
+ */
+function showedUp(state: SimState, personId: string): void {
+  const seen = ((state.flags.lastSeenDay ??= {}) as Record<string, number>);
+  const last = seen[personId];
+  seen[personId] = state.day;
+  if (last === state.day - 1) encodeUnspokenForState(state, 'show_up', personId, { tags: ['presence'] });
 }

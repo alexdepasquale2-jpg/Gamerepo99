@@ -1,5 +1,6 @@
 /** Succession choices: "Carry it on" (heir continues) / "Let it rest" (run ends, never shamed). Burnout only. */
 
+import { noteHookFired } from '../hooks';
 import { applyEffect, type EffectCtx } from '../effects';
 import { assembleInhabitant } from '../inhabitant';
 import { matchesWhen } from '../hooks';
@@ -51,6 +52,7 @@ function applyLegacyHooks(state: SimState, topBond: string | undefined): number 
   for (const id of new Set(state.player.hookIds)) {
     const hook = data.hooksById.get(id);
     if (!hook || hook.trigger !== 'on_burnout_or_death' || !matchesWhen(hook.when, state, ctx)) continue;
+    noteHookFired(state, hook.id);
     for (const fx of (hook.effects ?? []) as ScopedEffect[]) {
       if (fx.scope) {
         for (const townId of [...(scopes[fx.scope] ?? [])].sort()) {
@@ -115,7 +117,9 @@ export function carryItOn(state: SimState): SuccessionResult {
 
   const ctx: EffectCtx = { data, rng: deriveRng(state.seed, 'legacy_continue', state.day) };
   for (const hook of [...data.hooksById.values()].filter((h) => h.trigger === 'on_succession_continue')) {
-    if (matchesWhen(hook.when, state, ctx)) for (const fx of hook.effects ?? []) applyEffect(state, fx, ctx);
+    if (!matchesWhen(hook.when, state, ctx)) continue;
+    noteHookFired(state, hook.id);
+    for (const fx of hook.effects ?? []) applyEffect(state, fx, ctx);
   }
   pushJuice(state, 'succession.carried', { heirPersonId: heir.personId, spark: next.spark, viaDependence: heir.viaDependence });
   return { ok: true, choice: 'continue', imprint, heirPersonId: heir.personId };

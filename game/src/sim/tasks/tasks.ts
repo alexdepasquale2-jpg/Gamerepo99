@@ -8,6 +8,7 @@
  * and the folk may ask for it every frame.
  * Pure: no Phaser/DOM. Positions are tile maths; road, wagon and hearth spots are placed by the world.
  */
+import { trackedTable } from '../data-use-people';
 import tasksJson from '../../data/systems/tasks.json';
 import { activePlans, BUILDING_BY_ID, PLAYER_OWNER, type Claim } from '../economy/build-plans';
 import { claimRect } from '../economy/borders';
@@ -19,7 +20,8 @@ import { deriveRng } from '../rng';
 import { usedToday } from '../contrib/use-effects';
 import type { SimState } from '../types/runtime';
 
-export const TASKS = tasksJson as unknown as TasksTable;
+// By-key reads of kinds / goals count as use (a task of that kind or goal is on offer).
+export const TASKS = trackedTable('systems/tasks', tasksJson as unknown as TasksTable, ['kinds', 'goals']);
 type KindRow = { look: string; spot: string; verb: string };
 export type TasksTable = {
   holdMs: number; tapMs: number; capPerPersonPerDay: number;

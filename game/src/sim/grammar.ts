@@ -52,7 +52,7 @@ function pick(opts: readonly GrammarOption[], ctx: GrammarCtx, rng: Rng): string
 
 const capFirst = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
-type Env = { local?: GrammarRules; shared: GrammarRules; ctx: GrammarCtx; rng: Rng };
+type Env = { local?: GrammarRules; shared: GrammarRules; ctx: GrammarCtx; rng: Rng; onShared?: (rule: string) => void };
 
 // Slots go in as marker tokens and take their values only after tidy(), so a name or an imported
 // legend line is never read as grammar ('#', '{') nor re-cased or re-spaced.
@@ -71,6 +71,7 @@ function fill(text: string, env: Env, depth: number): string {
     if (depth >= MAX_DEPTH) continue;
     const opts = env.local?.[name] ?? env.shared[name];
     const t = opts ? pick(opts, env.ctx, env.rng) : undefined;
+    if (t !== undefined && !env.local?.[name]) env.onShared?.(name);
     const sub = t === undefined ? '' : fill(t, env, depth + 1);
     out += parts[i + 2] ? capFirst(sub) : sub;
   }
@@ -91,9 +92,16 @@ function tidy(s: string): string {
 }
 
 /** One line from a grammar; '' when no frame fits the context. */
-export function expandGrammar(g: Grammar, shared: GrammarRules, ctx: GrammarCtx, key: string | number): string {
+export function expandGrammar(
+  g: Grammar,
+  shared: GrammarRules,
+  ctx: GrammarCtx,
+  key: string | number,
+  /** Told each shared rule the line actually used (proof-of-use tracking; never changes the line). */
+  onShared?: (rule: string) => void,
+): string {
   const rng = createRng(hashKey(key));
   const frame = pick(g.frames, ctx, rng);
   if (frame === undefined) return '';
-  return tidy(fill(frame, { local: g.rules, shared, ctx, rng }, 0)).replace(TOKEN, (_, k: string) => ctx.slots?.[k] ?? '');
+  return tidy(fill(frame, { local: g.rules, shared, ctx, rng, onShared }, 0)).replace(TOKEN, (_, k: string) => ctx.slots?.[k] ?? '');
 }

@@ -6,6 +6,7 @@
  * letter. Pure, deterministic (deriveRng + sorted iteration); saveable (plain JSON on state.letters).
  */
 
+import { trackedTable } from './data-use-people';
 import { prettyTownId } from './map/districts';
 import repliesJson from '../data/dialogue/letter-replies.json';
 import { pushJuice } from './packets';
@@ -56,7 +57,7 @@ type Table = {
   web: Record<SocialEdgeKind | 'struggling', string[]>;
   postscript: { blessing: string; burden: string };
 };
-const T = repliesJson as unknown as Table;
+const T = trackedTable('dialogue/letter-replies', repliesJson as unknown as Table, ['writeDays', 'tones', 'town', 'web', 'postscript']);
 
 export const COURIER_SURVIVAL_PER_DAY = T.courierSurvivalPerDay;
 /** Letter tags a reply adds to the circumstance in which a Blessing or Burden may come to pass. */

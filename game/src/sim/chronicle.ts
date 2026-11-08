@@ -6,6 +6,7 @@
  * named know it, the old know everything, each person tells it once. Each kind keeps its newest `keep`.
  * Templates in data/dialogue/chronicle.json. Pure, deterministic (seeded by seed/kind/day/key).
  */
+import { trackedTable } from './data-use-people';
 import table from '../data/dialogue/chronicle.json';
 import { doctrineRow } from './doctrine-tick';
 import { prettyTownId } from './map/districts';
@@ -15,7 +16,7 @@ import type { SimState } from './types/runtime';
 
 type KindRow = { gist: string; summaries: string[] };
 type Table = { keep: number; keepByKind?: Record<string, number>; onlyFirstPerPerson: string[]; kinds: Record<string, KindRow>; codas: Record<string, string[]>; events: Record<string, string> };
-export const CHRONICLE = table as unknown as Table;
+export const CHRONICLE = trackedTable('dialogue/chronicle', table as unknown as Table, ['kinds', 'codas', 'events', 'keepByKind']);
 export const CHRONICLE_TAG = 'chronicle';
 
 type P = Record<string, unknown>;

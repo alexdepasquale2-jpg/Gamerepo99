@@ -197,7 +197,8 @@
         },
         "shame": {
           "powerMul": 1.2,
-          "sparkCostMul": 0.9
+          "sparkCostMul": 0.9,
+          "tags": ["destroy_record"]
         },
         "inspire": {
           "powerMul": 1.15,

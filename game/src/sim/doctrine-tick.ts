@@ -5,7 +5,11 @@
  * ids are iterated in sorted order). Never touches player spark.
  */
 
+import { noteUse } from './data-use-people';
 import type { DataTables } from './load-data';
+import { applyEffect, type EffectCtx } from './effects';
+import { matchesWhen, noteHookFired } from './hooks';
+import { deriveRng } from './rng';
 import { pushDelta } from './legacy/state';
 import { districtAt, districtId, districtOfTown } from './map/districts';
 import { pickLeader, residentsOf, tickDissent } from './doctrine-dissent';
@@ -39,7 +43,25 @@ export type DoctrineState = DoctrineMeters & {
 const GAP_MIN = 0.25;
 const EXPOSURE_MIN = 0.4;
 const COLLAPSE_BELOW = 0.15;
+/** Without hook data (bare test states) a collapse still darkens its town by this much. */
 const DESPAIR_ON_COLLAPSE = 0.05;
+
+/** A creed falling leaves a gap: the on_doctrine_collapse hooks (data/hooks/personal-cost.json) set how deep. */
+function collapseDespair(state: SimState, town: { despair: number }): void {
+  const data = state.data as DataTables | undefined;
+  const hooks = data ? [...data.hooksById.values()].filter((h) => h.trigger === 'on_doctrine_collapse') : [];
+  if (!hooks.length) {
+    town.despair = clamp01(town.despair + DESPAIR_ON_COLLAPSE);
+    return;
+  }
+  const ctx: EffectCtx = { data: data!, rng: deriveRng(state.seed, 'doctrine_collapse', state.day), town: { despair: town.despair } };
+  for (const h of hooks) {
+    if (!matchesWhen(h.when, state, ctx)) continue;
+    noteHookFired(state, h.id);
+    for (const fx of h.effects ?? []) applyEffect(state, fx, ctx);
+  }
+  town.despair = clamp01(ctx.town?.despair ?? town.despair);
+}
 const CASCADE_EXPOSURE = 0.05;
 const STEAL = 0.02;
 
@@ -262,6 +284,7 @@ export function applyDoctrineAct(state: SimState, actId: string, personId: strin
     }
   }
   logDoctrine(state, d);
+  noteUse('systems/doctrines', `acts.${act.id}`);
   if (act.effects?.some((e) => e.target === 'doctrine.exposure')) {
     pushJuice(state, 'doctrine.exposed', { doctrineId: id, townId, personId, exposure: d.exposure });
   }
@@ -306,13 +329,15 @@ export function tickDoctrines(state: SimState): { collapsed: string[]; competed:
   for (const id of ids) {
     const d = all[id]!;
     if (d.collapsed) continue;
+    // A creed in force in a town this dawn (its meters move, its folk speak of it).
+    noteUse('systems/doctrines', `doctrines.${id}`);
     d.legitimacy = applyCollapse({ ...d, legitimacy: legitimacyOf(d) });
     if (d.legitimacy < COLLAPSE_BELOW) {
       d.collapsed = true;
       newlyCollapsed.push(d);
       result.collapsed.push(id);
       const town = state.towns?.[d.townId];
-      if (town) town.despair = clamp01(town.despair + DESPAIR_ON_COLLAPSE);
+      if (town) collapseDespair(state, town);
       pushJuice(state, 'doctrine.collapse', { doctrineId: id, townId: d.townId });
     }
   }

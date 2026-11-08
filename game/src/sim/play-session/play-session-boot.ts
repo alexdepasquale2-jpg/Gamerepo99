@@ -1,5 +1,6 @@
 /** Play-session boot helpers: people index + town pick + snapshot. */
 
+import { noteUse } from '../data-use-people';
 import { districtOfTown } from '../map/districts';
 import type { FabricWorld } from '../gen/world';
 import type { DataTables } from '../load-data';
@@ -109,7 +110,13 @@ function assignNames(out: Record<string, PersonState>, world: FabricWorld, data:
     const f = family[deriveRng(seed, root, 'family').int(0, family.length)]!;
     const roll = (k: number) => (k ? deriveRng(seed, p.id, 'name', k) : deriveRng(seed, p.id, 'name')).int(0, given.length);
     const here = namesIn(nameScope(p.townId));
-    const name = district ? distinctName(given, f, here, roll) : `${given[roll(0)]!} ${f}`;
+    const g = given[roll(0)]!;
+    if (!district) {
+      // A home-pool name on a name plate (proof-of-use; district names note themselves in distinctName).
+      noteUse('people/names', `given.${g}`);
+      noteUse('people/names', `family.${f}`);
+    }
+    const name = district ? distinctName(given, f, here, roll) : `${g} ${f}`;
     here.add(name);
     p.name = name;
   }

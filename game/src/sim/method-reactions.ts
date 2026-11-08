@@ -1,7 +1,8 @@
 /** Refusal hooks + reaction-line selection. Pure sim; no module-level mutable selector. */
 
+import { matchesWhen, noteHookFired } from './hooks';
+import { noteUse } from './data-use-people';
 import { rememberLine } from './dyn/line-memory';
-import { matchesWhen } from './hooks';
 import type { DataTables } from './load-data';
 import type { Rng } from './rng';
 import type { EffectCtx } from './effects';
@@ -83,7 +84,11 @@ export function selectReactionLine(ctx: ReactionPickCtx): ReactionLineResult {
     (ctx.state as SimState & { reactionLineSelector?: ReactionLineSelector }).reactionLineSelector ??
     pickFixedReactionLine;
   const out = sel(ctx);
-  if (out.text) rememberLine(ctx.state, ctx.personId, out.lineId);
+  if (out.text) {
+    rememberLine(ctx.state, ctx.personId, out.lineId);
+    // a composed line is "opener+body": both fragments were said
+    for (const id of out.lineId.split('+')) noteUse('dialogue/fragments', id);
+  }
   return out;
 }
 
@@ -108,7 +113,10 @@ export function findRefusal(
     const hook = state.data.hooksById.get(hookId) as RefusalHook | undefined;
     if (!hook || hook.kind !== 'refusal' || hook.trigger !== 'on_method_commit') continue;
     if (hook.methodId && hook.methodId !== method.id) continue;
-    if (matchesWhen(hook.when, state, ctx)) return hook;
+    if (matchesWhen(hook.when, state, ctx)) {
+      noteHookFired(state as unknown as SimState, hook.id);
+      return hook;
+    }
   }
   return undefined;
 }

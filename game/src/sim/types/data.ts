@@ -29,6 +29,8 @@ export type HookDef = {
   stillShowsInMenu?: boolean;
   consumesAct?: boolean;
   lines?: Record<string, string[]>;
+  /** How the player feels it the next dawn (contrib/hook-felt): one variant is picked per dawn. */
+  felt?: string[];
 };
 
 export type ArchetypeDef = {

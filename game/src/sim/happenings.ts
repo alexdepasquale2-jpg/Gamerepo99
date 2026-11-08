@@ -21,6 +21,7 @@
  * may be a list of variants; one is drawn per happening from the seed.
  */
 
+import { noteUse } from './data-use-people';
 import { prettyTownId } from './map/districts';
 import { nudgeDoctrine } from './doctrine-tick';
 import { applyEffect, FLAME_MAX, type EffectCtx } from './effects';
@@ -341,6 +342,7 @@ export function startHappening(state: SimState, ev: HappeningRow, townId: string
   }
   const line = happeningLine(state, act, 'say');
   pushJuice(state, 'happening.start', { eventId: ev.id, townId, personId: act.speakerId, targetId, line, here });
+  noteUse('systems/events', ev.id);
   return act;
 }
 

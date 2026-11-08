@@ -30,9 +30,13 @@
       "id": "rule_no_contradict_memory",
       "forbid": {
         "lineTagsAny": [
-          "mood:naive_hope"
+          "mood:naive_hope",
+          "mood:chipper"
         ],
-        "memoryIncludes": "mark:hollowness"
+        "memoryIncludesAny": [
+          "mark:hollowness",
+          "mark:dependence"
+        ]
       }
     },
     {

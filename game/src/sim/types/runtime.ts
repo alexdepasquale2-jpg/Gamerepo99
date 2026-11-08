@@ -209,4 +209,8 @@ export type SimState = {
   carry?: import('../carry').CarryState;
   /** Civic slice 3: each town's granary, storehouse and yard, and the named goods flows (see sim/civic/town-stores). */
   townStores?: import('../civic/town-stores').TownStoresState;
+  /** Hooks that took effect today (sim/hooks noteHookFired), told at the next dawn (contrib/hook-felt; not saved). */
+  hookFelt?: { day: number; ids: string[]; prev?: string[] };
+  /** Proof ids pressed into your hands by people who reignited (see sim/proofs; created lazily). */
+  proofs?: string[];
 };

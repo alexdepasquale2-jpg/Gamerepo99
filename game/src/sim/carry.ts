@@ -11,6 +11,8 @@
  * that really holds it (data/items/carry.json; the coin is the old errand's carryRewardCoin).
  * Pure + deterministic: no Phaser/DOM, no Math.random.
  */
+import { encodeUnspokenForState } from './social/unspoken';
+import { fallbackLine } from './fallback-lines';
 import carryJson from '../data/items/carry.json';
 import { BUILDING_BY_ID, contributeToPlan, PLAYER_OWNER } from './economy/build-plans';
 import { addStock, isFoodRes, stockOf } from './economy/food-stock';
@@ -168,6 +170,8 @@ function thank(state: SimState, personId: string, now: string, dawn: string, tip
   p.trust = Math.min(1, (p.trust ?? 0) + FILE.thanks.trust);
   pushJuice(state, 'moment.beat', { personId, line: now, townId: p.townId, momentId: 'carry.thanks' });
   cs(state).thanks.push({ day: state.day, personId, line: dawn });
+  // Goods carried to someone who needed them: an errand they will not forget (unspoken_favor_warmth).
+  encodeUnspokenForState(state, 'carry_goods', personId, { tags: ['favor', 'errand'] });
   const tip = tipFrom?.() ?? 0;
   if (tip > 0) addItem(state, 'coin', tip);
   return tip;
@@ -212,6 +216,17 @@ function toTown(state: SimState, c: Carried, townId: string): ActOutcome {
   const short = deliverToTown(state, townId, c.itemId, c.qty, who ?? 'player');
   const qty = c.qty;
   delete state.player.carrying;
+  // Unloading a wagon into the store by hand: the driver tips a coin and the town talks of it.
+  if (c.from.startsWith('wagon:')) {
+    const salt = `${c.from}|${townId}`;
+    const said = fallbackLine('body.carry_crates', `${state.seed}|crates|${salt}|${state.day}`);
+    addItem(state, 'coin', 1);
+    if (who) {
+      const heard = fallbackLine('body.carry_crates.heard', `${state.seed}|crates-heard|${salt}|${state.day}`);
+      if (heard) pushJuice(state, 'moment.beat', { personId: who, line: heard, townId, momentId: 'body.carry_crates' });
+    }
+    if (said) return { ok: true, line: said };
+  }
   // Carrying a town's own goods back to it is no favour; bringing them from elsewhere when it is short is.
   if (short && who && c.fromTown !== townId) {
     const name = firstName(state, who);
