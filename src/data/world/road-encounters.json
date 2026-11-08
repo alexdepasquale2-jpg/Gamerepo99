@@ -17,7 +17,8 @@
             }
           ],
           "prism": "encounter.spawn.carter",
-          "tags": []
+          "tags": [],
+          "heard": "You came past the grain cart? Someone left it for whoever walks by. That was kind."
         },
         {
           "id": "enc_tired_logger",
@@ -32,7 +33,8 @@
           ],
           "workHook": "cost_road_labor",
           "prism": "encounter.spawn.worker",
-          "tags": []
+          "tags": [],
+          "heard": "The logger on the stump? He sat down after his brother left and hasn’t stood since."
         },
         {
           "id": "enc_kin_letter",
@@ -46,7 +48,8 @@
             }
           ],
           "prism": "encounter.spawn.runner",
-          "tags": []
+          "tags": [],
+          "heard": "A runner came through with a wet letter. Said you passed him on the road."
         },
         {
           "id": "enc_quiet_road",
@@ -74,7 +77,8 @@
           "prism": "encounter.spawn.thief",
           "tags": [
             "notoriety"
-          ]
+          ],
+          "heard": "Somebody followed you in. People talk about what you carry."
         }
       ]
     },
@@ -94,12 +98,13 @@
             }
           ],
           "prism": "route.caravan",
-          "tags": []
+          "tags": [],
+          "heard": "Ore wagons again. They take the stone and leave us the dust."
         },
         {
           "id": "enc_propaganda_handbill",
           "weight": 25,
-          "blurb": "A handbill promises prosperity no Ashford day matches.",
+          "blurb": "A handbill promises prosperity no day back home has matched.",
           "effects": [
             {
               "target": "doctrine.propaganda",
@@ -109,12 +114,13 @@
             }
           ],
           "prism": "encounter.spawn.handbill",
-          "tags": []
+          "tags": [],
+          "heard": "Did you see the handbills? ‘Prosperity.’ Nobody here has seen any."
         },
         {
           "id": "enc_broken_axle",
           "weight": 20,
-          "blurb": "A caravan axle cracked \u2014 supply thins.",
+          "blurb": "A caravan axle cracked — supply thins.",
           "effects": [
             {
               "target": "route.condition",
@@ -126,7 +132,8 @@
           "prism": "route.break",
           "tags": [
             "break"
-          ]
+          ],
+          "heard": "A caravan broke an axle out there. That’ll be thin stores for a week."
         },
         {
           "id": "enc_empty_glare",
@@ -161,7 +168,8 @@
           "prism": "encounter.spawn.thief",
           "tags": [
             "notoriety"
-          ]
+          ],
+          "heard": "Somebody followed you in. People talk about what you carry."
         }
       ]
     }

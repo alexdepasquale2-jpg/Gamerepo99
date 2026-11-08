@@ -92,6 +92,7 @@
       "leaderPersonId": "ruth_calder",
       "m2Optional": true,
       "blurb": "Keep the mill turning and the ovens honest — a town-side doctrine that still speaks a life Ashford recognizes.",
+      "hearsay": { "holds": "the bread still comes", "ledger": "the mill ledger" },
       "goals": [
         {
           "id": "goal_mill_shifts",
@@ -121,6 +122,7 @@
       "m2Optional": false,
       "milestone": "m3",
       "blurb": "Post work, run the ferry, answer the night knock.",
+      "hearsay": { "holds": "the ferry still runs when called", "ledger": "the ferryman's tally" },
       "goals": [
         {
           "id": "goal_ferry_runs",
@@ -150,6 +152,7 @@
       "m2Optional": false,
       "milestone": "m3",
       "blurb": "City doctrine: efficiency, boards, glare. Its promises are written for lives villagers cannot feel.",
+      "hearsay": { "holds": "the quotas pay", "ledger": "the city's own count" },
       "goals": [
         {
           "id": "goal_quota_days",
@@ -178,6 +181,7 @@
       "leaderPersonId": null,
       "m2Optional": true,
       "blurb": "Salt and catch shared by weight of rope — a wet compact.",
+      "hearsay": { "holds": "the nets are mended by the dawn tide", "ledger": "the rope-weigher's slate" },
       "goals": [
         {
           "id": "goal_nets_mended",
@@ -201,6 +205,7 @@
       "leaderPersonId": null,
       "m2Optional": true,
       "blurb": "Mark doors, keep quarrels soft, remember names in white dust.",
+      "hearsay": { "holds": "every door still carries a living mark", "ledger": "the chalk-keeper's list" },
       "goals": [
         {
           "id": "goal_doors_marked",
@@ -224,6 +229,7 @@
       "leaderPersonId": null,
       "m2Optional": true,
       "blurb": "Carts counted; ore and grain owed uphill toward the glare.",
+      "hearsay": { "holds": "every cart is counted", "ledger": "the toll book" },
       "goals": [
         {
           "id": "goal_carts_counted",

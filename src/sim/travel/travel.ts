@@ -15,6 +15,8 @@ import type {
   TravelSimState,
 } from './travel-types';
 import type { Inhabitant, SimState } from '../types/runtime';
+// journey.ts imports resolveDaysEff/sizeMulFor from here; the cycle is function-body only, so it is safe.
+import { runJourney, type JourneyOpts, type JourneyResult } from './journey';
 import { lapseHappenings } from '../happenings';
 
 export type { TravelRoute, EncounterEntry, EncounterTable, TravelSimState } from './travel-types';
@@ -37,7 +39,7 @@ function pushJuice(state: SimState, eventId: string, payload?: unknown): void {
   bus.emit?.(eventId, payload);
 }
 
-function sizeMulFor(player: Inhabitant, muls: Record<string, number>): number {
+export function sizeMulFor(player: Inhabitant, muls: Record<string, number>): number {
   const emb = player.embodiment as { tags?: string[]; footprint?: { tags?: string[] } };
   const tags = [
     ...(Array.isArray(emb?.tags) ? emb.tags : []),
@@ -82,7 +84,8 @@ function pickEncounter(
   return table.entries[table.entries.length - 1] ?? null;
 }
 
-function resolveDaysEff(route: TravelRoute, state: TravelSimState): number {
+/** Days on foot for this body on this road. */
+export function resolveDaysEff(route: TravelRoute, state: TravelSimState): number {
   const terrain = terrainMulFor(route.biomeIds, state.biomeTerrainMuls);
   const size = sizeMulFor(state.player, state.sizeTravelMuls ?? loadSizeTravelMuls());
   return Math.max(1, Math.ceil(route.days * terrain * size));
@@ -92,7 +95,26 @@ function resolveDaysEff(route: TravelRoute, state: TravelSimState): number {
  * Advance daysEff travel days along route (+2 spark/day, Loom pacing);
  * emit route.travel_step each day; roll encounter table and emit encounter.spawn when an entry hits.
  */
-export function startTravel(state: TravelSimState, routeId: string): { daysEff: number } {
+/**
+ * Take a road. With opts (the play session's road menu) the whole journey runs through journey.ts: hired
+ * travellers, real world days via opts.runDay, authored encounter effects and arrival lines. Without opts,
+ * the original light walk (calendar + spark only) used by scripted actions and older callers.
+ */
+export function startTravel(state: TravelSimState, routeId: string): { daysEff: number };
+export function startTravel(
+  state: TravelSimState,
+  routeId: string,
+  opts: JourneyOpts,
+): { daysEff: number; journey: JourneyResult };
+export function startTravel(
+  state: TravelSimState,
+  routeId: string,
+  opts?: JourneyOpts,
+): { daysEff: number; journey?: JourneyResult } {
+  if (opts) {
+    const journey = runJourney(state, routeId, opts);
+    return { daysEff: journey.ok ? journey.days : 0, journey };
+  }
   const routes = state.routes ?? [];
   const route = routes.find((r) => r.id === routeId);
   if (!route) return { daysEff: 0 };

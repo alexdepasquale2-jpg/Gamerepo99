@@ -161,7 +161,28 @@
     "imprintFlags": [
       "hoard_legacy"
     ],
-    "endingId": "ash_hoard"
+    "endingId": "ash_hoard",
+    "offerAfterDawns": 3,
+    "ui": {
+      "title": "The hoard",
+      "opening": "You never lit anyone. You kept what came to your hands, and hid what would not fit in them.",
+      "bought": "{coin} coin lies in {places}{guards}. It bought you quiet, {notoriety}.",
+      "guards": ", watched by {n} hired {guardWord}",
+      "nameByNotoriety": [
+        { "below": 0.2, "line": "and nobody looked twice" },
+        { "below": 0.5, "line": "and a name people lower their voices for" },
+        { "below": 2, "line": "and a name that walks into towns ahead of you" }
+      ],
+      "townsLead": "Meanwhile:",
+      "townByDespair": [
+        { "below": 0.3, "line": "{town} held on without you" },
+        { "below": 0.6, "line": "{town} grew quieter" },
+        { "below": 0.9, "line": "{town} went grey at the edges" },
+        { "below": 2, "line": "{town} went dark" }
+      ],
+      "buttons": { "continue": "Carry on", "quit": "Let it rest" },
+      "restedLine": "The hoard keeps. The towns keep turning. That is the whole of it."
+    }
   },
   "fade": 0.01,
   "despair": {

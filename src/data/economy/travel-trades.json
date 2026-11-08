@@ -171,7 +171,7 @@
       "lean": "bad",
       "baseSpark": 0,
       "baseCoin": 0,
-      "speedMul": 1.0,
+      "speedMul": 1,
       "trustBias": -0.5,
       "hostile": true,
       "routeIds": [
@@ -276,5 +276,53 @@
       "notes": "M4 player walk; M3 letters only"
     }
   ],
-  "formulaRef": "road-content-design §3.2"
+  "formulaRef": "road-content-design §3.2",
+  "voice": {
+    "note": "Road menu + journey prose (road-trades.ts / journey.ts). Tells are what a traveller lets show; lean never does.",
+    "roles": {
+      "carter": "a carter",
+      "caravaner": "a guild caravan",
+      "ferryman": "the ferryman",
+      "mount": "a stable hand with a mule",
+      "guide": "a local guide",
+      "courier": "a letter courier",
+      "smuggler": "someone who knows the gaps",
+      "escort": "a watch escort",
+      "gouger": "a gouger",
+      "scammer": "a shortcut seller",
+      "highwayman": "a highwayman",
+      "false_guide": "a false guide"
+    },
+    "tells": {
+      "steady_hands": "Hands steady on the reins.",
+      "fair_scale": "Weighs your bundle twice and says the same number both times.",
+      "named_by_kin": "Someone in the square calls them by name and waves.",
+      "eyes_on_gap": "Keeps looking at the gap in the hedge, not the road.",
+      "asks_no_names": "Doesn’t ask your name. Doesn’t give one.",
+      "cart_too_clean": "The cart is too clean for a working cart.",
+      "laughs_at_despair": "Laughs when you mention how bad it’s got back home.",
+      "name_wont_stick": "Gives a name, then a different one when you ask again.",
+      "badge_wrong_town": "Wears a guide’s badge from a town that isn’t on this road."
+    },
+    "outcome": {
+      "walked": "{days} on foot to {to}.",
+      "hired": "{days} on the road to {to} with {name}, {role}.",
+      "honest": "{name} set you down at {to}, fair as promised.",
+      "overcharged": "At {to} {name} wanted {extra} more — “for the axle”. You paid.",
+      "strayed": "{name} took a ‘better’ way. It cost {extra} more on the road.",
+      "robbed": "Halfway, {name} pulled the cart into the trees. Knife out. They took {lost} and left you to walk.",
+      "exposed": "{name} got you through the gaps quick. Too many people saw you use them.",
+      "courier": "{name} carried the letters bound that way too.",
+      "knownAgain": "You know this one now: {name} is {role}."
+    },
+    "highwayman": {
+      "id": "enc_highwayman",
+      "weight": 8,
+      "blurb": "A man steps out of the hedge and asks what you carry.",
+      "heard": "Highwayman on that road again? You’re lucky you still have your boots.",
+      "tags": [
+        "hostile"
+      ]
+    }
+  }
 }

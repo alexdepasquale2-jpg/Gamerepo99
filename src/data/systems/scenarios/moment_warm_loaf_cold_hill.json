@@ -62,5 +62,14 @@
     "siteKind": "bakery",
     "fallback": "first_matching_tags"
   },
-  "specialBar": true
+  "specialBar": true,
+  "beat": {
+    "lines": [
+      {
+        "who": "marta_ellison",
+        "text": "Oven's going. Don't make a thing of it."
+      }
+    ],
+    "dawnLine": "{name} left a loaf on the hill path. Still warm."
+  }
 }
