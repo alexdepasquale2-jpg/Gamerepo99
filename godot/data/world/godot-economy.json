@@ -1,9 +1,0 @@
-{
-  "spec": "Godot port only. What the v2 world generator would supply for the three authored towns: map position (tiles), generated townsfolk per town, and opening stock (v2 starts towns from dawn-stock and the civic stores, which the port collapses into one store per town).",
-  "towns": {
-    "ashford": { "q": 0, "r": 0, "folk": 14, "stock": { "bread": 10, "grain": 8, "wood": 8, "timber": 6, "stone": 6, "flax": 3 } },
-    "lowmere": { "q": 150, "r": 40, "folk": 12, "stock": { "fish": 10, "grain": 4, "wood": 6, "timber": 3, "stone": 4, "clay": 3 } },
-    "city_reach": { "q": 240, "r": -60, "folk": 6, "stock": { "bread": 20, "timber": 10, "ore": 12, "tools": 4, "nails": 8, "cloth": 4 } },
-    "marrow_den": { "q": -40, "r": 30, "folk": 0, "stock": {} }
-  }
-}
