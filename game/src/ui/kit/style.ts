@@ -20,8 +20,10 @@ const ROOT = `
 :root{${cssVars()}}
 @media (pointer:coarse){:root{--hf-tap:var(--hf-tap-coarse)}}
 body[data-pad=on]{--hf-pad-reserve-bottom:${PAD_RESERVE_BOTTOM_PX}px}
-@media (orientation:portrait){body[data-pad=on]{--hf-pad-reserve-bottom:256px}}
-@media (orientation:landscape) and (max-height:540px){body[data-pad=on]{--hf-pad-reserve-bottom:${Math.round(PAD_RESERVE_BOTTOM_PX * 0.6)}px}}
+/* Portrait: the hotbar sits just above the face buttons and d-pad (their tops are ~150-160px up on phones;
+   plain px, layer.ts parses this value). Landscape: it drops to the bottom edge between the d-pad and buttons. */
+@media (orientation:portrait){body[data-pad=on]{--hf-pad-reserve-bottom:168px}}
+@media (orientation:landscape) and (max-height:540px){body[data-pad=on]{--hf-pad-reserve-bottom:0px}}
 #hf-ui-layer{--hf-pad-overlap:max(0px,calc(var(--hf-pad-reserve-bottom) - var(--hf-below)))}
 @keyframes hf-rise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes hf-in-side{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}

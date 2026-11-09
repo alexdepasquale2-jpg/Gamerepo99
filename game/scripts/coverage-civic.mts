@@ -60,6 +60,7 @@ want('economy/dawn-stock', [
   ...keys(roleStock.base).map((k) => `base:${k}`),
   ...keys(roleStock.landBonus).map((k) => `land:${k}`),
   ...keys(roleStock.landFood).map((k) => `landFood:${k}`),
+  ...keys(dawnStockJson.openingShelves.byKind).map((k) => `shelves:${k}`),
 ]);
 want('economy/economy-resources', resourcesJson.resources.map((r) => r.id));
 want('economy/facilities', [
@@ -154,6 +155,11 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     const owner = residentsOf(st(s), townId)[0];
     if (owner) for (const b of zonesJson.civicBuildings) stakePlan(st(s), owner, townId, b.id, { built: true, founding: true });
   }
+  // A mill town in every other seed: towns reach village soon enough now to raise workshops over mills, so
+  // the grain fork's water wheel (a town with more mills than farms) needs one town that kept to milling.
+  const millTown = seed % 2 === 0 ? Object.keys(st(s).towns ?? {}).sort()[0] : undefined;
+  const miller = millTown ? residentsOf(st(s), millTown)[0] : undefined;
+  if (miller) for (let i = 0; i < 2; i++) stakePlan(st(s), miller, millTown!, 'mill', { built: true, founding: true });
   s.wait(60);
   // Each tech a town holds pays out through polityMul; a long run lets every fork be taken somewhere.
   for (const townId of Object.keys(st(s).towns ?? {})) polityMul(st(s), townId, 'farmer');

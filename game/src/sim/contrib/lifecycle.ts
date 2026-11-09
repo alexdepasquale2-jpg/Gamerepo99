@@ -8,13 +8,14 @@ import { registerDevHook } from '../../app/dev-hooks';
 import { registerDawnLines } from '../dawn-lines';
 import { laidToRest, lifeEvents, retire, type LifeEvent } from '../economy/mortality';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 /** At most this many life lines per dawn. */
 export const MAX_LIFE_LINES = 3;
 
 const townLabel = (id: string): string => prettyTownId(id);
 const nameOf = (state: SimState, id: string): string => state.people[id]?.name ?? townLabel(id);
-const first = (name: string): string => name.split(' ')[0] ?? name;
+const first = (name: string): string => firstNameOf(name) ?? name;
 
 function lifeLine(state: SimState, e: LifeEvent, away: string): string {
   const by = e.teller && state.people[e.teller] ? nameOf(state, e.teller) : undefined;

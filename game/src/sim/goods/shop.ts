@@ -20,6 +20,7 @@ import { deliverToTown, priceAt } from './deed-goods';
 import { consumeInstance, mintInstance } from './instances';
 import { noteUse } from '../data-use-world';
 import { ITEMS, ITEM_BY_ID, addItem, inventoryOf, itemName, removeItem } from './inventory';
+import { firstNameOf } from '../names';
 
 export type ShopKindId = 'general' | 'baker' | 'smith' | 'produce' | 'pedlar' | 'wagon';
 type KindRow = { name: string; sells: string[]; buys: string[]; markup: number; purse: number };
@@ -141,7 +142,7 @@ type Resolved = { kind: ShopKindId; townId?: string; keeperId?: string; title: s
 
 function resolve(state: SimState, ref: ShopRef): Resolved {
   const kindOfKeeper = (id: string | undefined): ShopKindId => (id ? SHOPS.jobKind[workJobId(state, id)] ?? 'general' : 'general');
-  const first = (id: string | undefined): string => (id ? (state.people[id]?.name ?? id).split(' ')[0]! : '');
+  const first = (id: string | undefined): string => (id ? firstNameOf(state.people[id]?.name ?? id)! : '');
   switch (ref.kind) {
     case 'stall': {
       const keeperId = pickKeeper(state, ref.id, SHOPS.stallJobs, `stall:${ref.id}`);
@@ -209,7 +210,7 @@ function townPrices(state: SimState, townId: string, itemId: string, markup: num
 }
 
 const pedlarBuyPrice = (state: SimState, v: Visitor, itemId: string): number =>
-  // The same price the road-folk "Buy" chip asks (contrib/road-folk pedlarPrice): one under the town's.
+  // A pedlar undercuts the town they walk to by a coin: carrying the good is their living.
   Math.max(1, priceAt(state, v.toTownId ?? v.townId ?? '', itemId) - 1);
 
 type Priced = { theirs: ShopLine[]; yours: ShopLine[] };

@@ -7,13 +7,14 @@ import { registerBoardPage } from '../board-pages';
 import { registerDawnLines } from '../dawn-lines';
 import { householdsIn, KIN, voiceOf, type Household } from '../economy/households';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 /** At most this many household lines per dawn. */
 export const MAX_HOUSEHOLD_LINES = 3;
 
 const townLabel = (id: string): string => prettyTownId(id);
 const nameOf = (state: SimState, id: string): string => state.people[id]?.name ?? townLabel(id);
-const firstOf = (state: SimState, id: string): string => nameOf(state, id).split(' ')[0]!;
+const firstOf = (state: SimState, id: string): string => firstNameOf(nameOf(state, id))!;
 
 /**
  * Births and comings-of-age from this dawn, in the towns you care about (where you stand, then home),

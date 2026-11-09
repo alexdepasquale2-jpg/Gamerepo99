@@ -12,6 +12,7 @@ import type { ActOutcome } from '../sim/play-session/action-providers';
 import { targetActionId, type Target } from '../sim/play-session/targets';
 import { groupVerbs, shortLabel, type RingChip, type Verb } from '../sim/play-session/verb-families';
 import { itemName } from '../sim/goods/inventory';
+import { LAND_RULES } from '../sim/land-acts';
 import { SCAN_RADIUS, dist, pickFocus, reachOf, thingAt } from './focus';
 import { createLayer } from './layer';
 import { createPrompt } from './prompt';
@@ -72,6 +73,9 @@ export function createController(ctx: GameContext) {
     return out;
   }
 
+  /** Items that work the ground: any land act's tools or materials, plus what mends a road (stone, timber, tools). */
+  const LAND_ITEMS = new Set<string>(['stone', 'timber', 'tools', ...LAND_RULES.acts.flatMap((a) => [...(a.tools ?? []), ...Object.keys(a.cost ?? {})])]);
+  const landReady = (): boolean => { const held = ctx.panels?.satchel?.held?.() ?? null; return !!held && LAND_ITEMS.has(held); };
   const candidates = (at: Pt, r: number, facing?: { dx: number; dy: number }): Thing[] => [
     ...ctx.world.things(at, r, facing),
     ...ctx.actors.things(at, r),
@@ -167,7 +171,10 @@ export function createController(ctx: GameContext) {
       prompt.show(null);
       return;
     }
-    setFocus(pickFocus(candidates(player, SCAN_RADIUS, ctx.actors.player.facing()), player, ctx.actors.player.facing()));
+    // The ground in front of you (land work, a worn road) is only offered while you hold something to work it
+    // with: otherwise "Open ground" wins every empty step and buries the people and things around you.
+    const facing = ctx.actors.player.facing();
+    setFocus(pickFocus(candidates(player, SCAN_RADIUS, landReady() ? facing : undefined), player, facing));
     if (!focus) {
       prompt.show(null);
       return;

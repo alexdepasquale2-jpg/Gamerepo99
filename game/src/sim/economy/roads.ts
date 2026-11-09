@@ -21,6 +21,7 @@ import type { SimState } from '../types/runtime';
 import type { EconomyRouteState } from './economy-lod-types';
 import { FACILITY_WORKERS, facilityPlaces } from './facilities';
 import { cartPosition } from './logistics';
+import { firstNameOf } from '../names';
 
 export const ROADS = {
   baseWear: 0.002,
@@ -70,7 +71,7 @@ export type Roadway = {
 
 export const roadwayOf = (state: SimState): Roadway => (state.roadway ??= { news: [] });
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
-const firstName = (state: SimState, id: string | undefined): string | undefined => (id ? state.people[id]?.name?.split(' ')[0] : undefined);
+const firstName = (state: SimState, id: string | undefined): string | undefined => (id ? firstNameOf(state.people[id]?.name) : undefined);
 
 export function noteRoadNews(state: SimState, n: Omit<RoadNews, 'day'> & { day?: number }): void {
   const rw = roadwayOf(state);

@@ -10,6 +10,7 @@ import { townDisplayName } from '../hoard/ending';
 import { townRole } from '../economy/town-roles';
 import { registerActionProvider, registerTargetProvider, type ProvidedAction } from '../play-session/action-providers';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 /** Below this trust a person will not keep your secret (first impressions start around 0.25-0.45). */
 export const STASH_TRUST_MIN = 0.2;
@@ -91,7 +92,7 @@ registerTargetProvider({
   },
 });
 
-const nameOf = (state: SimState, id: string | undefined): string => (id ? (state.people[id]?.name ?? id).split(' ')[0]! : 'Someone');
+const nameOf = (state: SimState, id: string | undefined): string => (id ? firstNameOf(state.people[id]?.name ?? id)! : 'Someone');
 
 /** This dawn's stash news, told by the neighbour who noticed. */
 export function stashDawnLines(state: SimState): string[] {

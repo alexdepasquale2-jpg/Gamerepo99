@@ -19,6 +19,7 @@ import { TILE_PX } from '../map/constants';
 import { deriveRng } from '../rng';
 import { usedToday } from '../contrib/use-effects';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 // By-key reads of kinds / goals count as use (a task of that kind or goal is on offer).
 export const TASKS = trackedTable('systems/tasks', tasksJson as unknown as TasksTable, ['kinds', 'goals']);
@@ -312,7 +313,7 @@ export const personTask = (state: SimState, personId: string): Task | undefined 
 
 export const nameOf = (state: SimState, id: string | undefined): string => {
   const n = (id && state.people[id]?.name) || (id ? pretty(id) : '');
-  return n.split(' ')[0] ?? n;
+  return firstNameOf(n) ?? n;
 };
 export const verbOfTask = (t: Task): string => kindRow(t.kind).verb;
 

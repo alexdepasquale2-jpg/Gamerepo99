@@ -10,6 +10,7 @@ import { jobOf } from './jobs';
 import { consumeInstance, giveInstance, mintInstance } from './instances';
 import { ITEMS, ITEM_BY_ID, addItem, bestGift, giftAffinity, hasItem, itemName, listStacks, removeItem } from './inventory';
 import { noteUse } from '../data-use-world';
+import { firstNameOf } from '../names';
 
 export type DeedGoodsResult = {
   ok: boolean; line: string; /** Item that changed hands (gift/trade), for presentation. */ itemId?: string;
@@ -105,7 +106,7 @@ export function workYield(state: SimState, personId: string): DeedGoodsResult {
     got.push(`${y.qty} ${itemName(y.itemId)}`);
   }
   // Their own first name (generated folk have ids like gen_12, whose head is no name).
-  const name = (state.people[personId]?.name ?? first(personId)).split(' ')[0]!;
+  const name = firstNameOf(state.people[personId]?.name ?? first(personId))!;
   return { ok: true, line: `You work alongside ${name} the ${job.name}.${got.length ? ` +${got.join(', +')}` : ''}`, got: got.map((g) => `+${g}`) };
 }
 

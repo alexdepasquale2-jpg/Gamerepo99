@@ -6,12 +6,14 @@
  * data/world/land-acts.json. Pure: no Phaser/DOM, no archetype branches.
  */
 import table from '../data/world/land-acts.json';
+import featuresJson from '../data/world/features.json';
 import { addItem, hasItem, itemName, removeItem } from './goods/inventory';
 import { consumeInstance } from './goods/instances';
 import { setTileEdit } from './map/tile-edits';
 import { noteUse } from './data-use-world';
 import type { TerrainAccess } from './map/terrain-access';
 import type { SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 export type LandActRow = {
   id: string; label: string; short?: string; on: string[]; becomes: string;
@@ -38,6 +40,7 @@ export type LandResult = { ok: boolean; line: string; act?: string; q?: number; 
 export const LAND_RULES = table as unknown as LandRules;
 const ACT_BY_ID = new Map(LAND_RULES.acts.map((a) => [a.id, a]));
 const CLEARS = new Set(LAND_RULES.clearsProps);
+const FEATURES = featuresJson as unknown as { farm: { fieldW: number[]; fieldH: number[] } };
 
 function work(state: SimState): LandWork {
   const w = (state.landWork ??= { day: state.day, used: 0, log: [] });
@@ -78,9 +81,37 @@ export function landActOn(view: LandView, q: number, r: number): LandActRow | nu
     // Streams and farm tracks are drawn over the land; a farmstead, fence or field is in the way.
     const drawn = view.drawn?.(q, r);
     if (drawn && (drawn.ground === 'stream' || drawn.ground?.startsWith('road') || drawn.props.some((p) => !CLEARS.has(p)))) return null;
+    if (drawn && insideFence(view, q, r)) return null;
     return a;
   }
   return null;
+}
+
+/** The longest run of bare or crop tiles between two fences: a farm's widest field (data/world/features.json). */
+const FIELD_SPAN = Math.max(FEATURES.farm.fieldW[1]!, FEATURES.farm.fieldH[1]!);
+const FENCES = new Set(['fence_h', 'fence_v']);
+/**
+ * Inside a fenced field. The crop sits on every other row (map/ladder/dress), so the bare rows between
+ * hold no prop of their own and would read as open ground. Walk out each way over bare or crop tiles:
+ * a tile is inside when every way meets the fence (or the gap of a gate in it) within a field's span.
+ * The gate itself, the ground outside and a lone scattered field prop all fail at least one way.
+ */
+function insideFence(view: LandView, q: number, r: number): boolean {
+  const props = (x: number, y: number): string[] => view.drawn!(x, y).props;
+  const fenced = (x: number, y: number): boolean => props(x, y).some((p) => FENCES.has(p));
+  const hits = (dq: number, dr: number, fence: string): boolean => {
+    for (let i = 1; i <= FIELD_SPAN; i++) {
+      const x = q + dq * i, y = r + dr * i, ps = props(x, y);
+      if (ps.includes(fence)) return true;
+      if (ps.some((p) => p !== 'field')) return false;
+      // A gate is a gap in the fence line: fence on both sides of it along the line (a gate next to a
+      // corner has the corner's fence_h on one side, so either kind counts).
+      if (!ps.length && fenced(x - dr, y - dq) && fenced(x + dr, y + dq)) return true;
+    }
+    return false;
+  };
+  // Shortest span first: open ground usually fails on the first way it is walked.
+  return hits(0, -1, 'fence_h') && hits(0, 1, 'fence_h') && hits(-1, 0, 'fence_v') && hits(1, 0, 'fence_v');
 }
 
 /** Tiles in reach, nearest first: the one faced, the one stood on, then the 4 and the diagonal neighbours. */
@@ -178,7 +209,7 @@ export function landDawnLines(state: SimState): string[] {
     const folk = Object.values(state.people).filter((p) => p.townId === townId).sort((a, b) => a.id.localeCompare(b.id));
     const who = folk.length ? folk[state.day % folk.length]! : undefined;
     const town = entries[0]!.townName ?? prettyTown(townId);
-    const name = who ? (who.name ?? prettyTown(who.id)).split(' ')[0] : 'A traveller';
+    const name = who ? firstNameOf(who.name ?? prettyTown(who.id)) : 'A traveller';
     out.push(`${name} says someone ${act.heard} outside ${town}.`);
   }
   return out;

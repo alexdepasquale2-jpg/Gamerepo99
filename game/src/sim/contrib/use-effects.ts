@@ -11,6 +11,7 @@ import { nodeCharges, nodeKind, type WorldNode } from '../goods/nodes';
 import { encodeUnspokenForState } from '../social/unspoken';
 import { supplyTown } from '../economy/village-economy';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 export type Bundle = {
   /** Player spark gained (capped at sparkMax). */
@@ -42,7 +43,7 @@ export const markUsed = (state: SimState, key: string): void => void (flagMap(st
 
 export const firstName = (state: SimState, id: string): string => {
   const n = state.people[id]?.name ?? id.replace(/_/g, ' ');
-  const w = n.split(' ')[0] ?? n;
+  const w = firstNameOf(n) ?? n;
   return w ? w[0]!.toUpperCase() + w.slice(1) : n;
 };
 

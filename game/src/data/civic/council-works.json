@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "spec": "What the council spends its treasury on (sim/contrib/council-works.ts), after paying builders on its own works, at most one of each a dawn and in this order. food: when the granary holds under belowDays of the town's meal it buys `item` from passing carters (coin leaves the district; the grain arrives as source:purchase in town-stores) up to toDays of the meal, at most maxPerDawn and what the granary has room for, at the town's price times priceMul; then not again for gap days. road: a road out of town worse than `below` (or broken) gets a paid hand who mends it by `gain` (never past the crews' ceiling), `wage` coin to the hand; one road every gap days. repair: a road facility of this town idle (no crew at work) for idleDays or more is put back to work by a resident fit to work there, hired for `wage`; one every gap days. reserve: coin the council keeps back from all of it. lines: the leader tells the player's town, {who} {town} {qty} {item} {coin} {road} {place}. newsKeep: council-works news kept per town.",
+  "reserve": 4,
+  "food": { "item": "grain", "belowDays": 2, "toDays": 5, "maxPerDawn": 40, "priceMul": 1.25, "gap": 3 },
+  "road": { "below": 0.6, "gain": 0.12, "wage": 6, "gap": 4 },
+  "repair": { "idleDays": 8, "wage": 10, "gap": 6 },
+  "newsKeep": 12,
+  "lines": {
+    "food": [
+      "{who} says the granary in {town} was running thin, so the council bought {qty} sacks of {item} off the carters. {coin} coin out of the levy.",
+      "{who} says the council paid {coin} coin from the levy for {qty} sacks of {item}. The granary in {town} will see us through."
+    ],
+    "road": [
+      "{who} says the council paid a hand {coin} coin to mend the road to {road}.",
+      "{who} says the levy is going on stone and timber for the road to {road}. {coin} coin of it this week."
+    ],
+    "repair": [
+      "{who} says the council put a crew back into the {place}. It had stood empty too long.",
+      "{who} says the {place} is working again. The council hired a hand for {coin} coin."
+    ]
+  }
+}

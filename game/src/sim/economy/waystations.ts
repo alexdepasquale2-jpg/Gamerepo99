@@ -22,6 +22,7 @@ import type { SimState } from '../types/runtime';
 import { besideRoad, facilityById, facilityPlaces, type FacilityPlace } from './facilities';
 import { cartPosition } from './logistics';
 import { guardCarts, roadWord, roadwayOf, type RoadHelp } from './roads';
+import { firstNameOf } from '../names';
 
 export const INNS = {
   restCoin: 1,
@@ -75,7 +76,7 @@ export const waystationsOn = (state: SimState, routeId: string): FacilityPlace[]
 /** The hostler's first name (the first of the crew), or a stand-in. */
 export function hostName(state: SimState, place: FacilityPlace): { id?: string; name: string } {
   const id = state.facilityStaff?.[place.id]?.crew.find((c) => !!c && !!state.people[c]) ?? undefined;
-  const name = id ? state.people[id]?.name?.split(' ')[0] : undefined;
+  const name = id ? firstNameOf(state.people[id]?.name) : undefined;
   return name ? { id, name } : { name: 'The hostler' };
 }
 
@@ -107,12 +108,12 @@ export function rumoursAt(state: SimState, place: FacilityPlace): string[] {
   const ls = state.letters;
   for (const f of ls?.flight ?? []) {
     if (f.fromPersonId !== state.player.id || !onRoad(f.legs)) continue;
-    const who = state.people[f.toPersonId]?.name?.split(' ')[0] ?? 'someone';
+    const who = firstNameOf(state.people[f.toPersonId]?.name) ?? 'someone';
     out.push(`A courier came through with a letter of yours for ${who}, bound for ${town(f.toTownId)}. ${f.days} dawn${f.days === 1 ? '' : 's'} out, yet.`);
   }
   for (const r of ls?.replies ?? []) {
     if (r.status !== 'travelling' || !onRoad(r.legs)) continue;
-    const who = state.people[r.fromPersonId]?.name?.split(' ')[0] ?? 'someone';
+    const who = firstNameOf(state.people[r.fromPersonId]?.name) ?? 'someone';
     out.push(`There is a rider on this road with a letter for you, from ${who} in ${town(r.fromTownId)}.`);
   }
   for (const a of state.happenings?.active ?? []) {

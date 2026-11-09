@@ -227,6 +227,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
       things.stores.update(time / 1000);
       roadWear.update(scene.cameras.main, true);
       war.update(time / 1000, scene.cameras.main);
+      civic.update(scene.cameras.main);
       towns.update(time, player, night);
       const lights = towns.spots
         .filter((s) => Math.hypot(s.hearth.x - player.x, s.hearth.y - player.y) < LIGHT_RANGE)

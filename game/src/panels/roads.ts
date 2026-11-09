@@ -16,6 +16,7 @@ import { coinOf } from '../sim/travel/journey';
 import { unreadReplies } from '../sim/letter-replies';
 import { button, el, townNamer } from './dom';
 import { districtAt } from '../sim/map/districts';
+import { firstNameOf } from '../sim/names';
 
 export const ROADS_ID = 'roads';
 const days = (n: number): string => `${n} day${n === 1 ? '' : 's'}`;
@@ -130,7 +131,7 @@ export function createRoads(ctx: GameContext, closeSheet: () => void): Roads {
         const kept = st.economyRoutes?.find((x) => x.id === r.routeId);
         sec.append(el('h3', '', `To ${to} · ${days(r.walkDays)} on foot${kept ? ` · the road is ${roadWord(kept)}` : ''}`));
         // A friend shows the shorter way (travel-trades fastRouteUnlocks): say who.
-        if (r.friendId) sec.append(el('p', 'hf-small hf-road-friend', `${(st.people[r.friendId]?.name ?? 'A friend').split(' ')[0]} knows a shorter way; the walk is quicker for it.`));
+        if (r.friendId) sec.append(el('p', 'hf-small hf-road-friend', `${firstNameOf(st.people[r.friendId]?.name ?? 'A friend')} knows a shorter way; the walk is quicker for it.`));
         sec.append(button(`Walk it: ${days(r.walkDays)}`, () => void travel(r.routeId), {
           id: `walk-${r.routeId}`, title: 'On foot. The world goes on while you walk.',
         }));

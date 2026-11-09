@@ -2,7 +2,9 @@
  * Traffic on the roads: trade wagons (the sim's caravans, drawn with their ox and status, and Things of
  * kind 'wagon'), village carts carrying goods to a short town, and couriers walking letters. Caravans
  * roll on in real time (advanceCaravanTravel); carts and couriers move a stage per dawn and ease there.
- * Only traffic inside the camera has sprites.
+ * Only traffic inside the camera has sprites. Art-pack frames are blended in once they load (pack-art):
+ * a cart carries its goods' own load, a wreck spills it with a rat picking at it, and a trade wagon
+ * trails a pack mule that faces its road eight ways.
  */
 import type Phaser from 'phaser';
 import type { GameContext, Pt, Thing } from '../app/contracts';
@@ -13,7 +15,8 @@ import { couriersOnRoad } from '../sim/letter-replies';
 import type { RoadPosition } from '../sim/road-journey';
 import type { LayoutRoute } from '../sim/map/world-layout';
 import type { CaravanMobile } from '../sim/caravans-types';
-import { ART_SCALE, ensureShadow, vehicleTexture } from './looks';
+import { ART_SCALE, CART_BED_Y, CART_H, cargoTexture, ensureShadow, heading8, muleTexture, ratTexture, vehicleTexture } from './looks';
+import { packVersion } from '../world/art/pack-art';
 import type { NameLayer } from './name-layer';
 import { safe } from './player';
 import { countVisual } from '../dev/visual-counts';
@@ -25,7 +28,17 @@ const SLOW_EVERY = 0.25;
 
 /** A wreck is a lost cart left where the road took it (economy/logistics wrecks), tipped on its side. */
 type Kind = 'wagon' | 'cart' | 'courier' | 'wreck';
-type Mover = { x: number; y: number; dx: number; seen: boolean; parts: Phaser.GameObjects.GameObject[] };
+type Mover = {
+  x: number; y: number; dx: number; seen: boolean; parts: Phaser.GameObjects.GameObject[];
+  /** Last clear road direction (both axes together), for the 8-way mule; dx alone keeps the flip steady. */
+  hx: number; hy: number;
+  /** Pack-art pieces, when their frames were in at build time (`art` is the pack version then). */
+  load?: Phaser.GameObjects.Image; mule?: Phaser.GameObjects.Image; rat?: Phaser.GameObjects.Image; art: number;
+};
+/** The cart load's centre sits this far (1x px) behind the cart strip's middle, over its bed. */
+const LOAD_BACK = 2.5;
+/** A pack mule walks this far (world px) behind its wagon's centre. */
+const MULE_BACK = 50;
 
 export type WagonsCtl = {
   update(dt: number, timeSec: number, names: NameLayer): void;
@@ -37,7 +50,7 @@ export type WagonsCtl = {
 export function createWagons(ctx: GameContext): WagonsCtl {
   const scene = ctx.scene;
   const routes = new Map<string, LayoutRoute>(ctx.layout.routes.map((r) => [r.id, r]));
-  const pos = new Map<string, { kind: Kind; x: number; y: number; dx: number; label?: string }>();
+  const pos = new Map<string, { kind: Kind; x: number; y: number; dx: number; dy?: number; label?: string }>();
   const movers = new Map<string, Mover>();
   let slow = 0;
 
@@ -63,31 +76,55 @@ export function createWagons(ctx: GameContext): WagonsCtl {
     return safe(() => ctx.interact.isOpen() || ctx.panels.anyOpen(), false) ? f.id : undefined;
   };
 
-  const caravanAt = (m: CaravanMobile): { p: Pt; dx: number } | null => {
+  const caravanAt = (m: CaravanMobile): { p: Pt; dx: number; dy: number } | null => {
     const f = m.heading === 'outbound' ? m.progress01 : 1 - m.progress01;
     const p = roadPx(m.routeId, f);
     const q = roadPx(m.routeId, f + (m.heading === 'outbound' ? 0.004 : -0.004));
     if (!p || !q) return null;
     const turned = m.phase === 'departing';
-    return { p, dx: (q.x - p.x) * (turned ? -1 : 1) };
+    return { p, dx: (q.x - p.x) * (turned ? -1 : 1), dy: (q.y - p.y) * (turned ? -1 : 1) };
+  };
+
+  /** The goods a cart or wreck carries (its id is `cart:<cartId>` / `wreck:<cartId>`), read from state. */
+  const goodsOf = (id: string, kind: Kind): string | undefined => {
+    const log = ctx.session.getState()?.logistics;
+    const cartId = id.slice(id.indexOf(':') + 1);
+    if (kind === 'cart') return log?.carts.find((c) => c.id === cartId)?.itemId;
+    if (kind === 'wreck') return log?.wrecks?.find((w) => w.cartId === cartId)?.itemId;
+    return undefined;
   };
 
   const build = (id: string, kind: Kind, x: number, y: number): Mover => {
     const parts: Phaser.GameObjects.GameObject[] = [];
+    const art = packVersion(scene);
+    const img = (tex: string) => { const o = scene.add.image(x, y, tex).setOrigin(0.5, 1).setScale(ART_SCALE); parts.push(o); return o; };
     const shadow = scene.add.image(x, y, ensureShadow(scene)).setScale(kind === 'wagon' ? 3 : 1.4, 1.2);
     parts.push(shadow);
+    const m: Mover = { x, y, dx: 1, hx: 1, hy: 0, seen: true, parts, art };
     if (kind === 'wagon') {
       parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'wagon'), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
       parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'ox'), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
+      const mule = muleTexture(scene, 2);
+      if (mule) m.mule = img(mule);
     } else if (kind === 'wreck') {
-      // On its side, dark with mud, its load spilled beside it.
-      parts.push(scene.add.sprite(x, y, vehicleTexture(scene, 'cart'), '0').setOrigin(0.5, 0.8).setScale(ART_SCALE).setAngle(80).setTint(0x8a7a6a));
-      const spill = scene.add.graphics();
-      spill.fillStyle(0x9a6a3a, 1).fillRect(-14, -6, 9, 7).fillRect(10, -3, 8, 6);
-      spill.fillStyle(0xc8a46a, 1).fillEllipse(2, 2, 10, 5);
-      parts.push(spill);
+      // On its side, dark with mud, its load spilled beside it (its goods' own art once the packs are in,
+      // tipped out of the cart, so the cart lies empty).
+      const goods = goodsOf(id, kind), load = goods ? cargoTexture(scene, goods) : null;
+      parts.push(scene.add.sprite(x, y, vehicleTexture(scene, load ? 'cart-empty' : 'cart'), '0').setOrigin(0.5, 0.8).setScale(ART_SCALE).setAngle(80).setTint(0x8a7a6a));
+      if (load) img(load).setAngle(-14).setTint(0xc8c0b4);
+      else {
+        const spill = scene.add.graphics();
+        spill.fillStyle(0x9a6a3a, 1).fillRect(-14, -6, 9, 7).fillRect(10, -3, 8, 6);
+        spill.fillStyle(0xc8a46a, 1).fillEllipse(2, 2, 10, 5);
+        parts.push(spill);
+      }
+      const rat = ratTexture(scene);
+      if (rat) m.rat = img(rat);
+    } else if (kind === 'cart') {
+      const goods = goodsOf(id, kind), load = goods ? cargoTexture(scene, goods) : null;
+      parts.push(scene.add.sprite(x, y, vehicleTexture(scene, load ? 'cart-empty' : 'cart'), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
+      if (load) m.load = img(load);
     } else parts.push(scene.add.sprite(x, y, vehicleTexture(scene, kind), '0').setOrigin(0.5, 1).setScale(ART_SCALE));
-    const m: Mover = { x, y, dx: 1, seen: true, parts };
     movers.set(id, m);
     return m;
   };
@@ -122,7 +159,7 @@ export function createWagons(ctx: GameContext): WagonsCtl {
         const a = caravanAt(m);
         if (!a) continue;
         live.add(m.id);
-        pos.set(m.id, { kind: 'wagon', x: a.p.x, y: a.p.y, dx: a.dx, label: caravanStatus(m) });
+        pos.set(m.id, { kind: 'wagon', x: a.p.x, y: a.p.y, dx: a.dx, dy: a.dy, label: caravanStatus(m) });
       }
       for (const [id, p] of pos) if (p.kind === 'wagon' && !live.has(id)) pos.delete(id);
       slow -= dt;
@@ -131,18 +168,28 @@ export function createWagons(ctx: GameContext): WagonsCtl {
       const vr = viewRect(scene, 96);
       const lr = viewRect(scene, 8);
       const indoors = !!safe(() => ctx.world.room(), null);
+      const art = packVersion(scene);
       for (const m of movers.values()) m.seen = false;
       const seenKinds: Record<Kind, number> = { wagon: 0, cart: 0, courier: 0, wreck: 0 };
       if (!indoors) for (const [id, p] of pos) {
         if (!inRect(vr, p.x, p.y)) continue;
-        const m = movers.get(id) ?? build(id, p.kind, p.x, p.y);
+        let m = movers.get(id) ?? build(id, p.kind, p.x, p.y);
+        if (m.art !== art) {
+          // Pack art landed since it was built: rebuild where it stands, facing as it was, to pick the frames up.
+          const old = m;
+          old.parts.forEach((o) => o.destroy());
+          m = build(id, p.kind, old.x, old.y);
+          Object.assign(m, { dx: old.dx, hx: old.hx, hy: old.hy });
+        }
         m.seen = true;
         seenKinds[p.kind]++;
         if (p.kind === 'wreck') {
-          const [shadow, body, spill] = m.parts as [Phaser.GameObjects.Image, Phaser.GameObjects.Sprite, Phaser.GameObjects.Graphics];
+          const [shadow, body, spill] = m.parts as [Phaser.GameObjects.Image, Phaser.GameObjects.Sprite, Phaser.GameObjects.Image | Phaser.GameObjects.Graphics];
           shadow.setPosition(p.x, p.y - 1).setDepth(p.y - 0.5);
           body.setPosition(p.x, p.y).setDepth(p.y);
-          spill.setPosition(p.x + 18, p.y).setDepth(p.y + 0.1);
+          spill.setPosition(p.x + (spill.type === 'Graphics' ? 18 : 24), p.y + (spill.type === 'Graphics' ? 0 : 4)).setDepth(p.y + 0.1);
+          // The rat sits at the spill's far edge, nose to it, and twitches now and then.
+          m.rat?.setPosition(p.x + 48, p.y + 6 - (Math.floor(timeSec * 3) % 7 === 0 ? 1 : 0)).setDepth(p.y + 6).setFlipX(true);
           if (p.label && inRect(lr, p.x, p.y)) names.put(`w:${id}`, p.x, p.y - 30, { text: p.label, alpha: 0.8, muted: true });
           continue;
         }
@@ -151,15 +198,28 @@ export function createWagons(ctx: GameContext): WagonsCtl {
         m.x += (p.x - m.x) * ease;
         m.y += (p.y - m.y) * ease;
         if (Math.abs(p.dx) > 0.2) m.dx = p.dx;
+        if (Math.hypot(p.dx, p.dy ?? 0) > 0.2) { m.hx = p.dx; m.hy = p.dy ?? 0; }
         const rolling = Math.abs(m.x - ox) > 0.05 || (p.kind === 'courier' && Math.hypot(p.x - m.x, p.y - m.y) > 1);
         const frame = rolling ? String(Math.floor(timeSec * 5) % 2) : '0';
         const left = m.dx < 0;
-        const [shadow, body, ox2] = m.parts as [Phaser.GameObjects.Image, Phaser.GameObjects.Sprite, Phaser.GameObjects.Sprite | undefined];
+        const [shadow, body] = m.parts as [Phaser.GameObjects.Image, Phaser.GameObjects.Sprite];
+        const ox2 = p.kind === 'wagon' ? (m.parts[2] as Phaser.GameObjects.Sprite) : undefined;
         shadow.setPosition(m.x, m.y - 1).setDepth(m.y - 0.5);
         body.setPosition(m.x, m.y).setDepth(m.y).setFlipX(left).setFrame(frame);
         if (ox2) {
           const oxX = m.x + (left ? -1 : 1) * 46;
           ox2.setPosition(oxX, m.y).setDepth(m.y + 0.1).setFlipX(left).setFrame(frame);
+        }
+        if (m.mule) {
+          // Trails the wagon facing the road's own way (8-way frames), its walk a one-pixel bob in step.
+          const tex = muleTexture(scene, heading8(m.hx, m.hy));
+          if (tex && m.mule.texture.key !== tex) m.mule.setTexture(tex);
+          m.mule.setPosition(m.x - (left ? -1 : 1) * MULE_BACK, m.y - (frame === '1' ? ART_SCALE : 0)).setDepth(m.y - 0.2);
+        }
+        if (m.load) {
+          // On the bed, behind the shafts: the strip's middle less LOAD_BACK, mirrored when it faces left.
+          m.load.setPosition(m.x + (left ? 1 : -1) * LOAD_BACK * ART_SCALE, m.y - (CART_H - CART_BED_Y) * ART_SCALE)
+            .setDepth(m.y + 0.05).setFlipX(left);
         }
         if (p.label && inRect(lr, m.x, m.y)) {
           names.put(`w:${id}`, m.x, m.y - (p.kind === 'wagon' ? 50 : 36), { text: p.kind === 'wagon' ? `Trader · ${p.label}` : p.label, alpha: 0.85, muted: p.kind !== 'wagon' });

@@ -25,6 +25,8 @@ button.hf-chip:focus-visible{outline:2px solid var(--hf-focus);outline-offset:2p
 #hf-spark.is-low{animation:hf-gutter 1.8s ease-in-out infinite}
 @keyframes hf-gutter{50%{border-color:${rgba('sparkOutline', 0.3)};box-shadow:0 0 0 2px ${rgba('void', 0.45)},0 0 10px ${rgba('wound', 0.8)}}}
 #hf-purse{left:calc(var(--hf-u) * ${HUD_LAYOUT.hotbar.x}px);bottom:calc(var(--hf-u) * ${360 - HUD_LAYOUT.hotbar.y + 4}px + var(--hf-pad-overlap));color:var(--hf-glow);font-family:var(--hf-font-mono);font-variant-numeric:tabular-nums;pointer-events:none}
+/* Touch hotbar slots are taller (44px+, panels/dom.ts), so the purse rides above the whole tray. */
+@media (pointer:coarse){#hf-purse{bottom:calc(80px + var(--hf-pad-overlap))}}
 
 #hf-touch{position:absolute;left:0;right:0;bottom:calc(var(--hf-u) * 6px);height:0;pointer-events:none}
 #hf-ui-layer[data-dock=below] #hf-touch{bottom:calc(8px + env(safe-area-inset-bottom,0px) - var(--hf-below))}

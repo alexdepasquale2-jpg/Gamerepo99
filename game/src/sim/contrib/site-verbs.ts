@@ -1,3 +1,4 @@
+import { firstNameOf } from '../names';
 /**
  * Running sites, kept in the world (civic slice 5). The ring offers one verb at a site's plot or a road
  * facility: "Ledger" (`site.ledger@<kind>:<id>`; panels open the site sheet). Everything else happens on
@@ -60,7 +61,7 @@ registerDawnTick('people', 'site-desk', afterStaffing);
 
 // ---- Dawn: the hands tell you how your places went. ----
 
-const firstOf = (state: SimState, id: string | undefined): string | undefined => (id ? state.people[id]?.name?.split(' ')[0] : undefined);
+const firstOf = (state: SimState, id: string | undefined): string | undefined => (id ? firstNameOf(state.people[id]?.name) : undefined);
 
 function deskLine(state: SimState, n: DeskNews): string | null {
   const site = siteById(state, n.siteId);

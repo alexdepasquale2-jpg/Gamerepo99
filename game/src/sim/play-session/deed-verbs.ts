@@ -9,6 +9,7 @@ import type { CompatRuntime } from '../interaction';
 import type { SimState } from '../types/runtime';
 import { itemName } from '../goods/inventory';
 import { lendCandidate, lendFrom, returnLine, returnTheirGoods, theirGoods } from '../goods/return-goods';
+import { firstNameOf } from '../names';
 
 export type DeedRow = {
   id: string;
@@ -58,7 +59,7 @@ export function deedVerbAllowed(state: SimState, d: DeedRow, personId: string, r
 
 function nameOf(state: SimState, personId: string): string {
   const n = state.people[personId]?.name ?? personId.replace(/_/g, ' ');
-  const w = n.split(' ')[0] ?? n;
+  const w = firstNameOf(n) ?? n;
   return w ? w[0]!.toUpperCase() + w.slice(1) : n;
 }
 

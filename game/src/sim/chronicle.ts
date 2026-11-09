@@ -1,8 +1,8 @@
 /**
  * The living chronicle: what happens in play becomes history. pushJuice hands every juice id here;
- * notable ones (a person reignited, a death, a doctrine falling or taken over, a succession, a
- * happening, a stolen hoard, a patron's betrayal) append a HistoryEvent to state.history carrying its
- * own summary, town, kind and gist, so history-voice retells it like the old beats: townsfolk and the
+ * notable ones (a person reignited, a death, a doctrine falling or taken over, a rival creed rising,
+ * a succession, a happening, a stolen hoard, a patron's betrayal) append a HistoryEvent to
+ * state.history carrying its own summary, town, kind and gist, so history-voice retells it like the old beats: townsfolk and the
  * named know it, the old know everything, each person tells it once. Each kind keeps its newest `keep`.
  * Templates in data/dialogue/chronicle.json. Pure, deterministic (seeded by seed/kind/day/key).
  */
@@ -13,6 +13,7 @@ import { prettyTownId } from './map/districts';
 import type { HistoryEvent } from './gen/world-types';
 import { deriveRng } from './rng';
 import type { SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 type KindRow = { gist: string; summaries: string[] };
 type Table = { keep: number; keepByKind?: Record<string, number>; onlyFirstPerPerson: string[]; kinds: Record<string, KindRow>; codas: Record<string, string[]>; events: Record<string, string> };
@@ -30,7 +31,7 @@ function townName(state: SimState, id: string | undefined): string {
 }
 function personName(state: SimState, id: string | undefined, fallback = 'someone'): string {
   const p = id ? state.people[id] : undefined;
-  return (p?.name ?? (id ? title(id) : fallback)).split(' ')[0] ?? fallback;
+  return firstNameOf(p?.name ?? (id ? title(id) : fallback)) ?? fallback;
 }
 function doctrineName(state: SimState, id: string | undefined): string {
   return (id && doctrineRow(state, id)?.name) || (id ? title(id.replace(/^doctrine_/, '')) : 'old creed');
@@ -55,7 +56,7 @@ function noteOf(state: SimState, id: string, p: P): Note | null {
     case 'kin.death': {
       const dead = str(p.deadId), teller = str(p.personId), t = str(p.townId);
       if (!dead) return null;
-      const name = (str(p.name) ?? title(dead)).split(' ')[0]!;
+      const name = firstNameOf(str(p.name) ?? title(dead))!;
       return { kind: 'death', key: dead, townId: t, personIds: teller ? [teller] : [], slots: { name, town: townName(state, t), age: 'a good age' } };
     }
     case 'doctrine.collapse': {
@@ -65,6 +66,12 @@ function noteOf(state: SimState, id: string, p: P): Note | null {
     case 'doctrine.swap': {
       const t = str(p.townId);
       return { kind: 'swap', key: `${str(p.challengerId)}>${str(p.incumbentId)}`, townId: t, personIds: [], slots: { challenger: doctrineName(state, str(p.challengerId)), incumbent: doctrineName(state, str(p.incumbentId)), town: townName(state, t) } };
+    }
+    case 'doctrine.rival': {
+      // doctrine-dissent: `doctrineId` is the creed risen against, `challengerId` the new one, `townId` where it rose.
+      const t = str(p.townId), rival = str(p.challengerId);
+      if (!rival) return null;
+      return { kind: 'rival', key: rival, townId: t, personIds: [], slots: { challenger: doctrineName(state, rival), incumbent: doctrineName(state, str(p.doctrineId)), town: townName(state, t) } };
     }
     case 'succession.carried': {
       const heir = str(p.heirPersonId);

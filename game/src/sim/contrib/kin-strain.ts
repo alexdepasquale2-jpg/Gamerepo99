@@ -8,10 +8,11 @@ import { registerDawnLines } from '../dawn-lines';
 import { deriveRng } from '../rng';
 import { kinStrainMap, STRAINED, strainedTiesOf, townDisplayName, townGap01, townKind } from '../social/kin-strain';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 type Told = { a: string; b: string; kind: string };
 
-const first = (name: string): string => name.split(' ')[0] ?? name;
+const first = (name: string): string => firstNameOf(name) ?? name;
 
 function placeOf(townId: string | undefined): string {
   const name = townDisplayName(townId) ?? 'away';

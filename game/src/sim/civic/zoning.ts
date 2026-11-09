@@ -36,6 +36,8 @@ type Table = {
   layouts: Record<SettlementKind, Layout>;
   buildingZone: Record<string, ZoneId>;
   tiers: { id: string; name: string; pop: number; built: number }[];
+  /** What else counts toward a tier (sim/civic/tiers): road crews' stations and the households' children. */
+  growth: { crewSite: number; crewRampDays: number; child: number };
   unlocks: Record<string, string>;
   civicBuildings: BuildingRow[];
   council: Council;

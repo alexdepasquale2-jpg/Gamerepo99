@@ -4,19 +4,19 @@
  * that is short of it (economy/village-economy). They spawn near the player (their town and its road
  * neighbours), walk the road for real (sim/visitors), and are people with ring verbs: ask where they're
  * bound, ask a blessing, ask for news, feed or guide a refugee (a helped refugee settles where the road
- * ends), buy from a pedlar. Pure + deterministic.
+ * ends). A pedlar's pack is bought from through the shop sheet ("Browse wares", contrib/shop and
+ * goods/shop), the one way to deal with them, so there is no buy chip here. Pure + deterministic.
  */
 import { doctrineRow } from '../doctrine-tick';
 import { atWar, CREEDS } from '../economy/polity';
 import { COVER_DAYS, scarcity, supplyTown } from '../economy/village-economy';
-import { priceAt } from '../goods/deed-goods';
-import { addItem, removeItem } from '../goods/inventory';
+import { removeItem } from '../goods/inventory';
 import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '../play-session/action-providers';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { noteVisitorNews, registerVisitorSource, roadVisitors, settleVisitor, spawnVisitor, visitorOf, type Visitor, type VisitorKind } from '../visitors';
 import { legitimacyShort } from './power-page';
-import { chip, coinHeld, fill, foodHeld, goodName, line, payCoin, pickLine, townName, visitorVars, VL, warm } from './visitor-lines';
+import { coinHeld, fill, foodHeld, goodName, line, payCoin, pickLine, townName, visitorVars, VL, warm } from './visitor-lines';
 
 const SOURCE = 'road-folk';
 const KINDS: readonly VisitorKind[] = ['pilgrim', 'courier', 'refugee', 'pedlar'];
@@ -178,8 +178,6 @@ function helpRefugee(state: SimState, v: Visitor, by: number): void {
   if (!v.legs && v.townId) settleVisitor(state, v.id, v.townId);
 }
 
-const pedlarPrice = (state: SimState, v: Visitor): number => Math.max(1, priceAt(state, v.toTownId ?? v.townId ?? '', v.item ?? '') - 1);
-
 registerTargetProvider({
   id: 'road-folk',
   kinds: ['person'],
@@ -194,10 +192,6 @@ registerTargetProvider({
       if (foodHeld(state)) out.push({ id: `road_food@${id}`, label: 'Share food with them', short: 'Share food', family: 'give' });
       if (coinHeld(state) >= 1) out.push({ id: `road_coin@${id}`, label: 'Give them a coin for the road', short: 'Give a coin', family: 'give' });
       if (v.legs) out.push({ id: `road_point@${id}`, label: `Point the way to ${townName(state, v.toTownId)}`, short: 'Point the way', family: 'help' });
-    }
-    if (v.kind === 'pedlar' && v.item && (v.qty ?? 0) > 0) {
-      const price = pedlarPrice(state, v), item = goodName(v.item);
-      out.push({ id: `road_buy@${id}`, label: `Buy ${item} from the pedlar (${price} coin)`, short: chip(`Buy ${item}`, 'Buy from them'), family: 'deal' });
     }
     return out;
   },
@@ -235,14 +229,6 @@ registerTargetProvider({
       case 'road_point':
         helpRefugee(state, v, 4);
         return say('point_refugee');
-      case 'road_buy': {
-        if (!v.item || !(v.qty ?? 0)) return say('sold_out_pedlar');
-        const price = pedlarPrice(state, v);
-        if (!payCoin(state, price)) return { ok: false, line: `That's ${price} coin. You haven't enough.` };
-        addItem(state, v.item, 1);
-        v.qty = (v.qty ?? 1) - 1;
-        return say('buy_pedlar');
-      }
       default:
         return false;
     }

@@ -11,6 +11,7 @@ import { fallbackLine } from './fallback-lines';
 import type { DataTables } from './load-data';
 import { pushJuice } from './packets';
 import type { SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 export type ProofRow = {
   id: string;
@@ -43,7 +44,7 @@ export function proofFor(state: SimState, personId: string, methodId: string): P
 /** The shown proof did its work: they say what it meant. */
 export function showProof(state: SimState, personId: string, proof: ProofRow): void {
   noteUse('people/proofs', proof.id);
-  const from = proof.sourcePersonId ? state.people[proof.sourcePersonId]?.name?.split(' ')[0] : undefined;
+  const from = proof.sourcePersonId ? firstNameOf(state.people[proof.sourcePersonId]?.name) : undefined;
   const line = fallbackLine('proof_shown', `${state.seed}|${state.day}|${personId}|${proof.id}`, { proof: proof.name.toLowerCase(), from });
   pushJuice(state, 'proof.shown', { personId, proofId: proof.id, line });
 }

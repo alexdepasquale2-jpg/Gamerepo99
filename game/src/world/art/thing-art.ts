@@ -2,9 +2,13 @@
  * Interactable things as code-drawn 1x textures (shown at 2x): resource nodes at three fullness levels
  * (full, picked over, spent), the stash chest and its tally pieces, noticeboard, signpost, facilities
  * and their crew, plot stakes, graves, a ground bundle (tinted by item colour), the hearth and the stall.
+ * An ore vein is the one node drawn from the art packs once they load (pack-art): its boulder reads far
+ * better than the painted lump, which stays as the look until then.
  */
 import type Phaser from 'phaser';
-import { makeTex, type Px } from './px';
+import { ihash, makeTex, painter, strHash, type Px } from './px';
+import { packTex } from './pack-art';
+import { noteUse } from '../../sim/data-use-world';
 
 /** Node look by fullness: 2 full, 1 picked over, 0 spent. */
 type NodePaint = (p: Px, level: number) => void;
@@ -57,7 +61,24 @@ const NODES: Record<string, [number, number, NodePaint]> = {
   }],
 };
 const NODE_FALLBACK = 'rock';
-export const nodeTex = (kindId: string, level: number): string => `w-node-${NODES[kindId] ? kindId : NODE_FALLBACK}-${Math.max(0, Math.min(2, level))}`;
+/** Ore boulders a vein may show (one per vein, by its id); a spent vein is the scatter of slag left behind. */
+const ORE_FULL = ['ore.ore_iron', 'ore.ore_copper'];
+const ORE_SPENT = 'ore.ore_slag_tin';
+
+/**
+ * Texture of a node at a fullness level. With a scene and the node's id, an ore vein shows its pack
+ * boulder (full), the same boulder worn smaller (picked over) or the slag scatter (spent) once the packs
+ * have loaded; until then, and for every other kind, the painted look.
+ */
+export function nodeTex(kindId: string, level: number, id?: string, scene?: Phaser.Scene): string {
+  const l = Math.max(0, Math.min(2, level));
+  if (kindId === 'ore_vein' && id && scene) {
+    const key = l === 0 ? ORE_SPENT : ORE_FULL[strHash(id) % ORE_FULL.length]!;
+    const tex = packTex(scene, key, l === 1 ? 2.6 : 2);
+    if (tex) { noteUse('art', key); return tex; }
+  }
+  return `w-node-${NODES[kindId] ? kindId : NODE_FALLBACK}-${l}`;
+}
 
 const THINGS: Record<string, [number, number, (p: Px) => void]> = {
   chest: [14, 11, (p) => {
@@ -139,7 +160,62 @@ const THINGS: Record<string, [number, number, (p: Px) => void]> = {
 
 export const thingTex = (id: string): string => `w-thing-${id}`;
 
+/** The facility kinds that have an abandoned look (overworld-assets facility.<kind>.abandoned). */
+export const FACILITY_KINDS = ['mill', 'lumber_camp', 'mine', 'waystation'] as const;
+export const abandonedTex = (kind: string): string => `w-thing-${kind}-abandoned`;
+
+/*
+ * The manifest's abandoned facility is a "swap" look: broken overlay on the same building. The baked
+ * buildings sheet its frames point at holds slices of an inn, not these yards, so the overlay is painted
+ * here over the facility's own art: weathered to grey-brown, roof and walls holed, weeds at the foot and
+ * the doorway boarded. Holes and weeds fall by a seeded hash of the pixel, so each kind decays its own way.
+ */
+function paintAbandoned(scene: Phaser.Scene, kind: string): void {
+  const key = abandonedTex(kind), base = thingTex(kind);
+  if (!scene.textures.exists(base) || scene.textures.exists(key)) return;
+  // A weathered copy of the working building's own texture, so the two can never drift apart.
+  const src = scene.textures.get(base).getSourceImage() as HTMLCanvasElement, w = src.width, h = src.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src, 0, 0);
+  const img = ctx.getImageData(0, 0, w, h), d = img.data;
+  const solid = (x: number, y: number) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3]! > 200;
+  const seed = strHash(kind);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    if (d[i + 3]! < 200) continue;
+    // Weathered: two thirds of the way to its own grey, darkened, warmed a touch toward old timber.
+    const lum = d[i]! * 0.3 + d[i + 1]! * 0.59 + d[i + 2]! * 0.11;
+    const mix = (c: number, warm: number) => Math.round((c * 0.35 + lum * 0.65) * 0.78 + warm);
+    d[i] = mix(d[i]!, 6); d[i + 1] = mix(d[i + 1]!, 2); d[i + 2] = mix(d[i + 2]!, -4);
+    // Holes: dark gaps in the upper two thirds, only where the building is solid all round.
+    if (y < h * 0.66 && solid(x - 1, y) && solid(x + 1, y) && solid(x, y - 1) && ihash(x >> 1, y, seed) < 0.06) {
+      d[i] = 0x1e; d[i + 1] = 0x1a; d[i + 2] = 0x16;
+    }
+  }
+  // Weeds up the foot of every solid column.
+  for (let x = 0; x < w; x++) {
+    let foot = -1;
+    for (let y = h - 1; y >= 0; y--) if (solid(x, y)) { foot = y; break; }
+    if (foot < 0 || ihash(x, foot, seed + 1) < 0.4) continue;
+    const tall = 1 + Math.floor(ihash(x, 7, seed + 2) * 3);
+    for (let k = 0; k < tall; k++) {
+      const i = ((foot - k) * w + x) * 4;
+      d[i] = k ? 0x6a : 0x4a; d[i + 1] = k ? 0x8a : 0x6a; d[i + 2] = k ? 0x3a : 0x2a; d[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  // Boards nailed across the middle: two pale planks, crossed.
+  const p = painter(ctx, w, h), cx = Math.round(w / 2), cy = Math.round(h * 0.7);
+  for (let k = -4; k <= 4; k++) { p.px(cx + k - 1, cy + k * 0.5, '#8a7454').px(cx + k - 1, cy - k * 0.5, '#9a8462'); }
+  scene.textures.addCanvas(key, canvas);
+}
+
 export function paintThingTextures(scene: Phaser.Scene): void {
   for (const [id, [w, h, draw]] of Object.entries(NODES)) for (let l = 0; l <= 2; l++) makeTex(scene, nodeTex(id, l), w, h, (p) => draw(p, l));
   for (const [id, [w, h, draw]] of Object.entries(THINGS)) makeTex(scene, thingTex(id), w, h, draw);
+  for (const kind of FACILITY_KINDS) paintAbandoned(scene, kind);
 }
