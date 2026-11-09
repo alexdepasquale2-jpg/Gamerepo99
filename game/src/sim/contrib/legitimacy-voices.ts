@@ -18,6 +18,7 @@ import type { SimState } from '../types/runtime';
 import { carrierIn, isVisitorId } from '../visitors';
 import { leaderOf } from './power-page';
 import { chip, line, VL } from './visitor-lines';
+import { firstNameOf } from '../names';
 
 export type Band = 'firm' | 'kept' | 'habit' | 'doubt' | 'fallen';
 
@@ -81,7 +82,7 @@ registerDawnLines('legitimacy-voices', legitimacyDawnLines);
 
 // ---------- ring: ask about the leader ----------
 
-const firstOf = (state: SimState, id: string | undefined): string | undefined => (id ? state.people[id]?.name?.split(' ')[0] : undefined);
+const firstOf = (state: SimState, id: string | undefined): string | undefined => (id ? firstNameOf(state.people[id]?.name) : undefined);
 
 registerTargetProvider({
   id: 'legitimacy-voices',

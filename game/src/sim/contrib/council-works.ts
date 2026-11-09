@@ -21,6 +21,7 @@ import { priceAt } from '../goods/deed-goods';
 import { prettyTownId } from '../map/districts';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 type Works = {
   reserve: number;
@@ -148,7 +149,7 @@ export function spendTreasury(state: SimState, townId: string, c: TownCivic, lea
 
 // ---- Dawn lines: the leader tells the player's town what the levy bought. ----
 
-const first = (state: SimState, id: string | undefined): string => (id ? (state.people[id]?.name ?? 'Someone').split(' ')[0]! : 'Someone');
+const first = (state: SimState, id: string | undefined): string => (id ? firstNameOf(state.people[id]?.name ?? 'Someone')! : 'Someone');
 
 export function worksLine(state: SimState, townId: string, n: WorkNews): string {
   const pool = WORKS.lines[n.kind] ?? [];

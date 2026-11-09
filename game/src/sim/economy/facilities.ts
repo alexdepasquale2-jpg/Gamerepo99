@@ -30,6 +30,7 @@ import type { SimState } from '../types/runtime';
 import { noteUse } from '../data-use-civic';
 import type { FacilityRow } from './economy-lod-types';
 import { addStock } from './food-stock';
+import { firstNameOf } from '../names';
 
 type Worker = { id: string; role: string; shiftHours: number; sparkDrainIfHelp: number; meaningTag: string };
 type KindBlock = {
@@ -439,7 +440,7 @@ export function facilityDawnLines(state: SimState): string[] {
   const staff = state.facilityStaff;
   if (!staff) return [];
   const here = state.player.townId;
-  const nameOfPerson = (pid?: string): string => (pid && state.people[pid]?.name?.split(' ')[0]) || 'The crew';
+  const nameOfPerson = (pid?: string): string => (pid && firstNameOf(state.people[pid]?.name)) || 'The crew';
   const changed = facilityPlaces(state)
     .filter((p) => staff[p.id]?.changedDay === state.day)
     .sort((a, b) => Number(!a.townIds.includes(here ?? '')) - Number(!b.townIds.includes(here ?? '')) || a.id.localeCompare(b.id));

@@ -10,6 +10,7 @@ import { hasItem, inventoryOf, itemName, removeItem } from '../goods/inventory';
 import type { SimState } from '../types/runtime';
 import { carrierIn, type Visitor } from '../visitors';
 import { townLabel } from './power-page';
+import { firstNameOf } from '../names';
 
 type Lines = Record<string, string[]>;
 export const VL = trackedTable('dialogue/visitors', linesJson as unknown as {
@@ -45,7 +46,7 @@ export const goodName = (id: string | undefined): string => (id ? itemName(id).t
 export function visitorVars(state: SimState, v: Visitor, extra: Vars = {}): Vars {
   const name = state.people[v.id]?.name ?? v.id;
   return {
-    name, first: name.split(' ')[0], home: townName(state, v.homeTownId), to: townName(state, v.toTownId ?? v.townId),
+    name, first: firstNameOf(name), home: townName(state, v.homeTownId), to: townName(state, v.toTownId ?? v.townId),
     town: townName(state, v.townId), item: goodName(v.item), qty: v.qty, coin: v.coin, ...extra,
   };
 }

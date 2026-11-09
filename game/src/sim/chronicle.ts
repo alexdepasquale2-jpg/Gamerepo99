@@ -13,6 +13,7 @@ import { prettyTownId } from './map/districts';
 import type { HistoryEvent } from './gen/world-types';
 import { deriveRng } from './rng';
 import type { SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 type KindRow = { gist: string; summaries: string[] };
 type Table = { keep: number; keepByKind?: Record<string, number>; onlyFirstPerPerson: string[]; kinds: Record<string, KindRow>; codas: Record<string, string[]>; events: Record<string, string> };
@@ -30,7 +31,7 @@ function townName(state: SimState, id: string | undefined): string {
 }
 function personName(state: SimState, id: string | undefined, fallback = 'someone'): string {
   const p = id ? state.people[id] : undefined;
-  return (p?.name ?? (id ? title(id) : fallback)).split(' ')[0] ?? fallback;
+  return firstNameOf(p?.name ?? (id ? title(id) : fallback)) ?? fallback;
 }
 function doctrineName(state: SimState, id: string | undefined): string {
   return (id && doctrineRow(state, id)?.name) || (id ? title(id.replace(/^doctrine_/, '')) : 'old creed');
@@ -55,7 +56,7 @@ function noteOf(state: SimState, id: string, p: P): Note | null {
     case 'kin.death': {
       const dead = str(p.deadId), teller = str(p.personId), t = str(p.townId);
       if (!dead) return null;
-      const name = (str(p.name) ?? title(dead)).split(' ')[0]!;
+      const name = firstNameOf(str(p.name) ?? title(dead))!;
       return { kind: 'death', key: dead, townId: t, personIds: teller ? [teller] : [], slots: { name, town: townName(state, t), age: 'a good age' } };
     }
     case 'doctrine.collapse': {

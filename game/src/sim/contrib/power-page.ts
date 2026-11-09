@@ -17,6 +17,7 @@ import type { DataTables } from '../load-data';
 import { deriveRng } from '../rng';
 import { promiseNote } from '../promise-tally';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 // ---------- data ----------
 
@@ -39,7 +40,7 @@ export function townLabel(state: SimState, townId: string, nameOf?: (id: string)
 }
 
 const fullName = (state: SimState, id: string): string => state.people[id]?.name ?? id;
-const firstName = (state: SimState, id: string): string => fullName(state, id).split(' ')[0]!;
+const firstName = (state: SimState, id: string): string => firstNameOf(fullName(state, id))!;
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 const plural = (n: number, w: string): string => `${n} ${w}${n === 1 ? '' : 's'}`;
 

@@ -14,6 +14,7 @@ import { ITEM_BY_ID, addItem, inventoryOf } from '../goods/inventory';
 import { jobOf } from '../goods/jobs';
 import type { SimState } from '../types/runtime';
 import { BUILDING_BY_ID, PLAYER_OWNER } from './build-plans';
+import { firstNameOf } from '../names';
 
 export const COMPANY = {
   startCoin: 10,
@@ -70,7 +71,7 @@ export function creditCompany(state: SimState, personId: string, out: Record<str
 
 const first = (id: string, state: SimState): string => {
   const n = state.people[id]?.name ?? id.split(/[_-]/)[0] ?? id;
-  return (n.split(' ')[0] ?? n).replace(/^./, (ch) => ch.toUpperCase());
+  return (firstNameOf(n) ?? n).replace(/^./, (ch) => ch.toUpperCase());
 };
 
 export function tickCompanies(state: SimState): void {

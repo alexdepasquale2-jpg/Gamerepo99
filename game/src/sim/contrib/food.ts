@@ -10,6 +10,7 @@ import { registerDawnTick } from '../dawn-ticks';
 import { FOOD_RES, foodCover, foodShortToday, isShortOf } from '../economy/food-stock';
 import { asClause, fallbackLine } from '../fallback-lines';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 type Word = 'starve' | 'short' | 'ok';
 type Key = 'food_starve' | 'food_short' | 'food_eased';
@@ -71,7 +72,7 @@ export function foodDawnLines(state: SimState): string[] {
     const days = Math.max(0, Math.floor(foodCover(state, townId)));
     const said = line(state, key, townId, { days: days === 1 ? 'a day' : days === 0 ? 'less than a day' : `${days} days` });
     const away = townId !== here ? `Word from ${townLabel(townId)}: ` : '';
-    out.push(name ? `${away}${name.split(' ')[0]} says ${said}` : `${away}${said.replace(/^./, (c) => c.toUpperCase())}`);
+    out.push(name ? `${away}${firstNameOf(name)} says ${said}` : `${away}${said.replace(/^./, (c) => c.toUpperCase())}`);
   }
   return out;
 }

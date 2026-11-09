@@ -1,3 +1,4 @@
+import { firstNameOf } from '../names';
 /**
  * Hauling (civic slice 3): what a site makes sits on its shelves until someone carries it to the town's
  * granary or storehouse, and what it works on has to be carried out to it. Each dawn, after the day's work
@@ -97,7 +98,7 @@ registerDawnTick('prices', 'civic-hauling', tickHauling);
 
 // ---- Dawn lines ----
 
-const firstName = (state: SimState, id: string | undefined): string | undefined => (id ? state.people[id]?.name?.split(' ')[0] : undefined);
+const firstName = (state: SimState, id: string | undefined): string | undefined => (id ? firstNameOf(state.people[id]?.name) : undefined);
 
 function storesLine(state: SimState, n: HaulNews): string | null {
   if (n.kind === 'low') {

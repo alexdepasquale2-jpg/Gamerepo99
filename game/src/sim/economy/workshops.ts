@@ -13,6 +13,7 @@ import { jobOf } from '../goods/jobs';
 import type { SimState } from '../types/runtime';
 import { BUILDINGS, BUILDING_BY_ID, PLAYER_OWNER, activePlans, claimBlocked, stakePlan, zoneWords, type BuildPlan, type BuildingDef } from './build-plans';
 import { COMPANY, companyOf, type Company } from './companies';
+import { firstNameOf } from '../names';
 
 export const WORKSHOPS = {
   /** Plans the player may have under way in one town at once. */
@@ -26,7 +27,7 @@ export const WORKSHOPS = {
 export type Result = { ok: boolean; line: string };
 const no = (line: string): Result => ({ ok: false, line });
 const lc = (s: string): string => s.toLowerCase();
-const firstName = (state: SimState, id: string): string => (state.people[id]?.name ?? id).split(' ')[0]!;
+const firstName = (state: SimState, id: string): string => firstNameOf(state.people[id]?.name ?? id)!;
 
 /** Buildings the player can found a workshop in: those with a trade and worker room. */
 export const workshopKinds = (): BuildingDef[] => BUILDINGS.filter((b) => (b.slots ?? 0) > 0);

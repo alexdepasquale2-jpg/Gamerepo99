@@ -9,9 +9,10 @@ import { BUILDING_BY_ID, activePlans } from './build-plans';
 import { cartPosition } from './logistics';
 import { TECHS, atWar, creedOf, techsOf, treatyOf } from './polity';
 import { townNeeds } from './village-economy';
+import { firstNameOf } from '../names';
 
 const label = (id: string): string => (id === 'food' ? 'food' : itemName(id).toLowerCase());
-const first = (state: { people: Record<string, { name?: string }> }, id: string): string => (id === 'player' ? 'you' : (state.people[id]?.name ?? id).split(' ')[0]!);
+const first = (state: { people: Record<string, { name?: string }> }, id: string): string => (id === 'player' ? 'you' : firstNameOf(state.people[id]?.name ?? id)!);
 
 export type PlanView = { id: string; owner: string; building: string; stage: 'gathering' | 'building'; progress: number; missing: { itemId: string; qty: number }[] };
 export type TownView = {

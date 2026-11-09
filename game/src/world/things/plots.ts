@@ -16,6 +16,7 @@ import { thingTex } from '../art/thing-art';
 import { civicTex, paintCivicTextures } from '../art/civic-art';
 import { DECAL_DEPTH, type Pt } from '../depth';
 import { drawSiteMarks, drawWorking, lookSig, plotSiteLook, type SiteLook } from './site-marks';
+import { firstNameOf } from '../../sim/names';
 
 const REACH = 56;
 
@@ -91,7 +92,7 @@ export function createPlots(scene: Phaser.Scene, getState: () => SimState | unde
       objs.push(bar);
     }
     for (const o of objs) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(visible);
-    const owner = c.ownerId === 'player' ? 'Your' : `${(s.people[c.ownerId]?.name ?? c.ownerId).split(' ')[0]!}'s`;
+    const owner = c.ownerId === 'player' ? 'Your' : `${firstNameOf(s.people[c.ownerId]?.name ?? c.ownerId)!}'s`;
     return { data: d, front, label: `${owner} ${BUILDING_BY_ID.get(c.kind)?.name?.toLowerCase() ?? 'plot'}`, objs, sig: '' };
   };
 

@@ -33,6 +33,7 @@ import markBack from '../../data/systems/scenarios/moment_mark_comes_back.json';
 import nail from '../../data/systems/scenarios/moment_nail_across_the_water.json';
 import coal from '../../data/systems/scenarios/moment_refusal_coal.json';
 import loaf from '../../data/systems/scenarios/moment_warm_loaf_cold_hill.json';
+import { firstNameOf } from '../names';
 
 export type MomentStep = { op: string; personId?: string; methodId?: string; targetPersonId?: string; to?: string; as?: string; path?: string };
 export type MomentEnsure = { personId: string; flame?: number; burning?: boolean; marks?: string[]; tagsInclude?: string[] };
@@ -246,7 +247,7 @@ function expectHolds(state: SimState, row: MomentRow, prog: Progress): boolean {
 }
 
 const pretty = (id: string): string => id.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-const nameOf = (state: SimState, id: string): string => (state.people[id]?.name ?? pretty(id)).split(' ')[0]!;
+const nameOf = (state: SimState, id: string): string => firstNameOf(state.people[id]?.name ?? pretty(id))!;
 
 function fire(state: SimState, row: MomentRow, prog: Progress, f: MomentsFlag): void {
   const first = methodSteps(row)[0]!;

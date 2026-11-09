@@ -22,6 +22,7 @@ import { DISTRICTS, districtId as districtIdOf } from '../map/districts';
 import type { SimState } from '../types/runtime';
 import { makeLog, makeStore, type ConservationLog, type Store } from './store';
 import { noteUse } from '../data-use-civic';
+import { firstNameOf } from '../names';
 
 export type SiteKindDef = {
   id: string; name: string; zone: string; tier: string;
@@ -127,7 +128,7 @@ export function remember(site: Site, e: SiteEvent): void {
 const firstName = (state: SimState, id: string): string => {
   if (id === PLAYER_OWNER) return 'Your';
   const n = state.people[id]?.name ?? id.split(/[_-]/)[0] ?? id;
-  return (n.split(' ')[0] ?? n).replace(/^./, (ch) => ch.toUpperCase());
+  return (firstNameOf(n) ?? n).replace(/^./, (ch) => ch.toUpperCase());
 };
 
 function activeDistrictId(state: SimState): string {

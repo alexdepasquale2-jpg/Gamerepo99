@@ -25,6 +25,7 @@ import { placeSettlements, settlementKind, type SettlementKind } from './map/wor
 import { biomeAt, type Biome } from './map/terrain';
 import { pushJuice } from './packets';
 import type { InhabitantParts, SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 type StartRule = NonNullable<InhabitantParts['startRule']>;
 type Cand = {
@@ -130,7 +131,7 @@ export function maybeFirstMoment(state: SimState): void {
   const salt = `${state.seed}:${state.player.townId}`;
   const who = greeter(state, rule);
   // The greeter's name and town fill any {name}/{town} a start grammar (or a shared rule it uses) asks for.
-  const name = who ? (state.people[who]?.name ?? '').split(' ')[0] : undefined;
+  const name = who ? firstNameOf(state.people[who]?.name ?? '') : undefined;
   const slots = { name: name || undefined, town: prettyTownId(state.player.townId) };
   const said = fallbackLine(`start.${rule.tag}`, salt, slots);
   if (who && said) pushJuice(state, 'moment.beat', { personId: who, line: said, momentId: `start.${rule.tag}` });

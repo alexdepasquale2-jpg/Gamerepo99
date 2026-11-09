@@ -1,3 +1,4 @@
+import { firstNameOf } from '../names';
 /**
  * The civic layer's public face (imported once from sim/contrib): the staffing dawn tick, the "Sites"
  * noticeboard page, dawn lines told by the people of a site, and a QA hook. News comes through people:
@@ -25,7 +26,7 @@ export const MAX_SITE_LINES = 3;
 registerDawnTick('people', 'civic-sites', tickSites);
 
 const fullName = (state: SimState, id: string | undefined): string | undefined => (id ? state.people[id]?.name : undefined);
-const firstOf = (state: SimState, id: string | undefined): string | undefined => fullName(state, id)?.split(' ')[0];
+const firstOf = (state: SimState, id: string | undefined): string | undefined => firstNameOf(fullName(state, id));
 
 /** Who tells a site's news: one of its hands (not the one it is about), else its owner, else a neighbour. */
 function tellerFor(state: SimState, site: Site, about?: string): string | undefined {

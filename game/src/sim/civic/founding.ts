@@ -15,6 +15,7 @@ import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { residentsOf, tierIndex, tierOf, TIERS, townPopulation, type Tier } from './tiers';
 import { civicOf, townKind, yearName, ZONES } from './zoning';
+import { firstNameOf } from '../names';
 
 /** Kinds the chronicle remembers raising (the rest are just more roofs). */
 const NOTABLE = new Set(['granary', 'market', 'barracks', 'townhall', 'chapel', 'mill']);
@@ -33,7 +34,7 @@ function foundingTier(state: SimState, townId: string): Tier {
   return best;
 }
 
-const firstName = (state: SimState, id: string): string => (state.people[id]?.name ?? 'Someone').split(' ')[0]!;
+const firstName = (state: SimState, id: string): string => firstNameOf(state.people[id]?.name ?? 'Someone')!;
 
 /** Place every unfounded district town's pre-aged buildings and backstory. */
 export function foundCivicTowns(state: SimState): void {

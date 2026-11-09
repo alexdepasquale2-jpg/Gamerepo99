@@ -10,6 +10,7 @@ import type { SimState } from '../../sim/types/runtime';
 import { ART_SCALE } from '../art/px';
 import { thingTex } from '../art/thing-art';
 import type { Pt } from '../depth';
+import { firstNameOf } from '../../sim/names';
 
 const GRAVE_REACH = 40;
 
@@ -52,7 +53,7 @@ export function createGraves(scene: Phaser.Scene, getState: () => SimState | und
         .filter((v) => Math.hypot(v.p.x - near.x, v.p.y - near.y) <= radius)
         .map((v): Thing => {
           const data: GraveData = { grave: true, personId: v.personId, name: v.name, townId: v.townId };
-          const first = v.name.split(' ')[0] ?? v.name;
+          const first = firstNameOf(v.name) ?? v.name;
           return { key: `grave:${v.id}`, kind: 'grave', id: v.id, x: v.p.x, y: v.p.y, reach: GRAVE_REACH, label: `${first}'s grave`, target: { kind: 'grave', id: v.id, data } };
         });
     },

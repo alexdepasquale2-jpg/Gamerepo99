@@ -66,7 +66,10 @@ function named(full: string, family: string): string {
 }
 
 /** What folk call someone: the given name, keeping a title that is part of it ("Old Tom Briggs" -> "Old Tom"). */
-export function firstNameOf(name: string): string {
+export function firstNameOf(name: string): string;
+export function firstNameOf(name: string | undefined): string | undefined;
+export function firstNameOf(name: string | undefined): string | undefined {
+  if (name === undefined) return undefined;
   const parts = name.trim().split(/\s+/);
   return parts[0] === 'Old' && parts.length > 2 ? `${parts[0]} ${parts[1]}` : parts[0] ?? name;
 }

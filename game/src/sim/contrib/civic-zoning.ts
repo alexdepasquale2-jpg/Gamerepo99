@@ -31,6 +31,7 @@ import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { noteUse } from '../data-use-civic';
 import { payHand, spendTreasury, worksIfAny, worksLine } from './council-works';
+import { firstNameOf } from '../names';
 
 /** Who speaks for a town: the leader of a doctrine seated there, else its eldest. */
 export function leaderOf(state: SimState, townId: string): string | undefined {
@@ -42,7 +43,7 @@ export function leaderOf(state: SimState, townId: string): string | undefined {
   return eldestOf(state, residentsOf(state, townId));
 }
 
-const first = (state: SimState, id: string | undefined): string => (id ? (state.people[id]?.name ?? 'Someone').split(' ')[0]! : 'Someone');
+const first = (state: SimState, id: string | undefined): string => (id ? firstNameOf(state.people[id]?.name ?? 'Someone')! : 'Someone');
 const kindName = (kind: string): string => BUILDING_BY_ID.get(kind)?.name ?? kind;
 const pct = (t: number): string => String(Math.round(t * 100));
 

@@ -20,6 +20,7 @@ import { registerTargetProvider, type ActOutcome, type ProvidedAction } from '..
 import { targetActionId, type Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
 import { isGrave } from './target-data';
+import { firstNameOf } from '../names';
 
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
 const act = (verb: string, t: Target, label: string, short: string, family = 'work'): ProvidedAction => ({ id: targetActionId(`workshop.${verb}`, t), label, short, family });
@@ -118,7 +119,7 @@ export function workshopDawnLines(state: SimState): string[] {
       // The worker's own wording, seeded per save, day and worker; the DEFAULT only if the key is gone.
       const said = fallbackLine(key, `${state.seed}|${state.day}|${n.personId}`, slots);
       const text = said ? asClause(said) : DEFAULT[key]!.replace(/\{(\w+)\}/g, (_, k: string) => slots[k as keyof typeof slots] ?? '');
-      const who = (state.people[n.personId]?.name ?? n.personId).split(' ')[0]!;
+      const who = firstNameOf(state.people[n.personId]?.name ?? n.personId)!;
       const away = c.townId !== state.player.townId ? `Word from ${townLabel(c.townId)}: ` : '';
       lines.push(`${away}${who} says ${text}`);
     }

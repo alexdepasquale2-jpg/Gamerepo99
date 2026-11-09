@@ -6,6 +6,7 @@
 import { registerDawnLines } from '../dawn-lines';
 import { fallbackLine } from '../fallback-lines';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 const TRAIT = 'inherited_dependence';
 
@@ -21,7 +22,7 @@ export function dependenceSpeaker(state: SimState): string | undefined {
   if (!folk.length) return undefined;
   const dep = (p: (typeof folk)[number]): number => p.marks?.find((m) => m.markId === 'dependence')?.stacks ?? 0;
   const best = folk.reduce((a, p) => (dep(p) > dep(a) ? p : a), folk[0]!);
-  return best.name ?? pretty(best.id).split(' ')[0];
+  return best.name ?? firstNameOf(pretty(best.id));
 }
 
 /** The key's grammar seeded per save and day (was day % list length), so each dawn can word it afresh. */

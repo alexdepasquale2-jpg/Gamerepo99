@@ -19,6 +19,7 @@ import { happeningTownName } from '../happenings';
 import { registerTargetProvider, type ProvidedAction } from '../play-session/action-providers';
 import { targetActionId, type Target } from '../play-session/targets';
 import type { SimState } from '../types/runtime';
+import { firstNameOf } from '../names';
 
 const verbOf = (actionId: string): string => actionId.slice(0, actionId.indexOf('@'));
 const rec = (t: Target): Record<string, unknown> => (t.data && typeof t.data === 'object' ? (t.data as Record<string, unknown>) : {});
@@ -116,7 +117,7 @@ registerBoardPage({
       const bits = [`${roadWord(r)}`];
       if (carts.length) bits.push(`${plural(carts.length, 'cart')} on it`);
       if (watch && watch.until > s.day) bits.push(`${watch.name} keeps watch`);
-      if (s.roadway?.crews?.[r.id]) bits.push(`${s.people[s.roadway.crews[r.id]!]?.name?.split(' ')[0] ?? 'someone'} is out mending it`);
+      if (s.roadway?.crews?.[r.id]) bits.push(`${firstNameOf(s.people[s.roadway.crews[r.id]!]?.name) ?? 'someone'} is out mending it`);
       lines.push(`• To ${nameOf(other)}: ${bits.join(', ')}.`);
     }
     lines.push('', 'Mend a worn road: stand on it with stone, timber and tools. Walk beside a cart to see it safe. Rest, hear the talk and hire help at the waystations.');

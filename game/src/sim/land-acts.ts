@@ -13,6 +13,7 @@ import { setTileEdit } from './map/tile-edits';
 import { noteUse } from './data-use-world';
 import type { TerrainAccess } from './map/terrain-access';
 import type { SimState } from './types/runtime';
+import { firstNameOf } from './names';
 
 export type LandActRow = {
   id: string; label: string; short?: string; on: string[]; becomes: string;
@@ -208,7 +209,7 @@ export function landDawnLines(state: SimState): string[] {
     const folk = Object.values(state.people).filter((p) => p.townId === townId).sort((a, b) => a.id.localeCompare(b.id));
     const who = folk.length ? folk[state.day % folk.length]! : undefined;
     const town = entries[0]!.townName ?? prettyTown(townId);
-    const name = who ? (who.name ?? prettyTown(who.id)).split(' ')[0] : 'A traveller';
+    const name = who ? firstNameOf(who.name ?? prettyTown(who.id)) : 'A traveller';
     out.push(`${name} says someone ${act.heard} outside ${town}.`);
   }
   return out;

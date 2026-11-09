@@ -17,6 +17,7 @@ import type { SimState } from '../types/runtime';
 import { actItemVerb, itemVerbAct } from './item-verbs';
 import { heldItemOf } from './target-data';
 import { markUsed, usedToday } from './use-effects';
+import { firstNameOf } from '../names';
 
 export const GRAVE_VISIT = 'grave_visit';
 export const GRAVE_KEEPSAKE = 'grave_keepsake';
@@ -27,7 +28,7 @@ const KEEPSAKE = 'keepsake';
 export const graveId = (g: Pick<Grave, 'personId' | 'day'>): string => `${g.personId}#${g.day}`;
 export const graveOf = (state: SimState, id: string): Grave | undefined => (state.legacy?.graves ?? []).find((g) => graveId(g) === id);
 
-const first = (name: string): string => name.split(' ')[0] ?? name;
+const first = (name: string): string => firstNameOf(name) ?? name;
 
 /** Who mourns them: family named when they died (life events), else living kin. */
 function mournerOf(state: SimState, g: Grave): string | undefined {

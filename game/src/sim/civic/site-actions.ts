@@ -28,6 +28,7 @@ import {
 } from './sites';
 import { managerFit } from './staffing';
 import { put, room, take, total } from './store';
+import { firstNameOf } from '../names';
 
 /** The one ring verb at a site (contrib/site-verbs lists it; panels open the ledger sheet on it). */
 export const LEDGER_VERB = 'site.ledger';
@@ -46,7 +47,7 @@ export const deskIfAny = (state: SimState | undefined): DeskState | undefined =>
 const deskOf = (state: SimState): DeskState => ((state as WithDesk).siteDesk ??= { wage: {}, news: [] });
 
 const no = (line: string): DeskResult => ({ ok: false, line });
-const first = (state: SimState, id: string): string => (state.people[id]?.name ?? id).split(' ')[0]!;
+const first = (state: SimState, id: string): string => firstNameOf(state.people[id]?.name ?? id)!;
 const tillOf = (s: Site): string => `site:${s.id}`;
 
 function deskNews(state: SimState, n: Omit<DeskNews, 'day'>): void {
