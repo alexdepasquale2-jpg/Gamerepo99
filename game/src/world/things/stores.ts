@@ -18,6 +18,7 @@ import { ART_SCALE, makeTex, type Px } from '../art/px';
 import { DECAL_DEPTH, tileFoot, type Pt } from '../depth';
 import type { TownSpots } from '../town-spots';
 import { townPlan } from '../../sim/map/town-plan';
+import { storeSpots } from '../civic-ground';
 import type { DrawnTile } from '../chunk-layer';
 
 const T = TILE_PX;
@@ -82,7 +83,9 @@ export function createStores(o: { scene: Phaser.Scene; getState: () => SimState 
   const findStand = (t: TownSpots): Stand | null => {
     const plan = townPlan(t.town);
     const off = (p: { q: number; r: number }): Pt => ({ x: t.centre.x + p.q * T, y: t.centre.y + p.r * T });
-    const fixed = [t.hearth, t.board, t.signpost, t.stall, t.chest, t.well, t.grave(0), t.grave(6), ...[...plan.gardens, ...plan.fences, ...plan.walls].map(off)];
+    // The civic granary and storehouse (world/civic-marks): their feet and roofs.
+    const civic = Object.values(storeSpots(t)).flatMap((p) => [p, { x: p.x, y: p.y - T * 1.6 }]);
+    const fixed = [t.hearth, t.board, t.signpost, t.stall, t.chest, t.well, t.grave(0), t.grave(6), ...civic, ...[...plan.gardens, ...plan.fences, ...plan.walls].map(off)];
     const doors = t.buildings.map((b) => b.door);
     const free = (q: number, r: number): boolean => {
       if (!o.terrain.passable(q, r) || o.terrain.onRoad(q, r)) return false;

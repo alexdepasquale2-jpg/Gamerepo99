@@ -223,7 +223,8 @@ export function facilityById(state: SimState, id: string): FacilityPlace | undef
   return facilityPlaces(state).find((f) => f.id === id);
 }
 
-const fitToWork = (state: SimState, place: FacilityPlace, pid: string | null, flame: number): boolean => {
+/** Can this person hold a crew slot here at this flame (a resident of one of the road's towns, not retired)? */
+export const fitToWork = (state: SimState, place: FacilityPlace, pid: string | null, flame: number): boolean => {
   const p = pid ? state.people[pid] : undefined;
   return !!p && p.flame >= flame && !!p.townId && place.townIds.includes(p.townId) && !p.tags?.includes('retired');
 };

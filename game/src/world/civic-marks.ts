@@ -1,9 +1,10 @@
 /**
  * What a town's civic life looks like from the street, so the tables are felt by walking:
  *   stores   the common granary and storehouse every town keeps (sites.json), with sacks / crates in
- *            front for how full each is (civic/town-stores);
+ *            front for how full each is (civic/town-stores), on clear plaza ground (civic-ground);
  *   tier     a pole by the signpost flying one pennant per tier above hamlet (zones.json tiers);
- *   zones    a stake with the zone's colour and emblem at the heart of each of the 16 lots (zoning);
+ *   zones    a stake with the zone's colour and emblem at the heart of each of the 16 lots (zoning), and
+ *            a faint wash of that colour over the lot's ground in towns near the camera (civic-ground);
  *   quarrels while the district is at war a levy poster by the noticeboard and a war banner by the
  *            hearth; under a trade pact a gold ribbon (civic/district-relations).
  * Reads the sim only (never writes). Redrawn when a town's signature changes.
@@ -11,15 +12,16 @@
 import type Phaser from 'phaser';
 import { TILE_PX } from '../sim/map/constants';
 import type { SimState } from '../sim/types/runtime';
-import { GRANARY_CAPACITY, STOREHOUSE_CAPACITY, storesIfAny } from '../sim/civic/town-stores';
+import { drawStores, GRANARY_CAPACITY, STOREHOUSE_CAPACITY, STORES, storesIfAny } from '../sim/civic/town-stores';
 import { total } from '../sim/civic/store';
 import { residentsOf, tierIndex, tierOf } from '../sim/civic/tiers';
-import { LOTS, zoneOfLot } from '../sim/civic/zoning';
+import { civicOf, LOTS, zoneOfLot } from '../sim/civic/zoning';
 import { liveId, polityIfAny } from '../sim/civic/district-relations';
 import { CELL_TILES, stakePlan } from '../sim/economy/build-plans';
 import { ART_SCALE } from './art/px';
 import { civicMarkTex, paintCivicTextures } from './art/civic-art';
 import type { TownSpots } from './town-spots';
+import { drawZoneTints, nearCamera, storeSpots, type StoreSpots } from './civic-ground';
 import type { Pt } from './depth';
 import type { GameContext } from '../app/contracts';
 import { registerDevHook } from '../app/dev-hooks';
@@ -29,12 +31,17 @@ const PENNANT = ['', 'pennant-village', 'pennant-town', 'pennant-city'];
 /** Each lot's stake stands mid-band: inner rings centre 7 cells out, outer 10 (innerMaxRing 8, maxRing 11). */
 const RING = { inner: 7, outer: 10 };
 
-export type CivicMarksLook = { townId: string; granary: number; storehouse: number; tier: string; zones: string[]; war: boolean; pact: boolean };
+export type CivicMarksLook = { townId: string; granary: number; storehouse: number; tier: string; zones: string[]; war: boolean; pact: boolean; at?: StoreSpots };
 type View = { look: CivicMarksLook; sig: string; objs: Phaser.GameObjects.GameObject[] };
+type Tint = { sig: string; g: Phaser.GameObjects.Graphics };
 
 export type CivicMarks = {
   refresh(state: SimState | undefined): void;
+  /** Zone tints follow the camera (cheap: a distance check per town, redrawn only when a town comes near). */
+  update(cam: Phaser.Cameras.Scene2D.Camera): void;
   list(): CivicMarksLook[];
+  /** Tints drawn now, by town (QA). */
+  tinted(): string[];
   setVisible(on: boolean): void;
   destroy(): void;
 };
@@ -77,7 +84,10 @@ function lotStake(i: number): { dq: number; dr: number } {
 export function createCivicMarks(scene: Phaser.Scene, towns: TownSpots[]): CivicMarks {
   paintCivicTextures(scene);
   const views = new Map<string, View>();
+  const tints = new Map<string, Tint>();
   let visible = true;
+  let lastCam = { x: NaN, y: NaN };
+  let dirty = true;
 
   const draw = (spots: TownSpots, look: CivicMarksLook): Phaser.GameObjects.GameObject[] => {
     const objs: Phaser.GameObjects.GameObject[] = [];
@@ -87,8 +97,8 @@ export function createCivicMarks(scene: Phaser.Scene, towns: TownSpots[]): Civic
       return o;
     };
     const up = (p: Pt, dx: number, dy: number): Pt => ({ x: p.x + dx, y: p.y + dy });
-    // Stores: the granary behind the signpost, the storehouse behind the noticeboard, goods out front.
-    const gran = up(spots.signpost, 0, -TILE_PX * 2.3), house = up(spots.board, 0, -TILE_PX * 2.3);
+    // Stores: the granary by the signpost, the storehouse by the noticeboard, on clear ground; goods out front.
+    const { granary: gran, storehouse: house } = storeSpots(spots);
     img(gran, 'store-granary');
     img(house, 'store-house');
     const pile = (at: Pt, key: string, frac: number) => {
@@ -132,17 +142,41 @@ export function createCivicMarks(scene: Phaser.Scene, towns: TownSpots[]): Civic
         if (cur?.sig === sig) { cur.look = look; continue; }
         cur?.objs.forEach((o) => o.destroy());
         views.set(id, { look, sig, objs: draw(spots, look) });
+        dirty = true;
       }
     },
-    list: () => [...views.values()].map((v) => v.look),
-    setVisible(on) { visible = on; for (const v of views.values()) for (const o of v.objs) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(on); },
-    destroy() { for (const v of views.values()) v.objs.forEach((o) => o.destroy()); views.clear(); },
+    update(cam) {
+      // Only when the camera has moved a few tiles, or refresh redrew a town (dirty): each tint is redrawn when its zones' signature changed.
+      if (!dirty && Math.hypot(cam.midPoint.x - lastCam.x, cam.midPoint.y - lastCam.y) < TILE_PX * 4) return;
+      lastCam = { x: cam.midPoint.x, y: cam.midPoint.y };
+      dirty = false;
+      for (const spots of towns) {
+        const id = spots.town.id, v = views.get(id), cur = tints.get(id);
+        const sig = v?.look.zones.join(',') ?? '';
+        if (!v || !nearCamera(cam, spots)) { cur?.g.destroy(); tints.delete(id); continue; }
+        if (cur?.sig === sig) continue;
+        cur?.g.destroy();
+        tints.set(id, { sig, g: drawZoneTints(scene, spots, v.look.zones).setVisible(visible) });
+      }
+    },
+    list: () => [...views.values()].map((v) => {
+      const t = towns.find((x) => x.town.id === v.look.townId);
+      return t ? { ...v.look, at: storeSpots(t) } : v.look;
+    }),
+    tinted: () => [...tints.keys()].sort(),
+    setVisible(on) {
+      visible = on;
+      for (const v of views.values()) for (const o of v.objs) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(on);
+      for (const t of tints.values()) t.g.setVisible(on);
+    },
+    destroy() { for (const v of views.values()) v.objs.forEach((o) => o.destroy()); views.clear(); for (const t of tints.values()) t.g.destroy(); tints.clear(); },
   };
 }
 
 /** Per-run layer (world/index sets it) for the QA hook: what each town's marks show now. */
 export const civicMarksOf = new WeakMap<GameContext, CivicMarks>();
 registerDevHook('civicMarks', (ctx) => () => civicMarksOf.get(ctx)?.list());
+registerDevHook('civicTints', (ctx) => () => civicMarksOf.get(ctx)?.tinted() ?? []);
 
 /**
  * QA: raise a finished building of `kind` in a town (its first resident owns it), or set every relation of
@@ -156,6 +190,17 @@ registerDevHook('civicForce', (ctx) => ({
     const got = s && town && owner ? stakePlan(s, owner, town, kind, { built: true, founding: true }) : null;
     ctx.world.refresh('all');
     return got ? { claimId: got.claim.id, dx: got.claim.dx, dy: got.claim.dy } : null;
+  },
+  /** Empty a town's food (granary, yard and site shelves alike: QA only) and fill its treasury, so the council's grain purchase shows at the next dawn. */
+  shortage(townId?: string, coin = 200) {
+    const s = ctx.session.getState();
+    const town = townId ?? s?.player.townId;
+    if (!s || !town) return 0;
+    let n = 0;
+    for (const item of STORES.granaryItems) n += drawStores(s, town, item, 1e9, 'sink:qa');
+    civicOf(s, town).treasury += coin;
+    ctx.world.refresh('all');
+    return n;
   },
   relations(state: 'war' | 'pact' | 'peace') {
     const s = ctx.session.getState();
