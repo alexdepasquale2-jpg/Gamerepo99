@@ -60,6 +60,7 @@ want('economy/dawn-stock', [
   ...keys(roleStock.base).map((k) => `base:${k}`),
   ...keys(roleStock.landBonus).map((k) => `land:${k}`),
   ...keys(roleStock.landFood).map((k) => `landFood:${k}`),
+  ...keys(dawnStockJson.openingShelves.byKind).map((k) => `shelves:${k}`),
 ]);
 want('economy/economy-resources', resourcesJson.resources.map((r) => r.id));
 want('economy/facilities', [

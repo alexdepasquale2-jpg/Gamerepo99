@@ -13,6 +13,7 @@ import { FOOD_RES } from '../economy/food-stock';
 import { supplyTown } from '../economy/village-economy';
 import { noteSeedRows, roleFoodItem, roleStock } from '../economy/town-roles';
 import { foundCivicTowns } from '../civic/founding';
+import { stockOpeningShelves } from '../economy/opening-shelves';
 
 export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
   const data = state.data as DataTables;
@@ -25,9 +26,13 @@ export function bindWorldEconomy(state: SimState, world: FabricWorld): void {
     // One food stock (F6): a new town's food seed, or an older save's food_grain, moves into the village
     // ledger once; town.stock never holds food again.
     if (!old) noteSeedRows(state.seed, s.id, !!data.dawnStock.seedStockByTown[s.id], stock);
+    // Truly new: no economy row and no goods yet (a save missing `towns` still has its ledger).
+    const fresh = !old && !state.villageEconomy?.towns[s.id];
     const food = old ? (old.stock?.[FOOD_RES] ?? 0) : (stock[FOOD_RES] ?? 0);
     delete stock[FOOD_RES];
     if (food > 0) supplyTown(state, s.id, old ? 'grain' : roleFoodItem(state.seed, s.id), food);
+    // A new town opens with a little on its shelves; its first dawn of work is still a day away.
+    if (fresh) stockOpeningShelves(state, s.id, s.kind);
     return [s.id, { ...old, id: s.id, q: s.q, r: s.r, stock, despair: old?.despair ?? 0, economyOptIn: true, economySeeded: true }];
   }));
   const oldRoutes = new Map((state.economyRoutes ?? []).map((r) => [r.id, r]));

@@ -209,7 +209,7 @@ function townPrices(state: SimState, townId: string, itemId: string, markup: num
 }
 
 const pedlarBuyPrice = (state: SimState, v: Visitor, itemId: string): number =>
-  // The same price the road-folk "Buy" chip asks (contrib/road-folk pedlarPrice): one under the town's.
+  // A pedlar undercuts the town they walk to by a coin: carrying the good is their living.
   Math.max(1, priceAt(state, v.toTownId ?? v.townId ?? '', itemId) - 1);
 
 type Priced = { theirs: ShopLine[]; yours: ShopLine[] };
