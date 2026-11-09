@@ -40,3 +40,4 @@ import './carry';
 import './tasks';
 import './hook-felt';
 import './works';
+import './hero';

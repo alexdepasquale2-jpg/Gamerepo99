@@ -1,6 +1,7 @@
 /**
  * Keyboard shortcuts: aliases for what the pad and HUD already reach (keys are never the only way).
- *   I satchel · M map · L letters · J the Works · B brood · Esc back / menu · ` dev menu · Shift+` god menu (dev builds)
+ *   I satchel · M map · L letters · J the Works · C hero (combat/) · B brood
+ *   Fighting (combat/): Space attack · Shift dodge · Q R F skills · Esc back / menu · ` dev menu · Shift+` god menu (dev builds)
  * The pad (ui/pad/bindings.ts) mirrors these: X = I, Select = M (hold: L / brood), Start = Esc with nothing
  * open, B = Esc while something is; A is E (held for hold-to-work) and 1–6 in the ring.
  * Esc order: the overlay stack's top entry (handled in its capture listener) → the ring → anything a

@@ -116,6 +116,35 @@ Everything above is the texture; the Works is the arc you climb through it. Open
   - Tests: `tests/works/`.
   - Whole-world check: `npm run game:check-works`.
 
+## The action layer: fighting in the wilds
+Towns stay safe. Out on the roads and in the wilds between them, things come for you.
+
+- **Fighting**:
+  - Keys: **Space** attacks (hold to keep swinging), **Shift** dodges, **Q / R / F** use your slotted skills, and **C** opens the hero sheet.
+  - Tapping or clicking a foe attacks it instead of walking there.
+  - On a phone, the combat bar sits above the hotbar and pad: hold **Attack**, and tap **Dodge** or a skill.
+  - Health is a red bar under the spark bar. Skills burn **spark**, which comes back while you fight, and health comes back out of a fight (faster in a town).
+- **Falling**: if you fall, you wake in the last town you were in, a tenth of your coin lighter (50 at most).
+- **Foes come in four families**, each leaving its mark on the world:
+  - **Despair-born** (ash-hounds, hollow folk, cinder-wraiths; the Despair Colossus): slaying them eases the nearest town's despair, and Spark bolt hits them double.
+  - **Bandits** (cutpurses, raiders, archers; the bandit chief): each one slain makes convoys safer for ten days.
+  - **Beasts** (wolves, boars, bears; Old Greymaw): they drop hides and meat for the satchel, kitchen and builds.
+  - **Rival soldiers**: they walk near towns at war with your home and near the town your band marches on. Each one slain lowers that town's defence before the battle.
+- **Packs and lairs**:
+  - Packs are seeded per map cell and day. Bandits keep near roads, despair-born come near despairing towns and at night, and beasts keep far out.
+  - **Lairs** (a despair rift, bandit or war camp, or a den) stand off the roads with a boss and its guard. A cleared lair pays a chest and lies quiet for 12 days.
+- **The hero**:
+  - **Levels**: each brings a skill point, two attribute points (might, grit, wits) and full health.
+  - **Gear**: weapons, armour and charms in 5 rarities with rolled affixes. Swords, axes, spears and mauls swing in arcs, while bows and ember staffs shoot.
+  - **Skills**: 9 skills in three branches. Blade has cleave, whirlwind and lunge; Ember has spark bolt, rekindle and flame nova; Ward has war cry, bulwark and ember volley.
+  - All of this is on the hero sheet (**C**), along with breaking gear down for coin and ember shards.
+- **The Works**: a sixth arc, **The Ember Knight**, counts your kills, levels, lairs and the Colossus. Its boon is a quarter more damage.
+- **Where the code is**:
+  - Rules: `src/sim/hero/` (pure). Data: `src/data/hero/*.json`.
+  - Front end: the **combat** area in `src/combat/`, with foes and AI, attacks and skills, the spawner, effects and the HUD. It is attached after interact, and it reuses the actors' figure and painter.
+  - Hero sheet: `src/panels/hero.ts`.
+  - Tests: `tests/hero/`, `tests/e2e/combat*.spec.ts`.
+
 ## Area ownership (one agent each)
 - **world:** `src/world/**`
 - **actors:** `src/actors/**`

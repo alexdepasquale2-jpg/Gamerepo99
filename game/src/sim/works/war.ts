@@ -11,6 +11,7 @@ import { strength, atWar } from '../economy/polity';
 import { addItem } from '../goods/inventory';
 import { deriveRng } from '../rng';
 import { planRoad } from '../road-journey';
+import { resetWeakened, weakenedMul } from '../hero/deeds';
 import type { SimState } from '../types/runtime';
 import { DESIGN_BY_ID, TUNING, plural, stockText } from './data';
 import { eatRation, rationsIn } from './lines';
@@ -104,11 +105,11 @@ export function powerOf(state: SimState): Power {
   return { soldiers: n, attack, guard, machines, total };
 }
 /**
- * How much a town stands against you: its own weight (people, buildings, companies, techs), and every town
+ * How much a town stands against you (its soldiers you cut down in the wilds weaken it: sim/hero/deeds): its own weight (people, buildings, companies, techs), and every town
  * you already hold makes the rest band together (+25% each), so the Crown is a climb, not a stroll.
  */
 export const defenceOf = (state: SimState, townId: string): number =>
-  Math.round((4 + strength(state, townId) * 0.35) * (1 + 0.25 * (worksIfAny(state)?.vassals.length ?? 0)));
+  Math.round((4 + strength(state, townId) * 0.35) * (1 + 0.25 * (worksIfAny(state)?.vassals.length ?? 0)) * weakenedMul(state, townId));
 
 /** Rations a march of this many days needs (a field stove saves a quarter). */
 export function marchRations(state: SimState, days: number): number {
@@ -158,6 +159,7 @@ function battle(state: SimState, target: string): void {
   const hold = def * (0.8 + rng.next() * 0.45);
   const won = atk > hold;
   b.battles++;
+  resetWeakened(state, target);
   const ratio = Math.min(1, hold / Math.max(1, atk));
   const lossShare = won ? 0.35 * ratio : 0.5;
   const armour = Math.min(0.6, p.guard / Math.max(1, p.soldiers) * 0.4);
