@@ -1,5 +1,5 @@
 /**
- * Dev menu (backtick, dev and playtest builds only): live info, walk speed, go to a town, time of
+ * Dev menu (backtick, dev and playtest builds only; Shift+backtick opens the full god menu): live info, walk speed, go to a town, time of
  * day, next dawn, spark and coin, give items. A kit side sheet; info refreshes on open and after each
  * button (no timer).
  */
@@ -13,7 +13,7 @@ const GIVE: [string, number][] = [['bread', 5], ['timber', 10], ['wool', 5], ['o
 
 export type DevMenu = { toggle: () => void; destroy: () => void };
 
-export function createDevMenu(ctx: GameContext): DevMenu | null {
+export function createDevMenu(ctx: GameContext, openGod?: () => void): DevMenu | null {
   if (!DEV_TOOLS) return null;
   const sheet: Sheet = createSheet({ id: 'hf-dev', title: 'Dev' });
   const panel = sheet.body;
@@ -46,6 +46,7 @@ export function createDevMenu(ctx: GameContext): DevMenu | null {
 
   function render(): void {
     panel.replaceChildren(kitEl('pre', 'hf-pre hf-muted hf-small', info()));
+    if (openGod) section('God menu (Shift+`)', [['Open the god menu', () => { sheet.close(); openGod(); }]]);
     const sp = getWalkMul();
     section('Walk speed', [1, 5, 20, 50].map((n) => [`${n}x`, () => setWalkMul(n), sp === n] as [string, () => void, boolean]));
     section('Go to town', ctx.layout.settlements.map((t) => [t.id.replace(/_/g, ' '), () => ctx.arriveAt(t.id)] as [string, () => void]));

@@ -22,6 +22,7 @@ import { attachEndScreens } from './end-screens';
 import { installShortcuts } from './keys';
 import { isBrood, openBroodMenu } from './brood-menu';
 import { createDevMenu } from './dev-menu';
+import { createGodMenu } from './god/god-menu';
 import { applyMuted } from './sound';
 import { beginRun, endRun, getFlow } from './run';
 
@@ -56,7 +57,8 @@ export function attachUi(ctx: GameContext): UiApi {
   });
   touch.onShownChange((shown) => hud.setMenuButton(!shown));
   const sheets = createSheetHost(ctx);
-  const dev = createDevMenu(ctx);
+  const god = createGodMenu(ctx);
+  const dev = createDevMenu(ctx, god?.open);
 
   /** Everything the HUD shows, from session state. */
   const refresh = (): void => {
@@ -93,7 +95,7 @@ export function attachUi(ctx: GameContext): UiApi {
     ctx.events.on('state-replaced', soon),
     ctx.events.on('arrive', soon),
     session.onJuice(soon),
-    installShortcuts(ctx, { pause, brood, dev: dev?.toggle }),
+    installShortcuts(ctx, { pause, brood, dev: dev?.toggle, god: god?.toggle }),
     attachEndScreens(ctx, { onRested: () => getFlow()?.title() }),
   ];
   // The day phase moves on its own; a light once-a-second read keeps the word right.
@@ -118,6 +120,7 @@ export function attachUi(ctx: GameContext): UiApi {
     for (const off of offs) off();
     sheets.destroy();
     dev?.destroy();
+    god?.destroy();
     touch.destroy();
     hud.destroy();
   });
