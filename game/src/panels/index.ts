@@ -153,3 +153,6 @@ registerDevHook('panels', (ctx) => () => ({
   trading: ctx.panels.trade.current(),
   slots: [...document.querySelectorAll<HTMLElement>('.hf-hotslot')].map((b) => b.dataset.item ?? null),
 }));
+
+/** `dev.holdItem('stone')` puts an item in the player's hand, as tapping its hotbar slot does (null: empty hands). */
+registerDevHook('holdItem', (ctx) => (itemId: string | null) => { ctx.panels.satchel.hold(itemId); return ctx.panels.satchel.held(); });
