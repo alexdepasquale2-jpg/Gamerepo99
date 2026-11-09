@@ -4,7 +4,8 @@
  */
 import type { GameContext, SheetDef } from '../app/contracts';
 import { button, el } from './dom';
-import { districtAtPoint, districtLine, drawRealm, playerDistrict } from './realm-draw';
+import { districtAtPoint, districtLine, districtPast, drawRealm, playerDistrict, realmAges } from './realm-draw';
+import { bakeOf } from '../sim/realm-bake';
 import { realm, type District } from '../sim/map/districts';
 import { CART_COLOR, LINK_COLOR, PLAYER_COLOR, WAGON_COLOR, drawMap, mapModel, despairColor, type MapModel } from './map-draw';
 
@@ -97,17 +98,24 @@ export function createWorldMap(ctx: GameContext, layer: HTMLElement, openMap: ()
     const w = Math.max(200, Math.min(640, Math.floor(body.clientWidth || 320)));
     c.width = w; c.height = w;
     const info = el('p', 'hf-small', undefined, { 'aria-live': 'polite', 'data-id': 'realm-info' });
+    // An older world: how the picked district stands after its past, and the tales it keeps.
+    const past = el('div', 'hf-small', undefined, { 'data-id': 'realm-past' });
     const here = playerDistrict(ctx);
     const show = (d: District | null): void => {
       picked = d;
       drawRealm(c, ctx, d);
       const desp = Object.values(ctx.session.townDespair());
-      info.textContent = d ? districtLine(d, desp.length ? desp.reduce((a, b) => a + b, 0) / desp.length : undefined) : 'Tap a district to read about it.';
+      const baked = d ? bakeOf(ctx.session.getState())?.byId[d.id]?.despair : undefined;
+      info.textContent = d ? districtLine(d, desp.length ? desp.reduce((a, b) => a + b, 0) / desp.length : undefined, baked) : 'Tap a district to read about it.';
+      past.replaceChildren();
+      const p = d ? districtPast(ctx, d) : null;
+      if (p) past.append(el('p', 'hf-small hf-muted', p.standing), ...p.tales.slice(0, 4).map((t) => el('p', 'hf-small', t)));
     };
     c.addEventListener('click', (e) => { const r = c.getBoundingClientRect(); show(districtAtPoint(c, ctx, e.clientX - r.left, e.clientY - r.top)); });
     const all = realm(ctx.seed);
     const towns = all.reduce((a, d) => a + d.towns.length, 0) + model.towns.length;
-    body.append(c, el('p', 'hf-small hf-muted', `${all.length} districts and ${towns} towns and villages. Gold outline: your home district. Grey: despair has the upper hand. A gold line joins districts under a trade pact; red dashes and crossed blades mark a war.`), info,
+    const ages = realmAges(ctx);
+    body.append(c, el('p', 'hf-small hf-muted', `${all.length} districts and ${towns} towns and villages. Gold outline: your home district. Grey: despair has the upper hand. A gold line joins districts under a trade pact; red dashes and crossed blades mark a war.${ages ? ' A gold ring marks a beacon; a dark cross, a land fallen to ash.' : ''}`), ...(ages ? [el('p', 'hf-small', ages, { 'data-id': 'realm-ages' })] : []), info, past,
       button('Close map', () => ctx.panels.map.toggle(), { id: 'map-close' }));
     show(picked ?? all.find((d) => here && d.col === here.col && d.row === here.row) ?? null);
   };

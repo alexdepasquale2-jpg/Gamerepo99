@@ -35,7 +35,11 @@ export type PlayLastResolve = {
   methodId?: string;
 };
 export type PlaySession = {
-  start(opts?: { seed?: number; archetypeId?: string }): void;
+  /**
+   * Begin a new run. `bakeDawns`: how many dawns of history the whole realm lives first (0..100000,
+   * sim/realm-bake); `storyteller`: who paces what befalls it (sim/storyteller; the first one by default).
+   */
+  start(opts?: { seed?: number; archetypeId?: string; bakeDawns?: number; storyteller?: string }): void;
   /** Every act on offer (whole world); with `personId`, only that person's acts are built. */
   listActions(personId?: string): PlayAction[];
   /** Ring verbs for one target (a person, or a thing the scene hands over with its data). No legacy method ids. */

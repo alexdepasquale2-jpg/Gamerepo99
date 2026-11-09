@@ -19,6 +19,7 @@ import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { noteUse } from '../data-use-civic';
 import { leaderOf } from '../contrib/power-page';
+import { bakedDistrict, bakedPair } from '../realm-bake';
 
 type Broker = { spark: number; base: number; perTrust: number; minTrust?: number; feudAfter?: number; trustAfter: number; failTrust: number };
 export type PolityTuning = {
@@ -113,12 +114,23 @@ export function relationOf(state: SimState, a: string, b: string): DistrictRelat
     const [x, y] = key.split('|') as [string, string];
     const rng = deriveRng(state.seed, 'district-relation', key);
     const rival = RIVALS.has(`${profileOf(state.seed, x).style}|${profileOf(state.seed, y).style}`);
-    r = p.relations[key] = {
+    // A baked realm hands over how the pair stood when its past ended (sim/realm-bake); a young one starts from the seed.
+    const baked = bakedPair(state, x, y);
+    r = p.relations[key] = baked ? {
+      a: x, b: y, trust: baked.trust, feud: baked.feud, state: baked.state, since: baked.since, lastWar: baked.lastWar,
+      ...(baked.warEnds !== undefined ? { warEnds: baked.warEnds } : {}), ...(baked.winner ? { winner: baked.winner } : {}),
+      nextLetter: state.day + rng.int(1, DPOL.letterEvery[1] + 1),
+    } : {
       a: x, b: y, trust: 0, feud: rng.int(DPOL.startFeud[0], DPOL.startFeud[1] + 1) + (rival ? DPOL.rivalStartFeud : 0), state: 'peace',
       since: state.day, lastWar: -999, nextLetter: state.day + rng.int(1, DPOL.letterEvery[1] + 1),
     };
   }
   return r;
+}
+
+/** Every neighbouring pair as it stands (a baked realm's pacts and wars are on the map from day 1). */
+export function primeRelations(state: SimState): void {
+  for (const key of allPairs()) { const [a, b] = key.split('|') as [string, string]; relationOf(state, a, b); }
 }
 
 export const liveId = (state: SimState): string => refId(activeDistrict(state));
@@ -130,7 +142,7 @@ export function despairOf(state: SimState, id: string): number {
     const ts = Object.values(state.towns ?? {}) as { despair?: number }[];
     return ts.length ? ts.reduce((a, t) => a + (t.despair ?? 0), 0) / ts.length : 0.3;
   }
-  return realmOf(state).summaries[id]?.despair ?? profileOf(state.seed, id).despair;
+  return realmOf(state).summaries[id]?.despair ?? bakedDistrict(state, id)?.despair ?? profileOf(state.seed, id).despair;
 }
 
 /** Nudge a district's despair: its live towns, else its summary (a never-seen district keeps its seed). */
@@ -150,7 +162,7 @@ export function bumpDespair(state: SimState, id: string, by: number): void {
 function strength(state: SimState, id: string): number {
   const folk = id === liveId(state)
     ? Object.values(state.people).filter((p) => !p.tags?.includes('retired')).length
-    : realmOf(state).summaries[id]?.people ?? (profileOf(state.seed, id).population || DPOL.homePeople);
+    : realmOf(state).summaries[id]?.people ?? (profileOf(state.seed, id).population || DPOL.homePeople) * (bakedDistrict(state, id)?.people ?? 1);
   return folk * (1.2 - despairOf(state, id));
 }
 

@@ -1,0 +1,260 @@
+{
+  "_doc": "The storyteller (sim/storyteller): one director paces everything that befalls the district you are in, instead of a flat chance per dawn. A teller is picked at New game (tellers[0] by default). Its tale moves through phases (calm, rising, peak, ebb; the Gale has one: wild); each phase lasts days[lo,hi], fires an incident with `chance` per dawn (never within minGap days of the last), and draws its kind from `kinds` weights: everyday = the happenings table (data/systems/events.json), boon / omen / twist / threat = an incident below, arc = a chain. Threats cost points (income per dawn grows with the day and with what you own) and raise tension; no threat fires while tension is over tensionCap, and a merciful teller holds threats back while your spark is low or your town is deep in despair. Nothing repeats: an incident waits out its cooldown, and one told lately is weighed down (novelty). Incident ops: despair {add}; food {days} (days of the town's appetite, + or -); stock {mul}; flame {add, share, pick: lit|unlit|any}; spark {add} and coin / item (only when you are in that town); route {break|mend}; settle (a wanderer stays for good); feud {add} (with a neighbouring district); happening {id}; pressure {family, need} (packs of that family gather near the town until you rout `need` of them). `intensity` scales losses and need. An incident with `days` stays in force that long and shows on the board's Tidings page (`board`, {left} = days left, {need} = packs left); `resolve.by` rout (kill packs near the town) or when (a happening-world clause holds at the deadline) decides between `win` and `lose` ops and lines. Lines are spoken by a resident ({name}); {town} the town, {other} a neighbouring district.",
+  "tuning": { "pointsStart": 2, "pointsCap": 14, "wealthCoin": 400, "wealthMax": 1.5, "dayRamp": 60, "intensity": [0.7, 2.2], "novelty": [0.12, 0.5], "noveltySpan": [3, 7], "mercySpark": 0.25, "mercyDespair": 0.8, "logKeep": 30, "pressureChance": 0.92, "pressureForce": 0.85 },
+  "tellers": [
+    {
+      "id": "ember", "name": "Old Ember", "title": "the hearth-keeper",
+      "blurb": "Trouble builds, breaks, and passes. After every storm, a quiet spell to mend in. The way most tales go.",
+      "minGap": 2, "threatMul": 1, "tensionCap": 60, "tensionDecay": 5, "income": 1, "mercy": true,
+      "phases": {
+        "calm": { "next": "rising", "days": [3, 5], "chance": 0.3, "kinds": { "everyday": 5, "boon": 2, "omen": 1 } },
+        "rising": { "next": "peak", "days": [3, 5], "chance": 0.5, "kinds": { "everyday": 4, "omen": 3, "twist": 2, "threat": 2 } },
+        "peak": { "next": "ebb", "days": [2, 3], "chance": 0.9, "kinds": { "threat": 6, "arc": 4, "twist": 1 } },
+        "ebb": { "next": "calm", "days": [2, 4], "chance": 0.35, "kinds": { "boon": 4, "everyday": 3 } }
+      }
+    },
+    {
+      "id": "weaver", "name": "The Weaver", "title": "who takes her time",
+      "blurb": "Long quiet seasons to build in. Then one thread pulled all the way through. Fewer tales, and each one a chapter.",
+      "minGap": 3, "threatMul": 1.35, "tensionCap": 80, "tensionDecay": 3, "income": 1.2, "mercy": true,
+      "phases": {
+        "calm": { "next": "rising", "days": [7, 11], "chance": 0.22, "kinds": { "everyday": 5, "boon": 3 } },
+        "rising": { "next": "peak", "days": [2, 4], "chance": 0.6, "kinds": { "omen": 5, "everyday": 2, "twist": 1 } },
+        "peak": { "next": "ebb", "days": [3, 5], "chance": 0.9, "kinds": { "arc": 8, "threat": 3 } },
+        "ebb": { "next": "calm", "days": [3, 5], "chance": 0.3, "kinds": { "boon": 5, "everyday": 2 } }
+      }
+    },
+    {
+      "id": "gale", "name": "The Gale", "title": "that asks no leave",
+      "blurb": "No rhythm, no mercy, no pattern. Windfalls and wolves in the same week. For those who have seen the other tales.",
+      "minGap": 1, "threatMul": 1.15, "tensionCap": 100, "tensionDecay": 8, "income": 1.4, "mercy": false,
+      "phases": {
+        "wild": { "next": "wild", "days": [5, 9], "chance": 0.6, "kinds": { "everyday": 3, "boon": 3, "omen": 1, "twist": 3, "threat": 4, "arc": 2 } }
+      }
+    }
+  ],
+  "phaseLines": {
+    "calm": "The roads are quiet. A good time to build something.",
+    "rising": "Folk keep looking at the tree line. Something is on its way.",
+    "peak": "Trouble is here, or near enough to smell.",
+    "ebb": "The worst has passed. People are counting what is left.",
+    "wild": "Nobody will say what tomorrow brings. Nobody ever could."
+  },
+  "incidents": [
+    {
+      "id": "bandit_raid", "name": "Bandit Raid", "kind": "threat", "weight": 8, "cost": 4, "tension": 30, "minDay": 5, "cooldown": 14, "days": 5,
+      "ops": [{ "op": "stock", "mul": 0.7 }, { "op": "despair", "add": 0.04 }, { "op": "pressure", "family": "bandit", "need": 2 }],
+      "say": ["They came at dusk and took what they liked. They are camped out past the fields, {name} says, laughing about it.", "Raiders. Half the stores gone, and they have not even bothered to run far."],
+      "news": ["Bandits raided {town} in the night. {name} says they are still camped nearby.", "{name} woke the lane: raiders hit {town}'s stores and are sitting just outside it."],
+      "board": "Raiders are camped outside {town}. Rout {need} more of their packs and the stores come back. They strike again in {left} days.",
+      "resolve": {
+        "by": "rout",
+        "win": [{ "op": "restore" }, { "op": "despair", "add": -0.06 }, { "op": "coin", "add": 20 }, { "op": "spark", "add": 6 }],
+        "winLines": ["The raiders have scattered. {name} is already carting the stores back to {town}.", "{town} got its own back. {name} says they will think twice now."],
+        "lose": [{ "op": "stock", "mul": 0.75 }, { "op": "despair", "add": 0.05 }],
+        "loseLines": ["The raiders came back to {town} for the rest. Nobody stood in their way.", "{name} says the bandits took a second helping from {town}, and left when they were ready."]
+      }
+    },
+    {
+      "id": "wolf_winter", "name": "Wolves at the Fences", "kind": "threat", "weight": 7, "cost": 2, "tension": 18, "minDay": 3, "cooldown": 12, "days": 4,
+      "ops": [{ "op": "food", "days": -1 }, { "op": "despair", "add": 0.02 }, { "op": "pressure", "family": "beast", "need": 2 }],
+      "say": ["Wolves in the sheep pens again. Nobody will go out to the far field.", "{name} counted seven of them at the fence last night. Bold as you like."],
+      "news": ["Wolves are taking stock at {town}. {name} says the far fields are abandoned.", "A pack has come down on {town}; {name} lost two ewes to it."],
+      "board": "A wolf pack is working the fields round {town}. Rout {need} more packs and the herders go back out ({left} days).",
+      "resolve": {
+        "by": "rout",
+        "win": [{ "op": "food", "days": 2 }, { "op": "despair", "add": -0.03 }, { "op": "item", "id": "hide", "qty": 2 }],
+        "winLines": ["The wolves are gone from {town}. {name} left hides on your step by way of thanks."],
+        "lose": [{ "op": "food", "days": -1.5 }],
+        "loseLines": ["The wolves took what they wanted from {town} and moved on fat."]
+      }
+    },
+    {
+      "id": "despair_tide", "name": "The Grey Tide", "kind": "threat", "weight": 6, "cost": 5, "tension": 35, "minDay": 8, "cooldown": 20, "days": 5, "when": { "despairAbove": 0.3 },
+      "ops": [{ "op": "despair", "add": 0.05 }, { "op": "flame", "add": -8, "share": 0.4, "pick": "lit" }, { "op": "pressure", "family": "despair", "need": 3 }],
+      "say": ["There are things at the edge of the fields that were not there yesterday. Grey things. They just stand.", "{name} will not go past the last house. Says the hollow ones are gathering."],
+      "news": ["A grey tide has come in round {town}: hollow things at the field edge, and the hearths burning low.", "{name} says the despair-born are thick outside {town}, and people can feel it indoors."],
+      "board": "The grey tide stands outside {town}; its hearths sink while it does. Rout {need} more packs of the despair-born to break it ({left} days).",
+      "resolve": {
+        "by": "rout",
+        "win": [{ "op": "despair", "add": -0.1 }, { "op": "flame", "add": 10, "share": 0.5, "pick": "any" }, { "op": "spark", "add": 10 }, { "op": "item", "id": "ember_shard", "qty": 1 }],
+        "winLines": ["The tide broke at {town}. {name} says people came out and stood in the lane, just breathing.", "Whatever stood outside {town} is gone. The hearths are drawing again."],
+        "lose": [{ "op": "despair", "add": 0.08 }, { "op": "flame", "add": -10, "share": 0.5, "pick": "any" }],
+        "loseLines": ["The grey tide did not break. It settled into {town}, and people let it.", "{name} says nobody fought it. {town} just got quieter."]
+      }
+    },
+    {
+      "id": "blight", "name": "Blight", "kind": "threat", "weight": 6, "cost": 3, "tension": 22, "minDay": 6, "cooldown": 18, "days": 5,
+      "ops": [{ "op": "food", "days": -3 }, { "op": "despair", "add": 0.02 }],
+      "say": ["The crop has gone black at the root. All of it, in a week.", "{name} pulled a whole row and every one was rotten."],
+      "news": ["Blight took the fields at {town}. {name} says the stores will not see them through.", "The crop failed at {town}; people are already eating less."],
+      "board": "Blight took {town}'s crop. If its stores hold two days of food when {left} days are up, it comes through. Bring food, or send a convoy.",
+      "resolve": {
+        "by": "when", "when": { "foodCoverAtLeast": 2 },
+        "win": [{ "op": "despair", "add": -0.05 }, { "op": "flame", "add": 6, "share": 0.4, "pick": "any" }, { "op": "spark", "add": 5 }],
+        "winLines": ["{town} came through the blight fed. {name} says people know who carried the grain in.", "Nobody starved at {town}. There is a kind of pride in the place this morning."],
+        "lose": [{ "op": "despair", "add": 0.07 }, { "op": "flame", "add": -8, "share": 0.5, "pick": "any" }],
+        "loseLines": ["{town} went hungry after the blight. {name} says some doors have not opened since.", "The stores ran out at {town}. People remember who had grain and who did not."]
+      }
+    },
+    {
+      "id": "road_washout", "name": "Road Washed Out", "kind": "twist", "weight": 6, "cost": 1, "tension": 8, "minDay": 4, "cooldown": 16,
+      "ops": [{ "op": "route", "break": true }],
+      "say": ["The road went in the night. A cart could not get through now.", "{name} walked out to look. Says half the hill is sitting on the road."],
+      "news": ["A road out of {town} has washed out. Carts are turning back.", "{name} says the road by {town} is gone under mud; it wants stone, timber and hands."]
+    },
+    {
+      "id": "envoy_slight", "name": "An Envoy Slighted", "kind": "twist", "weight": 5, "cost": 1, "tension": 10, "minDay": 6, "cooldown": 20,
+      "ops": [{ "op": "feud", "add": 12 }],
+      "say": ["The envoy from {other} left without eating. That is not a small thing, where they come from.", "{name} heard shouting from the hall. The envoy from {other} rode out before dawn."],
+      "news": ["An envoy from {other} left {town} insulted. {name} says the seat will hear of it.", "There are hard words between {town} and {other} this morning."]
+    },
+    {
+      "id": "deserters", "name": "Deserters", "kind": "twist", "weight": 5, "cost": 1, "tension": 6, "minDay": 5, "cooldown": 18,
+      "ops": [{ "op": "settle", "n": 2 }, { "op": "despair", "add": 0.01 }],
+      "say": ["Two came in off the road with army boots and no army. They want work and no questions.", "{name} has put the strangers up in the barn. Deserters, by the look."],
+      "news": ["Two deserters have settled at {town}. {name} says they work hard and flinch at horns.", "{town} has two new pairs of hands this morning, and nobody is asking where from."]
+    },
+    {
+      "id": "wanderer", "name": "A Wanderer Stays", "kind": "boon", "weight": 7, "cost": 0, "tension": -5, "cooldown": 10,
+      "ops": [{ "op": "settle", "n": 1, "flame": 55 }],
+      "say": ["Someone walked in last night and asked if there was an empty house. There are plenty of those.", "{name} says the newcomer has a way of whistling. People keep stopping to listen."],
+      "news": ["A wanderer has decided to stay at {town}. {name} says they came in already lit.", "{town} has a new face this morning, and a new light in a window that was dark."]
+    },
+    {
+      "id": "bumper_harvest", "name": "Bumper Harvest", "kind": "boon", "weight": 7, "cost": 0, "tension": -8, "cooldown": 14,
+      "ops": [{ "op": "food", "days": 4 }, { "op": "despair", "add": -0.03 }],
+      "say": ["I have never seen the carts come in so full. We will have to build a second crib.", "{name} keeps going out to look at the granary, just to look."],
+      "news": ["The harvest came in heavy at {town}. {name} says there is more than the stores will hold.", "{town} has grain to spare this morning, and people are almost cheerful about it."]
+    },
+    {
+      "id": "trade_fair", "name": "Trade Fair", "kind": "boon", "weight": 6, "cost": 0, "tension": -6, "minDay": 4, "cooldown": 18,
+      "ops": [{ "op": "stock", "mul": 1.4 }, { "op": "despair", "add": -0.04 }, { "op": "coin", "add": 12 }, { "op": "flame", "add": 5, "share": 0.3, "pick": "any" }],
+      "say": ["Carts from three roads, all at once. The square has not been this loud in years.", "{name} sold everything by noon and stood about grinning like a fool."],
+      "news": ["A fair has sprung up at {town}: traders from every road. {name} says the shelves are full.", "{town} is loud this morning. A fair came in with the carts."]
+    },
+    {
+      "id": "lost_cache", "name": "A Carrier's Cache", "kind": "boon", "weight": 5, "cost": 0, "tension": -4, "minDay": 3, "cooldown": 22, "where": "here",
+      "ops": [{ "op": "item", "id": "ember_shard", "qty": 1 }, { "op": "coin", "add": 25 }, { "op": "spark", "add": 8 }],
+      "say": ["We found this under the old hearthstone. It is warm. It has been waiting, I think, for one of you.", "{name} dug it up mending the wall. Says it belongs with whoever carries the spark now."],
+      "news": ["{name} found something an old spark-carrier buried at {town}, and has left it at your door.", "A cache from one who walked before you turned up at {town}. {name} thought you should have it."]
+    },
+    {
+      "id": "road_gang", "name": "The Road Gang", "kind": "boon", "weight": 5, "cost": 0, "tension": -4, "minDay": 5, "cooldown": 16,
+      "ops": [{ "op": "route", "mend": true }, { "op": "despair", "add": -0.02 }],
+      "say": ["They went out with mallets and no one asked them to. First time in my life.", "{name} says the young ones mended the road for something to do. Imagine that."],
+      "news": ["Folk from {town} mended their road unasked. {name} says carts are through again.", "The road by {town} was mended overnight by its own people."]
+    },
+    {
+      "id": "hairy_star", "name": "The Hairy Star", "kind": "omen", "weight": 5, "cost": 0, "tension": 12, "cooldown": 30,
+      "ops": [{ "op": "flame", "add": -3, "share": 0.3, "pick": "any" }],
+      "say": ["A star with a tail, three nights running. My grandmother would have had the shutters nailed.", "{name} says it means a death. {name} says that about everything."],
+      "news": ["A tailed star hangs over {town}. {name} says nothing good follows one.", "People at {town} were up all night watching the sky."]
+    },
+    {
+      "id": "birds_leave", "name": "The Birds Leave", "kind": "omen", "weight": 6, "cost": 0, "tension": 10, "cooldown": 20,
+      "ops": [{ "op": "despair", "add": 0.01 }],
+      "say": ["The rooks have gone from the elms. All of them, in one morning. That is not right.", "{name} noticed first: no birds. You do not hear how quiet it is until someone says."],
+      "news": ["The birds have left {town}. {name} says the old folk are stacking wood early.", "No birdsong at {town} this morning. People keep stopping to listen for it."]
+    },
+    {
+      "id": "cut_purses", "name": "Cut Purses", "kind": "omen", "weight": 5, "cost": 0, "tension": 10, "minDay": 4, "cooldown": 20,
+      "ops": [{ "op": "stock", "mul": 0.95 }],
+      "say": ["Third purse cut this week, and always on the road, never in town. Someone is counting our carts.", "{name} says there are strangers watching the road and writing things down."],
+      "news": ["Travellers near {town} are being robbed, a little at a time. {name} says someone is taking the town's measure.", "{name} was followed on the road to {town}."]
+    },
+    {
+      "id": "tribute", "name": "Tribute", "kind": "threat", "weight": 0, "cost": 0, "tension": 20, "arcOnly": true,
+      "ops": [{ "op": "stock", "mul": 0.6 }, { "op": "despair", "add": 0.08 }, { "op": "flame", "add": -8, "share": 0.5, "pick": "any" }],
+      "say": ["They did not even draw steel this time. They sent a list.", "{name} carried our tribute out to them. I could not look."],
+      "news": ["{town} is paying tribute to the bandit king. {name} says it will be every season now.", "The bandits own {town}'s road, and {town} knows it."]
+    },
+    {
+      "id": "kings_fall", "name": "The King's Fall", "kind": "boon", "weight": 0, "cost": 0, "tension": -20, "arcOnly": true,
+      "ops": [{ "op": "despair", "add": -0.08 }, { "op": "route", "mend": true }, { "op": "coin", "add": 40 }, { "op": "flame", "add": 10, "share": 0.5, "pick": "any" }, { "op": "happening", "id": "festival" }],
+      "say": ["They say the bandit king's own men left him in the night, after what you did. The road is ours.", "{name} is hanging lanterns. Lanterns! For a road."],
+      "news": ["The bandit king's band has broken up. {town} is lighting lanterns along its road.", "{name} says the roads round {town} are free, and that it was your doing."]
+    },
+    {
+      "id": "long_frost", "name": "The Long Frost", "kind": "threat", "weight": 0, "cost": 0, "tension": 25, "arcOnly": true, "days": 6,
+      "ops": [{ "op": "food", "days": -4 }, { "op": "despair", "add": 0.03 }, { "op": "flame", "add": -5, "share": 0.4, "pick": "any" }],
+      "say": ["The ground is like iron and it is not even midwinter. We are into the seed grain already.", "{name} is burning fence rails. That is how you know."],
+      "news": ["A killing frost has settled on {town}. {name} says the stores are going twice as fast.", "{town} woke to ice on the inside of the shutters."],
+      "board": "The long frost holds {town}. If its stores hold two days of food when it lifts in {left} days, it comes through. Bring food, fuel a convoy, or share your own.",
+      "resolve": {
+        "by": "when", "when": { "foodCoverAtLeast": 2 },
+        "win": [{ "op": "despair", "add": -0.08 }, { "op": "flame", "add": 10, "share": 0.6, "pick": "any" }, { "op": "spark", "add": 8 }, { "op": "happening", "id": "festival" }],
+        "winLines": ["The frost broke and {town} is still standing, every house of it. {name} is calling it the winter nobody was left out.", "{town} came through the frost whole. There is to be a feast."],
+        "lose": [{ "op": "despair", "add": 0.1 }, { "op": "flame", "add": -12, "share": 0.6, "pick": "any" }],
+        "loseLines": ["The frost lifted too late for {town}. {name} says they are counting who is left.", "{town} came out of the frost thinner and quieter, and not all of it came out."]
+      }
+    },
+    {
+      "id": "pilgrims", "name": "Pilgrims on the Road", "kind": "boon", "weight": 0, "cost": 0, "tension": -5, "arcOnly": true,
+      "ops": [{ "op": "settle", "n": 1, "flame": 60 }, { "op": "coin", "add": 8 }, { "op": "despair", "add": -0.02 }],
+      "say": ["Pilgrims, a dozen of them, walking to the place where the last spark-carrier rested. They sang the whole way in.", "{name} gave them the barn. One has decided not to leave."],
+      "news": ["Pilgrims came through {town}, following the old spark-carriers' road. One has stayed.", "{name} says the pilgrims at {town} are asking after you."]
+    },
+    {
+      "id": "shrine_lit", "name": "The Shrine Lit", "kind": "boon", "weight": 0, "cost": 0, "tension": -10, "arcOnly": true,
+      "ops": [{ "op": "flame", "add": 12, "share": 0.6, "pick": "any" }, { "op": "despair", "add": -0.06 }, { "op": "spark", "add": 12 }, { "op": "item", "id": "ember_shard", "qty": 2 }],
+      "say": ["They lit the old shrine. It has not burned in my lifetime. You can see it from the mill.", "{name} stood by it all night. Says it is the same fire you carry. I believe it."],
+      "news": ["The pilgrims lit the old shrine at {town}. {name} says half the town sat up with it.", "A fire is burning at {town}'s shrine this morning, for the first time in living memory."]
+    },
+    {
+      "id": "first_cough", "name": "The First Cough", "kind": "omen", "weight": 0, "cost": 0, "tension": 15, "arcOnly": true,
+      "ops": [{ "op": "flame", "add": -6, "share": 0.15, "pick": "any" }],
+      "say": ["There is a cough going round the carters. It sounds wet. I do not like it.", "{name} has shut the children in. Says it started like this the last time."],
+      "news": ["A cough is going round at {town}. {name} is keeping well back from the well.", "{town} is uneasy this morning: two carters are abed and grey in the face."]
+    },
+    {
+      "id": "grey_cough", "name": "The Grey Cough", "kind": "threat", "weight": 0, "cost": 0, "tension": 30, "arcOnly": true, "days": 5,
+      "ops": [{ "op": "flame", "add": -12, "share": 0.6, "pick": "any" }, { "op": "despair", "add": 0.05 }],
+      "say": ["It is in every third house now. People have stopped answering their doors.", "{name} is nursing four of them. Nobody is nursing {name}."],
+      "news": ["The grey cough has hold of {town}. {name} says doors are shut all down the lane.", "Sickness at {town}: the hearths are untended and the lane is empty."],
+      "board": "The grey cough has {town}. If half its hearths are lit when it passes in {left} days, it will remember who sat with the sick. Keep its people burning.",
+      "resolve": {
+        "by": "when", "when": { "litAtLeast": 0.5 },
+        "win": [{ "op": "despair", "add": -0.1 }, { "op": "spark", "add": 12 }, { "op": "flame", "add": 8, "share": 0.5, "pick": "any" }],
+        "winLines": ["The cough has passed at {town}, and nobody sat it out alone. {name} says that is your doing.", "{town} came through the grey cough with its fires in. People are saying your name kindly."],
+        "lose": [{ "op": "despair", "add": 0.08 }, { "op": "flame", "add": -8, "share": 0.5, "pick": "any" }],
+        "loseLines": ["The cough has burned itself out at {town}. What it left is very quiet.", "{name} says the sickness is over at {town}. Nobody is celebrating."]
+      }
+    }
+  ],
+  "arcs": [
+    {
+      "id": "bandit_king", "name": "The Bandit King", "weight": 6, "cost": 5, "minDay": 8, "cooldown": 45,
+      "blurb": "A band is taking the town's measure. Break them when they come, or pay them forever.",
+      "steps": [
+        { "after": 0, "incident": "cut_purses" },
+        { "after": 3, "incident": "bandit_raid" },
+        { "after": 6, "won": "kings_fall", "lost": "tribute" }
+      ]
+    },
+    {
+      "id": "ashen_winter", "name": "The Ashen Winter", "weight": 5, "cost": 5, "minDay": 10, "cooldown": 50,
+      "blurb": "The birds leave first. Then the frost comes for the stores.",
+      "steps": [
+        { "after": 0, "incident": "birds_leave" },
+        { "after": 3, "incident": "long_frost" }
+      ]
+    },
+    {
+      "id": "pilgrim_road", "name": "The Pilgrim Road", "weight": 4, "cost": 2, "minDay": 6, "cooldown": 60,
+      "blurb": "They walk where the spark-carriers walked. Lately that means here.",
+      "steps": [
+        { "after": 0, "incident": "pilgrims" },
+        { "after": 4, "incident": "shrine_lit" }
+      ]
+    },
+    {
+      "id": "grey_cough", "name": "The Grey Cough", "weight": 4, "cost": 5, "minDay": 12, "cooldown": 60,
+      "blurb": "A wet cough among the carters. Then every third house.",
+      "steps": [
+        { "after": 0, "incident": "first_cough" },
+        { "after": 2, "incident": "grey_cough" }
+      ]
+    }
+  ]
+}

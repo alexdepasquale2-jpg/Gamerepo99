@@ -1,7 +1,8 @@
 /**
  * The title flow and the pause menu (repurposed from the old game-flow):
  *   title (Continue, New game, Load) → who still lives here (4 archetypes + roll) → which world
- *   (known 42, a new one, or a number) → app.start(session, autosave).
+ *   (known 42, a new one, or a number) → how old it is (0 to 100,000 dawns of baked history) → who tells
+ *   the tale (the storyteller) → app.start(session, autosave).
  * In play: pause (resume, save to 3 slots, load, world file export/import, sound, leave to title).
  * Dawn autosave goes to its own slot. The overlay stack's pause flag drives app.setPaused.
  */
@@ -18,6 +19,8 @@ import { openTitleMenu } from './menus/title-menu';
 import { openInhabitantMenu } from './menus/inhabitant-menu';
 import { openWorldMenu, rollWorldSeed } from './menus/world-menu';
 import { openWorldFileMenu } from './menus/world-file-menu';
+import { openAgeMenu } from './menus/age-menu';
+import { openTellerMenu } from './menus/teller-menu';
 import type { MenuHandle } from './kit/menu';
 import { installOverlayKeys, overlays } from './kit/overlay-stack';
 import { ensureKitStyle } from './kit/style';
@@ -69,10 +72,30 @@ export function runTitleFlow(app: AppHooks): void {
     }, 200);
   }
 
-  function newGame(archetypeId: string, seed: number): void {
+  function newGame(archetypeId: string, seed: number, bakeDawns: number, storyteller: string): void {
     const s = createPlaySession({ mode: 'play', seed, archetypeId }) as PlaySession;
-    s.start({ seed, archetypeId });
+    s.start({ seed, archetypeId, bakeDawns, storyteller });
     begin(s);
+  }
+
+  /** After the world: how old it is (every district's past is baked), then who tells its tale. */
+  function pickAge(archetypeId: string, seed: number): void {
+    open(
+      openAgeMenu({
+        seed,
+        onPick: (dawns) => (menu?.close(), pickTeller(archetypeId, seed, dawns)),
+        onBack: () => pickWorld(archetypeId),
+      }),
+    );
+  }
+
+  function pickTeller(archetypeId: string, seed: number, dawns: number): void {
+    open(
+      openTellerMenu({
+        onPick: (teller) => (menu?.close(), newGame(archetypeId, seed, dawns, teller)),
+        onBack: () => (menu?.close(), pickAge(archetypeId, seed)),
+      }),
+    );
   }
 
   /** After who you are: which world. The new world's number is rolled once per visit and shown before you commit. */
@@ -80,7 +103,7 @@ export function runTitleFlow(app: AppHooks): void {
     open(
       openWorldMenu({
         newSeed: rollWorldSeed(Math.random()),
-        onPick: (seed) => (menu?.close(), newGame(archetypeId, seed)),
+        onPick: (seed) => (menu?.close(), pickAge(archetypeId, seed)),
         onBack: () => (menu?.close(), pickInhabitant()),
       }),
     );

@@ -1,0 +1,78 @@
+{
+  "_doc": "The realm's past (sim/realm-bake). Before day 1, every district lives `dawns` days (0 to maxDawns, chosen at New game) on an abstract day: food by season, land and weather; despair pulled toward the wound it carries (which itself rises and falls on a slow tide: tide.local per district, tide.realm for all of them, periods in years) and eased or deepened by its hearths (glow); neighbours feud, pact and go to war by the same meters as civic/district-relations; and rare events befall it (events). Each district keeps the greatest and the latest of what happened to it (keepGreat / keepRecent), which its people retell (tell), and the realm's time is cut into named ages (ages). Units are per dawn unless named otherwise. Nothing here is rolled in play: the bake is a pure function of (seed, dawns).",
+  "maxDawns": 100000,
+  "presets": [
+    { "id": "now", "dawns": 0, "label": "A young world", "hint": "No past but the one its people were born with. The world as it has always started." },
+    { "id": "generation", "dawns": 700, "label": "A generation", "hint": "25 years: one war, one bad winter, one name people still say." },
+    { "id": "century", "dawns": 2800, "label": "A century", "hint": "100 years of pacts, plagues and harvests behind every district." },
+    { "id": "age", "dawns": 28000, "label": "An age", "hint": "1,000 years. Lands have fallen to ash and been rekindled more than once." },
+    { "id": "deep", "dawns": 100000, "label": "Deep time", "hint": "3,571 years: the oldest world there is." }
+  ],
+  "tuning": {
+    "eventChance": 0.0055,
+    "keepGreat": 6,
+    "keepRecent": 4,
+    "food": { "start": 20, "cap": 60, "rate": 1.0, "work": 1.4, "workDespair": 0.6, "eat": 0.85, "eatPop": 0.2, "plenty": 40, "plentyDespair": 0.0004, "plentyPop": 0.0004, "famineDespair": 0.0015, "faminePop": 0.0012, "famineAfter": 10, "famineGap": 200 },
+    "harvestBySeason": [0.9, 1.2, 1.4, 0.4],
+    "fertility": { "forest": 0.95, "hills": 0.9, "fields": 1.12, "meadow": 1.05, "water": 1.0 },
+    "weather": [0.78, 1.22],
+    "despair": { "pull": 0.002, "glowRelief": 0.0003, "decadenceBelow": 0.15, "decadence": 0.0009, "floor": 0.02, "cap": 0.97 },
+    "tide": { "local": 0.2, "localYears": [40, 220], "realm": 0.12, "realmYears": [350, 600] },
+    "glow": { "from": 0.45, "rate": 0.001, "keep": 0.9995 },
+    "pop": { "pull": 0.0006, "min": 0.3, "max": 2.2 },
+    "status": { "fallDespair": 0.8, "fallGlow": -0.4, "riseDespair": 0.6, "beaconDespair": 0.12, "beaconGlow": 0.5, "dimDespair": 0.36 },
+    "reign": [300, 1200],
+    "contested": 0.2,
+    "pairs": { "letterTrust": 0.25, "grievanceEase": 0.3, "pactRelief": 0.00002, "warDespair": 0.001, "loseDespair": 0.03, "losePop": 0.04, "winFood": 6, "wearyPerWar": 1, "wearyFade": 500, "wearyCooldown": 1.5 },
+    "ages": { "count": 10, "minDawns": 140 }
+  },
+  "events": {
+    "plague": { "weight": 1.0, "note": 5, "despair": 0.07, "glow": -0.12, "popMul": [0.8, 0.93] },
+    "fire": { "weight": 0.9, "note": 3, "despair": 0.04, "foodMul": 0.7 },
+    "flood": { "weight": 0.5, "note": 3, "despair": 0.03, "foodMul": 0.5, "lands": ["water", "meadow"] },
+    "frost": { "weight": 0.8, "note": 3, "despair": 0.02, "food": -12 },
+    "blight": { "weight": 0.7, "note": 4, "despair": 0.03, "foodMul": 0.15 },
+    "harvest": { "weight": 1.1, "note": 3, "despair": -0.05, "glow": 0.04, "food": 18 },
+    "sparkbearer": { "weight": 0.5, "note": 7, "despair": [-0.16, -0.08], "glow": [0.3, 0.6] },
+    "schism": { "weight": 0.5, "note": 4, "despair": 0.05, "glow": -0.05, "feud": 15 },
+    "exodus": { "weight": 1.0, "note": 4, "popMul": [0.86, 0.9], "despairAbove": 0.65 },
+    "fair": { "weight": 0.8, "note": 3, "despair": -0.03, "pop": 0.05, "trust": 5, "foodAbove": 25, "despairBelow": 0.4 },
+    "comet": { "weight": 0.25, "note": 2, "glow": [-0.05, 0.05] },
+    "bandit": { "weight": 0.6, "note": 3, "despair": 0.03, "foodMul": 0.85 }
+  },
+  "notes": { "famine": 4, "war": 5, "pact": 2, "succession": 1, "two_seats": 4, "fell": 10, "rekindled": 9, "beacon": 9, "dimmed": 6 },
+  "ages": {
+    "war": ["The Banner Years", "The Long Feud", "The Iron Seasons", "The Burning Borders", "The War of the Seats"],
+    "grey": ["The Grey Years", "The Thin Years", "The Coughing Time", "The Hungry Reign", "The Black Winters"],
+    "dimming": ["The Dimming", "The Guttering", "The Cold Hearths", "The Long Dusk", "The Ash Years"],
+    "kindling": ["The Kindling", "The Bright Return", "The Years of the Walkers", "The Second Fire", "The Warm Reign"],
+    "plenty": ["The Long Table", "The Fat Years", "The Golden Harvests", "The Full Granaries", "The Easy Reign"],
+    "quiet": ["The Quiet Years", "The Slow Seasons", "The Mending", "The Unremarked Years", "The Even Reign"]
+  },
+  "tell": {
+    "warNames": ["Ember", "Salt", "Three Wells", "Broken Tithe", "Long Road", "Cold Ford", "Two Seals", "Grey Banner", "Last Granary", "Thorn"],
+    "kinds": {
+      "war_won": { "gist": "the War of the {war}", "summaries": ["{ago}, {district} went to war with {other}. They call it the War of the {war} now. Our side held the field, for what that bought.", "{ago} the levies marched on {other}. The War of the {war}: we won it, and buried a good many winning it."], "codas": ["Winning is a kind of losing too.", "The banners are still up in the hall, moth-eaten."] },
+      "war_lost": { "gist": "the War of the {war}", "summaries": ["{ago}, {other} came over the border. The War of the {war}. We lost it, and paid for the losing.", "{ago} {district} fought {other} and was beaten. The War of the {war}: half the old families date their grief from it."], "codas": ["Nobody here forgave {other}. Not really.", "You can still see where the wall was."] },
+      "pact": { "gist": "the pact with {other}", "summaries": ["{ago}, the seats of {district} and {other} put their seals to a pact. The carts ran both ways after that.", "{ago} we swore a trade pact with {other}. For a while the roads were worth walking."], "codas": ["A pact is only as warm as the hands that hold it.", "Good years, those."] },
+      "plague": { "gist": "the grey cough", "summaries": ["{ago}, the grey cough went through {town}. It took one in ten, and the rest stopped looking each other in the eye.", "{ago} a sickness came to {town} with the carts. They burned the bedding in the square for a month."], "codas": ["That is when the doors started being shut at night.", "Some houses never opened again."] },
+      "fire": { "gist": "the year {town} burned", "summaries": ["{ago}, {town} burned. Half the roofs in a night. They built it back lower and meaner.", "{ago} a fire took the old quarter of {town}. People stood and watched, which is the part nobody talks about."], "codas": ["The stones by the well are still black.", "Fire we could have fought, if anyone had cared to."] },
+      "flood": { "gist": "the year of the flood", "summaries": ["{ago}, the water came up over {town} and stayed a month. The stores rotted where they stood.", "{ago} the river took the low fields by {town}. We ate thin for a year after."], "codas": ["The mark is still on the chapel door.", "Water forgets. People don't."] },
+      "frost": { "gist": "the long frost", "summaries": ["{ago}, the frost came early and would not leave. {district} ate its seed grain that winter.", "{ago} was the winter of the long frost. In {town} they burned the fences to keep the old ones alive."], "codas": ["Nobody plants late any more.", "We counted the living in spring."] },
+      "blight": { "gist": "the blight year", "summaries": ["{ago}, the blight came through the fields of {district}. The whole harvest went black in a week.", "{ago} the crop failed around {town}. Not thin: failed. There was nothing to bring in."], "codas": ["That is the year the young ones started leaving.", "You never trust a field again, after."] },
+      "famine": { "gist": "the hungry season", "summaries": ["{ago}, the stores of {district} ran out before the spring did. People remember who shared and who did not.", "{ago} was the hungry season. In {town} they boiled harness leather."], "codas": ["Hunger keeps a ledger.", "Some families are still not spoken to."] },
+      "harvest": { "gist": "the golden harvest", "summaries": ["{ago}, {district} had a harvest the old folk still measure the others by. Carts stood loaded in the lanes.", "{ago} the fields by {town} gave double. There was dancing, they say. Real dancing."], "codas": ["We could have that again.", "Hard to believe now, I know."] },
+      "sparkbearer": { "gist": "the day {name} walked in", "summaries": ["{ago}, a stranger called {name} walked into {town} carrying something like an ember. Hearths that had been cold for years were lit by the time they left.", "{ago} one of the spark-carriers came through {town}. {name}, the name was. People woke up. That is the only way I can put it."], "codas": ["Then they walked on, and it was ours to keep. We did not keep all of it.", "You have the same look about you, if you don't mind my saying."] },
+      "schism": { "gist": "the split in the creed", "summaries": ["{ago}, the creed of {district} split down the middle over a matter nobody can now explain. {town} still has two meeting halls.", "{ago} half the seat walked out on the other half. Neighbours were shouted at over it, and {other} never forgot."], "codas": ["Being right kept nobody warm.", "It was never really about the creed."] },
+      "exodus": { "gist": "when the families left", "summaries": ["{ago}, a third of the young families of {district} packed their carts and went to {other}. The houses are still empty.", "{ago} people simply started leaving {town}. No quarrel, no farewell. Just fewer chimneys smoking each week."], "codas": ["You can't blame them. I tried.", "Some sent letters. Then the letters stopped."] },
+      "fair": { "gist": "the first great fair", "summaries": ["{ago}, {town} held its first great fair. Traders came from {other} and further. For a week the place remembered itself.", "{ago} the market at {town} was the talk of the realm. People met their wives and husbands at that fair."], "codas": ["We should hold one again.", "The fair field is pasture now."] },
+      "comet": { "gist": "the hairy star", "summaries": ["{ago}, a star with a tail hung over {district} for nine nights. Everybody had an opinion about what it meant.", "{ago} the hairy star came. The creed said one thing, the old women said another."], "codas": ["Whatever it meant, it meant it quietly.", "Nothing happened after. That was the strange part."] },
+      "bandit": { "gist": "the years of {name}'s band", "summaries": ["{ago}, a bandit called {name} held the roads of {district} for three seasons. Carts went armed or not at all.", "{ago} {name} and a band of broken men took a toll on every road out of {town}."], "codas": ["Some say {name} was one of ours, once.", "The roads were never quite trusted again."] },
+      "two_seats": { "gist": "the year of two seats", "summaries": ["{ago}, when the old seat-holder died, two claimed the chair. {name} took it in the end, and {district} was a long time healing.", "{ago} was the year of two seats. {name} won it; the other side's children still sit at the back."], "codas": ["Ask in {town} which side their family was on. Go on.", "A chair. All that over a chair."] },
+      "fell": { "gist": "when {district} went dark", "summaries": ["{ago}, the last lit hearth in {district} went out. Nobody marked the day. They only noticed, later, that it had been a while.", "{ago} {district} fell to ash. Not in a night: one cold house at a time, until there was no one left to mind."], "codas": ["That is the worst of it: it was quiet.", "We are what was left over."] },
+      "rekindled": { "gist": "when the fires came back", "summaries": ["{ago}, {district} came back from the ash. One hearth, then a street of them, then the seat itself.", "{ago} the fires were lit again in {town}. People who had not spoken in years stood in the lane and wept."], "codas": ["So it can be done. Remember that.", "It only took one to start it."] },
+      "beacon": { "gist": "when {district} burned bright", "summaries": ["{ago}, {district} was the brightest land in the realm. Travellers could see {town} from a day off, they say, all its windows lit.", "{ago} every hearth in {town} was burning. People walked here from {other} just to sit in it."], "codas": ["We were proud. Maybe too proud.", "I'd give a good deal to see it once."] },
+      "dimmed": { "gist": "when the bright years ended", "summaries": ["{ago}, the bright years of {district} ended. Nothing took them. We just stopped tending what we had.", "{ago} {town} began to go dark at the edges. By the time anyone said it aloud it was half gone."], "codas": ["A fire is a thing you do, not a thing you have.", "Nobody thinks it will be their house."] }
+    }
+  }
+}

@@ -36,6 +36,8 @@ export type RealmState = {
   inbox?: Record<string, InboxItem[]>;
   /** Districts as polities: leaders, and peace / pact / war per neighbouring pair (sim/civic/district-relations). Lazy. */
   polity?: DistrictPolity;
+  /** How many dawns of history every district lived before day 1 (sim/realm-bake). Absent: a young world. */
+  bake?: { dawns: number };
 };
 /** `due` is the day it would have landed; anything still on the road when you arrive goes back in flight. */
 export type InboxItem =
@@ -140,8 +142,8 @@ export function settleFresh(state: SimState, d: DistrictRef): void {
   }
 }
 
-/** Trunk roads out of a district: one to each neighbour, seat to seat, with days on the road. */
-export function trunkRoads(seed: number, from: DistrictRef): { to: DistrictRef; id: string; name: string; days: number; despair: number }[] {
+/** Trunk roads out of a district: one to each neighbour, seat to seat, with days on the road. `despairNow`: a district's despair as known (sim/realm-bake), else the seed's. */
+export function trunkRoads(seed: number, from: DistrictRef, despairNow?: (id: string) => number | undefined): { to: DistrictRef; id: string; name: string; days: number; despair: number }[] {
   const seatOf = (d: DistrictRef): { q: number; r: number } => {
     if (isHome(d.col, d.row)) { const b = districtBox(d.col, d.row); return { q: (b.q0 + b.q1) / 2, r: (b.r0 + b.r1) / 2 }; }
     const t = districtAt(seed, d.col, d.row).towns[0];
@@ -151,7 +153,7 @@ export function trunkRoads(seed: number, from: DistrictRef): { to: DistrictRef; 
   const a = seatOf(from);
   return neighbours(from.col, from.row).map((to) => {
     const dist = districtAt(seed, to.col, to.row), b = seatOf(to);
-    return { to, id: dist.id, name: dist.name, days: Math.max(2, Math.ceil(Math.hypot(b.q - a.q, b.r - a.r) / TRUNK_TILES_PER_DAY)), despair: dist.despair };
+    return { to, id: dist.id, name: dist.name, days: Math.max(2, Math.ceil(Math.hypot(b.q - a.q, b.r - a.r) / TRUNK_TILES_PER_DAY)), despair: despairNow?.(dist.id) ?? dist.despair };
   });
 }
 

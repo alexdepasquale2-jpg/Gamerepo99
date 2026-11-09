@@ -10,6 +10,7 @@ import voiceJson from '../data/dialogue/history-voice.json';
 import { loadHistoryTables, type HistoryBeat } from './gen/load/load-history';
 import type { HistoryEvent } from './gen/world-types';
 import { chronicleCodas } from './chronicle';
+import { bakeCodas } from './realm-bake/tell';
 import { deriveRng, type Rng } from './rng';
 import type { PersonState, SimState } from './types/runtime';
 
@@ -157,7 +158,7 @@ export function buildRetelling(inp: RetellInput): string {
   if (other && era !== 'deep' && rng.next() < 0.5) {
     coda = pick(rng, voice.codas.otherWitness)?.replace('{name}', shortName(inp.people[other]!));
   } else {
-    const own = kind ? voice.codas.kind[kind] ?? chronicleCodas(kind) : undefined;
+    const own = kind ? voice.codas.kind[kind] ?? (chronicleCodas(kind).length ? chronicleCodas(kind) : bakeCodas(kind)) : undefined;
     coda = pick(rng, own?.length ? own : voice.codas.fallback ?? []);
   }
   return [opener, summary, coda].filter((s) => !!s).join(' ');

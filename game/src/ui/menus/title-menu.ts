@@ -11,6 +11,6 @@ export function openTitleMenu(slots: SaveSlots, io: { onNew: () => void; onConti
       { id: 'new', label: 'New game', onPick: io.onNew },
       { id: 'load', label: 'Load', disabled: !hasSave, onPick: io.onLoad },
     ],
-    { id: 'hf-title-menu', onEscape: () => undefined, note: 'The fire keeps until you return.' },
+    { id: 'hf-title-menu', onEscape: () => undefined, note: 'A hundred districts. Up to 100,000 dawns of history. One spark. The fire keeps until you return.' },
   );
 }

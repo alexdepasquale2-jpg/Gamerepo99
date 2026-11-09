@@ -9,8 +9,11 @@ import {
   type InspectSession,
 } from '../fabric/world-dump';
 import type { CompatRuntime } from '../interaction';
-import { activeDistrict, arrivalTown, catchUp, freezeBlob, noteLeft, realmOf, refId, settleFresh, summarize, trunkRoads, withCarried, worldFor } from '../realm';
+import { activeDistrict, arrivalTown, catchUp, freezeBlob, homeRef, noteLeft, realmOf, refId, settleFresh, summarize, trunkRoads, withCarried, worldFor } from '../realm';
 import { deliverInbox, parkLeaving } from '../realm-away';
+import { applyBake, bakedDespair, layBakedHistory, setBake } from '../realm-bake';
+import { primeRelations } from '../civic/district-relations';
+import { chooseStoryteller } from '../storyteller/state';
 import { awayParts } from '../civic/lod-away';
 import { CHRONICLE_TAG } from '../chronicle';
 import { loadData, type DataTables } from '../load-data';
@@ -93,7 +96,7 @@ function createPlayModeSession(defaults: {
   let interactionRt: CompatRuntime | undefined;
   const juiceHandlers = new Set<(id: string, payload: unknown) => void>();
 
-  function boot(nextSeed: number, nextArchetype: string): void {
+  function boot(nextSeed: number, nextArchetype: string, bakeDawns = 0, storyteller?: string): void {
     seed = nextSeed;
     archetypeId = nextArchetype;
     tickN = 0;
@@ -104,6 +107,14 @@ function createPlayModeSession(defaults: {
     metrics.firstConsequenceAtTick = undefined;
     lastResolveVal = undefined;
     ({ world, routes, state, interactionRt } = bootPlayState(seed, archetypeId));
+    chooseStoryteller(state, storyteller);
+    // An older world: the whole realm lives its past first, and the home district wakes up in what that left.
+    if (setBake(state, bakeDawns) > 0) {
+      applyBake(state, homeRef());
+      primeRelations(state);
+      const st = state;
+      interactionRt = interactionRuntimeFromPeople(st.people, st.player.spark, (st.data as DataTables).interactions, (id) => firstTrust(st, id));
+    }
     connectJuice();
   }
 
@@ -138,6 +149,8 @@ function createPlayModeSession(defaults: {
     }
     // History is the seed's beats (regenerated), then what was lived (the chronicle loadState carried).
     next.history = [...carryHistory(world.history), ...(next.history ?? []).filter((h) => h.tags?.includes(CHRONICLE_TAG))];
+    // ...and, in an older world, what the bake remembers of this district (worked out again, never saved).
+    layBakedHistory(next, activeDistrict(next));
     routes = toTravelRoutes(world.routes ?? []);
     next.routes = routes;
     if (!world.settlements?.some((s) => s.id === next.player.townId)) next.player.townId = world.settlements?.[0]?.id;
@@ -157,7 +170,7 @@ function createPlayModeSession(defaults: {
 
   const session: PlaySession = {
     start(opts) {
-      boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId);
+      boot(opts?.seed ?? seed, opts?.archetypeId ?? archetypeId, opts?.bakeDawns, opts?.storyteller);
     },
     listActions: (personId) => {
       if (!state) return [];
@@ -230,7 +243,7 @@ function createPlayModeSession(defaults: {
       session.journey(routeId);
     },
     roads: () => (state ? roadViews(state) : []),
-    trunkRoads: () => (state ? trunkRoads(seed, activeDistrict(state)) : []),
+    trunkRoads: () => { const st = state; return st ? trunkRoads(seed, activeDistrict(st), (id) => realmOf(st).summaries[id]?.despair ?? bakedDespair(st, id)) : []; },
     district: () => activeDistrict(state ?? undefined),
     journeyDistrict(to) {
       if (!state) return null;
@@ -273,7 +286,11 @@ function createPlayModeSession(defaults: {
           for (const t of Object.values(next.towns ?? {}) as { despair: number }[]) t.despair = known.despair;
           // The away-tick (sim/realm-away) already drifted the summary up to lastTick; the LOD day runs the rest.
           since = known.lastTick ?? known.day;
-        } else settleFresh(next, to);
+        } else {
+          settleFresh(next, to);
+          // First sight of it in an older world: it is as its past left it.
+          applyBake(next, to);
+        }
       }
       delete realmOf(next).frozen[toId];
       adopt(next, (s) => catchUp(s, cur.day - since));

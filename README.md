@@ -3,50 +3,25 @@
 Walk into towns that have lost the will to live and reignite people one by one.
 Every method you use costs some of your own spark.
 
-This repo is the browser prototype (TypeScript + Vite + Phaser 3).
-Milestone 1 is the scaffold: pure simulation core, seeded RNG, event bus, and a wander demo.
+- **A hundred districts with up to 100,000 dawns of baked history.** Choose the world's age at New game; every district lives all of it first.
+- **A storyteller paces the tale.** Old Ember, the Weaver or the Gale: calm, omens, a crisis sized to what you own, and trouble you can answer.
+- **A world that runs without you.** Work, trade, families, feuds, pacts and wars, all NPC-run and deterministic.
 
-## Run
-
-```bash
-npm install
-npm run dev
-```
-
-Open the local URL Vite prints (usually http://localhost:5173).
-You should see a tile map with a few people wandering.
-
-## Test
+## Run the game
 
 ```bash
-npm test
+npm ci
+npm run game:dev      # http://localhost:5174
 ```
 
-Vitest covers deterministic tick, seeded RNG, and the event bus (subscribe / emit / unsubscribe).
-
-## E2E (Playwright)
+The game is in `game/` (TypeScript, Vite, Phaser 3). `game/README.md` has the feature list, the architecture and the rules for working on it.
 
 ```bash
-npx playwright install chromium   # once
-npm run test:e2e:m1               # M1 smoke (build + preview)
-npm run verify:m1                 # unit + build + M1 smoke
+npm run game:check    # type check + unit tests
+npm run game:build    # production build into game/dist
+npm run game:e2e      # browser tests against the build
 ```
 
-See `docs/qa/PROBE_M1_VERIFY.md`.
+## The old prototype
 
-## Build
-
-```bash
-npm run build
-```
-
-## Layout
-
-See `docs/STRUCTURE.md`. Simulation lives in `src/sim` (no Phaser, no DOM, no `Math.random`).
-Content JSON is in `src/data`. Phaser scenes are in `src/render`.
-
-## Data validation
-
-```bash
-npm run validate-data
-```
+`src/`, `tests/` and the root scripts are the first version of the game. It still runs (`npm run dev`, port 5173; `npm run check`) and is kept until `game/` fully replaces it. New work goes in `game/`.

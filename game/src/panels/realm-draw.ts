@@ -9,6 +9,7 @@ import type { GameContext } from '../app/contracts';
 import { polityIfAny, refOf } from '../sim/civic/district-relations';
 import { TILE_PX } from '../sim/map/constants';
 import { DISTRICTS, districtAtTile, realm, type District } from '../sim/map/districts';
+import { bakeOf, districtTale, standingOf, yearsOf } from '../sim/realm-bake';
 import { despairColor, PLAYER_COLOR } from './map-draw';
 
 const LAND_TINT: Record<string, string> = { forest: '#2f4a2c', hills: '#5a5246', fields: '#6a6a3a', meadow: '#4f6a3a', water: '#2e4a5a' };
@@ -24,7 +25,7 @@ function knownDespair(ctx: GameContext, d: District, live: number): number {
   const here = ctx.session.district();
   if (here.col === d.col && here.row === d.row) return live;
   const seen = (ctx.session.getState() as { realm?: { summaries?: Record<string, { despair: number }> } } | undefined)?.realm?.summaries?.[d.id];
-  return seen?.despair ?? d.despair;
+  return seen?.despair ?? bakeOf(ctx.session.getState())?.byId[d.id]?.despair ?? d.despair;
 }
 
 export function playerDistrict(ctx: GameContext): { col: number; row: number } | null {
@@ -45,6 +46,7 @@ export function drawRealm(canvas: HTMLCanvasElement, ctx: GameContext, selected?
   g.fillRect(0, 0, canvas.width, canvas.height);
   const here = playerDistrict(ctx);
   const live = liveDespair(ctx);
+  const bake = bakeOf(ctx.session.getState());
   for (const d of realm(ctx.seed)) {
     const x = ox + d.col * cell, y = oy + d.row * cell;
     g.fillStyle = LAND_TINT[d.character.land] ?? '#3a3a30';
@@ -60,6 +62,14 @@ export function drawRealm(canvas: HTMLCanvasElement, ctx: GameContext, selected?
       const rad = t.kind === 'city' ? 2.6 : t.kind === 'town' ? 1.9 : 1.3;
       g.fillStyle = t.seat ? '#f2e6b8' : 'rgba(242,230,184,0.75)';
       g.beginPath(); g.arc(tx, ty, Math.max(1, rad * cell / 40), 0, Math.PI * 2); g.fill();
+    }
+    // What the realm's past left: a beacon wears a gold ring, a fallen land a dark cross (sim/realm-bake).
+    const past = bake?.byId[d.id];
+    if (past?.beacon || past?.fallen) {
+      const cx = x + cell - Math.max(5, cell / 6), cy = y + Math.max(5, cell / 6), k = Math.max(2, cell / 12);
+      g.lineWidth = Math.max(1.5, cell / 26);
+      if (past.beacon) { g.strokeStyle = '#ffd86b'; g.beginPath(); g.arc(cx, cy, k, 0, Math.PI * 2); g.stroke(); }
+      else { g.strokeStyle = '#0b0a0f'; g.beginPath(); g.moveTo(cx - k, cy - k); g.lineTo(cx + k, cy + k); g.moveTo(cx + k, cy - k); g.lineTo(cx - k, cy + k); g.stroke(); }
     }
     if (d.home) {
       g.strokeStyle = '#f2b84b'; g.lineWidth = 2;
@@ -115,10 +125,27 @@ export function districtAtPoint(canvas: HTMLCanvasElement, ctx: GameContext, px:
   return realm(ctx.seed).find((d) => d.col === col && d.row === row) ?? null;
 }
 
-/** One line about a district for the sheet. */
-export function districtLine(d: District, homeDesp?: number): string {
+/** One line about a district for the sheet. `despair`: as known now (live, as you left it, or as its past left it). */
+export function districtLine(d: District, homeDesp?: number, despair = d.despair): string {
   if (d.home) return `${d.name}: your home district. ${homeDesp !== undefined && homeDesp > 0.4 ? 'Its towns are despairing.' : 'Its hearths still hold.'}`;
   const c = d.character;
   const towns = d.towns.map((t) => (t.seat ? `${t.name} (seat)` : t.name)).join(', ');
-  return `${d.name}. A ${c.woundLabel} land of ${d.towns.length} settlements and about ${d.population} people, ruled by the ${c.doctrine.name}, which promises ${c.doctrine.promise}. ${d.despair > 0.5 ? 'Most hearths there have gone cold.' : 'Some hearths there still burn.'} Towns: ${towns}.`;
+  return `${d.name}. A ${c.woundLabel} land of ${d.towns.length} settlements and about ${d.population} people, ruled by the ${c.doctrine.name}, which promises ${c.doctrine.promise}. ${despair > 0.5 ? 'Most hearths there have gone cold.' : 'Some hearths there still burn.'} Towns: ${towns}.`;
+}
+
+/** What a district's past left (an older world only): how it stands, and the tales it keeps, newest first. */
+export function districtPast(ctx: GameContext, d: District): { standing: string; tales: string[] } | null {
+  const bake = bakeOf(ctx.session.getState());
+  const b = bake?.byId[d.id];
+  if (!bake || !b) return null;
+  const wars = (b.counts.war_won ?? 0) + (b.counts.war_lost ?? 0);
+  const standing = `After ${yearsOf(bake.dawns).toLocaleString('en-US')} years: ${standingOf(b)}. ${b.rulers} seat-holders, ${wars} wars, ${b.counts.sparkbearer ?? 0} spark-carriers came through.`;
+  return { standing, tales: districtTale(bake, d.id).reverse().map((t) => t.line) };
+}
+
+/** The realm's ages, oldest first, as one line (an older world only). */
+export function realmAges(ctx: GameContext): string | null {
+  const bake = bakeOf(ctx.session.getState());
+  if (!bake?.ages.length) return null;
+  return `The realm is ${yearsOf(bake.dawns).toLocaleString('en-US')} years old. Its ages: ${bake.ages.map((a) => a.name).join(', ')}.`;
 }

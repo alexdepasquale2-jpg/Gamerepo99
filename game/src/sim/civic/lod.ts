@@ -25,7 +25,7 @@
  */
 import type { DataTables } from '../load-data';
 import { tickDoctrines } from '../doctrine-tick';
-import { tickHappenings } from '../happenings';
+import { tickStoryteller } from '../storyteller/director';
 import { JOBS } from '../goods/jobs';
 import { ITEM_BY_ID } from '../goods/inventory';
 import { COMPANY, companyManaged, companyOf, tickCompanies, workJobId, type Company } from '../economy/companies';
@@ -294,7 +294,7 @@ export function lodDays(state: SimState, days: number, daily?: (state: SimState)
       spoiledAt = d;
     }
     if (state.towns && data?.doctrines) tickDoctrines(state);
-    if (n % HAPPENING_EVERY === 0 || d === to) tickHappenings(state);
+    if (n % HAPPENING_EVERY === 0 || d === to) tickStoryteller(state);
     const far = n % FAR_EVERY === 0;
     if (far || n % RELATIONS_EVERY === 0 || d === to) {
       tickDistrictRelations(state, !far, d - relationsAt);
