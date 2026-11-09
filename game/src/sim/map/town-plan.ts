@@ -261,3 +261,22 @@ function pick(rng: Rng, weights: [string, number][]): string {
   for (const [t, w] of weights) if ((x -= w) < 0) return t;
   return weights[weights.length - 1]![0];
 }
+
+export type PlanRect = Rect;
+/**
+ * Everything a plan stands on, as tile rects from the centre's foot (a stamp spans y in [r - h, r]):
+ * building stamps, gardens and fences, walls, the graveyard, the road tiles through town. For things
+ * placed after the plan: world/civic-marks stands the town stores on clear plaza ground with it.
+ */
+export function planFootprints(town: LayoutSettlement, plan: TownPlan = townPlan(town)): PlanRect[] {
+  const g = plan.graves;
+  const yard = { x0: g.q - 0.6, y0: g.r - 1.2, x1: g.q + (GRAVE_COLS - 1) * GRAVE_STEP.q + 0.6, y1: g.r + (GRAVE_ROWS - 1) * GRAVE_STEP.r + 0.6 };
+  return [
+    ...plan.buildings.map((b) => footRect(b.type, b)),
+    ...plan.gardens.map((p) => footRect('garden', p)),
+    ...plan.fences.map((p) => footRect('fence', p)),
+    ...plan.walls.map((p) => footRect('wall', p)),
+    yard,
+    ...(town.lanes ?? []).map((c) => laneRect(c, 0)),
+  ];
+}

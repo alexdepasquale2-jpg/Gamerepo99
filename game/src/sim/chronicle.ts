@@ -1,8 +1,8 @@
 /**
  * The living chronicle: what happens in play becomes history. pushJuice hands every juice id here;
- * notable ones (a person reignited, a death, a doctrine falling or taken over, a succession, a
- * happening, a stolen hoard, a patron's betrayal) append a HistoryEvent to state.history carrying its
- * own summary, town, kind and gist, so history-voice retells it like the old beats: townsfolk and the
+ * notable ones (a person reignited, a death, a doctrine falling or taken over, a rival creed rising,
+ * a succession, a happening, a stolen hoard, a patron's betrayal) append a HistoryEvent to
+ * state.history carrying its own summary, town, kind and gist, so history-voice retells it like the old beats: townsfolk and the
  * named know it, the old know everything, each person tells it once. Each kind keeps its newest `keep`.
  * Templates in data/dialogue/chronicle.json. Pure, deterministic (seeded by seed/kind/day/key).
  */
@@ -65,6 +65,12 @@ function noteOf(state: SimState, id: string, p: P): Note | null {
     case 'doctrine.swap': {
       const t = str(p.townId);
       return { kind: 'swap', key: `${str(p.challengerId)}>${str(p.incumbentId)}`, townId: t, personIds: [], slots: { challenger: doctrineName(state, str(p.challengerId)), incumbent: doctrineName(state, str(p.incumbentId)), town: townName(state, t) } };
+    }
+    case 'doctrine.rival': {
+      // doctrine-dissent: `doctrineId` is the creed risen against, `challengerId` the new one, `townId` where it rose.
+      const t = str(p.townId), rival = str(p.challengerId);
+      if (!rival) return null;
+      return { kind: 'rival', key: rival, townId: t, personIds: [], slots: { challenger: doctrineName(state, rival), incumbent: doctrineName(state, str(p.doctrineId)), town: townName(state, t) } };
     }
     case 'succession.carried': {
       const heir = str(p.heirPersonId);

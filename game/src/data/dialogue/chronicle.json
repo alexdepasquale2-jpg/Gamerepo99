@@ -1,18 +1,28 @@
 {
   "version": 1,
-  "spec": "The living chronicle (sim/chronicle.ts): what happens in play becomes history people retell, through the same voice as the old beats (history-voice.ts). Each kind has summary templates (one is picked per event, seeded) and a gist (the noun phrase a dawn line uses). Slots: {name} the person, {town} the town, {heir}, {doctrine}, {challenger}, {incumbent}, {event}, {age}. keep = how many entries of each kind live at once (oldest of that kind drop out, so a run of happenings cannot push out a death); onlyFirstPerPerson = kinds recorded once per key (a second reignite of the same person, or the same happening in the same town, is not news). events = how each happening is named in a sentence. keepByKind = a kind's own keep where it differs (civic history: every generated town writes its backstory at founding). Civic kinds (sim/chronicle chronicleCivic): raised (a building went up; {building}, {when}, {owner}) and tier (a town grew; {tier}, {when}).",
+  "spec": "The living chronicle (sim/chronicle.ts): what happens in play becomes history people retell, through the same voice as the old beats (history-voice.ts). Each kind has summary templates (one is picked per event, seeded) and a gist (the noun phrase a dawn line uses). Slots: {name} the person, {town} the town, {heir}, {doctrine}, {challenger}, {incumbent}, {event}, {age}. keep = how many entries of each kind live at once (oldest of that kind drop out, so a run of happenings cannot push out a death); onlyFirstPerPerson = kinds recorded once per key (a second reignite of the same person, or the same happening in the same town, is not news). events = how each happening is named in a sentence. keepByKind = a kind's own keep where it differs (civic history: every generated town writes its backstory at founding). Civic kinds (sim/chronicle chronicleCivic): raised (a building went up; {building}, {when}, {owner}) and tier (a town grew; {tier}, {when}). rival: a rival creed rose against the seat's creed (doctrine-dissent, juice doctrine.rival; {challenger}, {incumbent}, {town} where it rose).",
   "keep": 6,
   "keepByKind": {
     "raised": 60,
-    "tier": 30
+    "tier": 30,
+    "rival": 8
   },
   "onlyFirstPerPerson": [
     "reignite",
     "happening",
     "betrayal",
-    "succession"
+    "succession",
+    "rival"
   ],
   "kinds": {
+    "rival": {
+      "gist": "when the {challenger} rose against the {incumbent}",
+      "summaries": [
+        "Folk in {town} had had enough of the {incumbent}. One spring they started meeting under the {challenger} instead.",
+        "The {challenger} began in {town}, in a back room, with people who had stopped believing the {incumbent}.",
+        "Nobody remembers who first spoke for the {challenger} in {town}. Everyone remembers the {incumbent} did not like it."
+      ]
+    },
     "reignite": {
       "gist": "the day {name} came back to life",
       "summaries": [
@@ -92,6 +102,10 @@
     }
   },
   "codas": {
+    "rival": [
+      "A creed that stops listening grows a rival.",
+      "Every old sign has a new one painted behind it."
+    ],
     "reignite": [
       "Gives you hope, that one.",
       "Makes you think anybody could come back."

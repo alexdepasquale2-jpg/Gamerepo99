@@ -3,7 +3,8 @@
  * eldest resident) keeps the zoning, the levy and the town's own works.
  *   dawn (late)  tier: a town that grows a tier is news, and history (chronicle 'tier').
  *                levy: a share of every company's new takings moves into the town's treasury;
- *                the treasury pays builders on the council's own works (barracks, town hall).
+ *                the treasury pays builders on the council's own works (barracks, town hall), then
+ *                buys grain for a thin granary, mends roads, re-crews idle works (council-works).
  *                the council sits now and then: gives a lot over to the zone that wants ground,
  *                moves the levy, stakes a work its tier allows.
  *   dawn lines   the leader tells it, in the player's town.
@@ -11,7 +12,7 @@
  * Logic for lots and tiers lives in sim/civic; data in data/civic/zones.json. Pure: no Phaser/DOM.
  */
 import { boardPages, registerBoardPage } from '../board-pages';
-import { chronicleCivic } from '../chronicle';
+import { CHRONICLE_TAG, chronicleCivic } from '../chronicle';
 import { eldestOf } from '../civic/founding';
 import { builtCount, nextTier, residentsOf, tierIndex, tierNeeded, tierOf, townPopulation, unlockedIn, unlocksAt } from '../civic/tiers';
 import {
@@ -29,6 +30,7 @@ import { targetActionId } from '../play-session/targets';
 import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { noteUse } from '../data-use-civic';
+import { payHand, spendTreasury, worksIfAny, worksLine } from './council-works';
 
 /** Who speaks for a town: the leader of a doctrine seated there, else its eldest. */
 export function leaderOf(state: SimState, townId: string): string | undefined {
@@ -88,13 +90,14 @@ function townDawn(state: SimState, townId: string): void {
     // Never pay for more work than is left (tickBuildPlans finishes it at the next dawn).
     for (let k = 0; k < need && paid < COUNCIL.maxLaborPerDawn && c.treasury >= COUNCIL.wagePerLabor; k++) {
       const hand = folk[deriveRng(state.seed, 'council-hand', state.day, w.id, paid).int(0, folk.length)]!;
-      const purse = (state.companies ??= { list: [], next: 1, purse: {} }).purse;
-      purse[hand] = (purse[hand] ?? 0) + COUNCIL.wagePerLabor;
+      payHand(state, hand, COUNCIL.wagePerLabor);
       c.treasury -= COUNCIL.wagePerLabor;
       w.laborDone += 1;
       paid += 1;
     }
   }
+  // What is left buys grain for a thin granary, mends the roads, puts idle works back to work (council-works).
+  spendTreasury(state, townId, c, leader, folk);
 
   // The council sits now and then.
   if (!leader || state.day - (c.lastCouncil ?? -1e9) < COUNCIL.minGap) return;
@@ -182,6 +185,11 @@ registerBoardPage({
     if (shut.length) left.push(`Not yet: ${shut.join(', ')}.`);
     const last = c?.news.filter((n) => n.kind !== 'tier' && n.kind !== 'petition').slice(-1)[0];
     if (last) left.push(`Last word from the council (day ${last.day}): ${newsLine(state, townId, last)}`);
+    const spent = worksIfAny(c)?.news.slice(-1)[0];
+    if (spent) left.push(`Paid from the levy (day ${spent.day}): ${worksLine(state, townId, spent)}`);
+    // The town's newest lived history (a creed rising, a building, a tier), as folk here would tell it.
+    const told = (state.history ?? []).filter((h) => h.tags?.includes(CHRONICLE_TAG) && h.townId === townId && h.summary).slice(-2).reverse();
+    if (told.length) left.push(`Folk here remember: ${told.map((h) => h.summary).join(' ')}`);
     // The stakes out on the lots (world/civic-marks) carry these colours.
     left.push('Stakes mark each lot: gold for farmland, brown for workshops, red for the market, blue for common ground, green for houses.');
     // Right: each zone and where its lots lie, with what stands on them.
