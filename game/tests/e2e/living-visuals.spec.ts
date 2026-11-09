@@ -1,5 +1,5 @@
-// The living world is drawn, not only simulated: each sim system that changes through the day (work, haulers,
-// town stores, spoilage, sickness, the young, war, road wear, lost carts, district letters, season and
+// The living world is drawn, not only simulated: each sim system that changes through the day (work, haulers
+// in town and on the road, letters on the road, town stores, spoilage, sickness, the young, war, road wear, lost carts, district letters, season and
 // weather, graves, building sites, despair) shows up in the running game. Every layer reports what it drew
 // this frame through `__hearth.dev.visuals()`; this spec brings each condition about (waiting days, standing
 // near the thing, or setting the state the sim would reach) and asserts its counter, with a screenshot each.
@@ -28,7 +28,7 @@ const rest = (page: Page, days: number) => hearth(page, (h, n: number) => {
 }, days);
 
 test('every living system has a visual in the running game', async ({ page }, info) => {
-  test.setTimeout(240_000);
+  test.setTimeout(420_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   await bootToPlay(page);
   await dev(page, 'setPhase', 0.3); // working hours
@@ -40,8 +40,13 @@ test('every living system has a visual in the running game', async ({ page }, in
   await seen(page, 'workFx', info, 'work-fx');
   await seen(page, 'workBars', info);
   await seen(page, 'caravans', info); // the trader in the square on day 1
-  await seen(page, 'siteMarks', info);
   await seen(page, 'warmth', info); // a hopeful town's palette runs warm
+  // Site marks count what is on screen: stand by a facility showing its staffing (lit and working, or dim).
+  const fac = (await dev<{ q: number; r: number; staffed: number; idle: boolean }[]>(page, 'facilities')).find((f) => f.staffed > 0 || f.idle);
+  expect(fac, 'a facility showing its staffing').toBeTruthy();
+  await dev(page, 'teleport', fac!.q, fac!.r + 2);
+  await seen(page, 'siteMarks', info, 'site-marks');
+  await standAt(page, spot.x, spot.y);
   // Where the start town's stores stand (found once the town is drawn), to come back to later.
   await expect.poll(async () => (await dev<any[]>(page, 'storeHeaps')).length).toBeGreaterThan(0);
   const heap0 = (await dev<{ townId: string; x: number; y: number }[]>(page, 'storeHeaps'))[0]!;
@@ -50,7 +55,24 @@ test('every living system has a visual in the running game', async ({ page }, in
   await rest(page, 10);
   await dev(page, 'setPhase', 0.3);
   await settle(page, 1500);
-  await seen(page, 'scaffolds', info);
+  // Scaffolds count what is on screen: walk to a plot still going up.
+  const claimed = (await dev<{ claimId: string; status: string }[]>(page, 'plots')).filter((p) => p.status === 'claimed').map((p) => `plot:${p.claimId}`);
+  expect(claimed.length, 'a plot under construction').toBeGreaterThan(0);
+  const plot = (await dev<{ key: string; x: number; y: number }[]>(page, 'things', 20_000)).find((t) => claimed.includes(t.key));
+  expect(plot, 'the plot drawn in the world').toBeTruthy();
+  await standAt(page, plot!.x, plot!.y);
+  await seen(page, 'scaffolds', info, 'scaffolds');
+
+  // Far sites' haulers walk the road with their loads (on the default world the road facilities, out past
+  // the streets): follow one along the route in working hours. No site is moved: this is the world as it is.
+  await expect.poll(async () => {
+    await dev(page, 'setPhase', 0.3);
+    const on = (await dev<{ id: string; x: number; y: number }[]>(page, 'roadHaulers'))[0];
+    if (on) await standAt(page, on.x, on.y, 0);
+    return (await visuals(page)).roadHaulers ?? 0;
+  }, { message: 'visuals().roadHaulers', timeout: 40_000, intervals: [1500] }).toBeGreaterThan(0);
+  await page.screenshot({ path: info.outputPath('road-hauler.png') });
+  proven.roadHaulers = (await visuals(page)).roadHaulers ?? 0;
   expect(await hearth(page, (h) => h.dev.season().season)).toBe('summer');
 
   // Winter: wait day by day for snow; the greenery whitens and snow falls over the view.
@@ -78,6 +100,31 @@ test('every living system has a visual in the running game', async ({ page }, in
   expect(walker.length, 'a visitor on the road').toBeGreaterThan(0);
   await standAt(page, walker[0].x, walker[0].y);
   await seen(page, 'roadFolk', info, 'visitor');
+
+  // A letter sent from the writing desk (the letters sheet, L) to someone a road away: its courier walks it.
+  const to = await hearth(page, (h) => {
+    const s = h.session.getState(), here = s.player.townId;
+    s.inventory ??= {};
+    s.inventory.letter = Math.max(1, s.inventory.letter ?? 0);
+    const next = new Set(s.economyRoutes.filter((r: any) => r.fromTownId === here || r.toTownId === here).map((r: any) => (r.fromTownId === here ? r.toTownId : r.fromTownId)));
+    return (Object.values(s.people).find((p: any) => next.has(p.townId)) as any)?.id as string | undefined;
+  });
+  expect(to, 'someone in a neighbouring town').toBeTruthy();
+  await page.keyboard.press('KeyL');
+  await page.locator('select[aria-label="Recipient"]').selectOption(to!);
+  await page.locator('textarea[aria-label="Letter text"]').fill('The road held this year. Come and see the new stores.');
+  await page.locator('[data-id="letters-send"]').click();
+  await expect(page.locator('.hf-note').filter({ hasText: /^Sent to/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  let courier: any;
+  for (let i = 0; i < 3 && !courier; i++) {
+    await settle(page, 600);
+    courier = (await dev<any[]>(page, 'traffic')).find((t) => t.kind === 'courier');
+    if (!courier) await rest(page, 1);
+  }
+  expect(courier, 'the letter on the road').toBeTruthy();
+  await standAt(page, courier.x, courier.y);
+  await seen(page, 'couriers', info, 'courier');
 
   // The town stores: heaps by the plaza; spoiled food draws crows; an emptied granary looks lean.
   const town = await hearth(page, (h) => h.session.getState().player.townId as string);
@@ -191,6 +238,11 @@ test('every living system has a visual in the running game', async ({ page }, in
   const w = wreck ?? (await dev<any[]>(page, 'traffic')).find((x) => x.kind === 'wreck');
   await standAt(page, w.x, w.y);
   await seen(page, 'wrecks', info, 'wreck');
+  // It lies beside the road on dry land: never in the water (a bridge's river) nor on the road itself.
+  const under = await dev<{ biome: string; ground: string | null; passable: boolean }>(page, 'tile', Math.floor(w.x / 32), Math.floor((w.y - 2) / 32));
+  expect(under.biome, 'wreck not in water').not.toBe('water');
+  expect(under.passable, 'wreck on walkable land').toBe(true);
+  expect(['road', 'road_bridge', 'bridge_deck', 'ford', 'ferry'], 'wreck beside, not on, the road').not.toContain(under.ground);
 
   // Every registered dawn tick names what shows it (or why it is spoken, not drawn).
   const why = await dev<Record<string, { counters: string[]; why: string }>>(page, 'visualsWhy');

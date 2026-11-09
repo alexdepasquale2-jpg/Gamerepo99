@@ -94,6 +94,8 @@ export interface WorldApi {
   update(dt: number, player: Pt): void;
   /** Where a town's granary, storehouse and yard stand in the open (world/things/stores), once found; haulers carry there. */
   storesAt?(townId: string): Pt | null;
+  /** Dry land off the road at a point: passable and not water (so not a bridge deck, ford or ferry), nor itself a road tile. */
+  roadsideLand?(p: Pt): boolean;
 }
 
 export interface PlayerHandle {
