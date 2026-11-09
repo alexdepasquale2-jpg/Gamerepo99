@@ -11,9 +11,10 @@ describe('focus ranks every kind', () => {
   it('lists each target kind once', () => {
     expect([...KIND_PRIORITY].sort()).toEqual([...TARGET_KINDS].sort());
   });
-  it('a stall wins a tie with the keeper beside it, a grave beats the ground', () => {
+  it('the keeper beside a stall wins the tie, the stall beats a wagon, a grave beats the ground', () => {
     const at = (kind: Thing['kind'], x: number): Thing => ({ key: `${kind}:a`, kind, id: 'a', x, y: 0, label: kind, target: { kind, id: 'a' } }) as Thing;
-    expect(pickFocus([at('person', 20), at('stall', 22)], { x: 0, y: 0 }, { dx: 1, dy: 0 })?.kind).toBe('stall');
+    expect(pickFocus([at('person', 20), at('stall', 22)], { x: 0, y: 0 }, { dx: 1, dy: 0 })?.kind).toBe('person');
+    expect(pickFocus([at('wagon', 20), at('stall', 22)], { x: 0, y: 0 }, { dx: 1, dy: 0 })?.kind).toBe('stall');
     expect(pickFocus([at('tile', 20), at('grave', 22)], { x: 0, y: 0 }, { dx: 1, dy: 0 })?.kind).toBe('grave');
   });
 });
