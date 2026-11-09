@@ -52,8 +52,11 @@ export const faunaVerbs = (kindId: string): readonly ThingVerbRow[] => FAUNA_VER
  * Was 12. With the dawn now costing about 3 a day net (hooks/spark-recovery.json), 12 (and 4, when tried) let a
  * walker who only sat under trees stay full forever; at 2 the wild slows the fall (an idle walker burns out
  * in ~60-90 days instead of ~25) but cannot replace real deeds. See game/scripts/balance-probe.mts.
+ * Was 2. The dawn now costs about 1.4 a day net (so an idle life lasts six to seven weeks), and 2 a day
+ * from the wild outran it: a walker who only sat under trees never burned out. At 1 the wild still slows
+ * the fall a little more than half, and only deeds hold the fire.
  */
-export const PROP_SPARK_PER_DAY = 2;
+export const PROP_SPARK_PER_DAY = 1;
 /** What is left of today's prop spark; lingering (sim/linger.ts) draws on the same cap. */
 export const propSparkLeft = (state: SimState): number => {
   const k = state.flags.propSpark as { day: number; got: number } | undefined;

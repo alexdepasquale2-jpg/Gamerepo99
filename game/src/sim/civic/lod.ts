@@ -9,11 +9,12 @@
  *     limited by inputs in store; households eat. A company's hands work its trade only while its site
  *     has a manager (companies workJobId: an idle site's hands work their own trade), and its till takes
  *     the share of what they make that creditCompany books at a dawn.
- * Each day, whole (the dawn's own ticks, in the dawn's order): the economy LOD (route deliveries,
- * caravans and their crates, facility crews, spoilage, starve/neglect/broken-road despair, flame relief),
- * build plans, the civic sites (civic/staffing: empty posts posted and filled, wages, rations, the unfed
- * falling sick and leaving, hiring), the carts (logistics: the goods build plans wait on), doctrines, and
- * the live district's relations and war (the levy, fed from the seat).
+ * The dawn's own ticks, in the dawn's order. Daily: build plans, doctrines, the caravans and the live
+ * district's war (the levy, fed from the seat). Stepped every few days, each step counting all its days
+ * (the *_EVERY constants below): the economy LOD (route deliveries, facility crews, spoilage,
+ * starve/neglect/broken-road despair, flame relief), the civic sites (civic/staffing: empty posts posted
+ * and filled, wages, rations, the unfed falling sick and leaving, hiring), the carts (logistics: the goods
+ * build plans wait on), store spoilage (as the dawn's hauling has it) and the live district's relations.
  * Without these a long wait drifted from the dawns: no carts meant no finished workshops, no companies
  * and no coin; no war, no levy to feed (perf-civic, seed 42: food 595 against the dawns' 366).
  * Slower: companies, borders and polity every DEVELOP_EVERY days, the realm's far pairs every FAR_EVERY,
@@ -43,6 +44,7 @@ import type { SimState } from '../types/runtime';
 import { tickDistrictRelations } from './district-relations';
 import { tickLiveWar } from './district-war';
 import { tickSites } from './staffing';
+import { spoilTown } from './town-stores';
 
 /** One happening draw per this many days of LOD (the full dawn draws every day). */
 export const HAPPENING_EVERY = 7;
@@ -52,8 +54,9 @@ export const HAPPENING_EVERY = 7;
  */
 export const DEVELOP_EVERY = 2;
 /**
- * The realm's far pairs of districts step every this many days; the live district's own pairs step
- * daily (their wars raise the levy and eat the seat's food). Far wars are only news here.
+ * The realm's far pairs of districts step every this many days (one day's worth each time); the live
+ * district's own pairs step every RELATIONS_EVERY days for all of them (their wars raise the levy and
+ * eat the seat's food). Far wars are only news here.
  */
 export const FAR_EVERY = 14;
 /**
@@ -61,6 +64,27 @@ export const FAR_EVERY = 14;
  * child born in the stretch eats in it and the dead stop eating.
  */
 export const LIFE_EVERY = 10;
+/*
+ * Stepped ticks: each runs every N days (and on the stretch's last day, so no day is dropped) with its
+ * per-day amounts scaled by the days the step stands for. Daily they made a 100-day wait cost a third or
+ * more of the full dawns; stepped, about a quarter (scripts/perf-civic.mts). Over 16 seeds food in store
+ * agrees with the dawns within half on 13 (14 when daily) and coin on 13 (12 daily), and the daily LOD's
+ * food ran high on most seeds (it lacked store spoilage): coin follows which workshops get built, one
+ * run's luck either way. Build plans stay daily:
+ * a plan grabs its goods as they are made, before the processors eat them (stepped, seed 42 founded 2
+ * companies against the dawns' 9, and coin wandered); so do new ambitions (rolled every few days with the
+ * chance compounded, agreement fell to 11 of 16 on both).
+ */
+/** The economy LOD (economy/economy-lod): deliveries, despair and relief per day, spoilage compounded. */
+export const ECONOMY_EVERY = 4;
+/** The civic sites (civic/staffing): wages and rations for every day of the step, one round of hiring. */
+export const SITES_EVERY = 3;
+/** The carts (economy/logistics): travel, the road's hazard and each town's departures for the step. */
+export const CARTS_EVERY = 4;
+/** Store spoilage (civic/town-stores spoilTown, the dawn's hauling slot): each day's rate compounded. */
+export const SPOIL_EVERY = 5;
+/** The live district's own relations (civic/district-relations): their drifts scaled by the step. */
+export const RELATIONS_EVERY = 5;
 
 /** What a window did, for the morning's news (civic/clock keeps the last one; contrib/clock tells it). */
 export type LodReport = { from: number; to: number; born: string[]; died: string[]; grown: number; wed: number };
@@ -235,25 +259,47 @@ export function lodDays(state: SimState, days: number, daily?: (state: SimState)
   if (to <= from) return rep;
   const data = state.data as DataTables | undefined;
   let runs = townRuns(state);
-  let lived = from;
+  let lived = from, economyAt = from, sitesAt = from, cartsAt = from, relationsAt = from, spoiledAt = from;
   for (let d = from + 1; d <= to; d++) {
     state.day = d;
     const n = d - from;
     // The dawn's order: the economy LOD (yesterday's hunger starves today), the village's goods, plans
     // and companies, the people slot (sites), polity, carts, doctrines, happenings, the late slot (war).
-    tickEconomyLod(state);
+    // The caravans keep their own daily schedule, so between economy steps only their hook runs.
+    if (n % ECONOMY_EVERY === 0 || d === to) {
+      tickEconomyLod(state, undefined, d - economyAt);
+      economyAt = d;
+    } else state.economyHooks?.caravan?.(state);
     for (const t of runs) goodsDay(t);
     tickBuildPlans(state);
     if (n % DEVELOP_EVERY === 0) tickCompanies(state);
-    tickSites(state);
+    if (n % SITES_EVERY === 0 || d === to) {
+      tickSites(state, d - sitesAt);
+      sitesAt = d;
+    }
     if (n % DEVELOP_EVERY === 0) {
       tickBorders(state);
       tickPolity(state);
     }
-    tickLogistics(state);
+    // The carts read the shortfalls today's plans and goods day posted, as the daily carts did.
+    if (n % CARTS_EVERY === 0 || d === to) {
+      tickLogistics(state, d - cartsAt);
+      cartsAt = d;
+    }
+    // The stores spoil as the dawn's hauling has them (civic/hauling, after the carts): food going stale in
+    // the granary, the storehouse and on site shelves. Without it a long wait kept the food the dawns lose
+    // (seed 42: 618 in store against the dawns' 247).
+    if (n % SPOIL_EVERY === 0 || d === to) {
+      for (const t of runs) spoilTown(state, t.id, d - spoiledAt);
+      spoiledAt = d;
+    }
     if (state.towns && data?.doctrines) tickDoctrines(state);
     if (n % HAPPENING_EVERY === 0 || d === to) tickHappenings(state);
-    tickDistrictRelations(state, n % FAR_EVERY !== 0);
+    const far = n % FAR_EVERY === 0;
+    if (far || n % RELATIONS_EVERY === 0 || d === to) {
+      tickDistrictRelations(state, !far, d - relationsAt);
+      relationsAt = d;
+    }
     tickLiveWar(state);
     daily?.(state);
     const life = n % LIFE_EVERY === 0 || d === to;

@@ -69,7 +69,11 @@ function surplus(state: SimState, townId: string, itemId: string): number {
 
 const onRoute = (log: Logistics, routeId: string): number => log.carts.filter((c) => c.legs.some((l) => l.routeId === routeId)).length;
 
-export function tickLogistics(state: SimState): void {
+/**
+ * One dawn of carts, or `days` of them at once (the LOD's long waits run the carts every few days): carts
+ * age by the whole step and face its whole hazard, and a town may send that many days' worth of carts.
+ */
+export function tickLogistics(state: SimState, days = 1): void {
   const ve = state.villageEconomy;
   if (!ve) return;
   const log = logOf(state);
@@ -78,12 +82,14 @@ export function tickLogistics(state: SimState): void {
   if (log.wrecks) log.wrecks = log.wrecks.filter((w) => state.day - w.day < WRECK_DAYS);
   // 1. Carts on the road: age, maybe lose, maybe arrive.
   for (const cart of [...log.carts].sort((a, b) => a.id.localeCompare(b.id))) {
-    cart.daysLeft -= 1;
+    // A cart that arrives partway through the step is only on the road (and at risk) until it arrives.
+    const onRoad = Math.max(1, Math.min(days, cart.daysLeft));
+    cart.daysLeft -= days;
     const req = log.requests.find((r) => r.id === cart.requestId);
     const broken = cart.legs.some((l) => (state.economyRoutes ?? []).find((r) => r.id === l.routeId)?.broken);
     const hazard = atWar(state, cart.fromTownId, cart.toTownId) ? 3 : broken ? 2 : safeRoads(state, cart.fromTownId, cart.toTownId) ? 0.5 : 1;
     const guarded = cart.escortedBy ? hazard * LOGISTICS.escortHazardMul : hazard;
-    if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** guarded) {
+    if (rng('cart-road', cart.id).next() >= COURIER_SURVIVAL_PER_DAY ** (guarded * onRoad)) {
       const at = cartPosition(cart);
       if (at) (log.wrecks ??= []).push({ cartId: cart.id, itemId: cart.itemId, qty: cart.qty, at, day: state.day });
       log.carts.splice(log.carts.indexOf(cart), 1);
@@ -120,7 +126,7 @@ export function tickLogistics(state: SimState): void {
     const items = req.itemId === 'food' ? FOOD : [req.itemId];
     let best: { from: string; item: string; road: NonNullable<ReturnType<typeof planRoad>> } | undefined;
     for (const from of towns) {
-      if (from === req.townId || atWar(state, from, req.townId) || (sent.get(from) ?? 0) >= LOGISTICS.departuresPerTown) continue;
+      if (from === req.townId || atWar(state, from, req.townId) || (sent.get(from) ?? 0) >= LOGISTICS.departuresPerTown * days) continue;
       const item = items.find((i) => surplus(state, from, i) >= 1);
       if (!item) continue;
       const road = planRoad(state, from, req.townId);
