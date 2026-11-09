@@ -11,11 +11,14 @@ import type { SimState } from '../types/runtime';
 import { worksIfAny } from '../works/state';
 import { FOE_SCALING, LAIRS, LAIR_RESPAWN, PACKS, foeRow, type Family, type FoeRow } from './data';
 import { heroIfAny } from './hero';
+import { STORY } from '../storyteller/data';
+import { pressureAt } from '../storyteller/state';
 
 export const CELL_PX = 900;
 export type Member = { id: string; level: number };
 export type Pack = { key: string; family: Family; members: Member[] };
-export type CellContext = { nearRoad: boolean; despair: number; night: boolean; hostile: boolean };
+/** `nearTown`: the town the cell lies by, when one is close (the storyteller gathers packs round a town in trouble). */
+export type CellContext = { nearRoad: boolean; despair: number; night: boolean; hostile: boolean; nearTown?: string };
 
 export function scaled(row: FoeRow, level: number): { hp: number; dmg: number; xp: number } {
   const l = level - 1;
@@ -40,7 +43,9 @@ export function packFor(state: SimState, cx: number, cy: number, c: CellContext)
   const key = cellKey(cx, cy);
   if (heroIfAny(state)?.cleared[key] === state.day) return null;
   const rng = deriveRng(state.seed, 'pack', state.day, key);
-  if (rng.next() > 0.5) return null;
+  // A raid, a wolf winter, a grey tide (sim/storyteller): that family is thick round the town until routed.
+  const press = pressureAt(state, c.nearTown);
+  if (rng.next() > (press ? STORY.tuning.pressureChance : 0.5)) return null;
   const w: [Family, number][] = [
     ['beast', c.nearRoad ? 1.5 : 4],
     ['bandit', c.nearRoad ? 3.5 : 0.6],
@@ -51,6 +56,7 @@ export function packFor(state: SimState, cx: number, cy: number, c: CellContext)
   let r = rng.next() * total;
   let family: Family = 'beast';
   for (const [f, x] of w) { r -= x; if (r <= 0) { family = f; break; } }
+  if (press?.family && deriveRng(state.seed, 'pack-press', state.day, key).next() < STORY.tuning.pressureForce) family = press.family;
   const shapes = PACKS[family];
   const shape = shapes[rng.int(0, shapes.length)]!;
   const base = Math.max(1, heroLevel(state) - 1 + rng.int(0, 3) + (family === 'rival' ? 1 : 0));

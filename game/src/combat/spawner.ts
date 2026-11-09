@@ -14,6 +14,7 @@ import { foeRow, type Family } from '../sim/hero/data';
 import { clearCell, clearLair } from '../sim/hero/deeds';
 import { CELL_PX, hostileTowns, lairAwake, lairPack, lairSites, packFor, type LairSite, type Pack } from '../sim/hero/spawns';
 import { deriveRng } from '../sim/rng';
+import { routPack } from '../sim/storyteller/director';
 import { Foe } from './foe';
 
 const WAKE_PX = 640;
@@ -154,6 +155,7 @@ export function createSpawner(ctx: GameContext, foes: Foe[]): Spawner {
           despair: near && near.d < 2400 ? s.towns?.[near.id]?.despair ?? 0 : 0,
           night,
           hostile: !!near && near.d < 2600 && hostile.has(near.id),
+          ...(near && near.d < 2400 ? { nearTown: near.id } : {}),
         });
         if (pack) spawn(pack, anchor);
       }
@@ -180,6 +182,8 @@ export function createSpawner(ctx: GameContext, foes: Foe[]): Spawner {
           const r = clearLair(s, l.lair.id, l.lair.name, l.pack.members[0]?.level ?? 1, l.nearTown);
           out.push({ site: l.lair, coin: r.coin, gearName: r.gear.name, at: l.lair.at });
         } else clearCell(s, key);
+        // Packs gathered round a town in trouble: routing them is how the tale turns (sim/storyteller).
+        routPack(s, l.pack.family, l.nearTown, l.lair ? 2 : 1);
         live.delete(key);
       }
       return out;

@@ -1,7 +1,7 @@
 /**
  * Happenings (data/systems/events.json): small things that befall a town at dawn — grey rain, a
- * stranger with embers, a rider with bad news. At most one starts per dawn, rarely; the draw is
- * seeded per seed+day on its own stream so no other system's rolls shift. Effects go through
+ * stranger with embers, a rider with bad news. They are the everyday texture of the storyteller's tale
+ * (sim/storyteller decides when one begins and weighs down what was told lately). Effects go through
  * applyEffect; time-limited ones are undone when they lapse. People carry the news (dawn lines in
  * contrib/happenings, a `happening.start` bubble over whoever said it). Pure: no Phaser/DOM.
  *
@@ -64,9 +64,6 @@ export type HappeningRow = {
 
 export type HappeningsTuning = {
   minDay: number;
-  chancePerDawn: number;
-  minGapDays: number;
-  maxActive: number;
   biasWeight: number;
   /** Added to the town weight where an event's `when` holds. */
   whenWeight: number;
@@ -117,9 +114,6 @@ const LOG_CAP = 20;
 const TOLD_CAP = 80;
 const DEFAULT_TUNING: HappeningsTuning = {
   minDay: 2,
-  chancePerDawn: 0.35,
-  minGapDays: 3,
-  maxActive: 1,
   biasWeight: 3,
   whenWeight: 4,
   playerTownWeight: 2,
@@ -385,30 +379,22 @@ function applyRelapse(state: SimState): void {
   }
 }
 
-/** One dawn: lapse old happenings, maybe start one, then the day's relapse pressure. Call after state.day advances. */
-export function tickHappenings(state: SimState): ActiveHappening | undefined {
-  if (!state.data || !state.towns || !happeningRows(state).length) return undefined;
+/**
+ * The start of a dawn for happenings: lapse what has run out, and date any doctrine that fell (every dawn,
+ * so a collapse is dated to the dawn it happened). When and whether a new one begins is the storyteller's
+ * call (sim/storyteller: the one scheduler for everything that befalls a district); it draws from
+ * happeningCandidates and begins one with startHappening.
+ */
+export function beginHappeningsDawn(state: SimState): void {
   lapseHappenings(state);
-  const t = happeningsTuning(state);
-  // Note doctrine falls every dawn (not only on a draw), so a collapse is dated to the dawn it happened.
   if (state.doctrines && Object.values(state.doctrines).some((d) => d.collapsed)) {
     const h = ensureHappenings(state);
     h.collapsed = stampCollapses(state, h.collapsed);
   }
-  const hs = state.happenings;
-  let started: ActiveHappening | undefined;
-  const gapOk = hs?.lastStartDay === undefined || state.day - hs.lastStartDay >= t.minGapDays;
-  const roomOk = (hs?.active.filter((a) => a.endsDay > state.day).length ?? 0) < t.maxActive;
-  if (state.day >= t.minDay && gapOk && roomOk) {
-    const rng = deriveRng(state.seed, 'happening', state.day);
-    if (rng.next() < t.chancePerDawn) {
-      const pick = pickWeighted(rng, happeningCandidates(state));
-      if (pick) started = startHappening(state, pick.ev, pick.townId, rng, pick.subject);
-    }
-  }
-  applyRelapse(state);
-  return started;
 }
+
+/** The end of a dawn for happenings: the day's relapse pressure where one is in force. */
+export const endHappeningsDawn = (state: SimState): void => applyRelapse(state);
 
 function inForce(state: SimState, townId: string | undefined): ActiveHappening[] {
   if (!townId) return [];

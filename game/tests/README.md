@@ -35,7 +35,8 @@ GAME_E2E_PORT=5410 npm run game:e2e   # another port (parallel worktrees)
 
 | Spec | Covers |
 | --- | --- |
-| `boot` | title menu, Enter-only flow into play on day 1 |
+| `boot` | title menu, Enter-only flow into play on day 1 (a young world, the first storyteller) |
+| `world-age` | New game with a typed age: it bakes, is told back, a storyteller is picked; the map shows the ages and the save keeps both |
 | `person` | a person's ring (Speak → Speak gently), their reply bubble, spark moves |
 | `wild-prop` | a tree/rock prop's ring, its verb changes spark or the satchel, once a day |
 | `trunk-road` | signpost trunk road out and back, arrival lines, home towns and people restored |

@@ -5,7 +5,7 @@ import { tickLetters } from '../letters-scale';
 import { tickHoardDawn } from '../hoard';
 import { tickLegacyDawn } from '../legacy/npc';
 import { tickPatronDawn } from '../patrons';
-import { tickHappenings } from '../happenings';
+import { tickStoryteller } from '../storyteller/director';
 import { tickEconomyLod } from '../economy/economy-lod';
 import { tickVillageEconomy } from '../economy/village-economy';
 import { tickLogistics } from '../economy/logistics';
@@ -127,7 +127,8 @@ export function advanceToDawn(state: SimState): void {
   tickHoardDawn(state);
   tickLegacyDawn(state);
   tickPatronDawn(state);
-  tickHappenings(state);
+  // The storyteller is the one scheduler for what befalls the district (happenings are its everyday table).
+  tickStoryteller(state);
   runDawnSlot(state, 'late');
   clampPlayerSpark(state);
 }

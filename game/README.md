@@ -4,6 +4,14 @@ This is a fresh front end on the proven simulation. The old game in `src/` keeps
 
 **On `main` since #64 (8 Nov 2026).**
 
+## On the box
+- **A hundred districts with up to 100,000 dawns of history.** At New game you choose the world's age, from a young world to 3,571 years (any number of dawns, 0 to 100,000). Every district lives all of it before you take a step: harvests and famines, plagues, rulers and contested seats, pacts and wars with its neighbours, and the spark-carriers who walked there before you. Lands fall to ash and are rekindled; others burn as beacons. The realm's time is cut into named ages, the map shows what the past left, and the people of each district retell their own.
+- **A storyteller, not a dice roll.** Old Ember, the Weaver or the Gale paces what befalls you: quiet spells to build in, omens, then a crisis sized to what you own, and room to mend after. Nothing is told twice running, and a merciful teller holds back while you are down.
+- **Trouble you can answer.** Raiders camp outside a raided town until you rout them and cart the stores home. A blighted town comes through if you keep it fed, a sick one if you keep it lit. Chains like *The Bandit King* and *The Ashen Winter* end differently depending on what you did.
+- **A world that runs without you.** Villagers work, trade, build, marry, age and die; towns feud, ally and go to war; carts and convoys roll the roads.
+- **Every way to be the last spark.** Four bodies, kind or cruel methods, hoarder or patron, heirs and legends, and an industrial arc from workbench to airship (The Works).
+- **Real-time fights in the wilds, a phone-sized UI, and no popups:** news comes through the people it concerns.
+
 ## Get it and run it
 Fresh copy:
 ```bash
@@ -25,7 +33,7 @@ Then open http://localhost:5174.
 - Type check and unit tests: `npm run game:check` (tests alone: `npm run game:test`)
 - Build: `npm run game:build` (writes `game/dist`; open with `npx vite preview --config game/vite.config.ts`)
 - The old game still runs on the same branch with `npm run dev` (port 5173).
-- **God menu** (dev and playtest builds): **Shift+`**, or the button at the top of the dev menu (`). This full-screen control centre pauses the game while it's open (click Paused to switch to Live). Tabs: **Overview** (vitals, skip 1/7/30/100 dawns with charts for every dawn, time of day, walk speed, go to any town, and world-wide acts such as kindling everyone, lifting despair or ending wars), **People** (searchable census, plus an inspector for flame, trust, age, purse, marks and tags, and teleporting to someone), **Towns** (despair, stores, shortages, funding or finishing builds, workshop tills, doctrine meters), **Powers** (trust, feud and treaties, declaring war or making peace, granting crafts and creeds), **Roads** (carts, requests, breaking or mending routes), **Realm** (map of all 100 districts: pick one to see its wound, doctrine and towns, then Jump to go there at once, with no days on the road), **You** (spark, coin, every item), **Feed** (every sim event as it happens), **State** (the raw state as a tree you can edit) and **Console** (JavaScript with `state`, `ctx`, `session`, `dev` and `commit()` in scope). Code: `src/ui/god/`.
+- **God menu** (dev and playtest builds): **Shift+`**, or the button at the top of the dev menu (`). This full-screen control centre pauses the game while it's open (click Paused to switch to Live). Tabs: **Overview** (vitals, skip 1/7/30/100 dawns with charts for every dawn, time of day, walk speed, go to any town, and world-wide acts such as kindling everyone, lifting despair or ending wars), **People** (searchable census, plus an inspector for flame, trust, age, purse, marks and tags, and teleporting to someone), **Towns** (despair, stores, shortages, funding or finishing builds, workshop tills, doctrine meters), **Powers** (trust, feud and treaties, declaring war or making peace, granting crafts and creeds), **Roads** (carts, requests, breaking or mending routes), **Realm** (map of all 100 districts: pick one to see its wound, doctrine and towns, and in an older world how its past left it and what it remembers, then Jump to go there at once, with no days on the road), **Story** (the storyteller's hand: swap tellers, see phase, tension and points, fire any incident or arc where you stand, rout a pack or end a trouble), **You** (spark, coin, every item), **Feed** (every sim event as it happens), **State** (the raw state as a tree you can edit) and **Console** (JavaScript with `state`, `ctx`, `session`, `dev` and `commit()` in scope). Code: `src/ui/god/`.
 
 ## What we learned, and the rules that follow
 The old game had a strong simulation that the player couldn't see. It grew about 15 one-off screens, a 1,000-line scene file, 12 single-letter hotkeys, a 17-chip paged ring, and one corner line that carried all the news. Features from 50 PRs were in the build and nobody could find them.
@@ -91,11 +99,30 @@ Each feature names the area that owns how it looks and is reached. The content a
 | Succession, heir, inherited dependence (I1–I3) | ui, voice | succession modal; dawn lines |
 | World file export/import, legends as NPCs, migrations (I5–I7, #38) | ui | pause → world file |
 | Interiors (F14) | world | doors open rooms; residents inside by schedule |
-| Happenings, authored moments (#45, #35) | voice | told by townsfolk |
+| The storyteller: phases, omens, threats you answer, chains, three tellers (sim/storyteller; happenings #45 are its everyday table); authored moments (#35) | voice, panels, combat | told by townsfolk at dawn; board Tidings tab says what is afoot and how to end it; packs gather round a town in trouble |
+| The realm's baked past: 0 to 100,000 dawns for all 100 districts (sim/realm-bake) | ui, panels, voice | New game → How old is the world?; world map → The realm (ages, beacons, fallen lands, each district's tales); Ask about the old days |
 | Saves: 3 slots + dawn autosave (J8) | ui | title and pause |
 | Sound (J6) | voice | cues; N mutes (also in pause menu) |
 | Every item has ≥2 uses (revamp R3) | content, interact, panels | held item adds "Use …" to any ring |
 | The realm: a 10×10 grid of districts, each generated from the seed with its own wound, doctrine, land and naming culture; only the district you are in runs the full sim, the rest are frozen or a summary (sim/map/districts, sim/realm) | world, panels | world map → The realm; signpost → Beyond this district (trunk roads) |
+
+## The storyteller
+One director decides when things happen, instead of a flat chance per dawn (`src/sim/storyteller/`, data in `src/data/systems/storytellers.json`). It runs in the dawn pipeline where the happenings draw used to be, and the happenings table is now its everyday texture.
+- **Tellers** (picked at New game, saved with the game): *Old Ember* moves through calm, rising, peak and ebb; *the Weaver* gives long calms and then a whole chain; *the Gale* has no rhythm and no mercy.
+- **Pacing**: each phase has its own chance per dawn and its own mix of kinds (everyday, boon, omen, twist, threat, arc). Threats cost points, which come in faster as days pass and as you grow rich, and raise tension; no threat fires over the teller's tension cap. Intensity (how much a raid takes, how many packs to rout) grows the same way.
+- **No repeats**: every incident has a cooldown, anything told lately is weighed down, and nothing is told twice running.
+- **Incidents reach real systems**: town despair and stock, the food ledger, flames, your spark and satchel, roads, newcomers who stay, feuds with the next district, packs in the wilds.
+- **Answerable**: a timed incident shows on the board's **Tidings** tab with what ends it. *Rout* incidents gather packs of one family round the town (routing the last one needed ends it on the spot); *when* incidents check the town at the deadline (food in store, hearths lit).
+- **Arcs** are chains in one town whose later steps turn on how the earlier ones ended.
+- Tests: `tests/sim/storyteller.test.ts`. Dev: god menu → Story.
+
+## The realm's past
+`src/sim/realm-bake/` bakes every district's history before day 1 (data in `src/data/world/realm-bake.json`).
+- **How long**: 0 to 100,000 dawns, chosen at New game (presets, or type a number). 0 is the world the game always made, bit for bit.
+- **What is simulated, per dawn, for all 100 districts**: food by season, land and weather; despair pulled toward the district's wound on slow tides; how its hearths burn; rulers; rare events; and every neighbouring pair's trust, feud, pacts and wars, on the same meters play uses.
+- **Cost**: about a second for the full 100,000 dawns, flat memory (each district keeps its greatest and latest events). It is a pure function of (seed, dawns): the save holds only the number, and old saves load as young worlds.
+- **What it changes in play**: district despair and head count on the map, trunk roads and district wars; pacts and wars standing on day 1; each district the first time it is live (town despair, who is already lit, stores); and its history, which its people retell.
+- Tests: `tests/sim/realm-bake.test.ts`, `tests/e2e/world-age.spec.ts`.
 
 ## The Works: the progression layer
 Everything above is the texture; the Works is the arc you climb through it. Open it with **J**, the **⚙ Era** chip under the spark bar, the pause menu, **The Works** at any hearth, or **Contracts** at a board.

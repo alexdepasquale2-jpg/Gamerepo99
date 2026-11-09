@@ -1,11 +1,8 @@
 {
   "version": 1,
   "tuning": {
-    "note": "Dawn draw (sim/happenings.ts): from minDay, once minGapDays have passed since the last happening began, chancePerDawn to start one (at most maxActive at a time). (event, town) pairs are weighted by event.weight x town weight: 1, plus biasWeight for a townBias town, plus whenWeight where the event's `when` holds, plus playerTownWeight where the player woke. townBias names roles (den/home: your home hearth, or a generated district's den-like town; village, town, city; despairing; lit) or authored town ids (the den maps to the den role, a missing town to the nearest gap). `when` reads the town (sim/happening-world: starving, foodCoverBelow, despairAbove, legitimacyBelow, litAtLeast, hasCreed, newChapelWithin, deathWithin, atWar, warNearby, collapsedWithin, any); an event whose `when` fails there does not happen there, and one cause (a death, a war, a fallen doctrine) is told once per town. townStrict events only happen in their bias towns. say/news/newsHere may be lists of variants ({town}, {name}: the speaker, {target}: who it fell on, {dead}). relapse.mul effects make burning people in that town lose relapseFlamePerDawn x (mul - 1) flame each dawn they last.",
+    "note": "The everyday table of the storyteller (sim/storyteller decides when one begins, never before minDay, and weighs down what was told lately). (event, town) pairs are weighted by event.weight x town weight: 1, plus biasWeight for a townBias town, plus whenWeight where the event's `when` holds, plus playerTownWeight where the player woke. townBias names roles (den/home: your home hearth, or a generated district's den-like town; village, town, city; despairing; lit) or authored town ids (the den maps to the den role, a missing town to the nearest gap). `when` reads the town (sim/happening-world: starving, foodCoverBelow, despairAbove, legitimacyBelow, litAtLeast, hasCreed, newChapelWithin, deathWithin, atWar, warNearby, collapsedWithin, any); an event whose `when` fails there does not happen there, and one cause (a death, a war, a fallen doctrine) is told once per town. townStrict events only happen in their bias towns. say/news/newsHere may be lists of variants ({town}, {name}: the speaker, {target}: who it fell on, {dead}). relapse.mul effects make burning people in that town lose relapseFlamePerDawn x (mul - 1) flame each dawn they last.",
     "minDay": 2,
-    "chancePerDawn": 0.35,
-    "minGapDays": 3,
-    "maxActive": 1,
     "biasWeight": 3,
     "whenWeight": 4,
     "playerTownWeight": 2,

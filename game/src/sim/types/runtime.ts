@@ -195,6 +195,8 @@ export type SimState = {
   legendTalk?: import('../contrib/legends').LegendTalk;
   /** Happenings in force and recently begun (see sim/happenings; saveable). */
   happenings?: import('../happenings').HappeningsState;
+  /** The storyteller: teller, phase, tension, incidents in force, the chain running (sim/storyteller; saveable). */
+  storyteller?: import('../storyteller/state').StoryState;
   /** Body-only acts (sim/contrib/body-acts): siblings left watching a place (saveable). */
   bodyActs?: import('../contrib/body-acts').BodyActsState;
   /** Road news, crews out, help hired at waystations, watches on the carts (sim/economy/roads; saveable). */

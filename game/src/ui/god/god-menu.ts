@@ -9,6 +9,7 @@ import { DEV_TOOLS } from '../../dev/dev-flags';
 import { overlays, type OverlayHandle } from '../kit/overlay-stack';
 import { recordHistory, threshold } from './history';
 import { realmTab } from './tab-realm';
+import { storyTab } from './tab-story';
 import { installGodStyle } from './style';
 import { consoleTab } from './tab-console';
 import { feedTab } from './tab-feed';
@@ -22,7 +23,7 @@ import { townsTab } from './tab-towns';
 import type { God, JuiceLine, Sample, Tab } from './types';
 import { btn, el } from './ui';
 
-const TABS: Tab[] = [overviewTab, peopleTab, townsTab, powersTab, roadsTab, realmTab, playerTab, feedTab, stateTab, consoleTab];
+const TABS: Tab[] = [overviewTab, peopleTab, townsTab, powersTab, roadsTab, realmTab, storyTab, playerTab, feedTab, stateTab, consoleTab];
 
 export type GodMenu = { toggle: () => void; open: () => void; destroy: () => void };
 
