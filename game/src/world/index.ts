@@ -127,14 +127,14 @@ export function attachWorld(ctx: GameContext): WorldApi {
   };
 
   // Old saves keyed per-building flags (lanterns) by plan index. Once per loaded state, on first use (a room
-  // entered, or the next poll), every town's keys move to the stable ids — while this build's plan still
-  // matches the one the save was made with, and before the next save writes them back out.
+  // entered, or the next poll), every town's keys move to the stable ids — only where the save's lot is still
+  // the same building (building-ids.ts), before the next save writes them back out.
   const adopted = new WeakSet<object>();
   const adoptOnce = (): void => {
     const s = st();
     if (!s || adopted.has(s)) return;
     adopted.add(s);
-    adoptLegacyBuildingFlags(s, towns.spots.flatMap((x) => x.buildings));
+    adoptLegacyBuildingFlags(s, towns.spots.flatMap((x) => x.buildings), towns.spots.map((x) => x.town));
   };
 
   const keeperSeen = new Map<string, string>();
@@ -199,6 +199,7 @@ export function attachWorld(ctx: GameContext): WorldApi {
     enterRoom,
     leaveRoom,
     storesAt: (townId) => things.stores.at(townId),
+    roadsideLand(p) { const t = tileOf(p); return !room && terrain.passable(t.q, t.r) && terrain.biome(t.q, t.r) !== 'water' && !terrain.onRoad(t.q, t.r); },
     update(dt, player) {
       const time = scene.time.now;
       clock.advance(dt);

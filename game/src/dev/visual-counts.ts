@@ -32,7 +32,7 @@ export const DAWN_TICK_VISUALS: Record<string, { counters: string[]; why: string
   roads: { counters: ['roadWear', 'workFx'], why: 'worn roads show ruts, broken ones rubble and a barrier; crews work at their spot' },
   mortality: { counters: ['graves', 'sickFolk'], why: 'a headstone appears in the yard; the sick walk pale and slow' },
   'civic-sites': { counters: ['siteMarks', 'workFx'], why: 'working sites smoke and glow, idle ones dim' },
-  'civic-hauling': { counters: ['haulers', 'storeHeaps', 'crows'], why: 'haulers carry loads to the stores; heaps track stock; crows over spoiled food' },
+  'civic-hauling': { counters: ['haulers', 'roadHaulers', 'storeHeaps', 'crows'], why: 'haulers carry loads to the stores (far sites\' haulers walk the road with them); heaps track stock; crows over spoiled food' },
   'realm-away': { counters: ['districtCouriers'], why: 'mail for elsewhere waits in an inbox; arriving letters come in by courier' },
 };
 

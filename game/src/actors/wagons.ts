@@ -18,6 +18,7 @@ import type { NameLayer } from './name-layer';
 import { safe } from './player';
 import { countVisual } from '../dev/visual-counts';
 import { footOf, inRect, viewRect } from './towns';
+import { roadsideSpot } from './roadside';
 
 /** Real ms per game day of caravan travel (as the old living world). */
 const DAY_MS = 120_000;
@@ -104,7 +105,11 @@ export function createWagons(ctx: GameContext): WagonsCtl {
     for (const w of st.logistics?.wrecks ?? []) {
       const a = along(w.at);
       // A cart lost the day it set out lies by its own town's gate: drawn only out on the road.
-      if (a && !safe(() => ctx.world.townAt(a.p), null)) pos.set(`wreck:${w.cartId}`, { kind: 'wreck', x: a.p.x + 14, y: a.p.y + 6, dx: a.dx, label: `Lost cart · ${w.qty} ${w.itemId.replace(/_/g, ' ')}` });
+      if (!a || safe(() => ctx.world.townAt(a.p), null)) continue;
+      // Tipped off the road onto dry land beside it: off a bridge, the nearest bank, never the water.
+      const lostAt = (shift: number): Pt | null => { const f = w.at.f + shift; return f < 0 || f > 1 ? null : along({ ...w.at, f })?.p ?? null; };
+      const at = safe(() => roadsideSpot(ctx.world, lostAt, { x: 14, y: 6 }), a.p) ?? a.p;
+      pos.set(`wreck:${w.cartId}`, { kind: 'wreck', x: at.x, y: at.y, dx: a.dx, label: `Lost cart · ${w.qty} ${w.itemId.replace(/_/g, ' ')}` });
     }
     for (const c of couriersOnRoad(st)) {
       const a = along(c.pos);
