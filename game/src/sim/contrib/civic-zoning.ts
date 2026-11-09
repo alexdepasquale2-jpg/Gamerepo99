@@ -172,7 +172,7 @@ registerBoardPage({
     const next = nextTier(tier);
     const left = [
       `${nameOf(townId)} is a ${tier.name}: ${pop} folk, ${built} ${built === 1 ? 'building' : 'buildings'} standing.`,
-      next ? `A ${next.name} wants ${next.pop} folk and ${next.built} buildings.` : 'No place hereabouts is grander.',
+      next ? `A ${next.name} wants ${next.pop} folk and ${next.built} ${next.built === 1 ? 'building' : 'buildings'}.` : 'No place hereabouts is grander.',
       `The council: ${first(state, leaderOf(state, townId))}. Levy ${pct(c?.tax ?? COUNCIL.taxStart)} in the hundred of company takings; ${Math.floor(c?.treasury ?? 0)} coin kept.`,
     ];
     const civic = Object.keys(ZONES.unlocks);
