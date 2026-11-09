@@ -66,8 +66,6 @@
     "food_refugee": ["You're kind. The little ones will eat.", "Thank you. I'll pass the kindness on when I can."],
     "coin_refugee": ["It'll get us to {to}. Thank you.", "Coin for the road. I won't waste it."],
     "point_refugee": ["{to}, past the stones. I'll find it. I'll stay, if they'll have me.", "Thank you. Knowing the way is half the walk."],
-    "buy_pedlar": ["Good {item}, that. Mind how you carry it.", "Sold. Pleasure doing business on the road."],
-    "sold_out_pedlar": ["Empty now. You had the last of it.", "Nothing left to sell. Lighter walking, though."],
     "answered": ["I've what I came for.", "Nothing more to say. I'll be gone by morning."]
   },
   "townNews": {

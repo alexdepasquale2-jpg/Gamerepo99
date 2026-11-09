@@ -42,6 +42,14 @@
     },
     "landFood": { "water": "fish" }
   },
+  "openingShelves": {
+    "description": "What a new town's stores hold on day 1, before its first dawn of work: a little of what its stall and counters sell, so a shop is not bare the first time you walk up to it. Item ids (data/items/items.json), put into the town's stores as the world's opening stock (source:opening, sim/economy/opening-shelves.ts). byKind: by settlement kind; a town of no known kind takes the village row. Crafted tools (axe, mallet) are left for the forge.",
+    "byKind": {
+      "village": { "bread": 3, "berries": 2, "fish": 1, "herbs": 2, "wool": 2, "flax": 2, "flour": 2, "wood": 4, "kindling": 3, "rope": 1, "nails": 2, "cloth": 1, "pots": 1, "clay": 2, "tools": 1 },
+      "town": { "bread": 4, "berries": 3, "fish": 2, "herbs": 2, "wool": 3, "flax": 2, "flour": 3, "wood": 5, "kindling": 3, "rope": 2, "nails": 3, "cloth": 2, "pots": 2, "clay": 2, "tools": 2 },
+      "city": { "bread": 6, "berries": 3, "fish": 3, "herbs": 3, "wool": 4, "flax": 3, "flour": 4, "wood": 6, "kindling": 4, "rope": 3, "nails": 4, "cloth": 3, "pots": 3, "clay": 3, "tools": 3 }
+    }
+  },
   "missingTownStock": "use_seed_or_empty",
   "stockFloor": 0,
   "spoil": {

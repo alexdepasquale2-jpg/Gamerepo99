@@ -10,9 +10,14 @@
 import type { Pt, Thing } from '../app/contracts';
 import type { TargetKind } from '../sim/play-session/targets';
 
-/** Ties go to the thing earlier in this list (board and signpost first, the hearth last). */
+/**
+ * Ties go to the thing earlier in this list (board and signpost first, the hearth last). Every kind is
+ * listed: an unlisted one would rank after bare ground. A stall is a place you walk up to on purpose (its
+ * keeper or a passer-by beside it can be faced from another side); a grave is a set piece, ahead of the
+ * scenery props and ground around it.
+ */
 export const KIND_PRIORITY: readonly TargetKind[] = [
-  'board', 'signpost', 'wagon', 'facility', 'door', 'person', 'chest', 'ground-item', 'node', 'plot', 'fauna', 'prop', 'tile', 'hearth',
+  'board', 'signpost', 'stall', 'wagon', 'facility', 'door', 'person', 'chest', 'ground-item', 'node', 'plot', 'fauna', 'grave', 'prop', 'tile', 'hearth',
 ];
 export const DEFAULT_REACH = 48;
 /** How far around the player we ask the other areas for things (covers the longest reach). */
