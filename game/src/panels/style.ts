@@ -111,6 +111,38 @@ function shopCss(): string {
 #hf-ui-layer[data-dock=below] .hf-shop[data-col=theirs] .hf-shop__col[data-side=yours],#hf-ui-layer[data-dock=below] .hf-shop[data-col=yours] .hf-shop__col[data-side=theirs]{display:none}
 #hf-ui-layer[data-dock=below] .hf-shop__pick{min-height:44px}
 #hf-ui-layer[data-dock=below] .hf-shop__stepbtn,#hf-ui-layer[data-dock=below] .hf-shop .hf-btn{min-height:44px;min-width:44px}
+/* Phones and small windows: the shop is a full-screen sheet, not a sliver beside the world. The UI layer is
+   lifted over the hotbar and the on-screen pad while it is open (they'd cover the basket); x closes it. */
+@media (pointer:coarse), (max-width:820px), (max-height:560px){
+  body[data-shop=on] #hf-ui-layer{z-index:46 !important}
+  body[data-shop=on] #hf-pad{visibility:hidden}
+  #hf-ui-layer .hf-sheet.hf-sheet--shop[open]{position:fixed;left:calc(6px + env(safe-area-inset-left,0px));right:calc(6px + env(safe-area-inset-right,0px));top:calc(6px + env(safe-area-inset-top,0px));bottom:calc(6px + env(safe-area-inset-bottom,0px));width:auto;height:auto;max-height:none;border-radius:var(--hf-r-xl);animation-name:hf-in-below}
+  #hf-ui-layer .hf-sheet.hf-sheet--shop[open]::before{content:none}
+  .hf-sheet--shop .hf-sheet__body{padding:10px 12px 0}
+  .hf-sheet--shop .hf-shop{gap:10px}
+  .hf-sheet--shop .hf-shop__tab{min-height:48px;font-size:1.05em}
+  .hf-sheet--shop .hf-shop__cols{align-items:stretch}
+  .hf-sheet--shop .hf-shop .hf-shop__rows{gap:6px;align-items:stretch}
+  .hf-sheet--shop .hf-shop__row{width:100%;box-sizing:border-box;align-self:stretch}
+  .hf-sheet--shop .hf-shop__pick{width:100%;grid-template-columns:auto minmax(0,1fr) auto auto}
+  .hf-sheet--shop .hf-shop__pick{min-height:56px;padding:6px 10px;gap:10px;font-size:1.08em}
+  .hf-sheet--shop .hf-shop__pick canvas,.hf-sheet--shop .hf-shop__pick img{width:32px;height:32px}
+  .hf-sheet--shop .hf-shop__price{font-size:1em;padding:2px 10px}
+  .hf-sheet--shop .hf-shop__stepbtn,.hf-sheet--shop .hf-shop .hf-btn{min-height:48px;min-width:48px;font-size:1.1em}
+  .hf-sheet--shop .hf-shop__step{padding:0 10px 8px}
+  .hf-sheet--shop .hf-shop__foot{margin:auto -12px 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));bottom:0}
+  .hf-sheet--shop .hf-shop__settle{min-height:52px;font-size:1.2em}
+}
+/* A phone on its side: little height, so the basket bar becomes one compact row beside the totals. */
+@media (max-height:560px) and (orientation:landscape){
+  .hf-sheet--shop .hf-sheet__head{padding:4px 6px 4px 12px}
+  .hf-sheet--shop .hf-shop__pick{min-height:46px}
+  .hf-sheet--shop .hf-shop__foot{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 12px}
+  .hf-sheet--shop .hf-shop__foot .hf-muted{display:none}
+  .hf-sheet--shop .hf-shop__basket{max-height:3em;flex:1 1 40%}
+  .hf-sheet--shop .hf-shop__acts{flex:1 1 280px}
+  .hf-sheet--shop .hf-shop__settle{min-height:44px}
+}
 `;
 }
 let shopInjected = false;

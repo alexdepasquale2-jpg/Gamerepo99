@@ -214,6 +214,7 @@ export function shopSheet(ctx: GameContext, ref: ShopRef, onClose?: () => void, 
     onClose() {
       if (active === ctl) active = null;
       window.removeEventListener('keydown', onKey, true);
+      delete document.body.dataset.shop;
       onClose?.();
     },
     render(body) {
@@ -224,6 +225,9 @@ export function shopSheet(ctx: GameContext, ref: ShopRef, onClose?: () => void, 
       }
       bodyEl = body;
       ensureShopStyles();
+      // On phones the shop takes the whole screen (panels/style.ts shopCss): mark the sheet and the page.
+      body.closest('.hf-sheet')?.classList.add('hf-sheet--shop');
+      document.body.dataset.shop = 'on';
       const st = ctx.session.getState();
       body.replaceChildren();
       if (!st) return;
