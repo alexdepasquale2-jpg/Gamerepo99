@@ -1,13 +1,14 @@
 /**
  * God menu (dev and playtest builds): a full-screen control centre for the simulation. Shift+` opens it,
  * as does the button in the dev menu. While it is open the game is paused (the overlay stack pauses the
- * scenes) unless "Live" is on. Tabs: overview, people, towns, powers, roads, you, feed, state, console.
+ * scenes) unless "Live" is on. Tabs: overview, people, towns, powers, roads, realm, you, feed, state, console.
  * Every edit goes straight into SimState, then `commit` tells the game to redraw.
  */
 import type { GameContext } from '../../app/contracts';
 import { DEV_TOOLS } from '../../dev/dev-flags';
 import { overlays, type OverlayHandle } from '../kit/overlay-stack';
 import { recordHistory, threshold } from './history';
+import { realmTab } from './tab-realm';
 import { installGodStyle } from './style';
 import { consoleTab } from './tab-console';
 import { feedTab } from './tab-feed';
@@ -21,7 +22,7 @@ import { townsTab } from './tab-towns';
 import type { God, JuiceLine, Sample, Tab } from './types';
 import { btn, el } from './ui';
 
-const TABS: Tab[] = [overviewTab, peopleTab, townsTab, powersTab, roadsTab, playerTab, feedTab, stateTab, consoleTab];
+const TABS: Tab[] = [overviewTab, peopleTab, townsTab, powersTab, roadsTab, realmTab, playerTab, feedTab, stateTab, consoleTab];
 
 export type GodMenu = { toggle: () => void; open: () => void; destroy: () => void };
 
@@ -46,6 +47,7 @@ export function createGodMenu(ctx: GameContext): GodMenu | null {
     memo: {},
     threshold: () => threshold(ctx.session.getState()),
     rerender: () => render(),
+    close: () => close(),
     toast(msg) {
       const t = root?.querySelector('.g-toast');
       if (!t) return;

@@ -16,6 +16,8 @@ export type God = {
   commit: (msg?: string) => void;
   rerender: () => void;
   toast: (msg: string) => void;
+  /** Close the god menu. */
+  close: () => void;
   history: Sample[];
   juice: JuiceLine[];
   /** Per-tab memory across re-renders (filters, selection, sort). */
