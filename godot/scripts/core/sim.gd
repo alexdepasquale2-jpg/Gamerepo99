@@ -28,6 +28,8 @@ var inventory: Dictionary = {}
 ## person id -> { flame:int, marks:Array, reignited:bool, spoke_day:int }
 var people: Dictionary = {}
 var acts_today: int = 0
+## The village economy (scripts/core/economy). Runs at every dawn for every town.
+var econ: Econ
 var over: bool = false
 
 func _ready() -> void:
@@ -50,17 +52,66 @@ func new_game(new_seed: int) -> void:
 			inventory[k] = int(Data.starting_inventory[k])
 	people = {}
 	for p in Data.people:
-		people[p.id] = {"flame": int(p.flameStart), "marks": [], "reignited": false, "spoke_day": 0}
+		people[p.id] = {"name": p.name, "townId": p.townId, "age": int(p.get("age", 30)), "tags": p.get("tags", []),
+			"flame": int(p.flameStart), "marks": [], "reignited": false, "spoke_day": 0}
+	_spawn_folk()
+	_new_econ()
 	for t in Data.towns:
 		if t.get("starting", false):
 			town_id = t.id
 	state_replaced.emit()
 
+## Generated townsfolk: the economy's hands. Named from names.json, unique per town, seeded.
+func _spawn_folk() -> void:
+	var given: Array = Data.names.get("given", [])
+	var family: Array = Data.names.get("family", [])
+	for town_id in Econ.sorted_keys(Data.econ_towns):
+		var used := {}
+		for id in people:
+			used[people[id].name] = true
+		var r := SeedRng.derive(world_seed, ["folk", town_id])
+		for i in int(Data.econ_towns[town_id].get("folk", 0)):
+			var nm := ""
+			for _try in 20:
+				nm = "%s %s" % [r.pick(given), r.pick(family)]
+				if not used.has(nm):
+					break
+			used[nm] = true
+			people["folk_%s_%d" % [town_id, i]] = {"name": nm, "townId": town_id, "age": r.int_range(18, 70), "tags": [],
+				"flame": r.int_range(10, 34), "marks": [], "reignited": false, "spoke_day": 0, "folk": true}
+
+func _new_econ() -> void:
+	econ = Econ.new()
+	econ.wseed = world_seed
+	econ.day = day
+	econ.people = people
+	for town_id in Data.econ_towns:
+		var t: Dictionary = Data.econ_towns[town_id]
+		econ.towns[town_id] = {"q": float(t.q), "r": float(t.r), "despair": 0.0}
+		var stock: Dictionary = t.get("stock", {})
+		for item in stock:
+			EconVillage.supply(econ, town_id, item, float(stock[item]))
+
+func is_folk(id: String) -> bool:
+	return bool(people.get(id, {}).get("folk", false))
+
+## Ids of everyone living in a town (authored first, then townsfolk), sorted.
+func residents_of(tid: String) -> Array:
+	var out: Array = []
+	for id in people:
+		if people[id].get("townId", "") == tid:
+			out.append(id)
+	out.sort_custom(func(a, b): return a < b if is_folk(a) == is_folk(b) else not is_folk(a))
+	return out
+
 func person_row(id: String) -> Dictionary:
 	for p in Data.people:
 		if p.id == id:
 			return p
-	return {}
+	var st: Dictionary = people.get(id, {})
+	if st.is_empty():
+		return {}
+	return {"id": id, "name": st.name, "townId": st.townId, "woundId": "", "tags": st.get("tags", []), "relapseBase": 0.1}
 
 func flame(id: String) -> int:
 	return int(people.get(id, {}).get("flame", 0))
@@ -70,12 +121,12 @@ func warmth_of(id: String) -> float:
 	return clampf(float(flame(id)) / float(Data.reignite_threshold), 0.0, 1.0)
 
 func town_warmth(tid: String = town_id) -> float:
-	var folk := Data.people_in(tid)
+	var folk := residents_of(tid)
 	if folk.is_empty():
 		return 0.55
 	var sum := 0.0
-	for p in folk:
-		sum += warmth_of(p.id)
+	for id in folk:
+		sum += warmth_of(id)
 	return sum / folk.size()
 
 func in_ember_zone() -> bool:
@@ -126,7 +177,9 @@ func _speak(id: String) -> void:
 	var row := person_row(id)
 	var st: Dictionary = people[id]
 	var line: String
-	if st.reignited:
+	if is_folk(id):
+		line = _folk_line(id)
+	elif st.reignited:
 		line = row.get("lifeLoop", row.get("reigniteLine", "..."))
 	elif int(st.spoke_day) == 0:
 		line = row.get("firstLine", "...")
@@ -136,6 +189,27 @@ func _speak(id: String) -> void:
 		st.spoke_day = day
 		_add_flame(id, 2)
 	said.emit(id, line, "talk")
+
+## What a townsperson talks about: their own build, their workshop, or what the town lacks.
+func _folk_line(id: String) -> String:
+	for p in EconPlans.active(econ, town_id):
+		if p.ownerId == id:
+			var needs: Array = []
+			var cost: Dictionary = Data.building_by_id[p.kind].cost
+			for i in cost:
+				if int(p.have.get(i, 0)) < int(cost[i]):
+					needs.append(Data.item_name(i))
+			if needs.is_empty():
+				return "The %s is going up. Mind the beams." % Data.building_by_id[p.kind].name
+			return "I'm building a %s. Short of %s, if you have any." % [Data.building_by_id[p.kind].name, " and ".join(needs.slice(0, 2))]
+	var c = EconCompanies.company_of(econ, id)
+	if c != null:
+		return "I work at %s. %s" % [c.name, "Wages come regular." if c.unpaid.is_empty() else "When they pay."]
+	var job: String = EconVillage.job_of(econ, id).name
+	var short := EconVillage.needs(econ, town_id)
+	if short.is_empty():
+		return "I'm the %s here. We get by." % job
+	return "I'm the %s here. We're short of %s." % [job, Data.item_name(short[0].item)]
 
 ## commitMethod: flameDelta = floor(basePower * woundMul * (1 ± fuzz)), spark -= sparkCost (x1.5 in the ember zone).
 func commit_method(id: String, method_id: String) -> void:
@@ -171,6 +245,11 @@ func give(id: String, item_id: String) -> void:
 	if int(inventory[item_id]) <= 0:
 		inventory.erase(item_id)
 	inventory_changed.emit()
+	var toward := EconPlans.contribute(econ, id, item_id)
+	if toward != "":
+		_add_flame(id, 3)
+		said.emit(id, toward + " Thank you.", "reaction")
+		return
 	var weight := gift_affinity(row, item)
 	var was := bool(people[id].reignited)
 	_add_flame(id, 4 + 5 * weight)
@@ -189,6 +268,16 @@ func gift_affinity(row: Dictionary, item: Dictionary) -> int:
 			if item.get("tags", []).has(rule.itemTag):
 				w += int(rule.weight)
 	return w
+
+## Leave an item in the town's store (the hearth's "Leave for the town").
+func leave_for_town(item_id: String) -> void:
+	if int(inventory.get(item_id, 0)) <= 0:
+		return
+	inventory[item_id] = int(inventory[item_id]) - 1
+	if int(inventory[item_id]) <= 0:
+		inventory.erase(item_id)
+	EconVillage.supply(econ, town_id, item_id, 1)
+	inventory_changed.emit()
 
 ## Self-use of an item from the hotbar (eat bread: +spark).
 func use_item(item_id: String) -> void:
@@ -238,6 +327,19 @@ func rest() -> void:
 						lines.append([p.id, p.get("woundLine", "It's gone cold again.")])
 		else:
 			st.flame = maxi(0, int(st.flame) - 1)
+	for tid in econ.towns:
+		econ.towns[tid].despair = 1.0 - town_warmth(tid)
+	econ.dawn(day)
+	# The economy's news is told by people in this town: by whom it concerns, else by someone who heard.
+	var here := residents_of(town_id)
+	var teller := 0
+	for n in econ.news:
+		if n.town != town_id or here.is_empty():
+			continue
+		var who: String = n.person if here.has(n.person) else here[(day + teller) % here.size()]
+		teller += 1
+		if lines.size() < 6:
+			lines.append([who, n.line])
 	spark_changed.emit(spark, spark_max)
 	day_started.emit(day, lines)
 	for l in lines:
@@ -273,7 +375,7 @@ func save_game() -> bool:
 		return false
 	f.store_string(JSON.stringify({
 		"version": 1, "seed": world_seed, "rng": rng.state, "day": day, "phase": phase, "spark": spark,
-		"coin": coin, "town": town_id, "inventory": inventory, "people": people, "acts": acts_today,
+		"coin": coin, "town": town_id, "inventory": inventory, "people": people, "acts": acts_today, "econ": econ.to_dict(),
 	}))
 	return true
 
@@ -300,7 +402,14 @@ func load_game() -> bool:
 	people = {}
 	for k in d.people:
 		var st: Dictionary = d.people[k]
-		people[k] = {"flame": int(st.flame), "marks": st.marks, "reignited": bool(st.reignited), "spoke_day": int(st.spoke_day)}
+		st.flame = int(st.flame)
+		st.reignited = bool(st.reignited)
+		st.spoke_day = int(st.spoke_day)
+		st.age = int(st.get("age", 30))
+		people[k] = st
+	_new_econ()
+	econ.day = day
+	econ.from_dict(d.get("econ", {}))
 	acts_today = int(d.get("acts", 0))
 	over = false
 	state_replaced.emit()

@@ -5,7 +5,8 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 src="$here/../game/src/data"
 for f in people/people.json people/names.json world/towns.json items/items.json \
-         systems/methods.json systems/wounds.json systems/player.json; do
+         systems/methods.json systems/wounds.json systems/player.json \
+         items/jobs.json items/buildings.json items/polity.json world/routes.json; do
   mkdir -p "$here/data/$(dirname "$f")"
   cp "$src/$f" "$here/data/$f"
 done

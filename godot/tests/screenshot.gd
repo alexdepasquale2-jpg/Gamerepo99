@@ -17,8 +17,13 @@ func _process(_dt: float) -> bool:
 		for i in 6:
 			sim.act("marta_ellison", "method:challenge")
 		sim.act("jonah_pike", "speak")
+		if OS.get_cmdline_user_args().has("board"):
+			for d in 40:
+				sim.rest()
 		main._refresh_warmth()
-	if frames == 60:
+	if frames == 60 and OS.get_cmdline_user_args().has("board"):
+		main._open_board()
+	elif frames == 60:
 		var t = main._find_thing("person", "harold_finch")
 		if t != null:
 			main._open_ring(t)

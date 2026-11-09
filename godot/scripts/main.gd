@@ -16,6 +16,9 @@ var ring: Ring
 var menu: MenuSheet
 var focused = null  # Dictionary thing or null
 var pending_open = null  # thing to open once the walk arrives
+## Dawn news waits its turn: one bubble at a time, so a busy dawn reads as people talking.
+var say_queue: Array = []
+var say_wait := 0.0
 
 func _ready() -> void:
 	world = Node2D.new()
@@ -56,7 +59,9 @@ func _ready() -> void:
 	Sim.reignited.connect(_on_reignited)
 	Sim.town_changed.connect(func(_t): _build_town())
 	Sim.state_replaced.connect(_build_town)
-	Sim.day_started.connect(func(_d, _l): _refresh_warmth())
+	Sim.day_started.connect(func(_d, _l):
+		say_queue.clear()
+		_refresh_warmth())
 	Sim.ended.connect(_on_ended)
 	_build_town()
 	_show_title()
@@ -68,12 +73,29 @@ func _build_town() -> void:
 	ring.close()
 	var t := Data.town(Sim.town_id)
 	map.build(t, Sim.world_seed)
+	var sites := {}
 	for p in Data.people_in(Sim.town_id):
+		sites[p.id] = p.siteId
+	var homes: Array = map.site_pos.values()
+	var i := 0
+	for id in Sim.residents_of(Sim.town_id):
 		var a := PersonActor.new()
-		var at: Vector2 = map.site_pos.get(p.siteId, map.hearth_pos) + Vector2(0, 14)
-		a.setup(p.id, p.name, at, map, Sim.world_seed)
+		var at: Vector2
+		if sites.has(id):
+			at = map.site_pos.get(sites[id], map.hearth_pos) + Vector2(0, 14)
+		else:
+			# Townsfolk gather around the houses and the hearth.
+			var r := SeedRng.derive(Sim.world_seed, ["home", id])
+			var base: Vector2 = homes[i % homes.size()] if not homes.is_empty() else map.hearth_pos
+			at = base + Vector2(r.next() * 120 - 60, 24 + r.next() * 40)
+			for _t in 8:
+				if map.passable(at):
+					break
+				at = base + Vector2(r.next() * 120 - 60, 24 + r.next() * 50)
+			i += 1
+		a.setup(id, Sim.people[id].name, at, map, Sim.world_seed)
 		world.add_child(a)
-		actors[p.id] = a
+		actors[id] = a
 	player.position = map.signpost_pos + Vector2(-40, 0) if Sim.day > 1 or Sim.phase > 0.15 else map.hearth_pos + Vector2(0, 40)
 	camera.limit_left = 0
 	camera.limit_top = 0
@@ -87,6 +109,20 @@ func _build_town() -> void:
 
 func _refresh_warmth() -> void:
 	map.set_warmth(Sim.town_warmth())
+	var list: Array = []
+	for c in EconPlans.claims_in(Sim.econ, Sim.town_id):
+		var prog := 1.0
+		for p in Sim.econ.build.plans:
+			if p.id == c.planId and p.stage != "done":
+				var def: Dictionary = Data.building_by_id[p.kind]
+				var have := 0.0
+				var total := 0.0
+				for it in def.cost:
+					have += mini(int(def.cost[it]), int(p.have.get(it, 0)))
+					total += float(def.cost[it])
+				prog = 0.5 * have / total if p.stage == "gathering" else 0.5 + 0.5 * minf(1.0, float(p.laborDone) / float(def.labor))
+		list.append({"dx": c.dx, "dy": c.dy, "w": c.w, "h": c.h, "kind": c.kind, "built": c.status == "built", "progress": prog})
+	map.set_plots(list)
 
 # --- Things and focus --------------------------------------------------------
 
@@ -96,6 +132,7 @@ func _things() -> Array:
 		var a: PersonActor = actors[id]
 		out.append({"kind": "person", "id": id, "pos": a.position, "label": a.display_name})
 	out.append({"kind": "hearth", "id": "hearth", "pos": map.hearth_pos, "label": "Hearth"})
+	out.append({"kind": "board", "id": "board", "pos": map.board_pos, "label": "Noticeboard"})
 	out.append({"kind": "signpost", "id": "signpost", "pos": map.signpost_pos, "label": "Signpost"})
 	return out
 
@@ -114,6 +151,7 @@ func _process(dt: float) -> void:
 		return
 	Sim.advance_time(dt)
 	_update_daylight()
+	_drain_says(dt)
 	focused = _nearest(player.position, REACH)
 	if focused != null and not ring.is_open():
 		prompt.visible = true
@@ -185,6 +223,14 @@ func _open_ring(t: Dictionary) -> void:
 			verbs = Sim.verbs_for_person(t.id)
 		"hearth":
 			verbs = [{"id": "rest", "label": "Rest till dawn"}, {"id": "save", "label": "Save"}]
+			var leave: Array = []
+			for item_id in Sim.inventory:
+				if Data.items_by_id.has(item_id):
+					leave.append({"id": "leave:" + item_id, "label": "Leave " + Data.items_by_id[item_id].name})
+			if not leave.is_empty():
+				verbs.append({"id": "family:leave", "label": "For the town", "children": leave.slice(0, 5)})
+		"board":
+			verbs = [{"id": "read_board", "label": "Read the board"}]
 		"signpost":
 			for other in Data.walkable_towns():
 				if other.id != Sim.town_id:
@@ -200,6 +246,11 @@ func _on_verb(verb_id: String) -> void:
 		_say_at(player, "Dawn. Day %d." % Sim.day, "talk")
 	elif verb_id == "save":
 		_say_at(player, "Saved." if Sim.save_game() else "Couldn't save.", "talk")
+	elif verb_id == "read_board":
+		_open_board()
+	elif verb_id.begins_with("leave:"):
+		Sim.leave_for_town(verb_id.substr(6))
+		_say_at(player, "Left it in the town's store.", "talk")
 	elif verb_id.begins_with("travel:"):
 		Sim.travel(verb_id.substr(7))
 	elif t.kind == "person":
@@ -209,8 +260,21 @@ func _on_verb(verb_id: String) -> void:
 # --- Voice -------------------------------------------------------------------
 
 func _on_said(person_id: String, line: String, kind: String) -> void:
-	if actors.has(person_id):
+	if not actors.has(person_id):
+		return
+	if kind == "dawn":
+		say_queue.append([person_id, line])
+	else:
 		_say_at(actors[person_id], line, kind)
+
+func _drain_says(dt: float) -> void:
+	say_wait -= dt
+	if say_wait > 0 or say_queue.is_empty():
+		return
+	var s: Array = say_queue.pop_front()
+	if actors.has(s[0]):
+		_say_at(actors[s[0]], s[1], "dawn")
+	say_wait = 1.6
 
 func _say_at(who: Node2D, line: String, kind: String) -> void:
 	for c in world.get_children():
@@ -272,6 +336,10 @@ func _on_menu(id: String) -> void:
 		"new":
 			Sim.new_game(int(Time.get_unix_time_from_system()) & 0x7FFFFFFF)
 			menu.hide_menu()
+
+func _open_board() -> void:
+	var t := Data.town(Sim.town_id)
+	menu.show_board("Noticeboard · " + str(t.get("name", "")), "\n".join(EconView.lines(Sim.econ, Sim.town_id)), [["resume", "Close"]])
 
 func _on_ended(_kind: String, text: String) -> void:
 	menu.show_menu("The end", text, [["new", "Begin again"]])

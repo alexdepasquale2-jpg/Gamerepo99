@@ -11,7 +11,7 @@ var center := Vector2.ZERO
 var stack: Array = []
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
 

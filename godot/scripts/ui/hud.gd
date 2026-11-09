@@ -16,7 +16,7 @@ var act_btn: Button
 var menu_btn: Button
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	day_label = Kit.label("", 14, Color("#bdb3a3"))
 	day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

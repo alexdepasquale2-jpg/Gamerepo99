@@ -13,6 +13,14 @@ var rng_fuzz: float = 0.1
 var wounds: Dictionary = {}
 var wound_cfg: Dictionary = {}
 var player_defaults: Dictionary = {}
+var jobs: Array = []
+var buildings: Array = []
+var building_by_id: Dictionary = {}
+var workshop_mul: float = 1.5
+var polity: Dictionary = {}
+var routes: Array = []
+var econ_towns: Dictionary = {}
+var names: Dictionary = {}
 
 func _ready() -> void:
 	load_all()
@@ -36,6 +44,19 @@ func load_all() -> void:
 		wounds[row.id] = row
 	wound_cfg = w
 	player_defaults = _read("res://data/systems/player.json").get("defaults", {})
+	jobs = _read("res://data/items/jobs.json").get("jobs", [])
+	var b = _read("res://data/items/buildings.json")
+	buildings = b.get("buildings", [])
+	workshop_mul = float(b.get("workshopMul", 1.5))
+	for row in buildings:
+		building_by_id[row.id] = row
+	polity = _read("res://data/items/polity.json")
+	var known := {}
+	for t in towns:
+		known[t.id] = true
+	routes = _read("res://data/world/routes.json").get("routes", []).filter(func(r): return known.has(r.fromTownId) and known.has(r.toTownId))
+	econ_towns = _read("res://data/world/godot-economy.json").get("towns", {})
+	names = _read("res://data/people/names.json")
 
 func town(id: String) -> Dictionary:
 	for t in towns:
@@ -49,6 +70,20 @@ func walkable_towns() -> Array:
 
 func people_in(town_id: String) -> Array:
 	return people.filter(func(p): return p.townId == town_id)
+
+func job(id: String) -> Dictionary:
+	for j in jobs:
+		if j.id == id:
+			return j
+	return {}
+
+func price(item_id: String) -> float:
+	return float(items_by_id.get(item_id, {}).get("price", 0))
+
+func item_name(item_id: String) -> String:
+	if item_id == "food":
+		return "food"
+	return str(items_by_id.get(item_id, {}).get("name", item_id)).to_lower()
 
 func method(id: String) -> Dictionary:
 	for m in methods:
