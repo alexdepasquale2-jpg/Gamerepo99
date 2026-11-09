@@ -209,6 +209,8 @@ export interface PanelsApi {
   company: { open(townId: string, companyId?: string): void };
   /** A site's ledger sheet (civic slice 5): who runs it, hands, wage, till, shelves; run it if it is yours. */
   site: { open(siteId: string): void };
+  /** The Works sheet (panels/works): yards, making, lines, vehicles, convoys, contracts, war and the arcs. */
+  works: { open(tab?: import('../panels/works/sheet').WorksTab): void; toggle(): void };
   /** The item being dragged from the hotbar right now (see the 'item-drag' event), or null. */
   dragging(): string | null;
   closeAll(): void;

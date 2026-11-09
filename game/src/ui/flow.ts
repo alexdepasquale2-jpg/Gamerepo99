@@ -139,6 +139,7 @@ export function runTitleFlow(app: AppHooks): void {
         world: s.getSeed(),
         muted: isMuted(),
         onResume: () => undefined,
+        onWorks: () => currentCtx()?.panels?.works.open(),
         onSave: () =>
           open(
             openSaveMenu('save', slots, {

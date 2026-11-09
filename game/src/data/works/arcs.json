@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "spec": "The Works' progression (sim/works/arcs). eras: renown thresholds; each Era unlocks buildings, recipes, vehicles and depots. arcs: five paths you can walk at once; each tier's goal is a stat (sim/works/arcs statOf) reaching n. A tier pays renown (and coin) the moment it is met, and the arc's capstone grants a lasting boon. tuning: the numbers the systems share.",
+  "eras": [
+    { "era": 1, "name": "Hearth Age", "renown": 0, "depots": 1 },
+    { "era": 2, "name": "Cart Age", "renown": 40, "depots": 2 },
+    { "era": 3, "name": "Forge Age", "renown": 130, "depots": 3 },
+    { "era": 4, "name": "Steam Age", "renown": 300, "depots": 4 },
+    { "era": 5, "name": "Sky Age", "renown": 520, "depots": 6 }
+  ],
+  "arcs": [
+    {
+      "id": "industry", "name": "The Great Engine", "role": "Industrialist", "blurb": "From a bench by the hearth to an engine that never sleeps.",
+      "boon": "Every manufacturing line makes one more batch each dawn.",
+      "tiers": [
+        { "label": "Make 5 things by hand", "stat": "made", "n": 5, "renown": 10, "coin": 5 },
+        { "label": "Run 2 manufacturing lines", "stat": "lines", "n": 2, "renown": 20, "coin": 10 },
+        { "label": "Lines turn out 150 goods", "stat": "produced", "n": 150, "renown": 40, "coin": 25 },
+        { "label": "Raise a foundry", "stat": "built_foundry", "n": 1, "renown": 60, "coin": 40 },
+        { "label": "Raise the Great Engine", "stat": "great_engine", "n": 1, "renown": 120, "coin": 100 }
+      ]
+    },
+    {
+      "id": "trade", "name": "The Iron Road", "role": "Merchant prince", "blurb": "Yards in every town and wagons between them.",
+      "boon": "Convoys travel twice as fast and are never raided.",
+      "tiers": [
+        { "label": "Deliver a convoy", "stat": "deliveries", "n": 1, "renown": 10, "coin": 5 },
+        { "label": "Hold depots in 2 towns", "stat": "depots", "n": 2, "renown": 20, "coin": 10 },
+        { "label": "Earn 300 coin by trade", "stat": "trade_coin", "n": 300, "renown": 40, "coin": 25 },
+        { "label": "Fill 8 town contracts", "stat": "contracts", "n": 8, "renown": 60, "coin": 40 },
+        { "label": "Lay the Iron Road", "stat": "iron_road", "n": 1, "renown": 120, "coin": 100 }
+      ]
+    },
+    {
+      "id": "war", "name": "Crown of Cinders", "role": "Warlord", "blurb": "Raise a band, feed it, arm it, and take the towns that will not bend.",
+      "boon": "Vassals pay double tribute and never rise against you.",
+      "tiers": [
+        { "label": "Raise a war band of 4", "stat": "soldiers", "n": 4, "renown": 10, "coin": 5 },
+        { "label": "Win a battle", "stat": "victories", "n": 1, "renown": 25, "coin": 10 },
+        { "label": "Field a war machine", "stat": "war_machines", "n": 1, "renown": 40, "coin": 25 },
+        { "label": "Hold 3 towns as vassals", "stat": "vassals", "n": 3, "renown": 60, "coin": 40 },
+        { "label": "Hold 6 towns: take the Crown", "stat": "vassals", "n": 6, "renown": 120, "coin": 100 }
+      ]
+    },
+    {
+      "id": "hearth", "name": "The Long Table", "role": "Hearthkeeper", "blurb": "Feed people until the whole realm sits down to eat together.",
+      "boon": "Your spark holds 25 more, and every town's despair eases a little each dawn.",
+      "tiers": [
+        { "label": "Cook 3 meals", "stat": "cooked", "n": 3, "renown": 10, "coin": 5 },
+        { "label": "Cook 5 different dishes", "stat": "dishes", "n": 5, "renown": 20, "coin": 10 },
+        { "label": "Bring food to 3 hungry towns", "stat": "towns_fed", "n": 3, "renown": 40, "coin": 25 },
+        { "label": "Hold 3 feasts", "stat": "feasts", "n": 3, "renown": 60, "coin": 40 },
+        { "label": "Set the Long Table", "stat": "long_table", "n": 1, "renown": 120, "coin": 100 }
+      ]
+    },
+    {
+      "id": "sky", "name": "The Far Spark", "role": "Skyfarer", "blurb": "Build what flies, and go where the map ends.",
+      "boon": "The Far Spark is found: your spark holds 50 more, and the realm remembers.",
+      "tiers": [
+        { "label": "Assemble a vehicle", "stat": "vehicles", "n": 1, "renown": 10, "coin": 5 },
+        { "label": "Own a steam-driven vehicle", "stat": "engined", "n": 1, "renown": 30, "coin": 20 },
+        { "label": "Raise a sky dock", "stat": "built_sky_dock", "n": 1, "renown": 50, "coin": 40 },
+        { "label": "Launch an airship", "stat": "airships", "n": 1, "renown": 70, "coin": 60 },
+        { "label": "Reach the Far Spark (3 voyages)", "stat": "voyages", "n": 3, "renown": 150, "coin": 200 }
+      ]
+    }
+  ],
+  "tuning": {
+    "depotCoin": 20,
+    "wage": 1,
+    "renownPerContract": 6,
+    "renownPerVictory": 10,
+    "lineLevelCap": [0, 2, 4, 6],
+    "lineUpgrade": [{}, { "gear": 1, "plank": 4 }, { "engine": 1, "steel": 4 }],
+    "fedBonus": 0.5,
+    "raidBase": 0.06,
+    "raidPerArmor": 0.25,
+    "wearPerTrip": 0.04,
+    "enlistCoin": 5,
+    "bandMax": [0, 4, 8, 14, 24, 40],
+    "desertBelow": 0.25,
+    "conquestDespair": 0.08,
+    "revoltDespair": 0.55,
+    "revoltOdds": 0.12,
+    "tributeCoin": 3,
+    "feastPlatters": 3,
+    "feastDespair": 0.12,
+    "feastFlame": 8,
+    "reliefDespair": 0.04,
+    "voyageDays": 3,
+    "voyageRations": 12,
+    "voyageFuel": 6,
+    "contractsMax": 4,
+    "contractDays": 8
+  },
+  "voyages": [
+    { "name": "the Cloud Shelf", "coin": 60, "line": "Past the last hill there is a shelf of cloud you can stand on. They brought back a seed nobody can name." },
+    { "name": "the Ashen Crown", "coin": 120, "line": "A ring of burnt mountains, and in the middle a hearth older than any town. It was still warm." },
+    { "name": "the Far Spark", "coin": 250, "line": "At the edge of everything, a light that does not gutter. They carried a little of it home." }
+  ]
+}

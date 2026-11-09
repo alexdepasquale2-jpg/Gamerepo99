@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "spec": "Works goods (sim/works): what your depots hold beyond the satchel's items (any items.json id may also sit in a depot). kind: material | part | arms | fuel | meal | project. price: base coin value (convoys sell at this, the Wright's catalogue sells parts at catalogueMul times it). meal: what eating one does (spark) and whether it feeds a crew or a soldier for a dawn (ration: true).",
+  "goods": [
+    { "id": "plank", "name": "Planks", "kind": "material", "price": 3 },
+    { "id": "charcoal", "name": "Charcoal", "kind": "fuel", "price": 2 },
+    { "id": "iron", "name": "Iron bar", "kind": "material", "price": 6 },
+    { "id": "steel", "name": "Steel bar", "kind": "material", "price": 12 },
+    { "id": "brick", "name": "Bricks", "kind": "material", "price": 3 },
+    { "id": "canvas", "name": "Canvas", "kind": "material", "price": 5 },
+    { "id": "powder", "name": "Black powder", "kind": "material", "price": 8 },
+
+    { "id": "wheel", "name": "Wheel", "kind": "part", "price": 8 },
+    { "id": "axle", "name": "Axle", "kind": "part", "price": 10 },
+    { "id": "cart_bed", "name": "Cart bed", "kind": "part", "price": 9 },
+    { "id": "harness", "name": "Harness", "kind": "part", "price": 7 },
+    { "id": "gear", "name": "Gear train", "kind": "part", "price": 14 },
+    { "id": "spring", "name": "Spring", "kind": "part", "price": 16 },
+    { "id": "chassis", "name": "Iron chassis", "kind": "part", "price": 40 },
+    { "id": "boiler", "name": "Boiler", "kind": "part", "price": 55 },
+    { "id": "engine", "name": "Steam engine", "kind": "part", "price": 90 },
+    { "id": "armor_plate", "name": "Armour plate", "kind": "part", "price": 30 },
+    { "id": "cannon", "name": "Cannon", "kind": "part", "price": 70 },
+    { "id": "gasbag", "name": "Gasbag", "kind": "part", "price": 60 },
+    { "id": "gondola", "name": "Gondola", "kind": "part", "price": 50 },
+    { "id": "spark_core", "name": "Spark core", "kind": "part", "price": 200 },
+    { "id": "rail", "name": "Rail section", "kind": "part", "price": 25 },
+
+    { "id": "spear", "name": "Spear", "kind": "arms", "price": 6 },
+    { "id": "shield", "name": "Shield", "kind": "arms", "price": 7 },
+    { "id": "mail", "name": "Mail shirt", "kind": "arms", "price": 18 },
+    { "id": "musket", "name": "Musket", "kind": "arms", "price": 30 },
+
+    { "id": "porridge", "name": "Porridge", "kind": "meal", "price": 2, "meal": { "spark": 4, "ration": true } },
+    { "id": "stew", "name": "Fish stew", "kind": "meal", "price": 5, "meal": { "spark": 10, "ration": true } },
+    { "id": "berry_pie", "name": "Berry pie", "kind": "meal", "price": 6, "meal": { "spark": 14 } },
+    { "id": "ration", "name": "Field ration", "kind": "meal", "price": 3, "meal": { "spark": 3, "ration": true } },
+    { "id": "hardtack", "name": "Hardtack", "kind": "meal", "price": 2, "meal": { "spark": 2, "ration": true } },
+    { "id": "herb_broth", "name": "Herb broth", "kind": "meal", "price": 4, "meal": { "spark": 9 } },
+    { "id": "feast_platter", "name": "Feast platter", "kind": "meal", "price": 20, "meal": { "spark": 25 } },
+
+    { "id": "great_engine", "name": "The Great Engine", "kind": "project", "price": 0 },
+    { "id": "iron_road", "name": "The Iron Road", "kind": "project", "price": 0 },
+    { "id": "long_table", "name": "The Long Table", "kind": "project", "price": 0 }
+  ]
+}

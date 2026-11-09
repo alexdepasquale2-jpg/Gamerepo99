@@ -97,6 +97,24 @@ Each feature names the area that owns how it looks and is reached. The content a
 | Every item has ≥2 uses (revamp R3) | content, interact, panels | held item adds "Use …" to any ring |
 | The realm: a 10×10 grid of districts, each generated from the seed with its own wound, doctrine, land and naming culture; only the district you are in runs the full sim, the rest are frozen or a summary (sim/map/districts, sim/realm) | world, panels | world map → The realm; signpost → Beyond this district (trunk roads) |
 
+## The Works: the progression layer
+Everything above is the texture; the Works is the arc you climb through it. Open it with **J**, the **⚙ Era** chip under the spark bar, the pause menu, **The Works** at any hearth, or **Contracts** at a board.
+
+- **Yards** (depots): take on a yard in a town (the first is free), stow your satchel into it, and raise buildings: workbench, kitchen, woodlot, farmstead, kiln, mine, forge, foundry, machine shop, assembly yard, barracks, sky dock.
+- **Making and cooking**: about 50 recipes at those buildings turn gathered goods into planks, iron, steel, gears, springs, wheels, axles, boilers, engines, armour, cannon and arms. The kitchen cooks porridge, stew, pies, broth, hardtack, field rations and feast platters. Eat meals for spark.
+- **Manufacturing lines**: set a building to a recipe and hire townsfolk (from the sheet, or **Hire for line** on the person). Every dawn each hand makes a batch from the yard's stock for a 1-coin wage. A crew fed rations makes half again. Improve a line for more hands.
+- **Vehicles**: pre-baked designs (handcart, ox wagon, war cart, steam wagon, landship, airship) are put together from parts at the assembly yard, or bought ready-made from the Wright's catalogue, which also sells single parts. Mods (cargo rack, spare wheel, shield wall, field stove, armour kit, gun mount, engine governor) fill each design's slots. Drive one yourself to another town.
+- **Logistics**: convoys run standing routes on their own. They load at dawn, burn fuel (grain, then charcoal), and either haul into your far yard or sell to the far town. Prices are better where the town is short, and food eases a hungry town's despair. Raiders hit bad roads and war zones; armour helps. Towns post **contracts**, which arriving convoys fill.
+- **War**: raise a band at a barracks, enlist townsfolk (**Enlist** on the person, 5-coin bounty), arm them from the yard, bring war machines, and feed them one ration each per dawn (a hungry band loses heart, then soldiers). March on a town: the band's power fights the town's defence. A won town becomes a vassal that pays tribute and grows in despair, and it may rise unless you garrison it or feast there. The fallen go home wounded.
+- **Five arcs, five Eras**: Industry (*The Great Engine*), Trade (*The Iron Road*), War (*Crown of Cinders*), Hearth (*The Long Table*) and Sky (*The Far Spark*: three airship voyages past the map's edge). Each has five steps that pay renown and coin, and the fifth grants a lasting boon. Renown climbs the Hearth, Cart, Forge, Steam and Sky Ages, and each age opens buildings, recipes, vehicles and more yards.
+- **Where the code is**:
+  - Sim: `src/sim/works/`. The dawn tick runs in the `late` slot, and news is spoken at dawn by the people it concerns.
+  - Ring verbs: `src/sim/contrib/works.ts`.
+  - Data: `src/data/works/*.json`.
+  - Sheet and chip: `src/panels/works/`.
+  - Tests: `tests/works/`.
+  - Whole-world check: `npm run game:check-works`.
+
 ## Area ownership (one agent each)
 - **world:** `src/world/**`
 - **actors:** `src/actors/**`

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "spec": "Works recipes (sim/works/make). at: the depot building it is made at. in/out: goods (works goods or items.json ids). era: unlocks at this Era (default the building's). hours: hand work time (default 1). line: false keeps it a hand-only recipe (projects, the spark core). spark: spark it costs you to make (hand only). A recipe with no `in` is an extraction: the building's hands bring it in.",
+  "recipes": [
+    { "id": "planks", "label": "Saw timber into planks", "at": "workbench", "in": { "timber": 1 }, "out": { "plank": 3 } },
+    { "id": "timber_cut", "label": "Square wood into timber", "at": "workbench", "in": { "wood": 2 }, "out": { "timber": 1 } },
+    { "id": "wheel", "label": "Build a wheel", "at": "workbench", "in": { "plank": 2, "nails": 1 }, "out": { "wheel": 1 } },
+    { "id": "cart_bed", "label": "Build a cart bed", "at": "workbench", "in": { "plank": 3, "nails": 1 }, "out": { "cart_bed": 1 } },
+    { "id": "harness", "label": "Stitch a harness", "at": "workbench", "in": { "rope": 1, "cloth": 1 }, "out": { "harness": 1 } },
+    { "id": "spear", "label": "Fit spears", "at": "workbench", "in": { "timber": 1, "iron": 1 }, "out": { "spear": 2 }, "era": 2 },
+    { "id": "shield", "label": "Bind a shield", "at": "workbench", "in": { "plank": 2, "iron": 1 }, "out": { "shield": 1 }, "era": 2 },
+    { "id": "canvas", "label": "Weave canvas", "at": "workbench", "in": { "flax": 2, "cloth": 1 }, "out": { "canvas": 1 }, "era": 2 },
+
+    { "id": "porridge", "label": "Cook porridge", "at": "kitchen", "in": { "grain": 1 }, "out": { "porridge": 2 } },
+    { "id": "stew", "label": "Simmer a fish stew", "at": "kitchen", "in": { "fish": 1, "herbs": 1 }, "out": { "stew": 2 } },
+    { "id": "berry_pie", "label": "Bake a berry pie", "at": "kitchen", "in": { "flour": 1, "berries": 2 }, "out": { "berry_pie": 1 } },
+    { "id": "rations", "label": "Pack field rations", "at": "kitchen", "in": { "bread": 1, "fish": 1 }, "out": { "ration": 4 } },
+    { "id": "hardtack", "label": "Bake hardtack", "at": "kitchen", "in": { "flour": 2 }, "out": { "hardtack": 3 } },
+    { "id": "herb_broth", "label": "Brew herb broth", "at": "kitchen", "in": { "herbs": 2 }, "out": { "herb_broth": 2 } },
+    { "id": "bake_bread", "label": "Bake bread for the yard", "at": "kitchen", "in": { "flour": 2 }, "out": { "bread": 2 } },
+    { "id": "feast_platter", "label": "Lay out a feast platter", "at": "kitchen", "in": { "bread": 2, "fish": 2, "berries": 2, "herbs": 1 }, "out": { "feast_platter": 1 }, "era": 2, "hours": 2 },
+    { "id": "long_table", "label": "Cook for the Long Table", "at": "kitchen", "in": { "feast_platter": 10, "berry_pie": 8, "stew": 12 }, "out": { "long_table": 1 }, "era": 4, "hours": 6, "line": false },
+
+    { "id": "cut_wood", "label": "Cut wood", "at": "woodlot", "out": { "wood": 2 } },
+    { "id": "grow_flax", "label": "Grow flax", "at": "woodlot", "out": { "flax": 1 } },
+    { "id": "grow_grain", "label": "Grow grain", "at": "farmstead", "out": { "grain": 2 } },
+    { "id": "pick_berries", "label": "Pick berries", "at": "farmstead", "out": { "berries": 2 } },
+    { "id": "grow_herbs", "label": "Grow herbs", "at": "farmstead", "out": { "herbs": 1 } },
+    { "id": "mill_flour", "label": "Grind flour", "at": "farmstead", "in": { "grain": 2 }, "out": { "flour": 2 } },
+    { "id": "net_fish", "label": "Net fish", "at": "farmstead", "out": { "fish": 1 } },
+
+    { "id": "charcoal", "label": "Burn charcoal", "at": "kiln", "in": { "wood": 2 }, "out": { "charcoal": 2 } },
+    { "id": "bricks", "label": "Fire bricks", "at": "kiln", "in": { "clay": 2, "wood": 1 }, "out": { "brick": 3 } },
+    { "id": "dig_ore", "label": "Dig ore", "at": "mine", "out": { "ore": 2 } },
+    { "id": "cut_stone", "label": "Cut stone", "at": "mine", "out": { "stone": 2 } },
+    { "id": "dig_clay", "label": "Dig clay", "at": "mine", "out": { "clay": 2 } },
+
+    { "id": "iron", "label": "Smelt iron", "at": "forge", "in": { "ore": 2, "charcoal": 1 }, "out": { "iron": 1 } },
+    { "id": "nails", "label": "Draw nails", "at": "forge", "in": { "iron": 1 }, "out": { "nails": 4 } },
+    { "id": "axle", "label": "Forge an axle", "at": "forge", "in": { "timber": 1, "iron": 1 }, "out": { "axle": 1 } },
+    { "id": "gear", "label": "Cut a gear train", "at": "forge", "in": { "iron": 2 }, "out": { "gear": 1 } },
+    { "id": "mail", "label": "Rivet a mail shirt", "at": "forge", "in": { "iron": 3 }, "out": { "mail": 1 } },
+    { "id": "tools_forge", "label": "Forge tools", "at": "forge", "in": { "iron": 1, "timber": 1 }, "out": { "tools": 1 } },
+
+    { "id": "steel", "label": "Pour steel", "at": "foundry", "in": { "iron": 2, "charcoal": 2 }, "out": { "steel": 1 } },
+    { "id": "boiler", "label": "Rivet a boiler", "at": "foundry", "in": { "steel": 4, "brick": 2 }, "out": { "boiler": 1 }, "hours": 2 },
+    { "id": "armor_plate", "label": "Roll armour plate", "at": "foundry", "in": { "steel": 2 }, "out": { "armor_plate": 1 } },
+    { "id": "cannon", "label": "Cast a cannon", "at": "foundry", "in": { "steel": 4, "powder": 1 }, "out": { "cannon": 1 }, "hours": 2 },
+    { "id": "rail", "label": "Roll rail", "at": "foundry", "in": { "steel": 2, "timber": 1 }, "out": { "rail": 2 } },
+    { "id": "powder", "label": "Grind black powder", "at": "foundry", "in": { "charcoal": 2, "herbs": 1, "clay": 1 }, "out": { "powder": 2 } },
+    { "id": "iron_road", "label": "Lay the Iron Road", "at": "foundry", "in": { "rail": 30, "plank": 30, "nails": 20 }, "out": { "iron_road": 1 }, "era": 4, "hours": 8, "line": false },
+
+    { "id": "spring", "label": "Wind a spring", "at": "machine_shop", "in": { "steel": 1 }, "out": { "spring": 1 } },
+    { "id": "engine", "label": "Build a steam engine", "at": "machine_shop", "in": { "gear": 2, "spring": 2, "steel": 3 }, "out": { "engine": 1 }, "hours": 3 },
+    { "id": "chassis", "label": "Frame an iron chassis", "at": "machine_shop", "in": { "steel": 3, "timber": 2 }, "out": { "chassis": 1 }, "hours": 2 },
+    { "id": "musket", "label": "Bore a musket", "at": "machine_shop", "in": { "steel": 1, "spring": 1, "timber": 1 }, "out": { "musket": 1 } },
+    { "id": "spark_core", "label": "Kindle a spark core", "at": "machine_shop", "in": { "steel": 2, "gear": 2, "kindling": 4 }, "out": { "spark_core": 1 }, "era": 4, "hours": 4, "line": false, "spark": 20 },
+    { "id": "great_engine", "label": "Raise the Great Engine", "at": "machine_shop", "in": { "engine": 4, "boiler": 3, "steel": 12, "spark_core": 1 }, "out": { "great_engine": 1 }, "era": 4, "hours": 8, "line": false },
+
+    { "id": "gasbag", "label": "Sew a gasbag", "at": "sky_dock", "in": { "canvas": 6, "rope": 2 }, "out": { "gasbag": 1 }, "hours": 2 },
+    { "id": "gondola", "label": "Hang a gondola", "at": "sky_dock", "in": { "plank": 8, "steel": 2, "rope": 2 }, "out": { "gondola": 1 }, "hours": 2 }
+  ]
+}

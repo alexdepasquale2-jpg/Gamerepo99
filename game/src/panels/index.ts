@@ -21,6 +21,8 @@ import { COMPANY_ID, companySheet, watchCompanyVerbs } from './company';
 import { CRAFT_ID, watchCraftVerbs } from './craft';
 import { SHOP_ID, shopNav, shopSheet, watchShopVerbs } from './shop';
 import { SITE_ID, siteSheet, watchSiteVerbs } from './site';
+import { WORKS_ID, watchWorksVerbs, worksSheet } from './works/sheet';
+import { createWorksChip } from './works/chip';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -67,6 +69,10 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     roads: { open: (townId) => sheets.open(roads.sheet(townId)) },
     company: { open: (townId, companyId) => sheets.open(companySheet(ctx, townId, companyId)) },
     site: { open: (siteId) => sheets.open(siteSheet(ctx, siteId)) },
+    works: {
+      open: (tab) => void sheets.open(worksSheet(ctx, tab)),
+      toggle: () => sheets.toggle(WORKS_ID, () => sheets.open(worksSheet(ctx))),
+    },
     dragging: () => hotbar.dragging(),
     closeAll() {
       hotbar.cancelDrag();
@@ -107,12 +113,17 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     ctx.events.on('state-replaced', () => { sheets.close(); hotbar.reset(); map.reset(); hudSync(); }),
     ctx.events.on('inventory', () => sheets.refresh(SHOP_ID)),
     watchShopVerbs(ctx, (ref) => api.shop.open(ref)),
+    watchWorksVerbs(ctx, (tab) => api.works.open(tab)),
+    ctx.events.on('dawn', () => sheets.refresh(WORKS_ID)),
+    ctx.events.on('arrive', () => sheets.refresh(WORKS_ID)),
   ];
+  const worksChip = createWorksChip(ctx, layer.el, () => api.works.toggle());
 
   // One light tick: keep the layer on the canvas, catch inventory changes no event announced, redraw maps.
   const timer = window.setInterval(() => {
     layer.sync();
     hotbar.sync();
+    worksChip.sync();
     const blocked = api.anyOpen() || ringOpen() || !!ctx.ui.blocking();
     map.tick(performance.now(), sheets.current() === MAP_ID, blocked);
   }, 250);
@@ -123,6 +134,7 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     window.clearInterval(timer);
     window.removeEventListener('keydown', onKey);
     offs.forEach((off) => off());
+    worksChip.destroy();
     hotbar.cancelDrag();
     map.destroy();
     layer.destroy();
