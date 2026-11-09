@@ -112,13 +112,16 @@ export function createWorldAssets(scene: Phaser.Scene): void {
 /*
  * Manifest art: every ready entry of the overworld manifest whose sheet is listed in `artSheets` (the
  * credited packs in assets/vendor plus baked sheets) becomes a frame named by its key ('fauna.pig') on that
- * sheet's texture. Loaded on demand, off the boot path: the world's look is still the code-drawn props.
+ * sheet's texture. Loaded on demand, off the boot path: the world keeps its code-drawn look and blends a few
+ * pack frames in once they land (world/art/pack-art), and the dev gallery lays them all out.
  */
 type ArtSheet = { path: string; frameW: number; frameH: number };
 type ArtEntry = { key: string; sheet: string; frame: number; rect?: number[]; status: string };
 const ART_SHEETS = (manifest as { artSheets?: Record<string, ArtSheet> }).artSheets ?? {};
 const ART_ENTRIES = Object.values(manifest.assets as Record<string, ArtEntry>).filter((e) => e.status === 'ready' && ART_SHEETS[e.sheet]);
 const artTex = (sheet: string): string => `art-${sheet}`;
+/** How many manifest keys have a pack source (loadManifestArt resolves with all of them once every pack is in). */
+export const MANIFEST_ART_KEYS = ART_ENTRIES.length;
 
 /** Texture and frame of a manifest key once loadManifestArt has run; null before, or for a key with no pack source. */
 export function manifestFrame(scene: Phaser.Scene, key: string): { tex: string; frame: string } | null {
@@ -127,8 +130,21 @@ export function manifestFrame(scene: Phaser.Scene, key: string): { tex: string; 
   return { tex: artTex(e.sheet), frame: key };
 }
 
-/** Load the packs the manifest's ready entries point at and name a frame per key. Resolves with the keys. */
+/**
+ * Load the packs the manifest's ready entries point at and name a frame per key. Resolves with the keys.
+ * One load per game (textures are shared by every scene): later callers share the first one's promise.
+ */
+const pending = new WeakMap<Phaser.Textures.TextureManager, Promise<string[]>>();
 export function loadManifestArt(scene: Phaser.Scene): Promise<string[]> {
+  let p = pending.get(scene.textures);
+  if (!p) {
+    p = loadArtOnce(scene);
+    pending.set(scene.textures, p);
+  }
+  return p;
+}
+
+function loadArtOnce(scene: Phaser.Scene): Promise<string[]> {
   const name = (): string[] => {
     for (const e of ART_ENTRIES) {
       const sheet = ART_SHEETS[e.sheet]!, key = artTex(e.sheet);
@@ -145,8 +161,12 @@ export function loadManifestArt(scene: Phaser.Scene): Promise<string[]> {
   const missing = [...new Set(ART_ENTRIES.map((e) => e.sheet))].filter((s) => !scene.textures.exists(artTex(s)));
   if (!missing.length) return Promise.resolve(name());
   return new Promise((resolve) => {
+    // A scene stopped mid-load never completes its loader: resolve with what arrived and forget this load,
+    // so the next caller (another scene) starts a fresh one instead of waiting forever.
+    const abandon = () => { pending.delete(scene.textures); resolve(name()); };
+    scene.events.once('shutdown', abandon);
     for (const s of missing) scene.load.image(artTex(s), toPublicUrl(ART_SHEETS[s]!.path));
-    scene.load.once('complete', () => resolve(name()));
+    scene.load.once('complete', () => { scene.events.off('shutdown', abandon); resolve(name()); });
     scene.load.start();
   });
 }

@@ -1,7 +1,7 @@
 /**
  * Facilities on the roads (sim/economy/facilities): the mill, wood camp, mine or waystation beside its
  * road, with one crew figure per staffed role at work beside it. A facility nobody staffs stands grey and
- * empty. Its civic site's marks sit beside it (site-marks: a wanted notice when no foreman runs it, a pip
+ * empty; left unstaffed for ABANDON_DAYS it falls derelict (holed, weeded, boarded up). Its civic site's marks sit beside it (site-marks: a wanted notice when no foreman runs it, a pip
  * per hand). Things carry `{ nameOf }` as target data (workShift names the towns it feeds).
  */
 import type Phaser from 'phaser';
@@ -9,20 +9,32 @@ import type { Thing } from '../../app/contracts';
 import type { SimState } from '../../sim/types/runtime';
 import { facilityPlaces, rolesFor, type FacilityPlace } from '../../sim/economy/facilities';
 import { ART_SCALE } from '../art/px';
-import { thingTex } from '../art/thing-art';
+import { abandonedTex, thingTex } from '../art/thing-art';
 import { tileFoot, type Pt } from '../depth';
 import { drawSiteMarks, facilitySiteLook, lookSig } from './site-marks';
 import { noteUse } from '../../sim/data-use-world';
 
 const REACH = 64;
 const KNOWN = new Set(['mill', 'lumber_camp', 'mine', 'waystation']);
+/** Days a yard stands with no crew before it reads as abandoned rather than just closed for now. */
+export const ABANDON_DAYS = 5;
+
+/**
+ * How a facility looks from its staffing record alone (render only; nothing new is saved): idle since
+ * changedDay (or since the world began, for a yard never crewed) for ABANDON_DAYS reads as abandoned.
+ */
+export function facilityLook(state: SimState | undefined, id: string): 'working' | 'idle' | 'abandoned' {
+  const s = state?.facilityStaff?.[id];
+  if (!s?.idle) return 'working';
+  return (state?.day ?? 0) - (s.changedDay ?? 0) >= ABANDON_DAYS ? 'abandoned' : 'idle';
+}
 type View = { place: FacilityPlace; pos: Pt; img: Phaser.GameObjects.Image; crew: Phaser.GameObjects.Image[]; marks: Phaser.GameObjects.GameObject[]; sig: string };
 
 export type FacilitiesLayer = {
   things(near: Pt, radius: number): Thing[];
   refresh(): void;
   update(time: number): void;
-  list(): { id: string; name: string; kind: string; q: number; r: number; staffed: number; idle: boolean }[];
+  list(): { id: string; name: string; kind: string; q: number; r: number; staffed: number; idle: boolean; look: 'working' | 'idle' | 'abandoned' }[];
   setVisible(on: boolean): void;
   destroy(): void;
 };
@@ -32,12 +44,13 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
   let visible = true;
   let placesSig = '';
   const staffOf = (id: string) => getState()?.facilityStaff?.[id];
+  const kindOf = (place: FacilityPlace) => (KNOWN.has(place.kind) ? place.kind : 'waystation');
 
   const build = (): void => {
     for (const v of views) { v.img.destroy(); v.crew.forEach((c) => c.destroy()); v.marks.forEach((m) => m.destroy()); }
     views = facilityPlaces(getState()).map((place) => {
       const pos = tileFoot(place.q, place.r);
-      const img = scene.add.image(pos.x, pos.y, thingTex(KNOWN.has(place.kind) ? place.kind : 'waystation'))
+      const img = scene.add.image(pos.x, pos.y, thingTex(kindOf(place)))
         .setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(pos.y).setVisible(visible);
       const crew = Array.from({ length: Math.min(3, rolesFor(place.kind)) }, (_, i) => {
         const x = pos.x + 40 + i * 14, y = pos.y + 4 + (i % 2) * 6;
@@ -55,15 +68,18 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
       const idle = s?.idle ?? false, staffed = idle ? 0 : Math.min(v.crew.length, s?.staffed ?? v.crew.length);
       const st = getState();
       const look = st ? facilitySiteLook(st, v.place.id) : undefined;
-      const next = `${idle}:${staffed}:${lookSig(look)}`;
+      const state = facilityLook(st, v.place.id);
+      const next = `${state}:${staffed}:${lookSig(look)}`;
       if (next === v.sig) continue;
       v.sig = next;
       v.marks.forEach((m) => m.destroy());
       v.marks = look ? drawSiteMarks(scene, look, v.pos.x, v.pos.y) : [];
       for (const m of v.marks) (m as unknown as Phaser.GameObjects.Components.Visible).setVisible(visible);
-      if (idle) v.img.setTint(0x8a8a8a); else v.img.clearTint();
-      // Art subject shown (overworld-assets facility.<kind>.<state>): a closed yard is greyed, a staffed one has its crew.
-      noteUse('art', `facility.${v.place.kind}.${idle ? 'idle' : 'working'}`);
+      // Art subject shown (overworld-assets facility.<kind>.<state>): a closed yard is greyed, a staffed one
+      // has its crew, a long-closed one swaps to its derelict look (already weathered, so no grey on top).
+      v.img.setTexture(state === 'abandoned' ? abandonedTex(kindOf(v.place)) : thingTex(kindOf(v.place)));
+      if (state === 'idle') v.img.setTint(0x8a8a8a); else v.img.clearTint();
+      noteUse('art', `facility.${v.place.kind}.${state}`);
       v.crew.forEach((c, i) => c.setVisible(visible && i < staffed).setData('on', i < staffed));
     }
   };
@@ -82,7 +98,7 @@ export function createFacilitiesLayer(scene: Phaser.Scene, getState: () => SimSt
     },
     list: () => views.map((v) => {
       const s = staffOf(v.place.id);
-      return { id: v.place.id, name: v.place.name, kind: v.place.kind, q: v.place.q, r: v.place.r, staffed: s?.staffed ?? 0, idle: s?.idle ?? false };
+      return { id: v.place.id, name: v.place.name, kind: v.place.kind, q: v.place.q, r: v.place.r, staffed: s?.staffed ?? 0, idle: s?.idle ?? false, look: facilityLook(getState(), v.place.id) };
     }),
     setVisible(on) {
       visible = on;

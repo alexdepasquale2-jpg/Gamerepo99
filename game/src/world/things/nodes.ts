@@ -11,6 +11,7 @@ import { CHUNK_SIZE, TILE_PX } from '../../sim/map/constants';
 import type { WorldLayout } from '../../sim/map/world-layout';
 import { ART_SCALE } from '../art/px';
 import { nodeTex } from '../art/thing-art';
+import { PACK_ART_EVENT, startPackArt } from '../art/pack-art';
 import { tileFoot, type Pt } from '../depth';
 
 const REACH = 40;
@@ -34,10 +35,12 @@ export function levelOf(state: SimState | undefined, n: WorldNode): number {
 
 export function createNodesLayer(scene: Phaser.Scene, getState: () => SimState | undefined, seed: number, layout: WorldLayout): NodesLayer {
   let visible = true;
+  // Ore veins draw from the art packs: start their load now, while the first chunks are still painting.
+  startPackArt(scene);
   const make = (node: WorldNode): View => {
     const pos = tileFoot(node.q, node.r);
     const level = levelOf(getState(), node);
-    const img = scene.add.image(pos.x, pos.y, nodeTex(node.kindId, level)).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(pos.y).setVisible(visible);
+    const img = scene.add.image(pos.x, pos.y, nodeTex(node.kindId, level, node.id, scene)).setOrigin(0.5, 1).setScale(ART_SCALE).setDepth(pos.y).setVisible(visible);
     return { node, img, pos, level };
   };
   const fixed = placeNodes(seed, layout.settlements, layout.routes).map(make);
@@ -66,13 +69,20 @@ export function createNodesLayer(scene: Phaser.Scene, getState: () => SimState |
     const st = getState();
     for (const v of views) {
       const level = levelOf(st, v.node);
-      if (level === v.level) continue;
+      // A look can also change with the level unchanged: an ore vein takes its pack boulder once the packs land.
+      const tex = nodeTex(v.node.kindId, level, v.node.id, scene);
+      if (level === v.level && tex === v.img.texture.key) continue;
       const gathered = level < v.level;
       v.level = level;
-      v.img.setTexture(nodeTex(v.node.kindId, level));
+      v.img.setTexture(tex);
       if (gathered) scene.tweens.add({ targets: v.img, scaleX: ART_SCALE * 1.12, scaleY: ART_SCALE * 0.88, duration: 90, yoyo: true });
     }
   };
+
+  // Game-wide event, so it must not outlive this scene's layer.
+  const offArt = () => scene.game.events.off(PACK_ART_EVENT, refresh);
+  scene.game.events.on(PACK_ART_EVENT, refresh);
+  scene.events.once('shutdown', offArt);
 
   return {
     things(near, radius) {
@@ -93,6 +103,6 @@ export function createNodesLayer(scene: Phaser.Scene, getState: () => SimState |
     refresh,
     all: () => views.map((v) => v.node),
     setVisible(on) { visible = on; for (const v of views) v.img.setVisible(on); },
-    destroy() { for (const v of views) v.img.destroy(); wild.clear(); },
+    destroy() { offArt(); for (const v of views) v.img.destroy(); wild.clear(); },
   };
 }
