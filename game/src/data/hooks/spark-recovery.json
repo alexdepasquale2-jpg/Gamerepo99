@@ -20,7 +20,7 @@
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +10. Waking at home softens the day (+3 against the dawn's -6), it no longer refills you on its own, so staying in the den doing nothing still runs the fire down.",
+      "notes": "Balance (game/scripts/balance-probe.mts): was +10. Waking at home softens the day (+3 against the dawn's -4.4), it no longer refills you on its own, so staying in the den doing nothing still runs the fire down.",
       "felt": [
         "You woke by your own hearth. That steadies something.",
         "Your own fire, your own stones. You wake a little more whole."
@@ -36,13 +36,13 @@
           "id": "fx_base_dawn",
           "target": "player.spark",
           "op": "add",
-          "value": -6,
+          "value": -4.4,
           "tags": [
             "recovery"
           ]
         }
       ],
-      "notes": "Balance (game/scripts/balance-probe.mts): was +12, now -6. Each dawn asks something of you: with only the archetype's own small comfort (+3) idle play loses about 3 a day and burns out in three to four weeks. Spark comes back from real deeds (seeing people grow, working beside them), not from sleeping.",
+      "notes": "Balance (game/scripts/balance-probe.mts): was +12, then -6, now -4.4. Each dawn asks something of you: with only the archetype's own small comfort (+3) idle play loses about 1.4 a day and an heirless idle life burns out in six to seven weeks (probe, 4 seeds: Marrow day 39-53, Ivy 47-63, the Brood 38-49; at -6 it was day 20-26, about three weeks, too quick to learn the world in). Bren has no unconditional comfort and still burns out idle in two weeks (was 10-11 days). Spark comes back from real deeds (seeing people grow, working beside them, carrying, holding to work), not from sleeping; the wild's daily cap (contrib/thing-verbs PROP_SPARK_PER_DAY) stays under the dawn's net cost, so lingering alone only slows the fall.",
       "felt": [
         "You wake, and the morning takes its small cut of your fire, as it always does.",
         "Your fire is a little lower at dawn. Each morning asks a little of you."
@@ -144,7 +144,7 @@
           ]
         }
       ],
-      "notes": "Worked beside someone yesterday: the row was full again for a shift. Balance (game/scripts/balance-probe.mts): was +8; +6 still outweighs the dawn (-6) and the empty row (-1), so a Bren who works alongside holds steady.",
+      "notes": "Worked beside someone yesterday: the row was full again for a shift. Balance (game/scripts/balance-probe.mts): was +8; +6 outweighs the dawn (-4.4) and the empty row (-1), so a Bren who works alongside holds steady.",
       "felt": [
         "You worked alongside someone yesterday. Shared bread tastes of it this morning.",
         "Your hands remember yesterday's work beside someone. It still sits warm in you."

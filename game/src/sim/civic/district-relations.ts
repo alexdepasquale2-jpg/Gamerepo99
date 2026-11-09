@@ -261,18 +261,19 @@ function nearLive(state: SimState, r: DistrictRelation, live: string): boolean {
   return [r.a, r.b].some((id) => { const d = refOf(id); return Math.abs(d.col - l.col) + Math.abs(d.row - l.row) === 1; });
 }
 
-function stepPair(state: SimState, r: DistrictRelation, live: string): void {
+/** One day of a pair, or `days` of them at once: the per-day drifts scale by the step, thresholds are read once. */
+function stepPair(state: SimState, r: DistrictRelation, live: string, days = 1): void {
   const day = state.day;
   if (r.courier && r.courier.due <= day) { const c = r.courier; delete r.courier; landLetter(state, r, c); }
   if (r.state === 'war') {
     if (day >= (r.warEnds ?? day)) endWar(state, r, live);
-    else for (const id of [r.a, r.b]) bumpDespair(state, id, DPOL.warDespairPerDay);
+    else for (const id of [r.a, r.b]) bumpDespair(state, id, DPOL.warDespairPerDay * days);
     return;
   }
   const D = Math.max(despairOf(state, r.a), despairOf(state, r.b));
   const pa = profileOf(state.seed, r.a), pb = profileOf(state.seed, r.b);
-  const drift = Math.min(Math.abs(r.trust), DPOL.trustDrift + DPOL.trustDriftPerTrust * Math.abs(r.trust)) * Math.sign(r.trust);
-  r.trust = clamp(r.trust - drift + (r.state === 'pact' ? DPOL.pactTrustPerDay : 0), -100, 100);
+  const drift = Math.min(Math.abs(r.trust), (DPOL.trustDrift + DPOL.trustDriftPerTrust * Math.abs(r.trust)) * days) * Math.sign(r.trust);
+  r.trust = clamp(r.trust - drift + (r.state === 'pact' ? DPOL.pactTrustPerDay * days : 0), -100, 100);
   const rival = RIVALS.has(`${pa.style}|${pb.style}`);
   if (rival) noteUse('civic/district-polity', `rival:${rivalRow(pa.style, pb.style)}`);
   for (const w of [pa.wound, pb.wound]) if (w in J.woundFeud) noteUse('civic/district-polity', `wound:${w}`);
@@ -280,7 +281,8 @@ function stepPair(state: SimState, r: DistrictRelation, live: string): void {
     + ((J.woundFeud[pa.wound] ?? 0) + (J.woundFeud[pb.wound] ?? 0)) / 2
     + DPOL.despairFeud * Math.max(0, D - DPOL.despairCalm);
   const sharp = 1 + DPOL.despairFeudMul * D;
-  r.feud = clamp(r.feud + grown * sharp - DPOL.feudDecay - DPOL.trustSoothe * Math.max(0, r.trust) / 100, 0, 100);
+  // Each term times the step (not their sum), so a one-day step adds exactly what the dawn always has.
+  r.feud = clamp(r.feud + grown * sharp * days - DPOL.feudDecay * days - DPOL.trustSoothe * Math.max(0, r.trust) / 100 * days, 0, 100);
 
   const party = r.a === live || r.b === live;
   if (r.state === 'pact' && (r.feud >= DPOL.breakFeud || r.trust < DPOL.breakTrust)) {
@@ -293,7 +295,7 @@ function stepPair(state: SimState, r: DistrictRelation, live: string): void {
     startWar(state, r, live);
     return;
   }
-  if (r.state === 'pact') for (const id of [r.a, r.b]) bumpDespair(state, id, -DPOL.pactRelief);
+  if (r.state === 'pact') for (const id of [r.a, r.b]) bumpDespair(state, id, -DPOL.pactRelief * days);
 
   if (!r.courier && day >= r.nextLetter) {
     const from = r.lastFrom === r.a ? r.b : r.a;
@@ -309,8 +311,10 @@ function stepPair(state: SimState, r: DistrictRelation, live: string): void {
 /**
  * One dawn for every neighbouring pair in the realm (once per day). `liveOnly`: just the live district's
  * own pairs (a long wait's in-between days, civic/lod: far pairs step on fewer days while nobody watches).
+ * `days`: how many days the live district's own pairs make up this step (civic/lod steps them every few
+ * days with their drifts scaled); far pairs keep one day a step, as they always have on a long wait.
  */
-export function tickDistrictRelations(state: SimState, liveOnly = false): void {
+export function tickDistrictRelations(state: SimState, liveOnly = false, days = 1): void {
   const p = ensurePolity(state);
   if (p.lastTick >= state.day) return;
   p.lastTick = state.day;
@@ -319,12 +323,12 @@ export function tickDistrictRelations(state: SimState, liveOnly = false): void {
   // Who leads is read again at every full step; on a long wait's in-between days the record stands.
   if (!liveOnly || !p.leaders[live]) p.leaders[live] = liveLeader(state);
   if (liveOnly) {
-    for (const r of liveRelations(state)) stepPair(state, r, live);
+    for (const r of liveRelations(state)) stepPair(state, r, live, days);
     return;
   }
   for (const key of allPairs()) {
     const [a, b] = key.split('|') as [string, string];
-    stepPair(state, relationOf(state, a, b), live);
+    stepPair(state, relationOf(state, a, b), live, a === live || b === live ? days : 1);
   }
 }
 

@@ -77,11 +77,17 @@ function seedMissingStock(state: SimState, town: TownEconomyState, data: DataTab
   town.economySeeded = true;
 }
 
+/** A per-dawn rate over `days` dawns, compounded (exactly the rate for one). */
+const compound = (rate: number, days: number): number => (days === 1 ? rate : 1 - (1 - Math.min(1, rate)) ** days);
+
 /**
  * One dawn of economy LOD. Called from advanceToDawn after dawn hooks, before spark clamp.
  * Hooks: params override `state.economyHooks`; both default to no-ops.
+ * `days`: dawns this step stands for (civic/lod runs it every few days on a long wait): deliveries,
+ * despair and relief count every day of it and spoilage compounds; the caravan hook still runs once
+ * (civic/lod runs it alone on the days between).
  */
-export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): EconomyLodResult {
+export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks, days = 1): EconomyLodResult {
   const result: EconomyLodResult = { moved: [], starved: [] };
   const data = economyData(state);
   if (!data) return result;
@@ -112,11 +118,11 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
     for (const route of routes) {
       if (route.fromTownId !== town.id && route.toTownId !== town.id) continue;
       if (route.broken && lod.flow.skipWhenRouteBroken) {
-        despairAdd += despairCfg.onRouteBroken;
+        despairAdd += despairCfg.onRouteBroken * days;
         doctrine(state, {
           townId: town.id,
           reason: 'route_broken',
-          deltaRealDelivery: despairCfg.doctrineRealDeliveryHitOnBroken,
+          deltaRealDelivery: despairCfg.doctrineRealDeliveryHitOnBroken * days,
         });
         continue;
       }
@@ -132,7 +138,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
         }
       }
       for (const [resourceId, base] of produced) {
-        const qty = base * route.condition * share;
+        const qty = base * route.condition * share * days;
         if (!(qty > 0)) continue;
         addStock(state, town.id, resourceId, qty);
         result.moved.push({ routeId: route.id, resourceId, qty, toTownId: town.id });
@@ -145,14 +151,14 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       for (const [rid, qty] of Object.entries(town.stock)) {
         if (isFoodRes(rid)) continue;
         const rate = spoilById.get(rid) ?? 0;
-        town.stock[rid] = Math.max(dawn.stockFloor, rate > 0 ? qty * (1 - rate) : qty);
+        town.stock[rid] = Math.max(dawn.stockFloor, rate > 0 ? qty * (1 - compound(rate, days)) : qty);
       }
-      spoilFood(state, town.id, spoilById.get(foodId) ?? 0, dawn.stockFloor);
+      spoilFood(state, town.id, compound(spoilById.get(foodId) ?? 0, days), dawn.stockFloor);
     }
 
     // 4. Starve: households went hungry at the last dawn and the ledger still cannot feed a day.
     if (foodStarving(state, town.id, despairCfg.starveWhenFoodBelow)) {
-      despairAdd += despairCfg.onStarve;
+      despairAdd += despairCfg.onStarve * days;
       result.starved.push(town.id);
       pushJuice(state, lod.juice.starve, { townId: town.id, food: foodHave(state, town.id), cover: foodCover(state, town.id) });
       doctrine(state, { townId: town.id, reason: 'starve', deltaRealDelivery: 0 });
@@ -166,12 +172,12 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       const last = touched?.[town.id];
       const neglected = last === undefined ? day >= neg.graceDawns : day - last >= neg.graceDawns;
       if (neglected && town.despair < neg.neglectCap) {
-        despairAdd += Math.min(neg.onNeglect, neg.neglectCap - town.despair);
+        despairAdd += Math.min(neg.onNeglect * days, neg.neglectCap - town.despair);
       }
     }
 
     // Mild: total despair add capped per dawn, then clamped.
-    const add = Math.min(despairAdd, despairCfg.maxAddPerDawn);
+    const add = Math.min(despairAdd, despairCfg.maxAddPerDawn * days);
     if (add > 0) {
       town.despair = Math.min(despairMax, Math.max(despairMin, town.despair + add));
     }
@@ -184,7 +190,7 @@ export function tickEconomyLod(state: SimState, hooks?: EconomyLodHooks): Econom
       const folk = Object.values(state.people).filter((p) => p.townId === town.id && !p.tags?.includes('retired'));
       const share = folk.length ? folk.filter((p) => p.flame >= burnAt).length / folk.length : 0;
       if (share >= relief.minShare && town.despair > despairMin) {
-        town.despair = Math.max(despairMin, town.despair - relief.perDawn * share);
+        town.despair = Math.max(despairMin, town.despair - relief.perDawn * share * days);
       }
     }
   }

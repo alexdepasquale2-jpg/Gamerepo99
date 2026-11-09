@@ -7,10 +7,13 @@
  *   - determinism: two fast-forwards from the same seed save byte-identically.
  * Run: npx vite-node --config game/vite.config.ts game/scripts/perf-civic.mts   (exit 1 on a strict miss;
  * despair, food and coin agreement only warn)
- * Times are the best of REPEATS runs on fresh states.
+ * Times are this process's CPU time (not wall time, which other work on a shared machine inflates unevenly
+ * between the two runs), the best of REPEATS runs on fresh states.
  * Env: PERF_DAYS (default 100), PERF_SEEDS (default "42,7").
  */
 import { createHash } from 'node:crypto';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { createPlaySession, type PlaySession } from '../src/sim/play-session/play-session';
 import { fastForward, fullDay } from '../src/sim/civic/clock';
 import { districtFood } from '../src/sim/civic/lod';
@@ -18,14 +21,19 @@ import type { SimState } from '../src/sim/types/runtime';
 
 const DAYS = Number(process.env.PERF_DAYS ?? 100);
 const SEEDS = (process.env.PERF_SEEDS ?? '42,7').split(',').map(Number);
-/** The LOD stretch must cost at most this share of the same days as full dawns... */
-const LOD_SHARE = 0.4;
+/**
+ * The LOD stretch must cost at most this share of the same days as full dawns... It runs at about a
+ * quarter (civic/lod steps the economy, sites, carts, spoilage and relations every few days); 0.3 leaves
+ * headroom for a shared machine and still catches those ticks slipping back to daily (that was 33-46%).
+ */
+const LOD_SHARE = 0.3;
 /** ...and never more than this, whatever the machine. */
 const BUDGET_MS = 1500;
 /**
  * Tolerances. People and despair follow the dawn's own rules closely. Food and coin are looser: the LOD
  * stretch makes goods at their expected rate (not person by person, so which company a hand ends up in
- * and when a raid falls differ), and runs company founding and polity every other day.
+ * and when a raid falls differ), runs company founding and polity every other day, and steps the economy,
+ * sites, carts, spoilage and relations every few days.
  */
 const TOL = { people: 0.1, despair: 0.15, food: 0.5, coin: 0.5 };
 /** Coin within this much is a match however small the totals (a few days of one workshop's takings). */
@@ -50,21 +58,36 @@ const hash = (st: SimState): string => {
   const { data: _d, rng: _r, bus: _b, ...rest } = st as SimState & Record<string, unknown>;
   return createHash('sha1').update(JSON.stringify(rest)).digest('hex');
 };
-/** Best of REPEATS on fresh states (this machine is shared: the minimum is the cost, the rest is noise). */
-const REPEATS = 3;
-const best = (seed: number, run: (st: SimState) => void): { ms: number; st: SimState } => {
-  let ms = Infinity, st: SimState | undefined;
-  for (let i = 0; i < REPEATS; i++) {
-    const s = boot(seed), t = performance.now();
-    run(s);
-    const took = performance.now() - t;
-    if (took < ms) { ms = took; st = s; }
-  }
-  return { ms, st: st! };
+/**
+ * Best of REPEATS on fresh states (this machine is shared: the minimum is the cost, the rest is noise),
+ * the full and LOD runs taken in turn so a busy spell weighs on both alike.
+ */
+const REPEATS = 7;
+/** A collection before each timed run, so neither is charged for the other's garbage. */
+setFlagsFromString('--expose-gc');
+const gc = runInNewContext('gc') as () => void;
+/**
+ * CPU milliseconds this thread has spent (user + system): what the work cost, whatever else is running.
+ * The thread's own clock where Node has one (22+), so the collector's and compiler's helper threads are
+ * left out too; the process's otherwise.
+ */
+const cpu = (process as { threadCpuUsage?: () => NodeJS.CpuUsage }).threadCpuUsage ?? process.cpuUsage;
+const cpuMs = (): number => { const u = cpu.call(process); return (u.user + u.system) / 1000; };
+type Timed = { ms: number; st?: SimState };
+const timeOnce = (seed: number, run: (st: SimState) => void, best: Timed): void => {
+  const s = boot(seed);
+  gc();
+  const t = cpuMs();
+  run(s);
+  const took = cpuMs() - t;
+  if (took < best.ms) { best.ms = took; best.st = s; }
 };
+const fullRun = (s: SimState): void => { for (let i = 0; i < DAYS; i++) fullDay(s); };
+const lodRun = (s: SimState): void => void fastForward(s, DAYS);
 
-// Warm the JIT and the lazy tables once so the first seed is not charged for them.
-{ const w = boot(1); for (let i = 0; i < 5; i++) fullDay(w); fastForward(w, 20); }
+// Warm the JIT and the lazy tables once so the first seed is not charged for them: a whole stretch, so
+// the stepped ticks' rarer paths (far relations, lives, the last-day flush) are compiled too.
+{ const w = boot(1); for (let i = 0; i < 20; i++) fullDay(w); fastForward(w, DAYS); }
 
 let failed = 0;
 let warned = 0;
@@ -82,8 +105,10 @@ const warn = (ok: boolean, what: string, full: number, lod: number, tol: string)
   console.log(`  ${ok ? 'ok  ' : 'WARN'} ${what} (full ${full.toFixed(2)}, lod ${lod.toFixed(2)}, tolerance ${tol})`);
 };
 for (const seed of SEEDS) {
-  const { ms: tFull, st: full } = best(seed, (s) => { for (let i = 0; i < DAYS; i++) fullDay(s); });
-  const { ms: tLod, st: lod } = best(seed, (s) => void fastForward(s, DAYS));
+  const f: Timed = { ms: Infinity }, l: Timed = { ms: Infinity };
+  for (let i = 0; i < REPEATS; i++) { timeOnce(seed, fullRun, f); timeOnce(seed, lodRun, l); }
+  const { ms: tFull } = f, { ms: tLod } = l;
+  const full = f.st!, lod = l.st!;
   const again = boot(seed);
   fastForward(again, DAYS);
   const a = agg(full), b = agg(lod);

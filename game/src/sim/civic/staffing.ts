@@ -114,15 +114,19 @@ function leave(state: SimState, site: Site, c: Company, id: string, why: 'quit' 
 /** The hands a site pays: its workers, its haulers, and a manager who does not own it. */
 const payroll = (site: Site): string[] => [...site.workers, ...(site.haulers ?? []), ...(site.managerId && site.managerId !== site.ownerId ? [site.managerId] : [])];
 
-function payWages(state: SimState, site: Site, c: Company): string[] {
+/** `days` of wages at once (civic/lod steps sites every few days): the whole step's pay, or that many days unpaid. */
+function payWages(state: SimState, site: Site, c: Company, days = 1): string[] {
   const paid: string[] = [];
+  const owed = site.wage * days;
   for (const id of payroll(site)) {
-    if (moveCoin(state, tillOf(site), purseOf(id), site.wage, 'wage') >= site.wage - 1e-9) {
+    if (moveCoin(state, tillOf(site), purseOf(id), owed, 'wage') >= owed - 1e-9) {
       delete c.unpaid[id];
       paid.push(id);
       continue;
     }
-    if ((c.unpaid[id] = (c.unpaid[id] ?? 0) + 1) >= COMPANY.quitAfterUnpaid) {
+    // A short step counts at most one dawn short of quitting: a single step never empties the payroll
+    // on its own (SITES_EVERY can equal quitAfterUnpaid), as daily dawns would have paid some of it.
+    if ((c.unpaid[id] = (c.unpaid[id] ?? 0) + Math.min(days, COMPANY.quitAfterUnpaid - 1)) >= COMPANY.quitAfterUnpaid) {
       leave(state, site, c, id, 'quit');
       news(state, { siteId: site.id, townId: site.townId, kind: 'unpaid-left', personId: id });
     }
@@ -131,10 +135,11 @@ function payWages(state: SimState, site: Site, c: Company): string[] {
 }
 
 /** Everyone the site keeps fed: the payroll and the owner when they run it. */
-function feedHands(state: SimState, site: Site, c: Company, sellers: Site[]): void {
+function feedHands(state: SimState, site: Site, c: Company, sellers: Site[], days = 1): void {
   const need = foodNeed(state, site.townId);
   const shortShare = need > 0 ? Math.min(1, foodShortToday(state, site.townId) / need) : 0;
-  const cost = rationCoin();
+  // A step of `days` buys that many rations, and going without counts that many days.
+  const cost = rationCoin() * days;
   const hands = [...payroll(site), ...(site.managerId && site.managerId === site.ownerId ? [site.managerId] : [])];
   const unfed = (site.unfed ??= {});
   for (const id of hands) {
@@ -146,16 +151,17 @@ function feedHands(state: SimState, site: Site, c: Company, sellers: Site[]): vo
     const bought = !!seller && moveCoin(state, purseOf(id), tillOf(seller), cost, 'ration') >= cost - 1e-9;
     const fed = !bare && (!seller || bought || id === site.ownerId);
     if (fed) { delete unfed[id]; continue; }
-    const days = (unfed[id] = (unfed[id] ?? 0) + 1);
+    // Likewise a single short step stops one dawn short of sickness (daily, they would have eaten some days).
+    const went = (unfed[id] = (unfed[id] ?? 0) + Math.min(days, CIVIC.sickAfterUnfed - 1));
     const p = state.people[id];
-    if (days >= CIVIC.sickAfterUnfed && p && !p.tags?.includes('sick')) {
+    if (went >= CIVIC.sickAfterUnfed && p && !p.tags?.includes('sick')) {
       p.tags = [...(p.tags ?? []), 'sick'];
       civicOf(state).sick[id] = state.day;
       nudgeDespair(state, site.townId);
       remember(site, { day: state.day, what: 'sick', personId: id });
       news(state, { siteId: site.id, townId: site.townId, kind: 'sick', personId: id });
     }
-    if (days >= CIVIC.leaveAfterUnfed) {
+    if (went >= CIVIC.leaveAfterUnfed) {
       leave(state, site, c, id, 'unfed');
       nudgeDespair(state, site.townId);
       news(state, { siteId: site.id, townId: site.townId, kind: 'unfed-left', personId: id });
@@ -230,8 +236,12 @@ export function vacatePosts(state: SimState, personId: string, why: 'died' | 're
   }
 }
 
-/** The dawn tick (registered in civic/index): sync the registry, then run every NPC company site. */
-export function tickSites(state: SimState): void {
+/**
+ * The dawn tick (registered in civic/index): sync the registry, then run every NPC company site. `days`:
+ * dawns this step stands for (civic/lod steps sites every few days): wages and rations for each of them,
+ * one round of posts and hiring.
+ */
+export function tickSites(state: SimState, days = 1): void {
   if (!state.build && !state.companies && !state.facilityStaff) return;
   const cv = syncSites(state);
   for (const [k, day] of Object.entries(cv.left)) if (state.day - day > CIVIC.rehireCooldown) delete cv.left[k];
@@ -255,9 +265,9 @@ export function tickSites(state: SimState): void {
       if (wage !== site.wage) remember(site, { day: state.day, what: 'wage', note: String(wage) });
       site.wage = wage;
       // Nobody runs an idle site, so nobody pays its hands: they wait for the post to be filled, and so does their count.
-      payWages(state, site, c);
+      payWages(state, site, c, days);
     }
-    feedHands(state, site, c, sellersIn(site.townId));
+    feedHands(state, site, c, sellersIn(site.townId), days);
     if (c.coin > COMPANY.reserve) moveCoin(state, tillOf(site), purseOf(c.ownerId), Math.floor((c.coin - COMPANY.reserve) * COMPANY.ownerDraw), 'draw');
     // Builders, and anyone who already runs a site, are not free to be hired.
     const busy = new Set([

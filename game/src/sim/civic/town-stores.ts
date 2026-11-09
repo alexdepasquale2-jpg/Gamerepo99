@@ -94,11 +94,14 @@ function bump(state: SimState, townId: string, ts: TownStores, item: string, del
   ts.seen[item] = g[item]!;
 }
 
-/** What one item adds up to across the town's depots and site shelves. */
-export function viewTotal(state: SimState, townId: string, item: string): number {
+/**
+ * What one item adds up to across the town's depots and site shelves. `sites`: the town's siteStoresIn when
+ * the caller already has it (a sweep over every item would otherwise re-list every site per item).
+ */
+export function viewTotal(state: SimState, townId: string, item: string, sites = siteStoresIn(state, townId)): number {
   const ts = storesIfAny(state)?.towns[townId];
   let n = ts ? DEPOTS.reduce((m, d) => m + total(ts[d], item), 0) : 0;
-  for (const s of siteStoresIn(state, townId)) n += total(s.store, item);
+  for (const s of sites) n += total(s.store, item);
   return n;
 }
 
@@ -111,14 +114,14 @@ function putDepot(state: SimState, townId: string, ts: TownStores, item: string,
 }
 
 /** Out of the town's stores, worst-kept first: the yard, the storehouse, the granary, then the sites' shelves. */
-function drawAll(state: SimState, townId: string, ts: TownStores, item: string, qty: number, sink: string, sitesToo = true): number {
+function drawAll(state: SimState, townId: string, ts: TownStores, item: string, qty: number, sink: string, sitesToo = true, sites?: Site[]): number {
   let left = qty;
   for (const d of ['yard', 'storehouse', 'granary'] as const) {
     if (left <= EPS) break;
     left -= take(ts[d], item, left, sink, ctx(state, depotLabel(townId, d)));
   }
   if (sitesToo) {
-    for (const s of siteStoresIn(state, townId)) {
+    for (const s of sites ?? siteStoresIn(state, townId)) {
       if (left <= EPS) break;
       left -= take(s.store, item, left, sink, ctx(state, siteLabel(s)));
     }
@@ -140,10 +143,11 @@ export function refreshTown(state: SimState, townId: string): void {
   if (!ts || !l) return;
   const items = new Set([...Object.keys(l.goods), ...Object.keys(ts.seen)]);
   for (const d of DEPOTS) for (const i of Object.keys(ts[d].items)) items.add(i);
-  for (const s of siteStoresIn(state, townId)) for (const i of Object.keys(s.store.items)) items.add(i);
+  const sites = siteStoresIn(state, townId);
+  for (const s of sites) for (const i of Object.keys(s.store.items)) items.add(i);
   for (const item of [...items].sort()) {
     // Keys stay (at 0) once seen: some callers index the ledger with a non-null assertion.
-    const v = viewTotal(state, townId, item);
+    const v = viewTotal(state, townId, item, sites);
     l.goods[item] = v;
     ts.seen[item] = v;
   }
@@ -154,6 +158,9 @@ function reconcile(state: SimState, townId: string, ts: TownStores): void {
   const l = ledgerIfAny(state, townId);
   if (!l) return;
   const keys = new Set([...Object.keys(l.goods), ...Object.keys(ts.seen)]);
+  // Listed once: moving goods in or out of stores never adds or drops a site (the LOD's goods day writes
+  // most of a town's ledger each day, and this ran once per changed item).
+  let sites: Site[] | undefined;
   for (const item of [...keys].sort()) {
     const now = l.goods[item];
     const was = ts.seen[item] ?? 0;
@@ -162,8 +169,8 @@ function reconcile(state: SimState, townId: string, ts: TownStores): void {
     const d = cur - was;
     if (Math.abs(d) <= EPS) { if (now !== cur) l.goods[item] = cur; continue; }
     if (d > 0) flow(state, 'source:outside', putDepot(state, townId, ts, item, d, 'source:outside'));
-    else flow(state, 'sink:outside', drawAll(state, townId, ts, item, -d, 'sink:outside'));
-    const v = viewTotal(state, townId, item);
+    else flow(state, 'sink:outside', drawAll(state, townId, ts, item, -d, 'sink:outside', true, (sites ??= siteStoresIn(state, townId))));
+    const v = viewTotal(state, townId, item, (sites ??= siteStoresIn(state, townId)));
     l.goods[item] = v;
     ts.seen[item] = v;
   }
@@ -260,10 +267,16 @@ export function spoilInTown(state: SimState, townId: string, item: string, rate:
   return n;
 }
 
-/** One dawn of per-good spoilage in every store in town, by each store's shelter. Returns what was lost. */
-export function spoilTown(state: SimState, townId: string): number {
+/**
+ * One dawn of per-good spoilage in every store in town, by each store's shelter, or `days` of it at once
+ * (civic/lod spoils every few days: each day's rate compounded over the step). Returns what was lost.
+ */
+export function spoilTown(state: SimState, townId: string, days = 1): number {
   const ts = openTown(state, townId);
-  const rateIn = (shelter: number) => (item: string) => (STORES.spoilage[item] ?? 0) * shelter;
+  const rateIn = (shelter: number) => (item: string) => {
+    const r = (STORES.spoilage[item] ?? 0) * shelter;
+    return days === 1 ? r : 1 - (1 - Math.min(1, r)) ** days;
+  };
   let lost = 0;
   for (const d of DEPOTS) lost += spoilItems(ts[d], rateIn(STORES.shelter[d]), logged(state, depotLabel(townId, d)));
   for (const s of siteStoresIn(state, townId)) lost += spoilItems(s.store, rateIn(STORES.shelter.site), logged(state, siteLabel(s)));
