@@ -175,3 +175,43 @@ describe('the works loop', () => {
     expect(worksOf(s).contracts.length).toBeGreaterThan(0);
   });
 });
+
+describe('the works in the world', () => {
+  it('a convoy moves along its road a stage a dawn, and parks when home', async () => {
+    const { convoysOnRoad, parkedVehicles } = await import('../../src/sim/works/where');
+    const s = tiny();
+    openDepot(s, 't1');
+    addStock(s, 't1', 'wheel', 2); addStock(s, 't1', 'cart_bed', 1);
+    assemble(s, 't1', 'handcart');
+    const cart = worksOf(s).vehicles[0]!;
+    expect(parkedVehicles(s).map((p) => p.townId)).toEqual(['t1']);
+    addStock(s, 't1', 'bread', 8);
+    openRoute(s, 't1', 't3', cart.id, 'sell', ['bread']);
+    s.day++; tickConvoys(s);
+    const a = convoysOnRoad(s)[0]!;
+    expect(a.at.routeId).toBe('r1');
+    expect(parkedVehicles(s)).toHaveLength(0);
+    s.day++; tickConvoys(s);
+    const b = convoysOnRoad(s)[0]!;
+    expect(b.at.routeId === 'r2' || b.at.f > a.at.f).toBe(true);
+  });
+
+  it('the band is a column on the road while it marches, and its soldiers are away', async () => {
+    const { awayWithBand, bandView } = await import('../../src/sim/works/where');
+    const s = tiny();
+    openDepot(s, 't1');
+    worksOf(s).renown = 50;
+    worksOf(s).depots.t1!.buildings.push('barracks');
+    raiseBand(s, 't1');
+    enlist(s); enlist(s);
+    expect(bandView(s)?.townId).toBe('t1');
+    expect(awayWithBand(s, worksOf(s).band!.soldiers[0]!)).toBe(false);
+    addStock(s, 't1', 'ration', 20);
+    expect(march(s, 't3').ok).toBe(true);
+    s.day++; tickWar(s);
+    const v = bandView(s)!;
+    expect(v.march?.target).toBe('t3');
+    expect(v.march?.hostile).toBe(true);
+    expect(awayWithBand(s, v.soldiers[0]!)).toBe(true);
+  });
+});

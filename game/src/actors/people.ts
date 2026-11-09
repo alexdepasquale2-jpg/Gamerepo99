@@ -18,6 +18,7 @@ import { hash } from './paint';
 import { safe } from './player';
 import { inRect, viewRect, type TownIndex } from './towns';
 import { visitorOf } from '../sim/visitors';
+import { awayWithBand } from '../sim/works/where';
 import { countVisual } from '../dev/visual-counts';
 import { createHaulLoads, haulLeg } from './haulers';
 import { createChildren } from './children';
@@ -64,10 +65,11 @@ export function createPeople(ctx: GameContext, towns: TownIndex): PeopleCtl {
     }
   };
 
-  // Visitors on a road are drawn by road-folk.ts; everyone else lives in a town.
+  // Visitors on a road are drawn by road-folk.ts, soldiers away with your band by works-traffic.ts;
+  // everyone else lives in a town.
   const rows = (): PersonRow[] => {
     const st = ctx.session.getState();
-    return ctx.session.listPeople().filter((p) => !(st && visitorOf(st, p.id)?.legs)).map((p) => ({ ...p, age: st?.people[p.id]?.age }));
+    return ctx.session.listPeople().filter((p) => !(st && (visitorOf(st, p.id)?.legs || awayWithBand(st, p.id)))).map((p) => ({ ...p, age: st?.people[p.id]?.age }));
   };
   /** Visitors never take a house. */
   const passing = (id: string): boolean => { const st = ctx.session.getState(); return !!(st && visitorOf(st, id)); };

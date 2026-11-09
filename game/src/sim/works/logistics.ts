@@ -14,7 +14,8 @@ import { deriveRng } from '../rng';
 import type { SimState } from '../types/runtime';
 import { DESIGN_BY_ID, GOODS, TUNING, goodName, goodPrice, isRation, plural, recipeEra, RECIPES, stockText } from './data';
 import { addStock, bump, depotAt, eraOf, news, nextId, reachable, roadDays, stockOf, take, townName, worksIfAny, worksOf } from './state';
-import type { Contract, Result, Route, Stock } from './types';
+import type { Contract, Result, Route, RouteLeg, Stock } from './types';
+import { planRoad } from '../road-journey';
 import { statsOf, vehicleById, wear } from './vehicles';
 
 // ---- Convoys ----
@@ -124,7 +125,7 @@ export function tickConvoys(state: SimState): void {
         news(state, `Raiders hit ${v.name} on the road out of ${townName(state, r.from)} and took half the load.`, undefined, r.from);
         bump(w, 'raided');
       }
-      r.leg = { dir: 'out', daysLeft: legDays(state, r), load: goods };
+      r.leg = withRoad(state, { dir: 'out', daysLeft: legDays(state, r), load: goods }, r.from, r.to);
       r.status = `on the road: ${stockText(goods)}`;
     }
     r.leg.daysLeft--;
@@ -132,7 +133,7 @@ export function tickConvoys(state: SimState): void {
     if (r.leg.dir === 'out') {
       v.townId = r.to;
       deliver(state, r, r.leg.load);
-      r.leg = { dir: 'back', daysLeft: legDays(state, r), load: {} };
+      r.leg = withRoad(state, { dir: 'back', daysLeft: legDays(state, r), load: {} }, r.to, r.from);
       r.status = 'coming back';
     } else {
       v.townId = r.from;
@@ -142,6 +143,11 @@ export function tickConvoys(state: SimState): void {
       r.status = 'loading at dawn';
     }
   }
+}
+/** Note the road a leg takes, so the convoy can be drawn on it (roads are re-planned every leg). */
+function withRoad(state: SimState, leg: RouteLeg, from: string, to: string): RouteLeg {
+  const road = planRoad(state, from, to);
+  return road?.legs.length ? { ...leg, days: leg.daysLeft, legs: road.legs } : { ...leg, days: leg.daysLeft };
 }
 const give = (state: SimState, townId: string, s: Stock): void => { for (const [id, n] of Object.entries(s)) addStock(state, townId, id, n); };
 

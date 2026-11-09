@@ -18,6 +18,7 @@ import { createRoomFolk } from './room-folk';
 import { createRoadFolk, type RoadFolk } from './road-folk';
 import { createDistrictCourier } from './district-courier';
 import { createRoadHaulers } from './road-haulers';
+import { createWorksTraffic } from './works-traffic';
 
 type Internals = { player: PlayerCtl; people: PeopleCtl; fauna: FaunaCtl; wagons: WagonsCtl; brood: BroodCtl; names: NameLayer; roadFolk: RoadFolk };
 const runs = new WeakMap<GameContext, Internals>();
@@ -37,6 +38,8 @@ export function attachActors(ctx: GameContext): ActorsApi {
   couriers.set(ctx, districtCourier);
   // Far sites' haulers on the road; one already drawn in their own streets is not drawn twice.
   const roadHaulers = createRoadHaulers(ctx, () => new Set(people.list().filter((p) => p.drawn).map((p) => p.id)));
+  // The Works: convoys, parked vehicles and the war band; soldiers away with it leave their streets.
+  const worksTraffic = createWorksTraffic(ctx, () => people.sync());
   runs.set(ctx, { player, people, fauna, wagons, brood, names, roadFolk });
 
   const sync = (): void => {
@@ -53,6 +56,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
     roadFolk.destroy();
     districtCourier.destroy();
     roadHaulers.destroy();
+    worksTraffic.destroy();
     people.destroy();
     fauna.destroy();
     wagons.destroy();
@@ -84,6 +88,7 @@ export function attachActors(ctx: GameContext): ActorsApi {
       roadFolk.update(dt, time, names);
       districtCourier.update(time, names);
       roadHaulers.update(dt, time, names);
+      worksTraffic.update(dt, time, names);
       roomFolk.update(names);
       names.end();
     },

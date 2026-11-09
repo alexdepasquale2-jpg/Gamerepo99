@@ -10,6 +10,7 @@
 import { strength, atWar } from '../economy/polity';
 import { addItem } from '../goods/inventory';
 import { deriveRng } from '../rng';
+import { planRoad } from '../road-journey';
 import type { SimState } from '../types/runtime';
 import { DESIGN_BY_ID, TUNING, plural, stockText } from './data';
 import { eatRation, rationsIn } from './lines';
@@ -37,9 +38,10 @@ export function enlist(state: SimState, personId?: string): Result {
   if (b.march) return { ok: false, line: 'The band is on the march.' };
   if (b.soldiers.length >= bandCap(state)) return { ok: false, line: `The band is as big as this age allows (${bandCap(state)}).` };
   const free = freeHands(state, b.townId);
-  const pick = personId ?? free[0];
+  const willing = (id: string): boolean => (state.people[id]?.flame ?? 50) >= MIN_FLAME;
+  const pick = personId ?? free.find(willing);
   if (!pick || !free.includes(pick)) return { ok: false, line: `Nobody free in ${townName(state, b.townId)} will take the bounty.` };
-  if ((state.people[pick]?.flame ?? 50) < 10) return { ok: false, line: `${personFirst(state, pick)} has no fire left to fight for anyone.` };
+  if (!willing(pick)) return { ok: false, line: `${personFirst(state, pick)} has no fire left to fight for anyone.` };
   if (coinOf(state) < TUNING.enlistCoin) return { ok: false, line: `The bounty is ${TUNING.enlistCoin} coin.` };
   addItem(state, 'coin', -TUNING.enlistCoin);
   b.soldiers.push(pick);
@@ -52,6 +54,8 @@ export function dismiss(state: SimState): Result {
 }
 
 const ARMS = ['spear', 'shield', 'mail', 'musket'];
+/** Someone this far gone (flame) will not take a bounty to fight. */
+const MIN_FLAME = 5;
 /** Draw arms from the yard where the band stands, up to one of each kind per soldier. */
 export function arm(state: SimState): Result {
   const b = bandOf(state);
@@ -138,7 +142,8 @@ export function march(state: SimState, target: string): Result {
     if (v && Object.keys(fuel).length && !take(state, b.townId, fuel, false)) return { ok: false, line: `${v.name} has no fuel for the march (${stockText(fuel)}).` };
   }
   for (let i = 0; i < need; i++) eatRation(state, b.townId);
-  b.march = { target, daysLeft: days };
+  const road = planRoad(state, b.townId, target);
+  b.march = { target, daysLeft: days, from: b.townId, days, ...(road?.legs.length ? { legs: road.legs } : {}) };
   const why = friendly(state, target) ? `to ${townName(state, target)}` : `on ${townName(state, target)}`;
   return { ok: true, line: `The band marches ${why}: ${plural(days, 'day')} on the road, ${need} rations packed.` };
 }

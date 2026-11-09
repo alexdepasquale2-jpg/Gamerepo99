@@ -27,7 +27,8 @@ export type Line = {
 export type VehicleJob = 'idle' | 'convoy' | 'band' | 'voyage';
 export type Vehicle = { id: string; design: string; name: string; townId: string; mods: string[]; condition: number; job: VehicleJob; built: number };
 
-export type RouteLeg = { dir: 'out' | 'back'; daysLeft: number; load: Stock };
+/** `legs`/`days`: the road chain this leg runs (from planRoad at departure), for drawing it on the road. */
+export type RouteLeg = { dir: 'out' | 'back'; daysLeft: number; load: Stock; days?: number; legs?: import('../road-journey').RoadLeg[] };
 export type Route = {
   id: string;
   from: string;
@@ -43,7 +44,8 @@ export type Route = {
   status: string;
 };
 
-export type March = { target: string; daysLeft: number };
+/** `from`/`days`/`legs`: where it set out and the road it takes (for drawing the column on the road). */
+export type March = { target: string; daysLeft: number; from?: string; days?: number; legs?: import('../road-journey').RoadLeg[] };
 export type Band = { townId: string; soldiers: string[]; kit: Stock; vehicles: string[]; morale: number; march?: March; battles: number };
 export type Vassal = { townId: string; since: number; feastUntil?: number };
 export type Contract = { id: string; townId: string; good: string; qty: number; coin: number; due: number };
