@@ -94,3 +94,9 @@ rumours and the chronicle; marks beyond resentment; refusal hooks; interiors; cr
 roads and encounters; the hoarder; succession; animals, carts and sound. Each one can be ported module
 by module into `scripts/core/` against the same JSON. The `rng.gd` parity test is the base for
 checking ported modules against the TS output.
+
+## Web build (phones)
+`export_presets.cfg` has a **Web** preset (single-threaded, so no special server headers are needed).
+Export it with `godot --headless --path godot --export-release Web out/index.html`, using the Godot
+4.3 web export template. On phones, the UI lays itself out for a short side of about 440 units, so
+text and chips stay finger-sized.

@@ -21,6 +21,8 @@ var say_queue: Array = []
 var say_wait := 0.0
 
 func _ready() -> void:
+	_fit_screen()
+	get_window().size_changed.connect(_fit_screen)
 	world = Node2D.new()
 	world.y_sort_enabled = false
 	add_child(world)
@@ -65,6 +67,17 @@ func _ready() -> void:
 	Sim.ended.connect(_on_ended)
 	_build_town()
 	_show_title()
+
+## Phones: lay the UI out for a ~440-unit short side so text and chips stay finger-sized.
+## Desktop keeps the 1280x720 base.
+func _fit_screen() -> void:
+	var px := Vector2(get_window().size)
+	if px.x <= 0 or px.y <= 0:
+		return
+	var dpr := maxf(1.0, DisplayServer.screen_get_scale())
+	var short_px := minf(px.x, px.y)
+	var target := 720.0 if short_px / dpr >= 700 else 440.0
+	get_window().content_scale_size = Vector2i(px * (target / short_px))
 
 func _build_town() -> void:
 	for a in actors.values():
