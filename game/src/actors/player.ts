@@ -14,6 +14,7 @@ import { UPRIGHT, type Posture } from './marks';
 import type { TownIndex } from './towns';
 import { padMove } from '../ui/pad/move-source';
 import { createCarryDraw } from './carry-draw';
+import { tapClaimed } from '../app/tap-claim';
 
 /** Matches the sim's TILES_PER_MINUTE: about two tiles a second at human pace. */
 const WALK_TILES_PER_SEC = 2.2;
@@ -97,7 +98,8 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
     facing = figure.dir === 2 ? { dx: dx < 0 ? -1 : 1, dy: 0 } : { dx: 0, dy: figure.dir === 1 ? -1 : 1 };
   }
 
-  const speedPx = () => WALK_TILES_PER_SEC * TILE_PX * look.speed * getWalkMul() * carry.speed();
+  let speedMul = 1;
+  const speedPx = () => WALK_TILES_PER_SEC * TILE_PX * look.speed * getWalkMul() * carry.speed() * speedMul;
 
   function walkTo(p: Pt): Promise<boolean> {
     endWalk(false);
@@ -116,7 +118,7 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
     const at = cam.getWorldPoint(ptr.x, ptr.y);
     const gen = walkGen;
     setTimeout(() => {
-      if (gen !== walkGen || blocked() || safe(() => ctx.interact.isOpen(), false)) return;
+      if (tapClaimed() || gen !== walkGen || blocked() || safe(() => ctx.interact.isOpen(), false)) return;
       void walkTo({ x: at.x, y: at.y });
     }, 0);
   });
@@ -145,6 +147,12 @@ export function createPlayer(ctx: GameContext, towns: TownIndex): PlayerCtl {
       follow();
     },
     facing: () => ({ ...facing }),
+    nudge(dx, dy) {
+      if (frozen) return 0;
+      if (dx || dy) setFacing(dx, dy);
+      return moveBy(dx, dy);
+    },
+    setSpeedMul(m) { speedMul = Math.max(0.3, Math.min(2, m)); },
     walkTo,
     stop: () => endWalk(false),
     setFrozen(f) {

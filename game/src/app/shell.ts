@@ -13,6 +13,7 @@ import { attachUi, trackCanvas } from '../ui';
 import { pickGameSize, setGameSize } from '../ui/kit/layer';
 import { attachPanels } from '../panels';
 import { attachInteract } from '../interact';
+import { attachCombat } from '../combat';
 import '../sim/contrib';
 import { waitDays } from '../sim/contrib/clock';
 
@@ -54,6 +55,7 @@ class WorldScene extends Phaser.Scene {
     ctx.ui = attachUi(ctx);
     ctx.panels = attachPanels(ctx);
     ctx.interact = attachInteract(ctx);
+    ctx.combat = attachCombat(ctx);
     const offGlue = attachGlue(ctx);
     // A wait at the hearth (contrib/clock) is a longer rest: the same fade, the days on the clock.
     const offWait = ctx.events.on('act', (e) => {
@@ -72,6 +74,7 @@ class WorldScene extends Phaser.Scene {
     if (!ctx) return;
     const dt = Math.min(delta, 50) / 1000;
     ctx.actors.update(dt);
+    ctx.combat.update(dt);
     ctx.world.update(dt, ctx.actors.player.pos());
   }
 

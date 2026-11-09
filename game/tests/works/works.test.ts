@@ -43,9 +43,9 @@ describe('works tables', () => {
     const made = new Set(RECIPES.flatMap((r) => Object.keys(r.out)));
     for (const g of GOODS) expect(made.has(g.id), g.id).toBe(true);
   });
-  it('the eras climb, and five arcs of five tiers each', () => {
+  it('the eras climb, and six arcs of five tiers each', () => {
     expect(ERAS.map((e) => e.era)).toEqual([1, 2, 3, 4, 5]);
-    expect(ARCS).toHaveLength(5);
+    expect(ARCS).toHaveLength(6);
     for (const a of ARCS) expect(a.tiers).toHaveLength(5);
   });
 });

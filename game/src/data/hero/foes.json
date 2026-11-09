@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "spec": "What you fight in the wilds (sim/hero, combat/). family: despair (born of a town's despair: slaying them eases it), bandit (the raiders on the roads: slaying them makes convoys safer), beast (wild animals: hides and meat), rival (soldiers of towns at war with yours or that your band marches on: each slain weakens that town). Stats are at level 1 and scale per level (scaling). ai: melee (close and strike), ranged (keep distance, shoot), charger (wind up, then rush), boss (melee with a slam that hits all around, and summons). art: a creature strip id (combat/draw-foes) or a person figure tinted (figure + tint). hp, dmg, speed (px/s), reach (melee px or shot range), cd (s between attacks), windup (s of telegraph), aggro (px), size (hit radius px), xp. drops: coin [min, max], items [{id, chance, n}], gear (chance of a piece of gear).",
+  "scaling": { "hp": 0.28, "dmg": 0.16, "xp": 0.22 },
+  "families": {
+    "despair": { "name": "Despair-born", "color": "#7a5aa8" },
+    "bandit": { "name": "Bandits", "color": "#a8642a" },
+    "beast": { "name": "Beasts", "color": "#6a8a4a" },
+    "rival": { "name": "Rival soldiers", "color": "#a82a2a" }
+  },
+  "foes": [
+    { "id": "ash_hound", "name": "Ash-hound", "family": "despair", "ai": "melee", "art": "ash_hound", "hp": 22, "dmg": 5, "speed": 118, "reach": 30, "cd": 1.0, "windup": 0.25, "aggro": 300, "size": 13, "xp": 9, "drops": { "coin": [0, 2], "items": [{ "id": "ember_shard", "chance": 0.25, "n": 1 }], "gear": 0.06 } },
+    { "id": "hollow", "name": "Hollow", "family": "despair", "ai": "melee", "figure": true, "tint": "#8a8aa0", "hp": 40, "dmg": 8, "speed": 58, "reach": 32, "cd": 1.5, "windup": 0.45, "aggro": 240, "size": 12, "xp": 12, "drops": { "coin": [1, 4], "items": [{ "id": "ember_shard", "chance": 0.35, "n": 1 }], "gear": 0.1 } },
+    { "id": "cinder_wraith", "name": "Cinder-wraith", "family": "despair", "ai": "ranged", "art": "wraith", "hp": 28, "dmg": 7, "speed": 70, "reach": 230, "cd": 2.0, "windup": 0.5, "aggro": 320, "size": 13, "xp": 14, "drops": { "coin": [1, 3], "items": [{ "id": "ember_shard", "chance": 0.5, "n": 1 }], "gear": 0.1 } },
+    { "id": "despair_colossus", "name": "Despair Colossus", "family": "despair", "ai": "boss", "art": "colossus", "boss": true, "hp": 420, "dmg": 18, "speed": 46, "reach": 52, "cd": 2.2, "windup": 0.8, "aggro": 360, "size": 30, "xp": 220, "summon": "ash_hound", "drops": { "coin": [40, 70], "items": [{ "id": "ember_shard", "chance": 1, "n": 5 }], "gear": 1 } },
+
+    { "id": "cutpurse", "name": "Cutpurse", "family": "bandit", "ai": "melee", "figure": true, "tint": "#c8a080", "hp": 26, "dmg": 6, "speed": 104, "reach": 28, "cd": 0.9, "windup": 0.2, "aggro": 260, "size": 11, "xp": 10, "drops": { "coin": [3, 9], "items": [], "gear": 0.08 } },
+    { "id": "raider", "name": "Raider", "family": "bandit", "ai": "melee", "figure": true, "tint": "#c88a6a", "hp": 46, "dmg": 9, "speed": 76, "reach": 34, "cd": 1.3, "windup": 0.4, "aggro": 280, "size": 12, "xp": 14, "drops": { "coin": [4, 10], "items": [{ "id": "rope", "chance": 0.2, "n": 1 }], "gear": 0.12 } },
+    { "id": "raider_archer", "name": "Raider archer", "family": "bandit", "ai": "ranged", "figure": true, "tint": "#b89a6a", "hp": 30, "dmg": 7, "speed": 72, "reach": 250, "cd": 1.8, "windup": 0.45, "aggro": 320, "size": 11, "xp": 13, "drops": { "coin": [3, 8], "items": [], "gear": 0.1 } },
+    { "id": "bandit_chief", "name": "Bandit chief", "family": "bandit", "ai": "boss", "figure": true, "tint": "#d06040", "boss": true, "scale": 1.5, "hp": 300, "dmg": 15, "speed": 70, "reach": 46, "cd": 1.6, "windup": 0.6, "aggro": 340, "size": 20, "xp": 160, "summon": "cutpurse", "drops": { "coin": [50, 90], "items": [{ "id": "tools", "chance": 0.6, "n": 1 }], "gear": 1 } },
+
+    { "id": "wolf", "name": "Wolf", "family": "beast", "ai": "melee", "art": "wolf", "hp": 24, "dmg": 6, "speed": 128, "reach": 30, "cd": 1.0, "windup": 0.22, "aggro": 280, "size": 13, "xp": 9, "drops": { "coin": [0, 0], "items": [{ "id": "hide", "chance": 0.6, "n": 1 }, { "id": "meat", "chance": 0.5, "n": 1 }], "gear": 0.03 } },
+    { "id": "boar", "name": "Boar", "family": "beast", "ai": "charger", "art": "boar", "hp": 44, "dmg": 11, "speed": 70, "reach": 30, "cd": 2.4, "windup": 0.7, "aggro": 220, "size": 15, "xp": 13, "drops": { "coin": [0, 0], "items": [{ "id": "meat", "chance": 0.9, "n": 2 }, { "id": "hide", "chance": 0.4, "n": 1 }], "gear": 0.03 } },
+    { "id": "bear", "name": "Bear", "family": "beast", "ai": "melee", "art": "bear", "hp": 110, "dmg": 16, "speed": 64, "reach": 40, "cd": 1.9, "windup": 0.6, "aggro": 240, "size": 22, "xp": 30, "drops": { "coin": [0, 0], "items": [{ "id": "hide", "chance": 1, "n": 2 }, { "id": "meat", "chance": 1, "n": 3 }], "gear": 0.08 } },
+    { "id": "great_bear", "name": "Old Greymaw", "family": "beast", "ai": "boss", "art": "bear", "boss": true, "scale": 1.6, "hp": 380, "dmg": 20, "speed": 66, "reach": 54, "cd": 2.0, "windup": 0.7, "aggro": 320, "size": 32, "xp": 190, "summon": "wolf", "drops": { "coin": [10, 20], "items": [{ "id": "hide", "chance": 1, "n": 5 }, { "id": "meat", "chance": 1, "n": 6 }], "gear": 1 } },
+
+    { "id": "levy", "name": "Levy spearman", "family": "rival", "ai": "melee", "figure": true, "tint": "#d07070", "hp": 40, "dmg": 9, "speed": 72, "reach": 44, "cd": 1.4, "windup": 0.4, "aggro": 300, "size": 12, "xp": 15, "drops": { "coin": [2, 6], "items": [], "gear": 0.12 } },
+    { "id": "crossbowman", "name": "Crossbowman", "family": "rival", "ai": "ranged", "figure": true, "tint": "#c05a5a", "hp": 32, "dmg": 10, "speed": 66, "reach": 270, "cd": 2.2, "windup": 0.6, "aggro": 340, "size": 12, "xp": 16, "drops": { "coin": [2, 6], "items": [], "gear": 0.12 } },
+    { "id": "sergeant", "name": "Sergeant", "family": "rival", "ai": "boss", "figure": true, "tint": "#e04a4a", "boss": true, "scale": 1.35, "hp": 240, "dmg": 14, "speed": 76, "reach": 46, "cd": 1.5, "windup": 0.5, "aggro": 340, "size": 18, "xp": 140, "summon": "levy", "drops": { "coin": [30, 60], "items": [], "gear": 1 } }
+  ],
+  "packs": {
+    "despair": [["ash_hound", "ash_hound", "ash_hound"], ["hollow", "hollow", "ash_hound"], ["cinder_wraith", "hollow", "hollow"], ["cinder_wraith", "ash_hound", "ash_hound", "hollow"]],
+    "bandit": [["cutpurse", "raider"], ["raider", "raider", "raider_archer"], ["raider_archer", "raider_archer", "cutpurse", "raider"]],
+    "beast": [["wolf", "wolf", "wolf"], ["boar"], ["boar", "boar"], ["bear"], ["wolf", "wolf", "wolf", "wolf"]],
+    "rival": [["levy", "levy", "crossbowman"], ["levy", "levy", "levy", "crossbowman", "crossbowman"]]
+  },
+  "lairs": {
+    "despair": { "name": "Despair rift", "boss": "despair_colossus", "guard": ["hollow", "hollow", "cinder_wraith", "ash_hound", "ash_hound"] },
+    "bandit": { "name": "Bandit camp", "boss": "bandit_chief", "guard": ["raider", "raider", "raider_archer", "raider_archer", "cutpurse"] },
+    "beast": { "name": "Greymaw's den", "boss": "great_bear", "guard": ["wolf", "wolf", "wolf", "bear"] },
+    "rival": { "name": "War camp", "boss": "sergeant", "guard": ["levy", "levy", "levy", "crossbowman", "crossbowman"] }
+  }
+}

@@ -107,6 +107,10 @@ export interface PlayerHandle {
   stop(): void;
   /** Freeze input-driven movement (rest, travel, modal). */
   setFrozen(frozen: boolean): void;
+  /** Move at once by (dx, dy) world px, sliding along walls (a dodge, a lunge); returns the distance covered. */
+  nudge(dx: number, dy: number): number;
+  /** Walk-speed multiplier from gear (combat). */
+  setSpeedMul(m: number): void;
 }
 
 /** One body of a many-bodied inhabitant. `at` is 'with_you' or the town it waits in. */
@@ -209,6 +213,8 @@ export interface PanelsApi {
   company: { open(townId: string, companyId?: string): void };
   /** A site's ledger sheet (civic slice 5): who runs it, hands, wage, till, shelves; run it if it is yours. */
   site: { open(siteId: string): void };
+  /** The hero sheet (panels/hero): level and attributes, gear and bag, skills and their slots. */
+  hero: { open(tab?: 'hero' | 'gear' | 'skills'): void; toggle(): void };
   /** The Works sheet (panels/works): yards, making, lines, vehicles, convoys, contracts, war and the arcs. */
   works: { open(tab?: import('../panels/works/sheet').WorksTab): void; toggle(): void };
   /** The item being dragged from the hotbar right now (see the 'item-drag' event), or null. */
@@ -244,6 +250,18 @@ export interface InteractApi {
   endHold?(): void;
 }
 
+/** The action layer (src/combat): foes in the wilds, your attacks and skills, health and the fall. */
+export interface CombatApi {
+  /** Foes are fighting you now (they have seen you). */
+  inCombat(): boolean;
+  /** Basic attack toward a world point (or at the nearest foe ahead). */
+  attack(at?: Pt): void;
+  dodge(): void;
+  /** Use the skill in slot 0..2 (Q, R, F). */
+  skill(slot: number): void;
+  update(dt: number): void;
+}
+
 export interface GameContext {
   scene: Phaser.Scene;
   session: PlaySession;
@@ -262,6 +280,7 @@ export interface GameContext {
   ui: UiApi;
   panels: PanelsApi;
   interact: InteractApi;
+  combat: CombatApi;
 }
 
 /** What the title flow (ui/flow.ts) needs from the app to start, stop and pause a run. */

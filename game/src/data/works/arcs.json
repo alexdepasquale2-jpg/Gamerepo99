@@ -63,6 +63,17 @@
         { "label": "Launch an airship", "stat": "airships", "n": 1, "renown": 70, "coin": 60 },
         { "label": "Reach the Far Spark (3 voyages)", "stat": "voyages", "n": 3, "renown": 150, "coin": 200 }
       ]
+    },
+    {
+      "id": "valor", "name": "The Ember Knight", "role": "Ember knight", "blurb": "Take up a blade against what stalks the roads and the dark between the towns.",
+      "boon": "Your blows burn: a quarter more damage, always.",
+      "tiers": [
+        { "label": "Slay 10 foes in the wilds", "stat": "slain", "n": 10, "renown": 10, "coin": 5 },
+        { "label": "Reach level 5", "stat": "hero_level", "n": 5, "renown": 20, "coin": 10 },
+        { "label": "Clear a lair", "stat": "lairs", "n": 1, "renown": 40, "coin": 25 },
+        { "label": "Slay 150 foes", "stat": "slain", "n": 150, "renown": 60, "coin": 40 },
+        { "label": "Bring down a Despair Colossus", "stat": "boss_despair_colossus", "n": 1, "renown": 120, "coin": 100 }
+      ]
     }
   ],
   "tuning": {

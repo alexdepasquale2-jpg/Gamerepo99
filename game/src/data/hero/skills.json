@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "spec": "Hero skills (sim/hero/skills, combat/actions). Three branches. Each skill: branch, level (hero level to learn), max rank, spark (cost from your spark bar), cd (cooldown s), kind (what combat does: cleave, whirl, lunge, bolt, nova, mend, cry, bulwark, volley), and per-rank numbers: mult (x weapon damage), radius/reach px, dur (s), heal (share of max health). One skill point each level; slots Q, R, F hold three learned skills. The dodge (Shift) is always yours.",
+  "branches": { "blade": "Blade", "ember": "Ember", "ward": "Ward" },
+  "skills": [
+    { "id": "cleave", "name": "Cleave", "branch": "blade", "level": 1, "max": 5, "spark": 2, "cd": 2.5, "kind": "cleave", "desc": "A wide, heavy swing that hits everything in front of you.", "mult": [1.6, 1.8, 2.0, 2.2, 2.5], "reach": 58 },
+    { "id": "whirl", "name": "Whirlwind", "branch": "blade", "level": 4, "max": 5, "spark": 5, "cd": 6, "kind": "whirl", "desc": "Spin with your blade out, striking all around you three times.", "mult": [0.8, 0.9, 1.0, 1.1, 1.3], "radius": 70 },
+    { "id": "lunge", "name": "Lunge", "branch": "blade", "level": 7, "max": 5, "spark": 3, "cd": 4, "kind": "lunge", "desc": "Dash forward and run through the first foe in your way.", "mult": [2.2, 2.5, 2.8, 3.1, 3.5], "reach": 160 },
+    { "id": "spark_bolt", "name": "Spark bolt", "branch": "ember", "level": 1, "max": 5, "spark": 3, "cd": 0.9, "kind": "bolt", "desc": "Throw a mote of your own fire. Despair-born take double.", "mult": [1.3, 1.5, 1.7, 1.9, 2.2], "reach": 300 },
+    { "id": "rekindle", "name": "Rekindle", "branch": "ember", "level": 3, "max": 5, "spark": 8, "cd": 12, "kind": "mend", "desc": "Breathe on your own coals: mend a share of your health over a few seconds.", "heal": [0.25, 0.3, 0.35, 0.4, 0.5], "dur": 3 },
+    { "id": "flame_nova", "name": "Flame nova", "branch": "ember", "level": 5, "max": 5, "spark": 10, "cd": 9, "kind": "nova", "desc": "Burst into flame: burn everything around you and push it back.", "mult": [2.0, 2.4, 2.8, 3.2, 3.8], "radius": 110 },
+    { "id": "war_cry", "name": "War cry", "branch": "ward", "level": 2, "max": 5, "spark": 4, "cd": 10, "kind": "cry", "desc": "A shout that staggers foes around you and steels your nerve.", "radius": 140, "dur": [1.2, 1.5, 1.8, 2.1, 2.5] },
+    { "id": "bulwark", "name": "Bulwark", "branch": "ward", "level": 6, "max": 5, "spark": 6, "cd": 14, "kind": "bulwark", "desc": "Set your feet: take far less harm for a while.", "dur": [4, 5, 6, 7, 8], "mult": [0.5, 0.45, 0.4, 0.35, 0.3] },
+    { "id": "volley", "name": "Ember volley", "branch": "ward", "level": 9, "max": 5, "spark": 9, "cd": 8, "kind": "volley", "desc": "Loose a fan of five burning shots.", "mult": [1.0, 1.15, 1.3, 1.45, 1.7], "reach": 300 }
+  ],
+  "start": { "skills": { "cleave": 1 }, "slots": ["cleave", null, null] }
+}

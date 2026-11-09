@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "spec": "Hero gear (sim/hero/gear). bases: slot (weapon | armor | charm), level (the lowest item level it drops at), and stats at item level 1 (weapons: dmg [min, max], rate (swings a second), reach (px), arc (degrees; 0 = a shot), shot (projectile speed px/s); armour: armor, speed (move multiplier); charms: affixes only). Item level scales weapon damage and armour by perLevel. rarities: weight, affix count, colour. affixes: stat, range [min, max] at item level 1 (scaled by perLevel), and the slots it can roll on. names: prefixes and suffixes by rarity.",
+  "perLevel": 0.14,
+  "bases": [
+    { "id": "sword", "name": "Sword", "slot": "weapon", "level": 1, "dmg": [7, 11], "rate": 1.6, "reach": 46, "arc": 100 },
+    { "id": "axe", "name": "Axe", "slot": "weapon", "level": 1, "dmg": [10, 16], "rate": 1.15, "reach": 44, "arc": 120 },
+    { "id": "spear", "name": "Spear", "slot": "weapon", "level": 2, "dmg": [8, 13], "rate": 1.4, "reach": 70, "arc": 40 },
+    { "id": "maul", "name": "Maul", "slot": "weapon", "level": 4, "dmg": [15, 24], "rate": 0.8, "reach": 50, "arc": 160 },
+    { "id": "bow", "name": "Bow", "slot": "weapon", "level": 2, "dmg": [6, 10], "rate": 1.5, "reach": 280, "arc": 0, "shot": 420 },
+    { "id": "ember_staff", "name": "Ember staff", "slot": "weapon", "level": 3, "dmg": [6, 10], "rate": 1.3, "reach": 260, "arc": 0, "shot": 320, "sparkRegen": 0.6 },
+    { "id": "jerkin", "name": "Leather jerkin", "slot": "armor", "level": 1, "armor": 4 },
+    { "id": "mail", "name": "Mail coat", "slot": "armor", "level": 3, "armor": 8, "speed": 0.97 },
+    { "id": "plate", "name": "Plate", "slot": "armor", "level": 6, "armor": 14, "speed": 0.92 },
+    { "id": "robe", "name": "Hearth robe", "slot": "armor", "level": 2, "armor": 2, "sparkRegen": 0.8 },
+    { "id": "amulet", "name": "Amulet", "slot": "charm", "level": 1 },
+    { "id": "ring", "name": "Ring", "slot": "charm", "level": 1 }
+  ],
+  "rarities": [
+    { "id": "common", "name": "Common", "weight": 50, "affixes": 0, "color": "#c8c0b0" },
+    { "id": "fine", "name": "Fine", "weight": 30, "affixes": 1, "color": "#7ac070" },
+    { "id": "rare", "name": "Rare", "weight": 14, "affixes": 2, "color": "#5ea8e8" },
+    { "id": "epic", "name": "Epic", "weight": 5, "affixes": 3, "color": "#b878e8" },
+    { "id": "kindled", "name": "Kindled", "weight": 1, "affixes": 4, "color": "#f2b84b" }
+  ],
+  "affixes": [
+    { "stat": "might", "name": "Might", "range": [1, 3], "slots": ["weapon", "armor", "charm"] },
+    { "stat": "grit", "name": "Grit", "range": [1, 3], "slots": ["weapon", "armor", "charm"] },
+    { "stat": "wits", "name": "Wits", "range": [1, 3], "slots": ["weapon", "armor", "charm"] },
+    { "stat": "dmgPct", "name": "% damage", "range": [6, 14], "slots": ["weapon", "charm"] },
+    { "stat": "ratePct", "name": "% attack speed", "range": [5, 12], "slots": ["weapon", "charm"] },
+    { "stat": "hp", "name": "max health", "range": [8, 18], "slots": ["armor", "charm"] },
+    { "stat": "armor", "name": "armour", "range": [2, 5], "slots": ["armor", "charm"] },
+    { "stat": "crit", "name": "% critical", "range": [3, 7], "slots": ["weapon", "charm"] },
+    { "stat": "leech", "name": "health on hit", "range": [1, 2], "slots": ["weapon", "charm"] },
+    { "stat": "sparkHit", "name": "spark on hit", "range": [0.4, 1], "slots": ["weapon", "charm"] },
+    { "stat": "movePct", "name": "% move speed", "range": [3, 8], "slots": ["armor", "charm"] },
+    { "stat": "xpPct", "name": "% experience", "range": [5, 12], "slots": ["charm"] }
+  ],
+  "names": {
+    "prefix": ["Ashen", "Ember", "Hearth", "Grey", "Smoulder", "Wayfarer's", "Old", "Bright", "Cinder", "Dawn", "Kindling", "Iron"],
+    "suffix": ["of the Road", "of Warmth", "of Embers", "of the Long Night", "of Mending", "of the Hollow", "of Dawn", "of the Last Spark", "of Kin", "of the Wilds"]
+  },
+  "start": { "weapon": { "base": "sword", "rarity": "common", "level": 1, "name": "Worn sword" }, "armor": { "base": "jerkin", "rarity": "common", "level": 1, "name": "Patched jerkin" } }
+}

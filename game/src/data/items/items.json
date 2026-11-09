@@ -114,6 +114,20 @@
       {"id":"home","label":"Give them to a new household","short":"For their home","target":"person","who":{"household":"new"},"effect":{"do":"gift","tags":["comfort","kin"]}},
       {"id":"build","label":"Add them to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
       {"id":"cook","label":"Cook a pot of stew","short":"Cook a stew","target":"hearth","qty":0,"oncePerDay":true,"effect":{"spark":4,"thanks":["food","hearth"],"done":"The pot bubbles on the hearth. {name} brings a bowl."}}
+    ] },
+    { "id": "hide", "name": "Hide", "icon": "wool", "color": "#8a6038", "price": 5, "tags": ["craft","warmth"], "verbs": [
+      {"id":"tanner","label":"Give the hide to a worker","short":"Give the hide","target":"person","who":{"jobs":["weaver","farmer","woodcutter","ropemaker"]},"effect":{"do":"gift","tags":["craft","warmth"]}},
+      {"id":"build","label":"Add it to their build","short":"Add to the build","target":"plot","effect":{"do":"plan"}},
+      {"id":"store","label":"Fill a need on the board","short":"Fill a need","target":"board","effect":{"do":"deliver"}}
+    ] },
+    { "id": "meat", "name": "Meat", "icon": "food", "color": "#b85a4a", "price": 4, "tags": ["food"], "use": {"spark":5}, "verbs": [
+      {"id":"eat","label":"Eat the meat","short":"Eat meat","target":"self","effect":{"spark":5}},
+      {"id":"roast","label":"Roast it over the hearth","short":"Roast the meat","target":"hearth","effect":{"spark":11,"done":"Fat spits on the coals. It is the best thing you have eaten in days."}},
+      {"id":"share","label":"Share the meat","short":"Share meat","target":"person","effect":{"do":"gift","tags":["food"]}}
+    ] },
+    { "id": "ember_shard", "name": "Ember shard", "icon": "keepsake", "color": "#e8783a", "price": 8, "tags": ["memory","warmth"], "verbs": [
+      {"id":"kindle","label":"Feed the shard to the hearth","short":"Kindle hearth","target":"hearth","effect":{"spark":8,"despair":-0.01,"done":"The shard flares and the whole fire leans toward you."}},
+      {"id":"give","label":"Press the shard into their hands","short":"Give the shard","target":"person","effect":{"do":"gift","tags":["memory","warmth"]}}
     ] }
   ],
   "startingInventory": {

@@ -17,6 +17,7 @@
 import deedsJson from '../../data/systems/interactions/deeds.json';
 import jobsJson from '../../data/items/jobs.json';
 import patronsJson from '../../data/economy/patrons.json';
+import foesJson from '../../data/hero/foes.json';
 import { ITEMS } from '../goods/inventory';
 import { NODES } from '../goods/nodes';
 import { LAND_RULES } from '../land-acts';
@@ -51,6 +52,7 @@ function supplyMap(): Map<string, string[]> {
   for (const id of Object.keys(ITEMS.startingInventory)) add(id, 'in your satchel at the start');
   for (const a of LAND_RULES.acts) for (const id of Object.keys(a.yield ?? {})) add(id, a.label.toLowerCase());
   for (const r of RECIPES) for (const id of Object.keys(r.out)) add(id, `craft at the ${r.station}`);
+  for (const f of (foesJson as { foes: { name: string; drops: { items: { id: string }[] } }[] }).foes) for (const d of f.drops.items) add(d.id, `dropped by ${an(f.name.toLowerCase())}`);
   for (const p of (patronsJson as { patrons: { name: string; deals: { offer: { coin?: number; goods?: Record<string, number> } }[] }[] }).patrons) {
     for (const d of p.deals) {
       if (d.offer.coin) add('coin', `${p.name} deal`);

@@ -23,6 +23,7 @@ import { SHOP_ID, shopNav, shopSheet, watchShopVerbs } from './shop';
 import { SITE_ID, siteSheet, watchSiteVerbs } from './site';
 import { WORKS_ID, watchWorksVerbs, worksSheet } from './works/sheet';
 import { createWorksChip } from './works/chip';
+import { HERO_ID, heroSheet } from './hero';
 
 export function attachPanels(ctx: GameContext): PanelsApi {
   const layer = createLayer(ctx);
@@ -69,6 +70,10 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     roads: { open: (townId) => sheets.open(roads.sheet(townId)) },
     company: { open: (townId, companyId) => sheets.open(companySheet(ctx, townId, companyId)) },
     site: { open: (siteId) => sheets.open(siteSheet(ctx, siteId)) },
+    hero: {
+      open: (tab) => void sheets.open(heroSheet(ctx, tab)),
+      toggle: () => sheets.toggle(HERO_ID, () => sheets.open(heroSheet(ctx))),
+    },
     works: {
       open: (tab) => void sheets.open(worksSheet(ctx, tab)),
       toggle: () => sheets.toggle(WORKS_ID, () => sheets.open(worksSheet(ctx))),
@@ -115,6 +120,7 @@ export function attachPanels(ctx: GameContext): PanelsApi {
     watchShopVerbs(ctx, (ref) => api.shop.open(ref)),
     watchWorksVerbs(ctx, (tab) => api.works.open(tab)),
     ctx.events.on('dawn', () => sheets.refresh(WORKS_ID)),
+    ctx.events.on('inventory', () => sheets.refresh(HERO_ID)),
     ctx.events.on('arrive', () => sheets.refresh(WORKS_ID)),
   ];
   const worksChip = createWorksChip(ctx, layer.el, () => api.works.toggle());

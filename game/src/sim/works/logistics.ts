@@ -16,6 +16,7 @@ import { DESIGN_BY_ID, GOODS, TUNING, goodName, goodPrice, isRation, plural, rec
 import { addStock, bump, depotAt, eraOf, news, nextId, reachable, roadDays, stockOf, take, townName, worksIfAny, worksOf } from './state';
 import type { Contract, Result, Route, RouteLeg, Stock } from './types';
 import { planRoad } from '../road-journey';
+import { banditCalm } from '../hero/deeds';
 import { statsOf, vehicleById, wear } from './vehicles';
 
 // ---- Convoys ----
@@ -51,7 +52,8 @@ function raidOdds(state: SimState, r: Route): number {
   const war = (state.polity?.wars ?? []).some((x) => x.status === 'active' && [x.aggressor, x.defender].some((t) => t === r.from || t === r.to)) ? 0.12 : 0;
   const worn = (state.economyRoutes ?? []).filter((e) => [e.fromTownId, e.toTownId].includes(r.from) || [e.fromTownId, e.toTownId].includes(r.to));
   const bad = worn.length ? 1 - worn.reduce((n, e) => n + e.condition, 0) / worn.length : 0;
-  return Math.max(0, (TUNING.raidBase + war + bad * 0.1) * (1 - s.armor * TUNING.raidPerArmor));
+  // Bandits you have cut down lately calm the roads (sim/hero/deeds).
+  return Math.max(0, (TUNING.raidBase + war + bad * 0.1) * (1 - s.armor * TUNING.raidPerArmor) * banditCalm(state));
 }
 
 function legDays(state: SimState, r: Route): number {
