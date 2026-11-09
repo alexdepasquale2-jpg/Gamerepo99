@@ -9,6 +9,7 @@ import { CHUNK_SIZE, TILE_PX } from '../sim/map/constants';
 import type { ChunkTiles } from '../sim/map/types';
 import { DETAIL_SPLIT, refineDetail } from '../sim/map/ladder/refine';
 import { EDGE, FIELDS, FOREST, HILLS, MEADOW, VARIANT_TINT, WATER, paintDetailProps, type Rgb } from './ground-detail';
+import { noteUse } from '../sim/data-use-world';
 
 const S = CHUNK_SIZE;
 const CPX = TILE_PX / 2; // canvas px per tile
@@ -47,6 +48,25 @@ export function classify(id: string | undefined): { base: number; over: Overlay 
     default: return id?.startsWith('road') ? { base: MEADOW, over: 'track' } : { base: MEADOW, over: null };
   }
 }
+
+/**
+ * Art-pack decals sprinkled over the painted ground (world/art/pack-art installs them; empty until then):
+ * biome patches by region, reeds at the water, wild barley in the heath, and a dirt speckle for roads.
+ */
+export type GroundDecal = { id: string; img: CanvasImageSource; w: number; h: number; alpha: number };
+export type GroundDecals = { patch: Record<string, GroundDecal>; reed?: GroundDecal | null; tuft?: GroundDecal | null; road?: CanvasImageSource };
+let DECALS: GroundDecals = { patch: {} };
+export function setGroundDecals(d: GroundDecals): void { DECALS = d; }
+
+/** The named biomes a coarse ground class stands for (as actors/fauna reads them), by region. */
+const NAMED: Record<number, string[]> = {
+  [MEADOW]: ['mill_heath', 'chalk_downs'],
+  [FOREST]: ['ash_wood', 'peat_fen'],
+  [HILLS]: ['chalk_downs', 'slag_verge', 'glare_approach'],
+};
+const WET_NAMED = ['river_margin', 'brine_marsh'];
+/** One tile in this many gets a decal: sparse enough to read as detail, not a second ground. */
+const DECAL_EVERY = 12;
 
 const hash = (x: number, y: number): number => {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263);
@@ -125,20 +145,57 @@ export function paintGround(chunk: ChunkTiles, around: (q: number, r: number) =>
   // Pass 3: small props per sub-cell.
   paintDetailProps(d, SIZE, SUB, det);
   ctx.putImageData(img, 0, 0);
+  paintDecals(ctx, base, over, q0, r0, seed);
   paintOverlays(ctx, over);
   return canvas;
+}
+
+/**
+ * Pass 4: art-pack decals, at most one per tile, never on or beside a road or on water, and always inside
+ * the chunk so neighbours join without seams. Which named biome a patch shows is fixed per 16-tile region,
+ * so an area reads as one heath or one fen; placement and jitter are seeded hashes of the tile.
+ */
+function paintDecals(ctx: CanvasRenderingContext2D, base: Uint8Array, over: Overlay[], q0: number, r0: number, seed: number): void {
+  const D = DECALS;
+  if (!Object.keys(D.patch).length && !D.reed && !D.tuft) return;
+  const near = (k: number, f: (j: number) => boolean) => f(k - 1) || f(k + 1) || f(k - G) || f(k + G);
+  for (let gy = 1; gy <= S; gy++) for (let gx = 1; gx <= S; gx++) {
+    const k = gy * G + gx, c = base[k]!;
+    const q = q0 + gx - 1, r = r0 + gy - 1;
+    const h = hash(q + seed * 7919, r - seed * 104729);
+    if (h % DECAL_EVERY !== 0 || c === WATER || c === FIELDS || over[k] || near(k, (j) => over[j] !== null)) continue;
+    const region = hash((q >> 4) + seed, (r >> 4) - seed) >>> 3;
+    const wet = near(k, (j) => base[j] === WATER);
+    const x = (gx - 1) * CPX, y = (gy - 1) * CPX;
+    const pick = (h >>> 8) & 7;
+    // Reeds stand two tiles tall, so only where the tile above is still this chunk's.
+    const plant = wet && pick < 3 && gy > 1 ? D.reed : c === MEADOW && pick < 2 ? D.tuft : null;
+    if (plant) {
+      ctx.drawImage(plant.img, x + ((CPX - plant.w) >> 1), y + CPX - plant.h);
+      noteUse('art', plant.id);
+      continue;
+    }
+    const names = wet ? WET_NAMED : NAMED[c];
+    const p = names && D.patch[names[region % names.length]!];
+    if (!p) continue;
+    ctx.globalAlpha = p.alpha;
+    ctx.drawImage(p.img, x + ((h >>> 12) % (CPX - p.w + 1)), y + ((h >>> 16) % (CPX - p.h + 1)));
+    ctx.globalAlpha = 1;
+    noteUse('art', p.id);
+  }
 }
 
 /** Roads, tracks, bridges, fords and ferries over the base ground (grid includes the border ring). */
 function paintOverlays(ctx: CanvasRenderingContext2D, over: Overlay[]): void {
   const at = (gx: number, gy: number): Overlay => (gx < 0 || gy < 0 || gx >= G || gy >= G ? null : over[gy * G + gx]!);
   const cx = (gx: number) => (gx - 1 + 0.5) * CPX, cy = (gy: number) => (gy - 1 + 0.5) * CPX;
-  const ribbon = (is: (o: Overlay) => boolean, layers: [number, string][]) => {
+  const ribbon = (is: (o: Overlay) => boolean, layers: [number, string | CanvasPattern, number?][]) => {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    for (const [width, color] of layers) {
+    for (const [width, color, alpha = 1] of layers) {
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
+      ctx.globalAlpha = alpha;
       ctx.beginPath();
       for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
         if (!is(at(gx, gy))) continue;
@@ -157,10 +214,17 @@ function paintOverlays(ctx: CanvasRenderingContext2D, over: Overlay[]): void {
       }
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
   };
   const roadish = (o: Overlay) => o === 'road' || o === 'bridge';
-  ribbon(roadish, [[13, 'rgba(96,76,46,0.35)'], [10, '#8c6e40'], [6, '#9a7a48']]);
-  ribbon((o) => o === 'track', [[7, 'rgba(96,76,46,0.3)'], [5, '#a88a5a']]);
+  // The ground sheet's dirt, thinly over the ribbon's crown: worn speckle instead of a flat stroke.
+  const dirt = DECALS.road ? ctx.createPattern(DECALS.road, 'repeat') : null;
+  const speck = (w: number, a: number): [number, CanvasPattern, number][] => (dirt ? [[w, dirt, a]] : []);
+  const hasRoad = over.some(roadish), hasTrack = over.some((o) => o === 'track');
+  ribbon(roadish, [[13, 'rgba(96,76,46,0.35)'], [10, '#8c6e40'], [6, '#9a7a48'], ...speck(6, 0.45)]);
+  ribbon((o) => o === 'track', [[7, 'rgba(96,76,46,0.3)'], [5, '#a88a5a'], ...speck(5, 0.3)]);
+  if (dirt && hasRoad) noteUse('art', 'road.road');
+  if (dirt && hasTrack) noteUse('art', 'road.track');
   for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
     const o = at(gx, gy);
     const x = (gx - 1) * CPX, y = (gy - 1) * CPX;
