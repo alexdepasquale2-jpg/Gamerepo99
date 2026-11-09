@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "spec": "Buildings you raise in a depot (sim/works/make). era: the Era that unlocks it. cost: goods spent from the depot (or your satchel), coin from your purse. lines: manufacturing lines it can run at once. Every recipe in recipes.json names the building it is made at.",
+  "buildings": [
+    { "id": "workbench", "name": "Workbench", "era": 1, "cost": { "wood": 2 }, "coin": 0, "lines": 1, "blurb": "Planks, wheels, cart beds and harness." },
+    { "id": "kitchen", "name": "Kitchen", "era": 1, "cost": { "stone": 3, "clay": 2 }, "coin": 5, "lines": 1, "blurb": "Meals to eat, rations for crews and soldiers." },
+    { "id": "woodlot", "name": "Woodlot", "era": 1, "cost": { "tools": 1 }, "coin": 10, "lines": 2, "blurb": "Hands cut wood and grow flax without you." },
+    { "id": "farmstead", "name": "Farmstead", "era": 1, "cost": { "wood": 4, "tools": 1 }, "coin": 10, "lines": 2, "blurb": "Grain, berries, herbs and fish, every dawn." },
+    { "id": "kiln", "name": "Kiln", "era": 2, "cost": { "stone": 6, "clay": 4 }, "coin": 15, "lines": 1, "blurb": "Charcoal and bricks." },
+    { "id": "mine", "name": "Mine shaft", "era": 2, "cost": { "timber": 4, "tools": 2, "rope": 2 }, "coin": 20, "lines": 2, "blurb": "Ore, stone and clay from the deep." },
+    { "id": "assembly", "name": "Assembly yard", "era": 2, "cost": { "plank": 10, "rope": 3, "nails": 4 }, "coin": 20, "lines": 0, "blurb": "Put vehicles together from their parts; fit mods." },
+    { "id": "barracks", "name": "Barracks", "era": 2, "cost": { "plank": 8, "brick": 6 }, "coin": 25, "lines": 0, "blurb": "Muster, house and drill a war band." },
+    { "id": "forge", "name": "Forge", "era": 2, "cost": { "brick": 8, "timber": 4, "tools": 1 }, "coin": 25, "lines": 2, "blurb": "Iron, nails, axles, arms, gear trains." },
+    { "id": "foundry", "name": "Foundry", "era": 3, "cost": { "brick": 16, "iron": 10, "timber": 6 }, "coin": 60, "lines": 2, "blurb": "Steel, boilers, armour, cannon, rail." },
+    { "id": "machine_shop", "name": "Machine shop", "era": 3, "cost": { "plank": 10, "iron": 8, "gear": 3 }, "coin": 60, "lines": 2, "blurb": "Springs, engines, chassis, muskets." },
+    { "id": "sky_dock", "name": "Sky dock", "era": 5, "cost": { "steel": 16, "rope": 10, "canvas": 8 }, "coin": 150, "lines": 1, "blurb": "Gasbags, gondolas, and a mooring mast for an airship." }
+  ]
+}

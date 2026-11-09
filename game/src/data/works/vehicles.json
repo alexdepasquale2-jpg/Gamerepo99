@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "spec": "Pre-baked vehicle designs and the mods they take (sim/works/vehicles). parts: what the assembly yard puts together. cap: goods a convoy trip carries. speed: road days are divided by it. armor: cuts raid odds and battle losses. fire: weight in a battle. fuel: spent from the depot each trip or march. slots: mods it takes. flies: ignores broken roads and raiders. The Wright's catalogue sells any part (and whole vehicles) at catalogueMul times the parts' price.",
+  "catalogueMul": 2.2,
+  "wholeMul": 1.8,
+  "designs": [
+    { "id": "handcart", "name": "Handcart", "era": 1, "parts": { "wheel": 2, "cart_bed": 1 }, "cap": 8, "speed": 1.2, "armor": 0, "fire": 0, "fuel": {}, "slots": 1, "blurb": "Two wheels and a stubborn back. Carries a little, fast." },
+    { "id": "ox_wagon", "name": "Ox wagon", "era": 2, "parts": { "wheel": 4, "axle": 2, "cart_bed": 2, "harness": 1 }, "cap": 24, "speed": 1, "armor": 0, "fire": 0, "fuel": { "grain": 1 }, "slots": 2, "blurb": "The workhorse of the roads. Eats grain each trip." },
+    { "id": "war_cart", "name": "War cart", "era": 2, "parts": { "wheel": 4, "axle": 2, "cart_bed": 1, "shield": 3, "harness": 1 }, "cap": 6, "speed": 0.9, "armor": 2, "fire": 3, "fuel": { "grain": 1 }, "slots": 2, "blurb": "A shielded wagon bristling with spears. The first war machine." },
+    { "id": "steam_wagon", "name": "Steam wagon", "era": 4, "parts": { "chassis": 1, "wheel": 4, "axle": 2, "boiler": 1, "engine": 1 }, "cap": 50, "speed": 2, "armor": 1, "fire": 0, "fuel": { "charcoal": 2 }, "slots": 3, "blurb": "Iron and steam. Twice the pace, twice the load, burns charcoal." },
+    { "id": "landship", "name": "Landship", "era": 4, "parts": { "chassis": 2, "engine": 2, "boiler": 1, "armor_plate": 6, "cannon": 2, "wheel": 6 }, "cap": 10, "speed": 1, "armor": 8, "fire": 12, "fuel": { "charcoal": 4 }, "slots": 3, "blurb": "A walled town on wheels. Gates do not hold against it." },
+    { "id": "airship", "name": "Airship", "era": 5, "parts": { "gasbag": 2, "gondola": 1, "engine": 1, "spark_core": 1, "rope": 6 }, "cap": 20, "speed": 4, "armor": 1, "fire": 0, "fuel": { "charcoal": 2 }, "slots": 2, "flies": true, "needs": "sky_dock", "blurb": "Lifted by a kindled spark. The only way past the edge of the map." }
+  ],
+  "mods": [
+    { "id": "cargo_rack", "name": "Cargo rack", "era": 1, "parts": { "plank": 3, "nails": 2 }, "cap": 6, "blurb": "+6 cargo." },
+    { "id": "spare_wheel", "name": "Spare wheel", "era": 1, "parts": { "wheel": 1 }, "wear": 0.5, "blurb": "Half the wear on every trip." },
+    { "id": "shield_wall", "name": "Shield wall", "era": 2, "parts": { "shield": 2 }, "armor": 1, "blurb": "+1 armour." },
+    { "id": "field_stove", "name": "Field stove", "era": 2, "parts": { "iron": 2, "brick": 2 }, "stove": true, "blurb": "Cooks on the march: a band eats a quarter less." },
+    { "id": "armor_kit", "name": "Armour kit", "era": 3, "parts": { "armor_plate": 2 }, "armor": 3, "blurb": "+3 armour." },
+    { "id": "gun_mount", "name": "Gun mount", "era": 3, "parts": { "cannon": 1 }, "fire": 5, "blurb": "+5 fire." },
+    { "id": "governor", "name": "Engine governor", "era": 4, "parts": { "gear": 1, "spring": 2 }, "speed": 0.5, "engine": true, "blurb": "+0.5 speed (engined vehicles only)." }
+  ],
+  "names": ["Old Faithful", "Bramble", "The Ember", "Stubborn Meg", "Grey Gull", "Tallow", "Hob", "The Lantern", "Rook", "Cinderback", "Patience", "Wren", "The Dowager", "Kettle", "Ironside", "Moth", "Saltbox", "Thistle", "Hearthstone", "The Last Word"]
+}

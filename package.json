@@ -28,6 +28,7 @@
     "game:test": "vitest run --config game/vitest.config.ts",
     "game:build": "tsc -p game/tsconfig.json && vite build --config game/vite.config.ts --base=./",
     "game:check-saves": "vite-node --config game/vite.config.ts game/scripts/check-saves.mts",
+    "game:check-works": "vite-node --config game/vite.config.ts game/scripts/check-works.mts",
     "game:e2e": "playwright test -c game/playwright.config.ts"
   },
   "dependencies": {

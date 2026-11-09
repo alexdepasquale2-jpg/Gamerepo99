@@ -3,6 +3,8 @@ import { openMenu, type MenuHandle } from '../kit/menu';
 
 export type PauseIo = {
   onResume: () => void;
+  /** Open the Works sheet (the progression layer). */
+  onWorks?: () => void;
   onSave: () => void;
   onLoad: () => void;
   onWorldFile: () => void;
@@ -21,6 +23,7 @@ export function openPauseMenu(io: PauseIo): MenuHandle {
     'Paused',
     [
       { id: 'resume', label: 'Resume', onPick: () => (handle.close(), io.onResume()) },
+      ...(io.onWorks ? [{ id: 'works', label: 'The Works', hint: 'Yards, lines, vehicles, convoys, war and the arcs (J)', onPick: () => (handle.close(), io.onWorks!()) }] : []),
       { id: 'save', label: 'Save', hint: 'Three slots; dawn saves on its own', onPick: () => (handle.close(), io.onSave()) },
       { id: 'load', label: 'Load', onPick: () => (handle.close(), io.onLoad()) },
       { id: 'world', label: 'World file', hint: 'Export this world, or import one', onPick: () => (handle.close(), io.onWorldFile()) },

@@ -141,7 +141,7 @@ export function lookTexture(scene: Phaser.Scene, look: Look): string {
   return key;
 }
 
-const addStrip = (scene: Phaser.Scene, key: string, make: () => Strip): string => {
+export const addStrip = (scene: Phaser.Scene, key: string, make: () => Strip): string => {
   if (scene.textures.exists(key)) return key;
   const s = make();
   const tex = scene.textures.addCanvas(key, s.canvas);
