@@ -49,7 +49,7 @@ export class WanderScene extends Phaser.Scene {
     this.createSparkHud();
 
     this.add
-      .text(8, 8, 'The Last Spark — M1 wander demo', {
+      .text(8, 8, 'WelCum HoMe — wander leftover', {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#f2e9e4',

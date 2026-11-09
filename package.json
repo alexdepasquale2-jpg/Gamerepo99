@@ -2,7 +2,7 @@
   "name": "the-last-spark",
   "version": "0.1.0",
   "private": true,
-  "description": "The Last Spark — walk into towns and reignite people, one spark at a time",
+  "description": "WelCum HoMe — Don Quixote was right. They want you inside.",
   "type": "module",
   "scripts": {
     "dev": "vite",
